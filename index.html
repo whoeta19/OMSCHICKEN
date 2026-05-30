@@ -12,6 +12,11 @@
   header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
   .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:17px;}
   .logo span{color:var(--accent);}
+  .header-right{display:flex;align-items:center;gap:10px;}
+  .sync-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;transition:all 0.2s;}
+  .sync-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;}
+  .sync-dot.offline{background:var(--red);}
   .header-meta{font-size:11px;color:var(--muted);}
   .tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--surface);}
   .tab{padding:9px 14px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;}
@@ -20,7 +25,7 @@
   .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
-  .stat-value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
   .stat-value.green{color:var(--green);}.stat-value.red{color:var(--red);}.stat-value.orange{color:var(--accent);}
   .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
   .btn:hover{background:var(--accent2);}
@@ -33,7 +38,7 @@
   .tx-date{font-size:10px;color:var(--muted);margin-top:2px;}
   .tx-amount{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;}
   .tx-amount.plus{color:var(--green);}.tx-amount.minus{color:var(--red);}
-  .cat-badge{font-size:10px;padding:3px 7px;border-radius:20px;font-weight:500;white-space:nowrap;cursor:pointer;}
+  .cat-badge{font-size:10px;padding:3px 7px;border-radius:20px;font-weight:500;white-space:nowrap;}
   .cat-chicken{background:#1a3a1a;color:#4ade80;}.cat-income{background:#0a2a1a;color:#22c55e;}
   .cat-personal{background:#3a1a0a;color:#fb923c;}.cat-transport{background:#1a1a3a;color:#818cf8;}
   .cat-food{background:#2a1a0a;color:#fbbf24;}.cat-unknown{background:#2a2a2a;color:#888;}
@@ -66,14 +71,17 @@
   .chart-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;}
   .chart-bar{height:100%;border-radius:4px;transition:width 0.5s;}
   .chart-label{width:80px;color:var(--muted);font-size:11px;}
-  .chart-val{width:70px;text-align:right;font-family:'Unbounded',sans-serif;font-size:10px;}
+  .chart-val{width:75px;text-align:right;font-family:'Unbounded',sans-serif;font-size:10px;}
   ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
-  <div class="header-meta" id="headerMeta">Бухгалтерия v1.0</div>
+  <div class="header-right">
+    <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
+    <div class="header-meta" id="headerMeta">0 операций</div>
+  </div>
 </header>
 <div class="tabs">
   <button class="tab active" onclick="showPage('dashboard',this)">📊 Дашборд</button>
@@ -115,6 +123,7 @@
     <button class="filter-btn" onclick="filterTx('transport',this)">🚗 Транспорт</button>
     <button class="filter-btn" onclick="filterTx('food',this)">🍽️ Еда</button>
     <button class="filter-btn" onclick="filterTx('personal',this)">🛍️ Личное</button>
+    <button class="filter-btn" onclick="filterTx('unknown',this)">❓ Прочее</button>
   </div>
   <div class="section-title">
     <span id="txCount">Операции</span>
@@ -134,7 +143,7 @@
     <div class="input-group"><label>Назначение</label><input type="text" id="addDesc" placeholder="Оплата по счёту..."></div>
   </div>
   <div class="input-group">
-    <label>Категория (или оставь пусто — определится автоматически)</label>
+    <label>Категория</label>
     <select id="addCat">
       <option value="">Автоматически</option>
       <option value="income">💰 Доход от продаж</option>
@@ -149,7 +158,7 @@
   <button class="btn" onclick="addManual()" style="width:100%;margin-bottom:12px">✅ Сохранить</button>
   <div id="addResult"></div>
   <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
-    <div class="section-title">Управление данными</div>
+    <div class="section-title">Управление</div>
     <button class="btn-outline" onclick="clearAll()" style="color:var(--red);border-color:var(--red);font-size:12px;padding:8px 14px">🗑️ Очистить все данные</button>
   </div>
 </div>
@@ -158,40 +167,63 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let allTx = JSON.parse(localStorage.getItem('omschicken_tx') || '[]');
+let allTx = [];
 let currentFilter = 'all';
+let synced = false;
 
-// ---- УМНАЯ КЛАССИФИКАЦИЯ БЕЗ ИИ ----
+// ---- КЛАССИФИКАЦИЯ ----
 function classify(name, description, amount) {
   if (amount > 0) return 'income';
   const text = (name + ' ' + description).toLowerCase();
-  
-  // Личная еда
-  if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway/.test(text)) return 'food';
-  
-  // Транспорт
-  if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин/.test(text)) return 'transport';
-  
-  // Личные покупки
-  if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike/.test(text)) return 'personal';
-  
-  // Закупка курятины / агро
-  if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|птицекомбинат|мясокомбинат|мясоперерабатыв/.test(text)) return 'chicken';
-  
-  // Зарплата
-  if (/зарплата|зп|аванс|выплата сотрудник/.test(text)) return 'salary';
-  
-  // Офис
+  if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino/.test(text)) return 'food';
+  if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин|neftmagist|нефть/.test(text)) return 'transport';
+  if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike|goods|ситилинк/.test(text)) return 'personal';
+  if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|птицекомбинат|мясокомбинат|мясоперерабатыв|chicken|бройлер|индейк/.test(text)) return 'chicken';
+  if (/зарплата|зп\b|аванс|выплата сотрудник/.test(text)) return 'salary';
   if (/аренда|коворкинг|офис|склад/.test(text)) return 'office';
-  
-  // Входящие от контрагентов — скорее всего доход (уже обработано выше)
   return 'unknown';
 }
 
-function save() {
-  localStorage.setItem('omschicken_tx', JSON.stringify(allTx));
+// ---- API ----
+async function apiGet() {
+  const r = await fetch('/api/transactions');
+  if (!r.ok) throw new Error('Ошибка сервера');
+  return r.json();
 }
 
+async function apiPost(txs) {
+  const r = await fetch('/api/transactions', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(txs)
+  });
+  if (!r.ok) throw new Error('Ошибка сохранения');
+  return r.json();
+}
+
+async function apiClear() {
+  await fetch('/api/clear', { method: 'DELETE' });
+}
+
+// ---- SYNC ----
+async function syncNow() {
+  document.getElementById('syncBtn').textContent = '⏳ Синхронизация...';
+  try {
+    allTx = await apiGet();
+    synced = true;
+    document.getElementById('syncDot').className = 'sync-dot';
+    document.getElementById('syncBtn').innerHTML = '<span class="sync-dot"></span>Синхронизировано';
+    renderAll();
+    showToast('✅ Данные синхронизированы');
+  } catch(e) {
+    synced = false;
+    document.getElementById('syncDot').className = 'sync-dot offline';
+    document.getElementById('syncBtn').innerHTML = '<span class="sync-dot offline"></span>Нет связи';
+    showToast('❌ Нет связи с сервером');
+  }
+}
+
+// ---- FILE ----
 async function handleFile(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -200,7 +232,7 @@ async function handleFile(e) {
   e.target.value = '';
 }
 
-function parseAndProcess(text) {
+async function parseAndProcess(text) {
   const lines = text.split('\n').filter(l => l.trim());
   const txs = [];
   for (let i = 1; i < lines.length; i++) {
@@ -215,27 +247,32 @@ function parseAndProcess(text) {
     const counterparty = (cols[24]||'').replace(/^АО "ТБанк"$|^ТБанк$/gi,'').trim();
     const name = counterparty.length>2 ? counterparty : description;
     const category = classify(name, description, amount);
-    txs.push({id:Date.now()+i, name, amount, date, description, category, is_personal:['personal','food'].includes(category)});
+    txs.push({name, amount, date, description, category, is_personal:['personal','food'].includes(category)});
   }
-  
   if (txs.length===0){showToast('❌ Не удалось прочитать файл');return;}
 
   const wrap=document.getElementById('progressWrap');
   const fill=document.getElementById('progressFill');
   const ptxt=document.getElementById('progressText');
   wrap.classList.add('active');
-  fill.style.width='60%';
-  ptxt.textContent=`Классифицирую ${txs.length} операций...`;
-  
-  setTimeout(()=>{
-    allTx=[...txs,...allTx];
-    save();
+  fill.style.width='30%';
+  ptxt.textContent=`Классифицировано ${txs.length} операций. Сохраняю...`;
+
+  try {
+    await apiPost(txs);
     fill.style.width='100%';
-    ptxt.textContent=`✅ Загружено ${txs.length} операций!`;
+    ptxt.textContent=`✅ Загружено и сохранено ${txs.length} операций!`;
+    setTimeout(()=>{wrap.classList.remove('active');fill.style.width='0%';},1500);
+    await syncNow();
+  } catch(e) {
+    // Fallback to local
+    allTx=[...txs,...allTx];
+    fill.style.width='100%';
+    ptxt.textContent=`✅ Загружено ${txs.length} (локально)`;
     setTimeout(()=>{wrap.classList.remove('active');fill.style.width='0%';},1500);
     renderAll();
-    showToast(`✅ Загружено ${txs.length} операций`);
-  }, 300);
+    showToast(`⚠️ Сохранено локально (нет связи)`);
+  }
 }
 
 function addManual() {
@@ -246,21 +283,24 @@ function addManual() {
   const manualCat=document.getElementById('addCat').value;
   if(!name||isNaN(amount)){showToast('Заполни название и сумму');return;}
   const cat=manualCat||classify(name,desc,amount);
-  const tx={id:Date.now(),name,amount,date,description:desc,category:cat,is_personal:['personal','food'].includes(cat)};
-  allTx=[tx,...allTx];
-  save();
+  const tx={name,amount,date,description:desc,category:cat,is_personal:['personal','food'].includes(cat)};
+  apiPost([tx]).then(()=>syncNow()).catch(()=>{
+    allTx=[tx,...allTx];renderAll();
+  });
   document.getElementById('addResult').innerHTML=`<div class="info-box success">✅ Сохранено: <strong>${name}</strong> — ${getCatBadge(cat)}</div>`;
   document.getElementById('addName').value='';
   document.getElementById('addAmount').value='';
   document.getElementById('addDesc').value='';
   document.getElementById('addCat').value='';
-  renderAll();
 }
 
-function clearAll() {
-  if(confirm('Удалить все данные?')){allTx=[];save();renderAll();showToast('Данные очищены');}
+async function clearAll() {
+  if(!confirm('Удалить все данные с сервера?'))return;
+  await apiClear();
+  allTx=[];renderAll();showToast('Данные очищены');
 }
 
+// ---- RENDER ----
 function renderAll() {
   const income=allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense=allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
@@ -269,9 +309,7 @@ function renderAll() {
   document.getElementById('statExpense').textContent=fmt(expense);
   document.getElementById('statPersonal').textContent=fmt(personal);
   document.getElementById('headerMeta').textContent=allTx.length+' операций';
-  
   renderChart();
-  
   const recent=allTx.slice(0,6);
   document.getElementById('recentList').innerHTML=recent.length?recent.map(txHTML).join(''):'<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
   renderTxList();
@@ -285,9 +323,9 @@ function renderChart() {
     {key:'personal',label:'🛍️ Личное',color:'#fb923c'},
     {key:'salary',label:'👥 Зарплата',color:'#38bdf8'},
     {key:'office',label:'🏢 Офис',color:'#a3e635'},
-    {key:'unknown',label:'❓ Прочее',color:'#666'},
+    {key:'unknown',label:'❓ Прочее',color:'#555'},
   ];
-  const totals=cats.map(c=>({...c,val:allTx.filter(t=>t.category===c.key).reduce((s,t)=>s+Math.abs(t.amount),0)}));
+  const totals=cats.map(c=>({...c,val:allTx.filter(t=>t.category===c.key&&t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0)}));
   const max=Math.max(...totals.map(t=>t.val),1);
   const active=totals.filter(t=>t.val>0);
   if(!active.length){document.getElementById('chartArea').innerHTML='<div style="color:var(--muted);font-size:12px;margin-bottom:16px">Загрузи выписку чтобы увидеть аналитику</div>';return;}
@@ -339,22 +377,11 @@ function exportCSV() {
 }
 
 function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
-
-function showPage(name,btn) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  if(btn)btn.classList.add('active');
-}
-
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3500);
-}
+function showPage(name,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');if(btn)btn.classList.add('active');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
 document.getElementById('addDate').value=new Date().toISOString().split('T')[0];
-renderAll();
+syncNow();
 </script>
 </body>
 </html>
