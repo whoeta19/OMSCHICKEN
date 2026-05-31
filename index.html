@@ -178,7 +178,7 @@ function classify(name, description, amount) {
   if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino/.test(text)) return 'food';
   if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин|neftmagist|нефть/.test(text)) return 'transport';
   if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike|goods|ситилинк/.test(text)) return 'personal';
-  if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|птицекомбинат|мясокомбинат|мясоперерабатыв|chicken|бройлер|индейк/.test(text)) return 'chicken';
+  if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|мясное дело|тихонов|птицекомбинат|мясокомбинат|мясоперерабатыв|chicken|бройлер|индейк/.test(text)) return 'chicken';
   if (/зарплата|зп\b|аванс|выплата сотрудник/.test(text)) return 'salary';
   if (/аренда|коворкинг|офис|склад/.test(text)) return 'office';
   return 'unknown';
