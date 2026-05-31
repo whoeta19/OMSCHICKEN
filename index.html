@@ -212,8 +212,10 @@ async function syncNow() {
     document.getElementById('syncBtn').innerHTML = '<span class="sync-dot"></span>Синхронизировано';
     renderAll();
   } catch(e) {
-    document.getElementById('syncDot').className = 'sync-dot offline';
-    document.getElementById('syncBtn').innerHTML = '<span class="sync-dot offline"></span>Нет связи';
+    const dot2 = document.getElementById('syncDot');
+    const btn2 = document.getElementById('syncBtn');
+    if(dot2) dot2.className = 'sync-dot offline';
+    if(btn2) btn2.innerHTML = '<span class="sync-dot offline"></span>Нет связи';
   }
 }
 
@@ -264,6 +266,8 @@ async function parseAndProcess(text) {
 
   try {
     await apiDelete();
+    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 2000));
     fill.style.width = '50%';
     ptxt.textContent = 'Сохраняю операции...';
     await apiPost(txs);
@@ -302,6 +306,7 @@ async function clearAll() {
   if (!confirm('Удалить все данные?')) return;
   try {
     await apiDelete();
+    await new Promise(r => setTimeout(r, 2000));
     allTx = [];
     renderAll();
     showToast('Данные очищены');
