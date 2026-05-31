@@ -210,6 +210,10 @@ async function syncNow() {
   document.getElementById('syncBtn').textContent = '⏳ Синхронизация...';
   try {
     allTx = await apiGet();
+      localStorage.removeItem('omschicken_tx');
+      localStorage.removeItem('omschicken_tx');
+      localStorage.removeItem('omschicken_tx');
+      localStorage.removeItem('omschicken_tx');
     synced = true;
     document.getElementById('syncDot').className = 'sync-dot';
     document.getElementById('syncBtn').innerHTML = '<span class="sync-dot"></span>Синхронизировано';
