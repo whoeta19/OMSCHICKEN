@@ -101,7 +101,7 @@
     <div class="upload-title">Загрузить выписку из Т-Банк</div>
     <div class="upload-sub">CSV файл · нажми для выбора</div>
   </div>
-  <input type="file" id="fileInput" accept=".csv,.txt" style="display:none" onchange="handleFile(event)">
+  <input type="file" id="fileInput" accept=".csv,.txt" style="display:none" onchange="handleFile(event)" onclick="this.value=''" onclick="this.value=''" onclick="this.value=''">
   <div class="progress-wrap" id="progressWrap">
     <div id="progressText" style="font-size:13px;font-weight:500">Обрабатываю...</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
