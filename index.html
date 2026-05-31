@@ -227,6 +227,7 @@ async function syncNow() {
 async function handleFile(e) {
   const file = e.target.files[0];
   if (!file) return;
+
   const text = await file.text();
   parseAndProcess(text);
   e.target.value = '';
@@ -259,7 +260,8 @@ async function parseAndProcess(text) {
   ptxt.textContent=`Классифицировано ${txs.length} операций. Сохраняю...`;
 
   try {
-    await apiPost(txs);
+    await fetch('/api/transactions', { method: 'DELETE' });
+      await apiPost(txs);
     fill.style.width='100%';
     ptxt.textContent=`✅ Загружено и сохранено ${txs.length} операций!`;
     setTimeout(()=>{wrap.classList.remove('active');fill.style.width='0%';},1500);
