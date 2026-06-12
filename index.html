@@ -178,8 +178,9 @@ function classify(name, description, amount) {
   if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин/.test(text)) return 'transport';
   if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike/.test(text)) return 'personal';
   if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|мясное дело|тихонов|мясокомбинат|chicken|бройлер/.test(text)) return 'chicken';
-  if (/зарплата|зп\b|аванс|выплата сотрудник/.test(text)) return 'salary';
-  if (/аренда|коворкинг|офис|склад/.test(text)) return 'office';
+  if (/зарплата|зп|аванс|выплата сотрудник|выдача зарплаты|выплата зарплаты/.test(text)) return 'salary';
+  if (/аренда|коворкинг|офис|склад|петрова/.test(text)) return 'office';
+  if (/смартлогистика|грузоперевозк|набокин/.test(text)) return 'transport';
   return 'unknown';
 }
 
