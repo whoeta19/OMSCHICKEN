@@ -43,7 +43,7 @@
   .cat-personal{background:#3a1a0a;color:#fb923c;}.cat-transport{background:#1a1a3a;color:#818cf8;}
   .cat-food{background:#2a1a0a;color:#fbbf24;}.cat-unknown{background:#2a2a2a;color:#888;}
   .cat-salary{background:#1a2a3a;color:#38bdf8;}.cat-office{background:#2a2a1a;color:#a3e635;}
-  .cat-bank{background:#2a1a2a;color:#c084fc;}.cat-logistics{background:#1a2a2a;color:#22d3ee;}
+  .cat-bank{background:#2a1a2a;color:#c084fc;}
   .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;background:var(--surface);}
   .upload-zone:hover{border-color:var(--accent);}
   .upload-title{font-size:14px;font-weight:500;margin:6px 0 3px;}
@@ -73,7 +73,6 @@
   .chart-bar{height:100%;border-radius:4px;transition:width 0.5s;}
   .chart-label{width:90px;color:var(--muted);font-size:11px;}
   .chart-val{width:75px;text-align:right;font-family:'Unbounded',sans-serif;font-size:10px;}
-  /* Переклассификатор */
   .reclassify-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:6px;}
   .reclassify-name{font-size:13px;font-weight:500;margin-bottom:4px;}
   .reclassify-meta{font-size:11px;color:var(--muted);margin-bottom:8px;}
@@ -100,10 +99,10 @@
   <button class="tab active" onclick="showPage('dashboard',this)">📊 Дашборд</button>
   <button class="tab" onclick="showPage('transactions',this)">📋 Операции</button>
   <button class="tab" onclick="showPage('reclassify',this)">🏷️ Разметка</button>
-  <button class="tab" onclick="showPage(`add`,this)">➕ Добавить</button>
-  <button class="tab" onclick="window.location.href=`/docs`">📄 Документы</button>
-  <button class="tab" onclick="window.location.href=`/analytics`">📊 Аналитика</button>
-  <button class="tab" onclick="window.location.href=`/vat`">🧾 НДС</button>
+  <button class="tab" onclick="showPage('add',this)">➕ Добавить</button>
+  <button class="tab" onclick="window.location.href='/docs'">📄 Документы</button>
+  <button class="tab" onclick="window.location.href='/analytics'">📊 Аналитика</button>
+  <button class="tab" onclick="window.location.href='/vat'">🧾 НДС</button>
 </div>
 <main>
 
@@ -116,7 +115,7 @@
   <div class="upload-zone" id="uploadZone">
     <div style="font-size:26px">📂</div>
     <div class="upload-title">Загрузить выписку из Т-Банк</div>
-    <div class="upload-sub">CSV файл · нажми для выбора</div>
+    <div class="upload-sub">CSV файл · нажми для выбора · загружай каждый месяц отдельно</div>
   </div>
   <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
   <div class="progress-wrap" id="progressWrap">
@@ -157,7 +156,7 @@
     <button class="btn btn-sm" onclick="saveRules()">💾 Сохранить правила</button>
   </div>
   <div class="info-box" style="margin-bottom:12px">
-    Нажми на категорию рядом с операцией чтобы переназначить. Система запомнит твой выбор и применит к похожим операциям автоматически.
+    Нажми на категорию чтобы переназначить. Система запомнит и применит к похожим операциям.
   </div>
   <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
     <select id="reclassifyFilter" onchange="renderReclassify()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none">
@@ -203,14 +202,13 @@
       <option value="salary">👥 Зарплата</option>
       <option value="office">🏢 Офис/Аренда</option>
       <option value="bank">🏦 Банк/Кредиты</option>
-      <option value="logistics">🚚 Логистика</option>
     </select>
   </div>
   <button class="btn" onclick="addManual()" style="width:100%;margin-bottom:12px">✅ Сохранить</button>
   <div id="addResult"></div>
   <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
     <div class="section-title">Управление</div>
-    <button class="btn-outline" onclick="clearAll()" style="color:var(--red);border-color:var(--red);font-size:12px;padding:8px 14px">🗑️ Очистить все данные</button>
+    <button class="btn-outline" onclick="clearAll()" style="color:var(--red);border-color:var(--red);font-size:12px;padding:8px 14px">🗑️ Очистить ВСЕ данные</button>
   </div>
 </div>
 
@@ -226,12 +224,9 @@ let userRules = JSON.parse(localStorage.getItem('omschicken_rules') || '{}');
 function classify(name, description, amount) {
   if (amount > 0) return 'income';
   const text = (name + ' ' + description).toLowerCase();
-  
-  // Проверяем пользовательские правила сначала
   for (const [keyword, category] of Object.entries(userRules)) {
     if (text.includes(keyword.toLowerCase())) return category;
   }
-  
   if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino|pizzasushiwok|chaihona|чайхона/.test(text)) return 'food';
   if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин|rnazk|rosneft|смартлогистика|грузоперевозк|набокин/.test(text)) return 'transport';
   if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike|lacoste|vnukovo|krc|симутин|подотчет/.test(text)) return 'personal';
@@ -262,7 +257,7 @@ async function apiDelete(month) {
   const r = await fetch('/api/transactions', {
     method: 'DELETE',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({month})
+    body: JSON.stringify({month: month || null})
   });
   if (!r.ok) throw new Error('Ошибка удаления');
 }
@@ -331,10 +326,13 @@ async function parseAndProcess(text) {
   const ptxt = document.getElementById('progressText');
   wrap.classList.add('active');
   fill.style.width = '20%';
-  ptxt.textContent = `Найдено ${txs.length} операций. Очищаю базу...`;
+
+  // Определяем месяц из первой операции с датой
+  const firstWithDate = txs.find(t => t.date && t.date.includes('.'));
+  const monthKey = firstWithDate ? firstWithDate.date.split('.').slice(1).join('.') : null;
+  ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
 
   try {
-    const monthKey = txs.length ? txs[0].date.split('.').slice(1).join('.') : null;
     await apiDelete(monthKey);
     fill.style.width = '50%';
     ptxt.textContent = 'Сохраняю операции...';
@@ -344,29 +342,26 @@ async function parseAndProcess(text) {
     allTx = await apiGet();
     fill.style.width = '100%';
     const unknownCount = allTx.filter(t=>t.category==='unknown').length;
-    ptxt.textContent = `✅ Загружено ${allTx.length} операций! Нераспознано: ${unknownCount}`;
+    ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
     setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
     renderAll();
-    if (unknownCount > 0) showToast(`⚠️ ${unknownCount} операций в "Прочее" — зайди в Разметку`);
-    else showToast(`✅ Загружено ${allTx.length} операций`);
+    if (unknownCount > 0) showToast(`⚠️ ${unknownCount} в "Прочее" — зайди в Разметку`);
+    else showToast(`✅ Загружено ${txs.length} операций за ${monthKey}`);
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
   }
 }
 
-// Разметка операций
 function renderReclassify() {
   const filter = document.getElementById('reclassifyFilter').value;
   const filtered = filter === 'all' ? allTx.filter(t=>t.amount<0) : allTx.filter(t=>t.category===filter && t.amount<0);
   document.getElementById('reclassifyCount').textContent = filtered.length + ' операций';
-  
   const cats = [
     {k:'chicken',l:'🐔 Курятина'},{k:'transport',l:'🚗 Транспорт'},{k:'food',l:'🍽️ Еда'},
     {k:'personal',l:'🛍️ Личное'},{k:'salary',l:'👥 Зарплата'},{k:'office',l:'🏢 Офис'},
     {k:'bank',l:'🏦 Банк'},{k:'unknown',l:'❓ Прочее'}
   ];
-  
   document.getElementById('reclassifyList').innerHTML = filtered.slice(0,50).map(tx => `
     <div class="reclassify-row">
       <div class="reclassify-name">${tx.name}</div>
@@ -374,48 +369,35 @@ function renderReclassify() {
       <div class="cat-btns">
         ${cats.map(c=>`<button class="cat-btn ${tx.category===c.k?'active':''}" onclick="reclassifyTx('${tx.id}','${c.k}','${tx.name}',this)">${c.l}</button>`).join('')}
       </div>
-    </div>
-  `).join('') || '<div class="empty"><div class="empty-icon">✅</div><div>Нет операций в этой категории</div></div>';
-  
+    </div>`).join('') || '<div class="empty"><div class="empty-icon">✅</div><div>Нет операций</div></div>';
   renderRules();
 }
 
 async function reclassifyTx(id, category, name, btn) {
-  // Обновляем локально
   const tx = allTx.find(t=>t.id==id);
-  if (tx) {
-    tx.category = category;
-    tx.is_personal = ['personal','food'].includes(category);
-  }
-  
-  // Обновляем кнопки
+  if (tx) { tx.category = category; tx.is_personal = ['personal','food'].includes(category); }
   btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  
-  // Добавляем правило
   const keyword = name.toLowerCase().substring(0,20);
   userRules[keyword] = category;
   localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
-  
-  // Обновляем в Supabase
   await apiUpdateCategory(id, category);
-  
   renderAll();
   renderRules();
-  showToast(`✅ Категория обновлена`);
+  showToast('✅ Категория обновлена');
 }
 
 function renderRules() {
   const rules = Object.entries(userRules);
   document.getElementById('rulesCount').textContent = rules.length;
   const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',unknown:'❓'};
-  document.getElementById('rulesList').innerHTML = rules.length ? 
-    `<div class="rules-list">${rules.map(([k,v],i)=>`
+  document.getElementById('rulesList').innerHTML = rules.length ?
+    `<div class="rules-list">${rules.map(([k,v])=>`
       <div class="rule-item">
         <span style="font-size:12px">"${k}" → ${cats[v]||'?'} ${v}</span>
         <button class="del-rule" onclick="deleteRule('${k}')">✕</button>
       </div>`).join('')}</div>` :
-    '<div style="font-size:12px;color:var(--muted)">Правил пока нет — разметь операции выше</div>';
+    '<div style="font-size:12px;color:var(--muted)">Правил пока нет</div>';
 }
 
 function deleteRule(keyword) {
@@ -426,7 +408,7 @@ function deleteRule(keyword) {
 
 function saveRules() {
   localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
-  showToast('✅ Правила сохранены — перезагрузи выписку чтобы применить');
+  showToast('✅ Правила сохранены');
 }
 
 function addManual() {
@@ -447,13 +429,12 @@ function addManual() {
 }
 
 async function clearAll() {
-  if (!confirm('Удалить все данные?')) return;
+  if (!confirm('Удалить ВСЕ данные за все месяцы?')) return;
   try {
-    const monthKey = txs.length ? txs[0].date.split('.').slice(1).join('.') : null;
-    await apiDelete(monthKey);
+    await apiDelete(null);
     allTx = [];
     renderAll();
-    showToast('Данные очищены');
+    showToast('Все данные очищены');
   } catch(e) { showToast('❌ '+e.message); }
 }
 
