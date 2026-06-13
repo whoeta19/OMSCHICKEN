@@ -1,5 +1,5 @@
 {
-  "rewrites": [{"source": "/vat", "destination": "/vat.html"},{"source": "/analytics", "destination": "/analytics.html"},{"source": "/docs", "destination": "/docs.html"},
+  "rewrites": [{"source": "/", "destination": "/index.html"},{"source": "/vat", "destination": "/vat.html"},{"source": "/analytics", "destination": "/analytics.html"},{"source": "/docs", "destination": "/docs.html"},
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
