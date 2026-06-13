@@ -265,9 +265,6 @@ async function apiDelete(month) {
     body: JSON.stringify({month})
   });
   if (!r.ok) throw new Error('Ошибка удаления');
-} {
-  const r = await fetch('/api/transactions', { method: 'DELETE' });
-  if (!r.ok) throw new Error('Ошибка удаления');
 }
 
 async function apiUpdateCategory(id, category) {
