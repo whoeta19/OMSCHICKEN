@@ -5,12 +5,19 @@ const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Получаем токен пользователя
+  const authHeader = req.headers.authorization || '';
+  const userToken = authHeader.replace('Bearer ', '').trim();
+  
+  // Если есть токен пользователя — используем его, иначе anon
+  const activeKey = userToken || SUPABASE_KEY;
+  
   const headers = {
     'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Authorization': 'Bearer ' + activeKey,
     'Content-Type': 'application/json',
     'Prefer': 'return=minimal'
   };
@@ -20,6 +27,18 @@ export default async function handler(req, res) {
     'Authorization': 'Bearer ' + SERVICE_KEY,
     'Content-Type': 'application/json'
   };
+
+  // Получаем user_id из токена если есть
+  let userId = null;
+  if (userToken) {
+    try {
+      const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
+      });
+      const userData = await userR.json();
+      userId = userData.id || null;
+    } catch(e) {}
+  }
 
   try {
     if (req.method === 'GET') {
@@ -32,9 +51,11 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const payload = Array.isArray(req.body) ? req.body : [req.body];
+      // Добавляем user_id к каждой записи
+      const payloadWithUser = userId ? payload.map(t => ({...t, user_id: userId})) : payload;
       const batchSize = 50;
-      for (let i = 0; i < payload.length; i += batchSize) {
-        const batch = payload.slice(i, i + batchSize);
+      for (let i = 0; i < payloadWithUser.length; i += batchSize) {
+        const batch = payloadWithUser.slice(i, i + batchSize);
         await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
           method: 'POST',
           headers,
@@ -56,14 +77,17 @@ export default async function handler(req, res) {
 
     if (req.method === 'DELETE') {
       const { period } = req.body || {};
-      if (period) {
-        // Удаляем только операции конкретного периода
+      if (period && userId) {
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}&user_id=eq.${userId}`, {
+          method: 'DELETE',
+          headers: adminHeaders
+        });
+      } else if (period) {
         await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}`, {
           method: 'DELETE',
           headers: adminHeaders
         });
       } else {
-        // Удаляем все
         await fetch(`${SUPABASE_URL}/rest/v1/rpc/truncate_transactions`, {
           method: 'POST',
           headers: adminHeaders,
