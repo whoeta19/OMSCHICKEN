@@ -253,11 +253,11 @@ async function apiPost(txs) {
   return r.json();
 }
 
-async function apiDelete(month) {
+async function apiDelete(period) {
   const r = await fetch('/api/transactions', {
     method: 'DELETE',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({month: month || null})
+    body: JSON.stringify({period: period || null})
   });
   if (!r.ok) throw new Error('Ошибка удаления');
 }
@@ -304,6 +304,16 @@ document.getElementById('fileInput').addEventListener('change', async function(e
 
 async function parseAndProcess(text) {
   const lines = text.split('\n').filter(l => l.trim());
+  // Определяем период из первой строки с датой
+  let monthKey = null;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(';');
+    const date = (cols[2]||'').trim();
+    if (date && date.includes('.') && date.length >= 8) {
+      const parts = date.split('.');
+      if (parts.length >= 3) { monthKey = parts[1] + '.' + parts[2]; break; }
+    }
+  }
   const txs = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
@@ -317,7 +327,7 @@ async function parseAndProcess(text) {
     const counterparty = (cols[24]||'').replace(/^АО "ТБанк"$|^ТБанк$/gi,'').trim();
     const name = counterparty.length>2 ? counterparty : description;
     const category = classify(name, description, amount);
-    txs.push({name, amount, date, description, category, is_personal:['personal','food'].includes(category)});
+    txs.push({name, amount, date, description, category, period: monthKey, is_personal:['personal','food'].includes(category)});
   }
   if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
 
@@ -326,11 +336,10 @@ async function parseAndProcess(text) {
   const ptxt = document.getElementById('progressText');
   wrap.classList.add('active');
   fill.style.width = '20%';
-
-  // Определяем месяц из первой операции с датой
-  const firstWithDate = txs.find(t => t.date && t.date.includes('.'));
-  const monthKey = firstWithDate ? firstWithDate.date.split('.').slice(1).join('.') : null;
   ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
+
+  try {
+    await apiDelete(monthKey);
 
   try {
     await apiDelete(monthKey);

@@ -55,13 +55,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      const { month } = req.body || {};
-      if (month) {
-        // Удаляем только операции конкретного месяца (формат: "05.2026")
-        const [m, y] = month.split('.');
-        const dateFrom = `${y}-${m}-01`;
-        const dateTo = `${y}-${m}-31`;
-        await fetch(`${SUPABASE_URL}/rest/v1/transactions?date=gte.${dateFrom}&date=lte.${dateTo}`, {
+      const { period } = req.body || {};
+      if (period) {
+        // Удаляем только операции конкретного периода
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}`, {
           method: 'DELETE',
           headers: adminHeaders
         });
