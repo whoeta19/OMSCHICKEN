@@ -258,7 +258,14 @@ async function apiPost(txs) {
   return r.json();
 }
 
-async function apiDelete() {
+async function apiDelete(month) {
+  const r = await fetch('/api/transactions', {
+    method: 'DELETE',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({month})
+  });
+  if (!r.ok) throw new Error('Ошибка удаления');
+} {
   const r = await fetch('/api/transactions', { method: 'DELETE' });
   if (!r.ok) throw new Error('Ошибка удаления');
 }
@@ -330,7 +337,8 @@ async function parseAndProcess(text) {
   ptxt.textContent = `Найдено ${txs.length} операций. Очищаю базу...`;
 
   try {
-    await apiDelete();
+    const monthKey = txs.length ? txs[0].date.split('.').slice(1).join('.') : null;
+    await apiDelete(monthKey);
     fill.style.width = '50%';
     ptxt.textContent = 'Сохраняю операции...';
     await apiPost(txs);
@@ -444,7 +452,8 @@ function addManual() {
 async function clearAll() {
   if (!confirm('Удалить все данные?')) return;
   try {
-    await apiDelete();
+    const monthKey = txs.length ? txs[0].date.split('.').slice(1).join('.') : null;
+    await apiDelete(monthKey);
     allTx = [];
     renderAll();
     showToast('Данные очищены');

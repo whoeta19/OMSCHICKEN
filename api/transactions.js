@@ -15,9 +15,15 @@ export default async function handler(req, res) {
     'Prefer': 'return=minimal'
   };
 
+  const adminHeaders = {
+    'apikey': SERVICE_KEY,
+    'Authorization': 'Bearer ' + SERVICE_KEY,
+    'Content-Type': 'application/json'
+  };
+
   try {
     if (req.method === 'GET') {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions?order=date.desc&limit=2000`, {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions?order=date.desc&limit=5000`, {
         headers: {...headers, 'Prefer': 'return=representation'}
       });
       const data = await r.json();
@@ -26,13 +32,12 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const payload = Array.isArray(req.body) ? req.body : [req.body];
-      // Используем upsert с hash для избежания дублей
       const batchSize = 50;
       for (let i = 0; i < payload.length; i += batchSize) {
         const batch = payload.slice(i, i + batchSize);
         await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
           method: 'POST',
-          headers: {...headers, 'Prefer': 'resolution=ignore-duplicates,return=minimal'},
+          headers,
           body: JSON.stringify(batch)
         });
       }
@@ -50,15 +55,24 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      await fetch(`${SUPABASE_URL}/rest/v1/rpc/truncate_transactions`, {
-        method: 'POST',
-        headers: {
-          'apikey': SERVICE_KEY,
-          'Authorization': 'Bearer ' + SERVICE_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: '{}'
-      });
+      const { month } = req.body || {};
+      if (month) {
+        // Удаляем только операции конкретного месяца (формат: "05.2026")
+        const [m, y] = month.split('.');
+        const dateFrom = `${y}-${m}-01`;
+        const dateTo = `${y}-${m}-31`;
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?date=gte.${dateFrom}&date=lte.${dateTo}`, {
+          method: 'DELETE',
+          headers: adminHeaders
+        });
+      } else {
+        // Удаляем все
+        await fetch(`${SUPABASE_URL}/rest/v1/rpc/truncate_transactions`, {
+          method: 'POST',
+          headers: adminHeaders,
+          body: '{}'
+        });
+      }
       return res.status(200).json({ ok: true });
     }
   } catch(e) {
