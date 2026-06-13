@@ -340,9 +340,6 @@ async function parseAndProcess(text) {
 
   try {
     await apiDelete(monthKey);
-
-  try {
-    await apiDelete(monthKey);
     fill.style.width = '50%';
     ptxt.textContent = 'Сохраняю операции...';
     await apiPost(txs);
