@@ -50,11 +50,11 @@
   .preview-btn-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 
   /* Стили для печатного документа */
-  @media print {
-    body{background:#fff!important;color:#000!important;}
-    .no-print{display:none!important;}
-    .doc-print{display:block!important;padding:20mm;font-family:'Times New Roman',serif;color:#000;background:#fff;}
-  }
+@media print {
+  body > *{display:none!important;}
+  #printArea{display:block!important;position:fixed;top:0;left:0;width:100%;padding:15mm;}
+  .doc-print{font-family:'Times New Roman',serif;color:#000;background:#fff;}
+}
   .doc-print{background:#fff;color:#000;padding:20px;border-radius:8px;font-family:'Times New Roman',serif;font-size:13px;line-height:1.5;}
   .doc-header-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
   .doc-header-table td{padding:4px 8px;font-size:12px;vertical-align:top;}
@@ -179,7 +179,7 @@
       <button class="btn" onclick="window.print()">🖨️ Распечатать / PDF</button>
       <button class="btn-outline" onclick="saveToHistory()">💾 Сохранить в историю</button>
     </div>
-    <div class="doc-print" id="docPreview"></div>
+    <div id="printArea"><div class="doc-print" id="docPreview"></div></div>
   </div>
 </div>
 
