@@ -92,6 +92,7 @@
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
   <div class="header-right">
     <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
+    <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer">Выйти</button>
     <div class="header-meta" id="headerMeta">0 операций</div>
   </div>
 </header>
@@ -216,6 +217,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
+const _token = localStorage.getItem("omschicken_token"); if (!_token) window.location.href = "/login";
 let allTx = [];
 let currentFilter = 'all';
 let isUploading = false;
@@ -271,6 +273,7 @@ async function apiUpdateCategory(id, category) {
   return r.json();
 }
 
+function logout(){localStorage.removeItem("omschicken_token");localStorage.removeItem("omschicken_refresh");localStorage.removeItem("omschicken_user");window.location.href="/login";}
 async function syncNow() {
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
