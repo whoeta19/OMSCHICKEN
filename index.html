@@ -330,7 +330,7 @@ async function parseAndProcess(text) {
   ptxt.textContent = `Найдено ${txs.length} операций. Очищаю базу...`;
 
   try {
-    // не очищаем - накапливаем историю
+    await apiDelete();
     fill.style.width = '50%';
     ptxt.textContent = 'Сохраняю операции...';
     await apiPost(txs);
@@ -444,7 +444,7 @@ function addManual() {
 async function clearAll() {
   if (!confirm('Удалить все данные?')) return;
   try {
-    // не очищаем - накапливаем историю
+    await apiDelete();
     allTx = [];
     renderAll();
     showToast('Данные очищены');
