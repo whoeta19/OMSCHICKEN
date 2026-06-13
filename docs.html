@@ -23,9 +23,9 @@
   .input-group input,.input-group select,.input-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;resize:vertical;}
   .input-group input:focus,.input-group select:focus,.input-group textarea:focus{border-color:var(--accent);}
   .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .input-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
   .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
   .btn:hover{background:var(--accent2);}
+  .btn-sm{padding:6px 12px;font-size:10px;}
   .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
   .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
@@ -33,7 +33,6 @@
   .items-table th{font-size:11px;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);}
   .items-table td{padding:6px 8px;font-size:12px;}
   .items-table td input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px 6px;color:var(--text);font-size:12px;width:100%;}
-  .items-table tr:nth-child(even) td{background:#0d0d0d;}
   .add-row-btn{background:none;border:1px dashed var(--border);border-radius:6px;padding:6px 12px;color:var(--muted);font-size:12px;cursor:pointer;width:100%;margin-top:6px;}
   .add-row-btn:hover{border-color:var(--accent);color:var(--accent);}
   .toast{position:fixed;bottom:20px;right:16px;left:16px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.3s;z-index:999;}
@@ -44,47 +43,40 @@
   .doc-type-icon{font-size:28px;margin-bottom:6px;}
   .doc-type-name{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;}
   .doc-type-desc{font-size:10px;color:var(--muted);margin-top:3px;}
-  /* Превью документа */
   .preview-wrap{display:none;}
   .preview-wrap.active{display:block;}
   .preview-btn-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
-
-  /* Стили для печатного документа */
-@media print {
-  body > *{display:none!important;}
-  #printArea,#printArea *{display:block!important;}
-  #printArea{display:block!important;position:fixed;top:0;left:0;width:100%;padding:15mm;}
-  .doc-print{font-family:'Times New Roman',serif;color:#000;background:#fff;}
-}
-  .doc-print{background:#fff;color:#000;padding:20px;border-radius:8px;font-family:'Times New Roman',serif;font-size:13px;line-height:1.5;}
-  .doc-header-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
-  .doc-header-table td{padding:4px 8px;font-size:12px;vertical-align:top;}
+  /* Загрузка печати */
+  .stamp-upload-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;}
+  .stamp-upload-area:hover{border-color:var(--accent);}
+  .stamp-preview{max-width:120px;max-height:120px;object-fit:contain;border-radius:8px;}
+  .stamp-placeholder{font-size:36px;margin-bottom:8px;}
+  /* Стили печатного документа */
+  .doc-print{background:#fff;color:#000;padding:24px;border-radius:8px;font-family:'Times New Roman',serif;font-size:13px;line-height:1.5;}
   .doc-title{text-align:center;font-size:16px;font-weight:bold;margin:16px 0 8px;}
-  .doc-subtitle{text-align:center;font-size:13px;margin-bottom:16px;}
   .doc-table{width:100%;border-collapse:collapse;margin:12px 0;}
   .doc-table th{background:#f0f0f0;padding:6px 8px;font-size:12px;border:1px solid #999;text-align:center;}
   .doc-table td{padding:5px 8px;font-size:12px;border:1px solid #999;}
-  .doc-total{text-align:right;margin:8px 0;font-weight:bold;}
-  .doc-sign{display:flex;justify-content:space-between;margin-top:24px;}
-  .doc-sign-block{width:45%;}
-  .doc-sign-line{border-bottom:1px solid #000;margin:20px 0 4px;}
-  .doc-sign-label{font-size:11px;color:#666;}
-  .stamp-area{position:relative;display:inline-block;}
-  .stamp{width:100px;height:100px;border:3px solid #00008B;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#00008B;font-size:8px;text-align:center;padding:8px;opacity:0.8;transform:rotate(-15deg);margin:8px;}
-  .stamp-inner{border:1px solid #00008B;border-radius:50%;width:80px;height:80px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:4px;}
-  .stamp-text{font-weight:bold;font-size:7px;line-height:1.2;}
   .info-block{background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:10px;margin-bottom:12px;font-size:12px;}
   .info-block-title{font-weight:bold;margin-bottom:4px;font-size:11px;color:#666;text-transform:uppercase;}
+  .sign-area{display:flex;justify-content:space-between;align-items:flex-end;margin-top:24px;}
+  .sign-block{position:relative;}
+  .sign-img{max-height:60px;opacity:0.85;}
+  .stamp-img{max-height:100px;max-width:100px;opacity:0.85;transform:rotate(-12deg);}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
-  <div style="font-size:11px;color:var(--muted)">Документы</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="btn-outline" onclick="showPage('settings',document.querySelectorAll('.tab')[2])" style="font-size:11px;padding:5px 10px">⚙️ Настройки</button>
+    <button class="btn-outline" onclick="window.location.href='/'" style="font-size:11px;padding:5px 10px">← Бухгалтерия</button>
+  </div>
 </header>
 <div class="tabs">
   <button class="tab active" onclick="showPage('create',this)">📄 Создать</button>
   <button class="tab" onclick="showPage('history',this)">📋 История</button>
+  <button class="tab" onclick="showPage('settings',this)">⚙️ Настройки</button>
 </div>
 <main>
 
@@ -141,13 +133,13 @@
     <table class="items-table" id="itemsTable">
       <thead>
         <tr>
-          <th style="width:40%">Наименование</th>
-          <th style="width:12%">Кол-во</th>
-          <th style="width:12%">Ед.</th>
-          <th style="width:15%">Цена</th>
+          <th style="width:38%">Наименование</th>
+          <th style="width:10%">Кол-во</th>
+          <th style="width:10%">Ед.</th>
+          <th style="width:14%">Цена</th>
           <th style="width:12%">НДС%</th>
-          <th style="width:15%">Сумма</th>
-          <th style="width:5%"></th>
+          <th style="width:12%">Сумма</th>
+          <th style="width:4%"></th>
         </tr>
       </thead>
       <tbody id="itemsBody">
@@ -174,13 +166,12 @@
     <button class="btn" onclick="generateDoc()">👁️ Сформировать документ</button>
   </div>
 
-  <!-- Превью документа -->
   <div class="preview-wrap" id="previewWrap">
-    <div class="preview-btn-row no-print">
+    <div class="preview-btn-row">
       <button class="btn" onclick="printDocument()">🖨️ Распечатать / PDF</button>
       <button class="btn-outline" onclick="saveToHistory()">💾 Сохранить в историю</button>
     </div>
-    <div id="printArea"><div class="doc-print" id="docPreview"></div></div>
+    <div class="doc-print" id="docPreview"></div>
   </div>
 </div>
 
@@ -190,29 +181,177 @@
   <div id="historyList"></div>
 </div>
 
+<!-- Настройки -->
+<div class="page" id="page-settings">
+  <div class="section-title">⚙️ Настройки документов</div>
+  
+  <div class="card">
+    <div class="section-title">🔵 Печать организации</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Загрузи изображение печати (PNG с прозрачным фоном). Она будет автоматически ставиться на все документы.</p>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+      <div class="stamp-upload-area" onclick="document.getElementById('stampInput').click()" style="width:150px">
+        <div id="stampPreviewWrap">
+          <div class="stamp-placeholder">🔵</div>
+          <div style="font-size:12px;color:var(--muted)">Нажми чтобы загрузить печать</div>
+        </div>
+      </div>
+      <input type="file" id="stampInput" accept="image/*" style="display:none" onchange="loadStamp(this)">
+      <div style="flex:1">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Рекомендации:</p>
+        <ul style="font-size:12px;color:var(--muted);padding-left:16px;line-height:1.8">
+          <li>Формат: PNG с прозрачным фоном</li>
+          <li>Размер: минимум 300×300 px</li>
+          <li>Или JPG/JPEG без фона</li>
+        </ul>
+        <button class="btn-outline" onclick="clearStamp()" style="margin-top:12px;font-size:11px;color:var(--red);border-color:var(--red)">Удалить печать</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">✍️ Подпись директора</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Загрузи изображение подписи (PNG с прозрачным фоном).</p>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+      <div class="stamp-upload-area" onclick="document.getElementById('signInput').click()" style="width:200px;height:80px;display:flex;align-items:center;justify-content:center">
+        <div id="signPreviewWrap">
+          <div style="font-size:24px">✍️</div>
+          <div style="font-size:12px;color:var(--muted)">Загрузить подпись</div>
+        </div>
+      </div>
+      <input type="file" id="signInput" accept="image/*" style="display:none" onchange="loadSign(this)">
+      <div style="flex:1">
+        <button class="btn-outline" onclick="clearSign()" style="margin-top:12px;font-size:11px;color:var(--red);border-color:var(--red)">Удалить подпись</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">🏢 Реквизиты организации</div>
+    <div class="input-row">
+      <div class="input-group"><label>Название</label><input type="text" id="settingName" value='ООО "ОМСЧИКЕН"'></div>
+      <div class="input-group"><label>ИНН / КПП</label><input type="text" id="settingInn" value="5800015301 / 580001001"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>Адрес</label><input type="text" id="settingAddr" value="440013, г. Пенза, ул. Чаадаева, 72"></div>
+      <div class="input-group"><label>Телефон</label><input type="text" id="settingPhone" value="8(9869)47-66-97"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>Директор</label><input type="text" id="settingDirector" value="Симутин Семен Евгеньевич"></div>
+      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="settingBuh" value="Симутин Семен Евгеньевич"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>Банк</label><input type="text" id="settingBank" value="АО «ТБанк»"></div>
+      <div class="input-group"><label>Р/С</label><input type="text" id="settingRs" value="40702810210001915113"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>БИК</label><input type="text" id="settingBik" value="044525411"></div>
+      <div class="input-group"><label>К/С</label><input type="text" id="settingKs" value="30101810145250000974"></div>
+    </div>
+    <button class="btn" onclick="saveSettings()" style="margin-top:8px">💾 Сохранить реквизиты</button>
+  </div>
+</div>
+
 </main>
 <div class="toast" id="toast"></div>
 
 <script>
-const SELLER = {
-  name: 'ООО "ОМСЧИКЕН"',
-  inn: '5800015301',
-  kpp: '580001001',
-  ogrn: '1255800003447',
-  addr: '440013, г. Пенза, ул. Чаадаева, 72',
-  phone: '8(9869)47-66-97',
-  email: 'mo@omchicken.ru',
-  bank: 'АО «ТБанк»',
-  rs: '40702810210001915113',
-  ks: '30101810145250000974',
-  bik: '044525411',
-  director: 'Симутин Семен Евгеньевич',
-  buh: 'Симутин Семен Евгеньевич',
-  okvd: '46.32.1'
-};
-
 let currentDocType = 'schet';
 let docHistory = JSON.parse(localStorage.getItem('omschicken_docs') || '[]');
+let stampImg = localStorage.getItem('omschicken_stamp') || '';
+let signImg = localStorage.getItem('omschicken_sign') || '';
+
+let SELLER = JSON.parse(localStorage.getItem('omschicken_seller') || 'null') || {
+  name: 'ООО "ОМСЧИКЕН"',
+  inn: '5800015301', kpp: '580001001', ogrn: '1255800003447',
+  addr: '440013, г. Пенза, ул. Чаадаева, 72',
+  phone: '8(9869)47-66-97', email: 'mo@omchicken.ru',
+  bank: 'АО «ТБанк»', rs: '40702810210001915113',
+  ks: '30101810145250000974', bik: '044525411',
+  director: 'Симутин Семен Евгеньевич', buh: 'Симутин Семен Евгеньевич'
+};
+
+// Инициализация превью
+function initPreviews() {
+  if (stampImg) {
+    document.getElementById('stampPreviewWrap').innerHTML = `<img src="${stampImg}" class="stamp-preview" style="max-width:120px;max-height:120px">`;
+  }
+  if (signImg) {
+    document.getElementById('signPreviewWrap').innerHTML = `<img src="${signImg}" style="max-height:60px;max-width:180px">`;
+  }
+}
+
+function loadStamp(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    stampImg = e.target.result;
+    localStorage.setItem('omschicken_stamp', stampImg);
+    document.getElementById('stampPreviewWrap').innerHTML = `<img src="${stampImg}" class="stamp-preview" style="max-width:120px;max-height:120px">`;
+    showToast('✅ Печать загружена!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadSign(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    signImg = e.target.result;
+    localStorage.setItem('omschicken_sign', signImg);
+    document.getElementById('signPreviewWrap').innerHTML = `<img src="${signImg}" style="max-height:60px;max-width:180px">`;
+    showToast('✅ Подпись загружена!');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearStamp() {
+  stampImg = '';
+  localStorage.removeItem('omschicken_stamp');
+  document.getElementById('stampPreviewWrap').innerHTML = '<div class="stamp-placeholder">🔵</div><div style="font-size:12px;color:var(--muted)">Нажми чтобы загрузить печать</div>';
+  showToast('Печать удалена');
+}
+
+function clearSign() {
+  signImg = '';
+  localStorage.removeItem('omschicken_sign');
+  document.getElementById('signPreviewWrap').innerHTML = '<div style="font-size:24px">✍️</div><div style="font-size:12px;color:var(--muted)">Загрузить подпись</div>';
+  showToast('Подпись удалена');
+}
+
+function saveSettings() {
+  SELLER = {
+    ...SELLER,
+    name: document.getElementById('settingName').value,
+    inn: document.getElementById('settingInn').value.split('/')[0].trim(),
+    kpp: document.getElementById('settingInn').value.split('/')[1]?.trim() || SELLER.kpp,
+    addr: document.getElementById('settingAddr').value,
+    phone: document.getElementById('settingPhone').value,
+    director: document.getElementById('settingDirector').value,
+    buh: document.getElementById('settingBuh').value,
+    bank: document.getElementById('settingBank').value,
+    rs: document.getElementById('settingRs').value,
+    bik: document.getElementById('settingBik').value,
+    ks: document.getElementById('settingKs').value,
+  };
+  localStorage.setItem('omschicken_seller', JSON.stringify(SELLER));
+  showToast('✅ Реквизиты сохранены');
+}
+
+function getStampHtml() {
+  if (stampImg) {
+    return `<img src="${stampImg}" style="max-height:100px;max-width:100px;opacity:0.85;transform:rotate(-12deg)">`;
+  }
+  return `<div style="width:90px;height:90px;border:3px solid #00008B;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#00008B;font-size:8px;text-align:center;padding:8px;opacity:0.7;transform:rotate(-15deg)"><div style="border:1px solid #00008B;border-radius:50%;width:72px;height:72px;display:flex;align-items:center;justify-content:center;padding:4px"><div style="font-weight:bold;font-size:7px;line-height:1.3">ООО<br>"ОМСЧИКЕН"<br>М.П.</div></div></div>`;
+}
+
+function getSignHtml() {
+  if (signImg) {
+    return `<img src="${signImg}" style="max-height:40px;max-width:150px;opacity:0.85;display:block;margin-bottom:2px">`;
+  }
+  return `<span style="font-size:12px">_________________</span>`;
+}
 
 function selectDocType(type, el) {
   currentDocType = type;
@@ -234,10 +373,7 @@ function addRow() {
   tbody.appendChild(tr);
 }
 
-function removeRow(btn) {
-  btn.closest('tr').remove();
-  calcTotal();
-}
+function removeRow(btn) { btn.closest('tr').remove(); calcTotal(); }
 
 function calcTotal() {
   let totalNoVat = 0, totalVat = 0;
@@ -248,8 +384,7 @@ function calcTotal() {
     const vatPct = parseFloat(tr.querySelector('select').value) || 0;
     const sum = qty * price;
     const vat = sum * vatPct / 100;
-    totalNoVat += sum;
-    totalVat += vat;
+    totalNoVat += sum; totalVat += vat;
     tr.querySelector('.row-total').textContent = fmt(sum + vat);
   });
   document.getElementById('totalNoVat').textContent = fmt(totalNoVat);
@@ -276,7 +411,6 @@ function getItems() {
 function generateDoc() {
   const items = getItems();
   if (!items.length) { showToast('Добавь хотя бы один товар'); return; }
-  
   const buyer = {
     name: document.getElementById('buyerName').value || 'Не указано',
     inn: document.getElementById('buyerInn').value || '—',
@@ -285,31 +419,37 @@ function generateDoc() {
     contact: document.getElementById('buyerContact').value || '—',
     phone: document.getElementById('buyerPhone').value || '—'
   };
-  
   const docNum = document.getElementById('docNumber').value || '1';
-  const docDate = document.getElementById('docDate').value ? 
-    new Date(document.getElementById('docDate').value).toLocaleDateString('ru-RU') : 
+  const docDate = document.getElementById('docDate').value ?
+    new Date(document.getElementById('docDate').value).toLocaleDateString('ru-RU') :
     new Date().toLocaleDateString('ru-RU');
-  
   const totalNoVat = items.reduce((s,i)=>s+i.sum,0);
   const totalVat = items.reduce((s,i)=>s+i.vat,0);
   const totalAll = totalNoVat + totalVat;
-  
+
   let html = '';
-  
-  if (currentDocType === 'schet') {
-    html = generateSchet(items, buyer, docNum, docDate, totalNoVat, totalVat, totalAll);
-  } else if (currentDocType === 'nakl') {
-    html = generateNakl(items, buyer, docNum, docDate, totalNoVat, totalVat, totalAll);
-  } else if (currentDocType === 'akt') {
-    html = generateAkt(items, buyer, docNum, docDate, totalNoVat, totalVat, totalAll);
-  } else if (currentDocType === 'dog') {
-    html = generateDog(buyer, docNum, docDate, totalAll);
-  }
-  
+  if (currentDocType === 'schet') html = generateSchet(items, buyer, docNum, docDate, totalNoVat, totalVat, totalAll);
+  else if (currentDocType === 'nakl') html = generateNakl(items, buyer, docNum, docDate, totalNoVat, totalVat, totalAll);
+  else if (currentDocType === 'akt') html = generateAkt(items, buyer, docNum, docDate, totalNoVat, totalVat, totalAll);
+  else if (currentDocType === 'dog') html = generateDog(buyer, docNum, docDate, totalAll);
+
   document.getElementById('docPreview').innerHTML = html;
   document.getElementById('previewWrap').classList.add('active');
   document.getElementById('previewWrap').scrollIntoView({behavior:'smooth'});
+}
+
+function signBlock() {
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px">
+      <div>
+        <div style="font-size:12px;margin-bottom:16px">Руководитель ${getSignHtml()} ${SELLER.director}</div>
+        <div style="font-size:12px">Гл. бухгалтер _________________ ${SELLER.buh}</div>
+      </div>
+      <div style="text-align:center">
+        ${getStampHtml()}
+        <div style="font-size:10px;color:#666;margin-top:4px">М.П.</div>
+      </div>
+    </div>`;
 }
 
 function generateSchet(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
@@ -338,31 +478,15 @@ function generateSchet(items, buyer, num, date, totalNoVat, totalVat, totalAll) 
     <div class="doc-title">СЧЁТ НА ОПЛАТУ № ${num} от ${date}</div>
     <table class="doc-table">
       <thead><tr><th>№</th><th>Наименование товара</th><th>Кол-во</th><th>Ед.</th><th>Цена</th><th>НДС%</th><th>Сумма</th></tr></thead>
-      <tbody>
-        ${items.map(i=>`<tr><td style="text-align:center">${i.num}</td><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:center">${i.unit}</td><td style="text-align:right">${fmt(i.price)}</td><td style="text-align:center">${i.vatPct}%</td><td style="text-align:right">${fmt(i.total)}</td></tr>`).join('')}
-      </tbody>
+      <tbody>${items.map(i=>`<tr><td style="text-align:center">${i.num}</td><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:center">${i.unit}</td><td style="text-align:right">${fmt(i.price)}</td><td style="text-align:center">${i.vatPct}%</td><td style="text-align:right">${fmt(i.total)}</td></tr>`).join('')}</tbody>
     </table>
     <div style="text-align:right;margin-top:8px">
       <div style="font-size:12px">Итого без НДС: ${fmt(totalNoVat)}</div>
       <div style="font-size:12px">НДС: ${fmt(totalVat)}</div>
       <div style="font-size:15px;font-weight:bold;margin-top:4px">ИТОГО К ОПЛАТЕ: ${fmt(totalAll)}</div>
     </div>
-    <div style="margin-top:16px;font-size:12px;color:#666">
-      Оплата данного счёта означает согласие с условиями поставки. Уведомление об оплате обязательно.
-    </div>
-    <div class="doc-sign" style="margin-top:24px;align-items:flex-end">
-      <div>
-        <div style="font-size:12px">Руководитель _________________ ${SELLER.director}</div>
-        <div style="font-size:12px;margin-top:8px">Гл. бухгалтер _________________ ${SELLER.buh}</div>
-      </div>
-      <div style="text-align:center">
-        <div class="stamp">
-          <div class="stamp-inner">
-            <div class="stamp-text">ООО<br>"ОМСЧИКЕН"<br>М.П.</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
+    <div style="margin-top:12px;font-size:12px;color:#666">Оплата данного счёта означает согласие с условиями поставки. Уведомление об оплате обязательно.</div>
+    ${signBlock()}`;
 }
 
 function generateNakl(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
@@ -374,8 +498,7 @@ function generateNakl(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
         <div style="font-weight:bold">${SELLER.name}</div>
         <div>ИНН ${SELLER.inn} / КПП ${SELLER.kpp}</div>
         <div>${SELLER.addr}</div>
-        <div>Р/С: ${SELLER.rs}</div>
-        <div>${SELLER.bank}, БИК ${SELLER.bik}</div>
+        <div>Р/С: ${SELLER.rs} | ${SELLER.bank}</div>
       </div>
       <div class="info-block">
         <div class="info-block-title">Грузополучатель (Покупатель)</div>
@@ -386,35 +509,27 @@ function generateNakl(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
       </div>
     </div>
     <table class="doc-table">
-      <thead><tr><th>№</th><th>Наименование</th><th>Ед.</th><th>Кол-во</th><th>Цена</th><th>НДС%</th><th>Сумма НДС</th><th>Сумма с НДС</th></tr></thead>
-      <tbody>
-        ${items.map(i=>`<tr><td style="text-align:center">${i.num}</td><td>${i.name}</td><td style="text-align:center">${i.unit}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.price)}</td><td style="text-align:center">${i.vatPct}%</td><td style="text-align:right">${fmt(i.vat)}</td><td style="text-align:right">${fmt(i.total)}</td></tr>`).join('')}
-      </tbody>
+      <thead><tr><th>№</th><th>Наименование</th><th>Ед.</th><th>Кол-во</th><th>Цена</th><th>НДС%</th><th>Сумма НДС</th><th>Итого</th></tr></thead>
+      <tbody>${items.map(i=>`<tr><td style="text-align:center">${i.num}</td><td>${i.name}</td><td style="text-align:center">${i.unit}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.price)}</td><td style="text-align:center">${i.vatPct}%</td><td style="text-align:right">${fmt(i.vat)}</td><td style="text-align:right">${fmt(i.total)}</td></tr>`).join('')}</tbody>
     </table>
-    <div style="text-align:right;margin:8px 0">
-      <div>Итого: ${fmt(totalNoVat)} | НДС: ${fmt(totalVat)} | <strong>Всего: ${fmt(totalAll)}</strong>
-    </div>
-    <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div style="text-align:right;margin:8px 0">Итого: ${fmt(totalNoVat)} | НДС: ${fmt(totalVat)} | <strong>Всего: ${fmt(totalAll)}</strong></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
       <div>
-        <div style="font-weight:bold;margin-bottom:8px;font-size:12px">ОТПУСТИЛ</div>
-        <div style="font-size:12px">Директор _________________ ${SELLER.director}</div>
-        <div style="font-size:11px;color:#666;margin-top:4px">(должность, подпись, расшифровка)</div>
-        <div style="text-align:center;margin-top:8px">
-          <div class="stamp"><div class="stamp-inner"><div class="stamp-text">ООО<br>"ОМСЧИКЕН"<br>М.П.</div></div></div>
-        </div>
+        <div style="font-weight:bold;font-size:12px;margin-bottom:8px">ОТПУСТИЛ</div>
+        <div style="font-size:12px">Директор ${getSignHtml()} ${SELLER.director}</div>
+        <div style="text-align:center;margin-top:4px">${getStampHtml()}</div>
       </div>
       <div>
-        <div style="font-weight:bold;margin-bottom:8px;font-size:12px">ПОЛУЧИЛ</div>
+        <div style="font-weight:bold;font-size:12px;margin-bottom:8px">ПОЛУЧИЛ</div>
         <div style="font-size:12px">_________________ _________________</div>
-        <div style="font-size:11px;color:#666;margin-top:4px">(должность, подпись, расшифровка)</div>
-        <div style="font-size:12px;margin-top:8px">М.П.</div>
+        <div style="font-size:12px;margin-top:24px">М.П.</div>
       </div>
     </div>`;
 }
 
 function generateAkt(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
   return `
-    <div class="doc-title">АКТ ВЫПОЛНЕННЫХ РАБОТ (УСЛУГ) № ${num} от ${date}</div>
+    <div class="doc-title">АКТ ВЫПОЛНЕННЫХ РАБОТ № ${num} от ${date}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div class="info-block">
         <div class="info-block-title">Исполнитель</div>
@@ -429,29 +544,23 @@ function generateAkt(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
         <div>${buyer.addr}</div>
       </div>
     </div>
-    <p style="font-size:12px;margin-bottom:12px">Мы, нижеподписавшиеся, составили настоящий акт о том, что Исполнитель выполнил, а Заказчик принял следующие работы (услуги):</p>
+    <p style="font-size:12px;margin-bottom:12px">Мы, нижеподписавшиеся, составили настоящий акт о том, что Исполнитель выполнил, а Заказчик принял следующие работы:</p>
     <table class="doc-table">
-      <thead><tr><th>№</th><th>Наименование работ/услуг</th><th>Ед.</th><th>Кол-во</th><th>Цена</th><th>НДС%</th><th>Сумма</th></tr></thead>
-      <tbody>
-        ${items.map(i=>`<tr><td style="text-align:center">${i.num}</td><td>${i.name}</td><td style="text-align:center">${i.unit}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.price)}</td><td style="text-align:center">${i.vatPct}%</td><td style="text-align:right">${fmt(i.total)}</td></tr>`).join('')}
-      </tbody>
+      <thead><tr><th>№</th><th>Наименование</th><th>Ед.</th><th>Кол-во</th><th>Цена</th><th>НДС%</th><th>Сумма</th></tr></thead>
+      <tbody>${items.map(i=>`<tr><td style="text-align:center">${i.num}</td><td>${i.name}</td><td style="text-align:center">${i.unit}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fmt(i.price)}</td><td style="text-align:center">${i.vatPct}%</td><td style="text-align:right">${fmt(i.total)}</td></tr>`).join('')}</tbody>
     </table>
     <div style="text-align:right;margin:8px 0"><strong>Итого: ${fmt(totalAll)}</strong></div>
-    <p style="font-size:12px;margin:12px 0">Вышеперечисленные работы выполнены полностью и в срок. Заказчик претензий по объёму, качеству и срокам оказания услуг не имеет.</p>
+    <p style="font-size:12px;margin:12px 0">Вышеперечисленные работы выполнены полностью и в срок. Заказчик претензий не имеет.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px">
       <div>
-        <div style="font-weight:bold;font-size:12px">ИСПОЛНИТЕЛЬ</div>
-        <div style="font-size:12px;margin-top:8px">${SELLER.name}</div>
-        <div style="font-size:12px">Директор _________________ ${SELLER.director}</div>
-        <div style="text-align:center">
-          <div class="stamp"><div class="stamp-inner"><div class="stamp-text">ООО<br>"ОМСЧИКЕН"<br>М.П.</div></div></div>
-        </div>
+        <div style="font-weight:bold;font-size:12px">ИСПОЛНИТЕЛЬ — ${SELLER.name}</div>
+        <div style="font-size:12px;margin-top:8px">Директор ${getSignHtml()} ${SELLER.director}</div>
+        <div style="text-align:center;margin-top:4px">${getStampHtml()}</div>
       </div>
       <div>
-        <div style="font-weight:bold;font-size:12px">ЗАКАЗЧИК</div>
-        <div style="font-size:12px;margin-top:8px">${buyer.name}</div>
-        <div style="font-size:12px">_________________ _________________</div>
-        <div style="font-size:12px;margin-top:8px">М.П.</div>
+        <div style="font-weight:bold;font-size:12px">ЗАКАЗЧИК — ${buyer.name}</div>
+        <div style="font-size:12px;margin-top:8px">_________________ _________________</div>
+        <div style="font-size:12px;margin-top:24px">М.П.</div>
       </div>
     </div>`;
 }
@@ -459,43 +568,29 @@ function generateAkt(items, buyer, num, date, totalNoVat, totalVat, totalAll) {
 function generateDog(buyer, num, date, totalAll) {
   return `
     <div class="doc-title">ДОГОВОР ПОСТАВКИ № ${num}</div>
-    <div class="doc-subtitle">г. Пенза, ${date}</div>
-    <p style="font-size:12px;margin-bottom:10px"><strong>${SELLER.name}</strong>, ИНН ${SELLER.inn}, именуемое в дальнейшем «Поставщик», в лице Генерального директора ${SELLER.director}, действующего на основании Устава, с одной стороны, и <strong>${buyer.name || '________________'}</strong>, ИНН ${buyer.inn || '________________'}, именуемое в дальнейшем «Покупатель», в лице _________________, действующего на основании _________________, с другой стороны, заключили настоящий Договор о нижеследующем:</p>
-    
+    <div class="doc-title" style="font-size:13px;font-weight:normal">г. Пенза, ${date}</div>
+    <p style="font-size:12px;margin-bottom:10px"><strong>${SELLER.name}</strong>, ИНН ${SELLER.inn}, в лице Генерального директора ${SELLER.director}, действующего на основании Устава, именуемое «Поставщик», и <strong>${buyer.name||'________________'}</strong>, ИНН ${buyer.inn||'________________'}, именуемое «Покупатель», заключили настоящий Договор:</p>
     <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">1. ПРЕДМЕТ ДОГОВОРА</p>
-    <p style="font-size:12px;margin-bottom:8px">1.1. Поставщик обязуется поставить, а Покупатель принять и оплатить мясо птицы (куриное) охлаждённое/замороженное (далее — Товар) в ассортименте, количестве и по ценам, согласованным в Спецификациях (Приложениях) к настоящему Договору.</p>
-    <p style="font-size:12px;margin-bottom:8px">1.2. Качество Товара должно соответствовать требованиям ГОСТ и действующим санитарным нормам РФ.</p>
-    
-    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">2. ЦЕНА И ПОРЯДОК РАСЧЁТОВ</p>
-    <p style="font-size:12px;margin-bottom:8px">2.1. Цена Товара включает НДС 10% и устанавливается в Спецификации.</p>
-    <p style="font-size:12px;margin-bottom:8px">2.2. Покупатель производит оплату в течение 5 (пяти) банковских дней с момента поставки Товара.</p>
-    <p style="font-size:12px;margin-bottom:8px">2.3. Оплата производится путём перечисления денежных средств на расчётный счёт Поставщика.</p>
-    
-    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">3. ПОСТАВКА ТОВАРА</p>
-    <p style="font-size:12px;margin-bottom:8px">3.1. Поставка осуществляется на условиях самовывоза или доставки транспортом Поставщика по согласованию сторон.</p>
-    <p style="font-size:12px;margin-bottom:8px">3.2. Приёмка Товара осуществляется по накладной. Подписание накладной Покупателем означает согласие с количеством и качеством Товара.</p>
-    
-    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">4. ОТВЕТСТВЕННОСТЬ СТОРОН</p>
-    <p style="font-size:12px;margin-bottom:8px">4.1. За просрочку оплаты Покупатель уплачивает пени в размере 0,1% от суммы задолженности за каждый день просрочки.</p>
-    
-    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">5. СРОК ДЕЙСТВИЯ ДОГОВОРА</p>
-    <p style="font-size:12px;margin-bottom:8px">5.1. Договор вступает в силу с момента подписания и действует до 31 декабря текущего года с возможностью автоматической пролонгации.</p>
-    
-    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">6. РЕКВИЗИТЫ И ПОДПИСИ СТОРОН</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px">
+    <p style="font-size:12px;margin-bottom:8px">1.1. Поставщик обязуется поставить мясо птицы (куриное) охлаждённое/замороженное в ассортименте по Спецификациям к настоящему Договору, а Покупатель — принять и оплатить.</p>
+    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">2. ЦЕНА И РАСЧЁТЫ</p>
+    <p style="font-size:12px;margin-bottom:8px">2.1. Цена включает НДС 10%. 2.2. Оплата в течение 5 банковских дней с момента поставки на р/с Поставщика.</p>
+    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">3. ПОСТАВКА</p>
+    <p style="font-size:12px;margin-bottom:8px">3.1. Самовывоз или доставка транспортом Поставщика по согласованию. 3.2. Приёмка по накладной.</p>
+    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">4. ОТВЕТСТВЕННОСТЬ</p>
+    <p style="font-size:12px;margin-bottom:8px">4.1. За просрочку оплаты — пени 0,1% от суммы задолженности за каждый день.</p>
+    <p style="font-weight:bold;font-size:12px;margin:10px 0 4px">5. СРОК ДЕЙСТВИЯ</p>
+    <p style="font-size:12px;margin-bottom:12px">5.1. До 31 декабря текущего года с автоматической пролонгацией.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px">
       <div class="info-block">
         <div class="info-block-title">ПОСТАВЩИК</div>
         <div style="font-size:12px">${SELLER.name}</div>
         <div style="font-size:12px">ИНН ${SELLER.inn} / КПП ${SELLER.kpp}</div>
-        <div style="font-size:12px">ОГРН ${SELLER.ogrn}</div>
+        <div style="font-size:12px">ОГРН ${SELLER.ogrn||'1255800003447'}</div>
         <div style="font-size:12px">${SELLER.addr}</div>
-        <div style="font-size:12px">Р/С: ${SELLER.rs}</div>
-        <div style="font-size:12px">${SELLER.bank}, БИК ${SELLER.bik}</div>
-        <div style="font-size:12px">К/С: ${SELLER.ks}</div>
-        <div style="margin-top:12px;font-size:12px">Директор _________________ ${SELLER.director}</div>
-        <div style="text-align:center">
-          <div class="stamp"><div class="stamp-inner"><div class="stamp-text">ООО<br>"ОМСЧИКЕН"<br>М.П.</div></div></div>
-        </div>
+        <div style="font-size:12px">Р/С: ${SELLER.rs} | ${SELLER.bank}</div>
+        <div style="font-size:12px">БИК: ${SELLER.bik} | К/С: ${SELLER.ks}</div>
+        <div style="font-size:12px;margin-top:8px">Директор ${getSignHtml()} ${SELLER.director}</div>
+        <div style="text-align:center">${getStampHtml()}</div>
       </div>
       <div class="info-block">
         <div class="info-block-title">ПОКУПАТЕЛЬ</div>
@@ -503,18 +598,34 @@ function generateDog(buyer, num, date, totalAll) {
         <div style="font-size:12px">ИНН/КПП: ${buyer.inn}</div>
         <div style="font-size:12px">${buyer.addr}</div>
         <div style="font-size:12px">${buyer.bank}</div>
-        <div style="margin-top:12px;font-size:12px">_________________ _________________</div>
+        <div style="font-size:12px;margin-top:24px">_________________ _________________</div>
         <div style="font-size:12px;margin-top:8px">М.П.</div>
       </div>
     </div>`;
 }
 
+function printDocument() {
+  const content = document.getElementById('docPreview').innerHTML;
+  const win = window.open('','_blank');
+  win.document.write(`<html><head><meta charset="UTF-8"><title>Документ</title><style>
+    body{font-family:'Times New Roman',serif;padding:15mm;color:#000;margin:0}
+    .doc-table{width:100%;border-collapse:collapse;margin:12px 0}
+    .doc-table th{background:#f0f0f0;padding:6px 8px;font-size:12px;border:1px solid #999;text-align:center}
+    .doc-table td{padding:5px 8px;font-size:12px;border:1px solid #999}
+    .doc-title{text-align:center;font-size:16px;font-weight:bold;margin:16px 0 8px}
+    .info-block{background:#f9f9f9;border:1px solid #ddd;padding:10px;margin-bottom:12px;font-size:12px}
+    .info-block-title{font-weight:bold;margin-bottom:4px;font-size:11px;color:#666;text-transform:uppercase}
+    img{max-width:100%;height:auto}
+    @media print{@page{margin:15mm}}
+  </style></head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
+}
+
 function saveToHistory() {
   const docTypes = {schet:'Счёт',nakl:'Накладная',akt:'Акт',dog:'Договор'};
   const doc = {
-    id: Date.now(),
-    type: currentDocType,
-    typeName: docTypes[currentDocType],
+    id: Date.now(), type: currentDocType, typeName: docTypes[currentDocType],
     num: document.getElementById('docNumber').value || '1',
     date: document.getElementById('docDate').value || new Date().toISOString().split('T')[0],
     buyer: document.getElementById('buyerName').value || 'Не указано',
@@ -531,32 +642,40 @@ function renderHistory() {
   const icons = {schet:'🧾',nakl:'📦',akt:'✅',dog:'📝'};
   document.getElementById('historyList').innerHTML = docHistory.length ?
     docHistory.map(d=>`
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center">
         <div style="font-size:24px">${icons[d.type]||'📄'}</div>
         <div>
           <div style="font-weight:500;font-size:13px">${d.typeName} №${d.num}</div>
           <div style="font-size:11px;color:var(--muted)">${d.buyer} · ${new Date(d.date).toLocaleDateString('ru-RU')} · ${d.total}</div>
         </div>
-        <button class="btn btn-sm" onclick="printDoc(${d.id})">🖨️</button>
+        <button class="btn btn-sm" onclick="printFromHistory(${d.id})">🖨️</button>
+        <button class="btn-outline" style="font-size:10px;padding:5px 8px;color:var(--red);border-color:var(--red)" onclick="deleteDoc(${d.id})">✕</button>
       </div>`).join('') :
     '<div style="text-align:center;padding:36px;color:var(--muted)">История пуста — создай первый документ</div>';
 }
 
-function printDoc(id) {
+function printFromHistory(id) {
   const doc = docHistory.find(d=>d.id===id);
   if (!doc) return;
-  document.getElementById('docPreview').innerHTML = doc.html;
-  document.getElementById('previewWrap').classList.add('active');
-  showPage('create', document.querySelector('.tab'));
-  setTimeout(()=>window.print(), 300);
+  const win = window.open('','_blank');
+  win.document.write(`<html><head><meta charset="UTF-8"><title>Документ</title><style>
+    body{font-family:'Times New Roman',serif;padding:15mm;color:#000;margin:0}
+    .doc-table{width:100%;border-collapse:collapse;margin:12px 0}
+    .doc-table th{background:#f0f0f0;padding:6px 8px;font-size:12px;border:1px solid #999;text-align:center}
+    .doc-table td{padding:5px 8px;font-size:12px;border:1px solid #999}
+    .doc-title{text-align:center;font-size:16px;font-weight:bold;margin:16px 0 8px}
+    .info-block{background:#f9f9f9;border:1px solid #ddd;padding:10px;margin-bottom:12px;font-size:12px}
+    .info-block-title{font-weight:bold;margin-bottom:4px;font-size:11px;color:#666;text-transform:uppercase}
+    img{max-width:100%;height:auto}
+  </style></head><body>${doc.html}</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(), 500);
 }
 
-function printDocument() {
-  const content = document.getElementById('docPreview').innerHTML;
-  const win = window.open('','_blank');
-  win.document.write('<html><head><meta charset="UTF-8"><style>body{font-family:Times New Roman,serif;padding:20mm;color:#000}.doc-table{width:100%;border-collapse:collapse}.doc-table th,.doc-table td{border:1px solid #999;padding:5px 8px;font-size:12px}.doc-title{text-align:center;font-size:16px;font-weight:bold;margin:16px 0}.stamp{width:100px;height:100px;border:3px solid #00008B;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#00008B;font-size:8px;text-align:center;transform:rotate(-15deg)}.info-block{background:#f9f9f9;border:1px solid #ddd;padding:10px;margin-bottom:12px;font-size:12px}</style></head><body>'+content+'</body></html>');
-  win.document.close();
-  win.print();
+function deleteDoc(id) {
+  docHistory = docHistory.filter(d=>d.id!==id);
+  localStorage.setItem('omschicken_docs', JSON.stringify(docHistory));
+  renderHistory();
 }
 
 function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
@@ -569,11 +688,10 @@ function showPage(name,btn){
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
-// Инициализация
 document.getElementById('docDate').value = new Date().toISOString().split('T')[0];
 document.getElementById('docNumber').value = String(docHistory.length + 1).padStart(3,'0');
 calcTotal();
-renderHistory();
+initPreviews();
 </script>
 </body>
 </html>
