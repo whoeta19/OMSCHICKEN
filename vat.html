@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ОМСЧИКЕН — НДС</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:17px;}
+  .logo span{color:var(--accent);}
+  .tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+  .tab{padding:9px 14px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  main{padding:18px 20px;max-width:900px;margin:0 auto;}
+  .page{display:none;}.page.active{display:block;}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:12px;color:var(--accent);}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+  .stat-value.green{color:var(--green);}
+  .stat-value.red{color:var(--red);}
+  .stat-value.orange{color:var(--accent);}
+  .stat-value.purple{color:#c084fc;}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;transition:all 0.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+  .btn:hover{background:var(--accent2);}
+  .table-wrap{overflow-x:auto;margin-bottom:16px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{background:var(--surface2);color:var(--muted);padding:8px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);}
+  tr:hover td{background:#0d0d0d;}
+  .badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
+  .badge-buy{background:#1a3a1a;color:#4ade80;}
+  .badge-sell{background:#0a2a1a;color:#22c55e;}
+  .info-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.6;}
+  .info-box.warning{border-color:var(--accent);}
+  .info-box.success{border-color:var(--green);}
+  .info-box.danger{border-color:var(--red);}
+  .period-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none;}
+  /* Печать */
+  @media print{
+    header,.tabs,.no-print{display:none!important;}
+    body{background:#fff;color:#000;}
+    table{font-size:11px;}
+    th{background:#f0f0f0!important;color:#000!important;}
+    .stat-card{border:1px solid #ddd;}
+    .stat-value{color:#000!important;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
+    <button class="btn-outline no-print" onclick="window.print()">🖨️ Печать</button>
+    <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
+  </div>
+</header>
+<div class="tabs">
+  <button class="tab active" onclick="showPage('summary',this)">📊 Сводка НДС</button>
+  <button class="tab" onclick="showPage('sales',this)">📈 Книга продаж</button>
+  <button class="tab" onclick="showPage('purchases',this)">📉 Книга покупок</button>
+</div>
+<main>
+
+<!-- Сводка НДС -->
+<div class="page active" id="page-summary">
+  <div id="summaryContent"><div style="text-align:center;padding:40px;color:var(--muted)">⏳ Загружаю данные...</div></div>
+</div>
+
+<!-- Книга продаж -->
+<div class="page" id="page-sales">
+  <div class="section-title">📈 Книга продаж</div>
+  <div class="info-box" style="margin-bottom:12px;font-size:12px">
+    Все входящие платежи от покупателей. НДС 10% включён в сумму.
+  </div>
+  <div class="table-wrap">
+    <table id="salesTable">
+      <thead><tr><th>№</th><th>Дата</th><th>Покупатель</th><th>Сумма с НДС</th><th>НДС 10%</th><th>Без НДС</th></tr></thead>
+      <tbody id="salesBody"></tbody>
+      <tfoot id="salesFoot"></tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- Книга покупок -->
+<div class="page" id="page-purchases">
+  <div class="section-title">📉 Книга покупок</div>
+  <div class="info-box" style="margin-bottom:12px;font-size:12px">
+    Закупки курятины у поставщиков. НДС 10% к вычету.
+  </div>
+  <div class="table-wrap">
+    <table id="purchasesTable">
+      <thead><tr><th>№</th><th>Дата</th><th>Поставщик</th><th>Сумма с НДС</th><th>НДС 10%</th><th>Без НДС</th></tr></thead>
+      <tbody id="purchasesBody"></tbody>
+      <tfoot id="purchasesFoot"></tfoot>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<script>
+let allTx = [];
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/transactions');
+    allTx = await r.json();
+    renderSummary();
+    renderSales();
+    renderPurchases();
+  } catch(e) {
+    document.getElementById('summaryContent').innerHTML = '<div style="color:var(--red);padding:20px">❌ Ошибка загрузки</div>';
+  }
+}
+
+function calcVat(amount, pct) {
+  // НДС внутри суммы: НДС = сумма * ставка / (100 + ставка)
+  return amount * pct / (100 + pct);
+}
+
+function renderSummary() {
+  // Продажи (доходы от покупателей курятины)
+  const sales = allTx.filter(t => t.amount > 0 && t.category === 'income');
+  const totalSales = sales.reduce((s,t) => s + Number(t.amount), 0);
+  const vatSales = calcVat(totalSales, 10);
+  const salesNoVat = totalSales - vatSales;
+
+  // Закупки курятины
+  const purchases = allTx.filter(t => t.amount < 0 && t.category === 'chicken');
+  const totalPurchases = purchases.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
+  const vatPurchases = calcVat(totalPurchases, 10);
+  const purchasesNoVat = totalPurchases - vatPurchases;
+
+  // НДС к уплате
+  const vatToPay = vatSales - vatPurchases;
+
+  const statusClass = vatToPay > 0 ? 'danger' : 'success';
+  const statusText = vatToPay > 0 
+    ? `⚠️ К уплате в бюджет: ${fmt(vatToPay)}`
+    : `✅ Переплата НДС: ${fmt(Math.abs(vatToPay))} (возврат или зачёт)`;
+
+  document.getElementById('summaryContent').innerHTML = `
+    <div class="section-title">📊 Сводка НДС за период</div>
+    
+    <div class="info-box ${statusClass}" style="font-size:14px;font-weight:500;margin-bottom:16px">
+      ${statusText}
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">НДС с продаж (исходящий)</div>
+        <div class="stat-value red">${fmt(vatSales)}</div>
+        <div class="stat-sub">С оборота ${fmt(totalSales)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">НДС к вычету (входящий)</div>
+        <div class="stat-value green">${fmt(vatPurchases)}</div>
+        <div class="stat-sub">С закупок ${fmt(totalPurchases)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">НДС к уплате</div>
+        <div class="stat-value ${vatToPay > 0 ? 'red' : 'green'}">${fmt(vatToPay)}</div>
+        <div class="stat-sub">${vatToPay > 0 ? 'Задолженность перед ФНС' : 'Переплата'}</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Выручка без НДС</div>
+        <div class="stat-value orange">${fmt(salesNoVat)}</div>
+        <div class="stat-sub">Налоговая база продаж</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Закупки без НДС</div>
+        <div class="stat-value purple">${fmt(purchasesNoVat)}</div>
+        <div class="stat-sub">Налоговая база закупок</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Операций с НДС</div>
+        <div class="stat-value">${sales.length + purchases.length}</div>
+        <div class="stat-sub">${sales.length} продаж / ${purchases.length} закупок</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div class="section-title">🧮 Расчёт НДС</div>
+      <table style="width:100%;font-size:13px">
+        <tr>
+          <td style="padding:8px 0;color:var(--muted)">Выручка (с НДС)</td>
+          <td style="text-align:right;font-weight:500">${fmt(totalSales)}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:var(--muted)">НДС начисленный (10/110 × выручка)</td>
+          <td style="text-align:right;color:var(--red)">−${fmt(vatSales)}</td>
+        </tr>
+        <tr style="border-top:1px solid var(--border)">
+          <td style="padding:8px 0;color:var(--muted)">Выручка без НДС</td>
+          <td style="text-align:right">${fmt(salesNoVat)}</td>
+        </tr>
+        <tr><td colspan="2" style="padding:8px 0"></td></tr>
+        <tr>
+          <td style="padding:8px 0;color:var(--muted)">Закупки курятины (с НДС)</td>
+          <td style="text-align:right;font-weight:500">${fmt(totalPurchases)}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:var(--muted)">НДС к вычету (10/110 × закупки)</td>
+          <td style="text-align:right;color:var(--green)">+${fmt(vatPurchases)}</td>
+        </tr>
+        <tr style="border-top:1px solid var(--border)">
+          <td style="padding:8px 0;color:var(--muted)">Закупки без НДС</td>
+          <td style="text-align:right">${fmt(purchasesNoVat)}</td>
+        </tr>
+        <tr style="border-top:2px solid var(--accent)">
+          <td style="padding:12px 0;font-weight:700;font-size:14px">НДС К УПЛАТЕ В БЮДЖЕТ</td>
+          <td style="text-align:right;font-weight:700;font-size:14px;color:${vatToPay > 0 ? 'var(--red)' : 'var(--green)'}">${fmt(vatToPay)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="info-box" style="font-size:12px">
+      <strong>ℹ️ Справка:</strong> НДС рассчитан по ставке 10% (мясо птицы, ОКВЭД 46.32.1). 
+      Формула: НДС = Сумма × 10 / 110. Декларация подаётся ежеквартально до 25-го числа месяца, следующего за кварталом.
+      <br><br>
+      <strong>Квартальные сроки:</strong> Q1 → 25 апреля | Q2 → 25 июля | Q3 → 25 октября | Q4 → 25 января
+    </div>
+  `;
+}
+
+function renderSales() {
+  const sales = allTx.filter(t => t.amount > 0 && t.category === 'income');
+  let total = 0;
+  let totalVat = 0;
+
+  document.getElementById('salesBody').innerHTML = sales.map((t, i) => {
+    const amount = Number(t.amount);
+    const vat = calcVat(amount, 10);
+    const noVat = amount - vat;
+    total += amount;
+    totalVat += vat;
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${t.date||'—'}</td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</td>
+      <td style="text-align:right;color:var(--green)">+${fmt(amount)}</td>
+      <td style="text-align:right;color:var(--accent)">${fmt(vat)}</td>
+      <td style="text-align:right">${fmt(noVat)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('salesFoot').innerHTML = `
+    <tr style="font-weight:700;background:var(--surface2)">
+      <td colspan="3">ИТОГО</td>
+      <td style="text-align:right;color:var(--green)">${fmt(total)}</td>
+      <td style="text-align:right;color:var(--accent)">${fmt(totalVat)}</td>
+      <td style="text-align:right">${fmt(total - totalVat)}</td>
+    </tr>`;
+}
+
+function renderPurchases() {
+  const purchases = allTx.filter(t => t.amount < 0 && t.category === 'chicken');
+  let total = 0;
+  let totalVat = 0;
+
+  document.getElementById('purchasesBody').innerHTML = purchases.map((t, i) => {
+    const amount = Math.abs(Number(t.amount));
+    const vat = calcVat(amount, 10);
+    const noVat = amount - vat;
+    total += amount;
+    totalVat += vat;
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${t.date||'—'}</td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.name}</td>
+      <td style="text-align:right;color:var(--red)">−${fmt(amount)}</td>
+      <td style="text-align:right;color:var(--green)">${fmt(vat)}</td>
+      <td style="text-align:right">${fmt(noVat)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('purchasesFoot').innerHTML = `
+    <tr style="font-weight:700;background:var(--surface2)">
+      <td colspan="3">ИТОГО</td>
+      <td style="text-align:right;color:var(--red)">${fmt(total)}</td>
+      <td style="text-align:right;color:var(--green)">${fmt(totalVat)}</td>
+      <td style="text-align:right">${fmt(total - totalVat)}</td>
+    </tr>`;
+}
+
+function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+
+loadData();
+</script>
+</body>
+</html>
