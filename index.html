@@ -91,8 +91,8 @@
 <header>
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
   <div class="header-right">
+    <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">Выйти</button>
     <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
-    <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer">Выйти</button>
     <div class="header-meta" id="headerMeta">0 операций</div>
   </div>
 </header>
@@ -217,11 +217,21 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const _token = localStorage.getItem("omschicken_token"); if (!_token) window.location.href = "/login";
 let allTx = [];
 let currentFilter = 'all';
 let isUploading = false;
 let userRules = JSON.parse(localStorage.getItem('omschicken_rules') || '{}');
+
+// Проверка авторизации
+const _token = localStorage.getItem('omschicken_token');
+if (!_token) window.location.href = '/login';
+
+function logout() {
+  localStorage.removeItem('omschicken_token');
+  localStorage.removeItem('omschicken_refresh');
+  localStorage.removeItem('omschicken_user');
+  window.location.href = '/login';
+}
 
 function classify(name, description, amount) {
   if (amount > 0) return 'income';
@@ -240,15 +250,19 @@ function classify(name, description, amount) {
 }
 
 async function apiGet() {
-  const r = await fetch('/api/transactions');
+  const token = localStorage.getItem('omschicken_token') || '';
+  const r = await fetch('/api/transactions', {
+    headers: {'Authorization': 'Bearer ' + token}
+  });
   if (!r.ok) throw new Error('Ошибка сервера');
   return r.json();
 }
 
 async function apiPost(txs) {
+  const token = localStorage.getItem('omschicken_token') || '';
   const r = await fetch('/api/transactions', {
     method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
     body: JSON.stringify(txs)
   });
   if (!r.ok) throw new Error('Ошибка сохранения');
@@ -256,24 +270,25 @@ async function apiPost(txs) {
 }
 
 async function apiDelete(period) {
+  const token = localStorage.getItem('omschicken_token') || '';
   const r = await fetch('/api/transactions', {
     method: 'DELETE',
-    headers: {'Content-Type':'application/json'},
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
     body: JSON.stringify({period: period || null})
   });
   if (!r.ok) throw new Error('Ошибка удаления');
 }
 
 async function apiUpdateCategory(id, category) {
+  const token = localStorage.getItem('omschicken_token') || '';
   const r = await fetch('/api/transactions', {
     method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
     body: JSON.stringify({id, category})
   });
   return r.json();
 }
 
-function logout(){localStorage.removeItem("omschicken_token");localStorage.removeItem("omschicken_refresh");localStorage.removeItem("omschicken_user");window.location.href="/login";}
 async function syncNow() {
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
@@ -340,9 +355,6 @@ async function parseAndProcess(text) {
   wrap.classList.add('active');
   fill.style.width = '20%';
   ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
-
-  try {
-    await apiDelete(monthKey);
 
   try {
     await apiDelete(monthKey);
