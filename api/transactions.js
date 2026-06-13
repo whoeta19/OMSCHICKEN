@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions?order=date.desc&limit=1000`, {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions?order=date.desc&limit=2000`, {
         headers: {...headers, 'Prefer': 'return=representation'}
       });
       const data = await r.json();
@@ -26,11 +26,14 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const payload = Array.isArray(req.body) ? req.body : [req.body];
-      for (let i = 0; i < payload.length; i += 50) {
+      // Используем upsert с hash для избежания дублей
+      const batchSize = 50;
+      for (let i = 0; i < payload.length; i += batchSize) {
+        const batch = payload.slice(i, i + batchSize);
         await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
           method: 'POST',
-          headers,
-          body: JSON.stringify(payload.slice(i, i + 50))
+          headers: {...headers, 'Prefer': 'resolution=ignore-duplicates,return=minimal'},
+          body: JSON.stringify(batch)
         });
       }
       return res.status(200).json({ ok: true, count: payload.length });
