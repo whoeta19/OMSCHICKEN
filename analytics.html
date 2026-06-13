@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ОМСЧИКЕН — Аналитика</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:17px;}
+  .logo span{color:var(--accent);}
+  main{padding:18px 20px;max-width:900px;margin:0 auto;}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:12px;color:var(--accent);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;}
+  .stat-value.green{color:var(--green);}
+  .stat-value.red{color:var(--red);}
+  .stat-value.orange{color:var(--accent);}
+  .stat-value.blue{color:#818cf8;}
+  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+  .chart-card.full{grid-column:1/-1;}
+  canvas{max-height:250px;}
+  .top-list{list-style:none;}
+  .top-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .top-item:last-child{border-bottom:none;}
+  .top-num{font-family:'Unbounded',sans-serif;font-size:11px;color:var(--muted);width:20px;}
+  .top-name{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .top-amount{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;}
+  .top-amount.income{color:var(--green);}
+  .top-amount.expense{color:var(--red);}
+  .profit-bar{height:8px;border-radius:4px;margin-top:4px;}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;transition:all 0.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .loading{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+  @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr);}.charts-grid{grid-template-columns:1fr;}.chart-card.full{grid-column:1;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
+    <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
+  </div>
+</header>
+<main>
+  <div id="loadingMsg" class="loading">⏳ Загружаю данные...</div>
+  <div id="content" style="display:none">
+
+    <!-- Ключевые показатели -->
+    <div class="section-title">📊 Ключевые показатели</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="kpiIncome">—</div></div>
+      <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="kpiExpense">—</div></div>
+      <div class="stat-card"><div class="stat-label">Прибыль</div><div class="stat-value" id="kpiProfit">—</div></div>
+      <div class="stat-card"><div class="stat-label">Рентабельность</div><div class="stat-value blue" id="kpiMargin">—</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Закупка курятины</div><div class="stat-value orange" id="kpiChicken">—</div></div>
+      <div class="stat-card"><div class="stat-label">Личные расходы</div><div class="stat-value red" id="kpiPersonal">—</div></div>
+      <div class="stat-card"><div class="stat-label">Зарплата</div><div class="stat-value blue" id="kpiSalary">—</div></div>
+      <div class="stat-card"><div class="stat-label">Банк/Кредиты</div><div class="stat-value" id="kpiBank" style="color:#c084fc">—</div></div>
+    </div>
+
+    <!-- Графики -->
+    <div class="charts-grid">
+      <!-- Доходы и расходы по дням -->
+      <div class="chart-card full">
+        <div class="section-title">📈 Доходы и расходы по дням</div>
+        <canvas id="chartDays"></canvas>
+      </div>
+
+      <!-- Пирог по категориям -->
+      <div class="chart-card">
+        <div class="section-title">🥧 Расходы по категориям</div>
+        <canvas id="chartPie"></canvas>
+      </div>
+
+      <!-- Прибыль по дням -->
+      <div class="chart-card">
+        <div class="section-title">💹 Прибыль/Убыток по дням</div>
+        <canvas id="chartProfit"></canvas>
+      </div>
+    </div>
+
+    <!-- Топ контрагентов -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="section-title">💰 Топ покупателей (доход)</div>
+        <ul class="top-list" id="topIncome"></ul>
+      </div>
+      <div class="chart-card">
+        <div class="section-title">📤 Топ поставщиков (расход)</div>
+        <ul class="top-list" id="topExpense"></ul>
+      </div>
+    </div>
+
+    <!-- Накопительный график -->
+    <div class="chart-card">
+      <div class="section-title">📊 Накопительный баланс</div>
+      <canvas id="chartBalance"></canvas>
+    </div>
+
+  </div>
+</main>
+
+<script>
+let allTx = [];
+
+async function loadData() {
+  document.getElementById('loadingMsg').style.display = 'block';
+  document.getElementById('content').style.display = 'none';
+  try {
+    const r = await fetch('/api/transactions');
+    allTx = await r.json();
+    renderAll();
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('loadingMsg').textContent = '❌ Ошибка загрузки данных';
+  }
+}
+
+function renderAll() {
+  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const profit = income - expense;
+  const margin = income > 0 ? (profit/income*100).toFixed(1) : 0;
+
+  document.getElementById('kpiIncome').textContent = fmt(income);
+  document.getElementById('kpiExpense').textContent = fmt(expense);
+  document.getElementById('kpiProfit').textContent = fmt(profit);
+  document.getElementById('kpiProfit').className = 'stat-value ' + (profit >= 0 ? 'green' : 'red');
+  document.getElementById('kpiMargin').textContent = margin + '%';
+  document.getElementById('kpiChicken').textContent = fmt(allTx.filter(t=>t.category==='chicken').reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiPersonal').textContent = fmt(allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiSalary').textContent = fmt(allTx.filter(t=>t.category==='salary').reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiBank').textContent = fmt(allTx.filter(t=>t.category==='bank').reduce((s,t)=>s+Math.abs(t.amount),0));
+
+  renderDaysChart();
+  renderPieChart();
+  renderProfitChart();
+  renderTopLists();
+  renderBalanceChart();
+}
+
+function getDayData() {
+  const days = {};
+  allTx.filter(t=>t.date).forEach(t => {
+    const d = t.date;
+    if (!days[d]) days[d] = {income:0, expense:0};
+    if (t.amount > 0) days[d].income += Number(t.amount);
+    else days[d].expense += Math.abs(Number(t.amount));
+  });
+  return Object.entries(days).sort(([a],[b])=>a.localeCompare(b));
+}
+
+function renderDaysChart() {
+  const data = getDayData();
+  const labels = data.map(([d])=>d.split('.').slice(0,2).join('.'));
+  const incomes = data.map(([,v])=>v.income);
+  const expenses = data.map(([,v])=>v.expense);
+
+  const ctx = document.getElementById('chartDays').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {label:'Доход',data:incomes,backgroundColor:'rgba(34,197,94,0.7)',borderColor:'#22c55e',borderWidth:1},
+        {label:'Расход',data:expenses,backgroundColor:'rgba(239,68,68,0.7)',borderColor:'#ef4444',borderWidth:1}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#999',font:{size:11}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
+        y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
+      }
+    }
+  });
+}
+
+function renderPieChart() {
+  const cats = [
+    {k:'chicken',l:'🐔 Курятина',c:'#4ade80'},
+    {k:'transport',l:'🚗 Транспорт',c:'#818cf8'},
+    {k:'food',l:'🍽️ Еда',c:'#fbbf24'},
+    {k:'personal',l:'🛍️ Личное',c:'#fb923c'},
+    {k:'salary',l:'👥 Зарплата',c:'#38bdf8'},
+    {k:'office',l:'🏢 Офис',c:'#a3e635'},
+    {k:'bank',l:'🏦 Банк',c:'#c084fc'},
+    {k:'unknown',l:'❓ Прочее',c:'#555'},
+  ];
+  const data = cats.map(c=>({...c, val:allTx.filter(t=>t.category===c.k&&t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0)})).filter(c=>c.val>0);
+
+  const ctx = document.getElementById('chartPie').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: data.map(d=>d.l),
+      datasets:[{data:data.map(d=>d.val),backgroundColor:data.map(d=>d.c),borderWidth:2,borderColor:'#141414'}]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{
+        legend:{position:'right',labels:{color:'#999',font:{size:10},boxWidth:12}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)}`}}
+      }
+    }
+  });
+}
+
+function renderProfitChart() {
+  const data = getDayData();
+  const labels = data.map(([d])=>d.split('.').slice(0,2).join('.'));
+  const profits = data.map(([,v])=>v.income - v.expense);
+
+  const ctx = document.getElementById('chartProfit').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets:[{
+        label:'Прибыль/Убыток',
+        data:profits,
+        backgroundColor:profits.map(v=>v>=0?'rgba(34,197,94,0.7)':'rgba(239,68,68,0.7)'),
+        borderColor:profits.map(v=>v>=0?'#22c55e':'#ef4444'),
+        borderWidth:1
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
+        y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
+      }
+    }
+  });
+}
+
+function renderTopLists() {
+  // Топ покупателей
+  const incomeMap = {};
+  allTx.filter(t=>t.amount>0).forEach(t=>{
+    incomeMap[t.name] = (incomeMap[t.name]||0) + Number(t.amount);
+  });
+  const topInc = Object.entries(incomeMap).sort(([,a],[,b])=>b-a).slice(0,8);
+  document.getElementById('topIncome').innerHTML = topInc.map(([name,val],i)=>`
+    <li class="top-item">
+      <span class="top-num">${i+1}</span>
+      <span class="top-name" title="${name}">${name}</span>
+      <span class="top-amount income">+${fmt(val)}</span>
+    </li>`).join('');
+
+  // Топ поставщиков
+  const expenseMap = {};
+  allTx.filter(t=>t.amount<0).forEach(t=>{
+    expenseMap[t.name] = (expenseMap[t.name]||0) + Math.abs(Number(t.amount));
+  });
+  const topExp = Object.entries(expenseMap).sort(([,a],[,b])=>b-a).slice(0,8);
+  document.getElementById('topExpense').innerHTML = topExp.map(([name,val],i)=>`
+    <li class="top-item">
+      <span class="top-num">${i+1}</span>
+      <span class="top-name" title="${name}">${name}</span>
+      <span class="top-amount expense">-${fmt(val)}</span>
+    </li>`).join('');
+}
+
+function renderBalanceChart() {
+  const data = getDayData();
+  const labels = data.map(([d])=>d.split('.').slice(0,2).join('.'));
+  let balance = 0;
+  const balances = data.map(([,v])=>{
+    balance += v.income - v.expense;
+    return balance;
+  });
+
+  const ctx = document.getElementById('chartBalance').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets:[{
+        label:'Баланс',
+        data:balances,
+        borderColor:'#ff6b00',
+        backgroundColor:'rgba(255,107,0,0.1)',
+        fill:true,
+        tension:0.3,
+        pointRadius:3,
+        pointBackgroundColor:'#ff6b00'
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Баланс: ${fmt(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
+        y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
+      }
+    }
+  });
+}
+
+function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
+function fmtShort(n){
+  const abs = Math.abs(n);
+  if(abs>=1000000) return (n/1000000).toFixed(1)+'М';
+  if(abs>=1000) return (n/1000).toFixed(0)+'К';
+  return n;
+}
+
+loadData();
+</script>
+</body>
+</html>
