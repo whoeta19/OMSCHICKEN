@@ -176,10 +176,11 @@ function classify(name, description, amount) {
   const text = (name + ' ' + description).toLowerCase();
   if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino/.test(text)) return 'food';
   if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин/.test(text)) return 'transport';
-  if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike/.test(text)) return 'personal';
+  if (/wildberries|wb*|озон|ozon|авито|lacoste|krc|симутин|подотчет|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike/.test(text)) return 'personal';
   if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|мясное дело|тихонов|мясокомбинат|chicken|бройлер/.test(text)) return 'chicken';
   if (/зарплата|зп|аванс|выплата сотрудник|выдача зарплаты|выплата зарплаты/.test(text)) return 'salary';
   if (/аренда|коворкинг|офис|склад|петрова/.test(text)) return 'office';
+  if (/овердрафт|погашение|задолженность по договору|плата за использованный|плата за активный|плата за обслуживание|обслуживание счета/.test(text)) return 'bank';
   if (/смартлогистика|грузоперевозк|набокин/.test(text)) return 'transport';
   return 'unknown';
 }
