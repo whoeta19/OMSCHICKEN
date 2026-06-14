@@ -85,6 +85,65 @@
   .rule-item:last-child{border-bottom:none;}
   .del-rule{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;}
   ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  /* Мобильная адаптация */
+  @media (max-width: 600px) {
+    header{padding:12px 14px;}
+    .logo{font-size:14px;}
+    .header-right{gap:5px;}
+    .sync-btn{font-size:10px;padding:4px 7px;}
+    #companySwitcher{max-width:90px;font-size:10px;}
+    main{padding:12px 14px;}
+    .stats-row{grid-template-columns:1fr 1fr;gap:6px;}
+    .stat-value{font-size:12px;}
+    .tabs{padding:8px 14px 0;gap:0;}
+    .tab{padding:8px 10px;font-size:11px;}
+    .tx-row{grid-template-columns:1fr auto;gap:6px;}
+    .tx-row > div:nth-child(2){display:none;}
+    .tx-name{font-size:12px;}
+    .input-row{grid-template-columns:1fr;}
+    .filter-bar{gap:4px;}
+    .filter-btn{font-size:10px;padding:3px 8px;}
+    .upload-zone{padding:16px;}
+    .upload-title{font-size:13px;}
+    .section-title{font-size:11px;}
+    .btn{padding:9px 14px;font-size:10px;}
+    .btn-sm{padding:5px 10px;font-size:9px;}
+    .reclassify-row{padding:10px;}
+    .cat-btns{gap:4px;}
+    .cat-btn{font-size:10px;padding:3px 7px;}
+    .chart-label{width:70px;font-size:10px;}
+    .chart-val{width:60px;font-size:9px;}
+    /* Мобильное нижнее меню */
+    .mobile-nav{display:flex!important;}
+    .tabs{display:none;}
+  }
+  /* Нижнее меню для мобильных */
+  .mobile-nav{
+    display:none;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    z-index:200;
+    padding:8px 0 env(safe-area-inset-bottom,8px);
+  }
+  .mobile-nav-items{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+  }
+  .mobile-nav-btn{
+    display:flex;flex-direction:column;align-items:center;
+    background:none;border:none;color:var(--muted);
+    font-size:9px;cursor:pointer;padding:4px 8px;
+    gap:2px;min-width:50px;
+  }
+  .mobile-nav-btn.active{color:var(--accent);}
+  .mobile-nav-btn span{font-size:20px;line-height:1;}
+  @media (max-width:600px){
+    main{padding-bottom:70px;}
+  }
+
 </style>
 </head>
 <body>
@@ -370,6 +429,10 @@ function switchCompany(id) {
   syncNow();
 }
 
+function setMobileActive(btn) {
+  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
 async function syncNow() {
   loadCompanies();
   const btn = document.getElementById('syncBtn');
@@ -633,5 +696,27 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
 syncNow();
 </script>
+
+<!-- Мобильное нижнее меню -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-items">
+    <button class="mobile-nav-btn active" id="mnav-dashboard" onclick="showPage('dashboard',this);setMobileActive(this)">
+      <span>📊</span>Главная
+    </button>
+    <button class="mobile-nav-btn" id="mnav-transactions" onclick="showPage('transactions',this);setMobileActive(this)">
+      <span>📋</span>Операции
+    </button>
+    <button class="mobile-nav-btn" id="mnav-reclassify" onclick="showPage('reclassify',this);setMobileActive(this)">
+      <span>🏷️</span>Разметка
+    </button>
+    <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)">
+      <span>➕</span>Добавить
+    </button>
+    <button class="mobile-nav-btn" onclick="window.location.href='/docs'">
+      <span>📄</span>Документы
+    </button>
+  </div>
+</nav>
+
 </body>
 </html>
