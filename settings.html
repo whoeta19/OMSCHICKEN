@@ -191,6 +191,17 @@
     <div style="font-size:11px;color:var(--muted);margin-top:8px">* Уведомления показываются при открытии приложения</div>
   </div>
 
+<!-- Компании -->
+  <div class="card">
+    <div class="section-title">🏢 Мои компании</div>
+    <div id="companiesList" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input type="text" id="newCompanyName" placeholder="Название компании" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;outline:none">
+      <input type="text" id="newCompanyInn" placeholder="ИНН" style="width:130px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;outline:none">
+    </div>
+    <button class="btn" onclick="addCompany()">+ Добавить компанию</button>
+  </div>
+
   <!-- Аккаунт -->
   <div class="card">
     <div class="section-title">👤 Аккаунт</div>
@@ -351,6 +362,63 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// Компании
+const _compToken = localStorage.getItem('omschicken_token') || '';
+
+async function loadCompaniesSettings() {
+  try {
+    const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+_compToken}});
+    const companies = await r.json();
+    const currentId = localStorage.getItem('omschicken_company');
+    document.getElementById('companiesList').innerHTML = companies.length ?
+      companies.map(c=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500">${c.name}</div>
+            <div style="font-size:11px;color:var(--muted)">ИНН: ${c.inn||'—'}</div>
+          </div>
+          ${c.id===currentId?'<span style="font-size:11px;color:var(--green)">✓ Активная</span>':'<button onclick="setActiveCompany(\''+c.id+'\')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-size:11px;cursor:pointer">Выбрать</button>'}
+          <button onclick="deleteCompany('${c.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button>
+        </div>`).join('') :
+      '<div style="font-size:12px;color:var(--muted)">Нет компаний — добавь первую</div>';
+  } catch(e) {}
+}
+
+async function addCompany() {
+  const name = document.getElementById('newCompanyName').value.trim();
+  const inn = document.getElementById('newCompanyInn').value.trim();
+  if (!name) { showToast('Введи название'); return; }
+  await fetch('/api/companies', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+_compToken},
+    body: JSON.stringify({name, inn})
+  });
+  document.getElementById('newCompanyName').value = '';
+  document.getElementById('newCompanyInn').value = '';
+  loadCompaniesSettings();
+  showToast('✅ Компания добавлена');
+}
+
+async function deleteCompany(id) {
+  if (!confirm('Удалить компанию?')) return;
+  await fetch('/api/companies', {
+    method:'DELETE',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+_compToken},
+    body: JSON.stringify({id})
+  });
+  loadCompaniesSettings();
+  showToast('Компания удалена');
+}
+
+function setActiveCompany(id) {
+  localStorage.setItem('omschicken_company', id);
+  loadCompaniesSettings();
+  showToast('✅ Активная компания изменена');
+}
+
+loadCompaniesSettings();
+
 </script>
 </body>
 </html>
