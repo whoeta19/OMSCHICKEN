@@ -94,6 +94,7 @@
     <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 8px;cursor:pointer;max-width:140px;outline:none;margin-right:4px">
       <option value="">Компания...</option>
     </select>
+    <button onclick="window.location.href='/settings'" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">⚙️</button>
     <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">Выйти</button>
     <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
     <div class="header-meta" id="headerMeta">0 операций</div>
