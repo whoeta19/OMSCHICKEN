@@ -358,9 +358,7 @@ async function loadCloudSettings() {
       if (s.bik) document.getElementById('sBik').value = s.bik;
       if (s.ks) document.getElementById('sKs').value = s.ks;
     }
-  } catch(e) {}
-  // Показываем превью
-  initImagePreviews();
+  } catch(e) { initImagePreviews(); }
 }
 
 async function saveToCloud(key, value) {
