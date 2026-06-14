@@ -324,24 +324,27 @@ function clearImage(key, previewId, icon) {
 
 async function loadCloudSettings() {
   const tok = localStorage.getItem('omschicken_token') || '';
-  if (!tok) return;
+  if (!tok) { initImagePreviews(); return; }
   try {
-    const r = await fetch('/api/company_settings?t=' + Date.now(), {
+    const r = await fetch('/api/company_settings?nc=' + Date.now(), {
       headers: {'Authorization': 'Bearer ' + tok},
       cache: 'no-store'
     });
     const data = await r.json();
     if (data && data.stamp) {
       localStorage.setItem('omschicken_stamp', data.stamp);
-      document.getElementById('stampPreview').innerHTML = `<img src="${data.stamp}" class="preview-img" style="max-width:120px;max-height:120px">`;
+      const el = document.getElementById('stampPreview');
+      if (el) el.innerHTML = '<img src="' + data.stamp + '" style="max-width:120px;max-height:120px;border-radius:8px">';
     }
     if (data && data.sign) {
       localStorage.setItem('omschicken_sign', data.sign);
-      document.getElementById('signPreview').innerHTML = `<img src="${data.sign}" style="max-height:60px;max-width:180px">`;
+      const el = document.getElementById('signPreview');
+      if (el) el.innerHTML = '<img src="' + data.sign + '" style="max-height:60px;max-width:180px">';
     }
     if (data && data.logo) {
       localStorage.setItem('omschicken_logo', data.logo);
-      document.getElementById('logoPreview').innerHTML = `<img src="${data.logo}" class="preview-img" style="max-width:120px;max-height:120px">`;
+      const el = document.getElementById('logoPreview');
+      if (el) el.innerHTML = '<img src="' + data.logo + '" style="max-width:120px;max-height:120px;border-radius:8px">';
     }
     if (data && data.seller) {
       localStorage.setItem('omschicken_seller', JSON.stringify(data.seller));
