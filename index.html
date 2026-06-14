@@ -91,8 +91,9 @@
 <header>
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
   <div class="header-right">
-    <button onclick="window.location.href=`/settings`" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">⚙️</button>
-    <button onclick="window.location.href=`/settings`" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">⚙️</button>
+    <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 8px;cursor:pointer;max-width:140px;outline:none;margin-right:4px">
+      <option value="">Компания...</option>
+    </select>
     <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">Выйти</button>
     <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
     <div class="header-meta" id="headerMeta">0 операций</div>
@@ -148,8 +149,7 @@
   </div>
   <div class="section-title">
     <span id="txCount">Операции</span>
-    <button class="btn btn-sm" onclick="exportCSV()">📥 CSV</button>
-    <button class="btn btn-sm" onclick="exportToExcel(allTx)" style="margin-left:4px;background:#1d6f42">📊 Excel</button>
+    <button class="btn btn-sm" onclick="exportCSV()">📥 Экспорт</button>
   </div>
   <div id="txList"></div>
 </div>
@@ -292,7 +292,50 @@ async function apiUpdateCategory(id, category) {
   return r.json();
 }
 
+// Мультикомпания
+let currentCompanyId = localStorage.getItem('omschicken_company') || null;
+
+async function loadCompanies() {
+  const token = localStorage.getItem('omschicken_token') || '';
+  try {
+    const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
+    const companies = await r.json();
+    const sel = document.getElementById('companySwitcher');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Все компании</option>' + 
+      companies.map(c=>`<option value="${c.id}" ${c.id===currentCompanyId?'selected':''}>${c.name}</option>`).join('');
+    // Если компаний нет — создаём ОМСЧИКЕН автоматически
+    if (companies.length === 0) {
+      await createDefaultCompany();
+    }
+  } catch(e) {}
+}
+
+async function createDefaultCompany() {
+  const token = localStorage.getItem('omschicken_token') || '';
+  const seller = JSON.parse(localStorage.getItem('omschicken_seller') || '{}');
+  const r = await fetch('/api/companies', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({name: seller.name || 'ООО "ОМСЧИКЕН"', inn: seller.inn || '5800015301'})
+  });
+  const company = await r.json();
+  if (company && company[0]) {
+    currentCompanyId = company[0].id;
+    localStorage.setItem('omschicken_company', currentCompanyId);
+    await loadCompanies();
+  }
+}
+
+function switchCompany(id) {
+  currentCompanyId = id || null;
+  if (id) localStorage.setItem('omschicken_company', id);
+  else localStorage.removeItem('omschicken_company');
+  syncNow();
+}
+
 async function syncNow() {
+  loadCompanies();
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
   if (btn) btn.innerHTML = '⏳ Синхронизация...';
@@ -554,6 +597,5 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
 syncNow();
 </script>
-<script src="/export.js"></script>
 </body>
 </html>
