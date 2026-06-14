@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ОМСЧИКЕН — Настройки</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111;--muted:#888;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;transition:background 0.3s,color 0.3s;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:17px;}
+  .logo span{color:var(--accent);}
+  main{padding:18px 20px;max-width:700px;margin:0 auto;}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:12px;color:var(--accent);}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .input-group{margin-bottom:12px;}
+  .input-group label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
+  .input-group input,.input-group select,.input-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+  .input-group input:focus,.input-group select:focus{border-color:var(--accent);}
+  .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .btn:hover{background:var(--accent2);}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-danger{background:none;border:1px solid var(--red);color:var(--red);border-radius:8px;padding:8px 14px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-label{font-size:13px;}
+  .toggle-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+  .toggle{width:44px;height:24px;background:var(--border);border-radius:12px;cursor:pointer;position:relative;transition:background 0.2s;border:none;}
+  .toggle.on{background:var(--accent);}
+  .toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left 0.2s;}
+  .toggle.on::after{left:23px;}
+  .upload-area{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;}
+  .upload-area:hover{border-color:var(--accent);}
+  .preview-img{max-height:80px;max-width:200px;border-radius:6px;margin-top:8px;}
+  .toast{position:fixed;bottom:20px;right:16px;left:16px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.3s;z-index:999;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .theme-btns{display:flex;gap:8px;margin-top:8px;}
+  .theme-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;transition:all 0.2s;background:var(--surface2);}
+  .theme-btn.active{border-color:var(--accent);color:var(--accent);}
+  .notif-day{display:flex;align-items:center;gap:8px;}
+  .notif-day input[type=number]{width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
+  </div>
+</header>
+<main>
+
+  <!-- Тема -->
+  <div class="card">
+    <div class="section-title">🎨 Оформление</div>
+    <div class="input-group">
+      <label>Тема интерфейса</label>
+      <div class="theme-btns">
+        <div class="theme-btn" id="theme-dark" onclick="setTheme('dark',this)">🌙 Тёмная</div>
+        <div class="theme-btn" id="theme-light" onclick="setTheme('light',this)">☀️ Светлая</div>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>Акцентный цвет</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <div onclick="setAccent('#ff6b00',this)" style="width:32px;height:32px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent" class="accent-dot active-accent"></div>
+        <div onclick="setAccent('#22c55e',this)" style="width:32px;height:32px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+        <div onclick="setAccent('#818cf8',this)" style="width:32px;height:32px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+        <div onclick="setAccent('#f43f5e',this)" style="width:32px;height:32px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+        <div onclick="setAccent('#0ea5e9',this)" style="width:32px;height:32px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+        <div onclick="setAccent('#a855f7',this)" style="width:32px;height:32px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Реквизиты -->
+  <div class="card">
+    <div class="section-title">🏢 Реквизиты компании</div>
+    <div class="input-row">
+      <div class="input-group"><label>Название</label><input type="text" id="sName" placeholder='ООО "ОМСЧИКЕН"'></div>
+      <div class="input-group"><label>ИНН</label><input type="text" id="sInn" placeholder="5800015301"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>КПП</label><input type="text" id="sKpp" placeholder="580001001"></div>
+      <div class="input-group"><label>ОГРН</label><input type="text" id="sOgrn" placeholder="1255800003447"></div>
+    </div>
+    <div class="input-group"><label>Юридический адрес</label><input type="text" id="sAddr" placeholder="440013, г. Пенза, ул. Чаадаева, 72"></div>
+    <div class="input-row">
+      <div class="input-group"><label>Телефон</label><input type="text" id="sPhone" placeholder="8(9869)47-66-97"></div>
+      <div class="input-group"><label>Email</label><input type="text" id="sEmail" placeholder="mo@omchicken.ru"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>Генеральный директор</label><input type="text" id="sDirector" placeholder="Симутин Семен Евгеньевич"></div>
+      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="sBuh" placeholder="Симутин Семен Евгеньевич"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>Банк</label><input type="text" id="sBank" placeholder="АО «ТБанк»"></div>
+      <div class="input-group"><label>Расчётный счёт</label><input type="text" id="sRs" placeholder="40702810210001915113"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label>БИК</label><input type="text" id="sBik" placeholder="044525411"></div>
+      <div class="input-group"><label>Корр. счёт</label><input type="text" id="sKs" placeholder="30101810145250000974"></div>
+    </div>
+    <button class="btn" onclick="saveRequisites()">💾 Сохранить реквизиты</button>
+  </div>
+
+  <!-- Логотип и печать -->
+  <div class="card">
+    <div class="section-title">🖼️ Логотип и печать</div>
+    <div class="input-row">
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Логотип компании</div>
+        <div class="upload-area" onclick="document.getElementById('logoInput').click()">
+          <div id="logoPreview">
+            <div style="font-size:28px">🏢</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">PNG, JPG · нажми для загрузки</div>
+          </div>
+        </div>
+        <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="loadImage(this,'logo','logoPreview')">
+        <button class="btn-outline" onclick="clearImage('logo','logoPreview','🏢')" style="margin-top:6px;font-size:11px;width:100%">Удалить</button>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Печать организации</div>
+        <div class="upload-area" onclick="document.getElementById('stampInput').click()">
+          <div id="stampPreview">
+            <div style="font-size:28px">🔵</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">PNG с прозрачным фоном</div>
+          </div>
+        </div>
+        <input type="file" id="stampInput" accept="image/*" style="display:none" onchange="loadImage(this,'stamp','stampPreview')">
+        <button class="btn-outline" onclick="clearImage('stamp','stampPreview','🔵')" style="margin-top:6px;font-size:11px;width:100%">Удалить</button>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Подпись директора</div>
+      <div class="upload-area" onclick="document.getElementById('signInput').click()" style="padding:12px">
+        <div id="signPreview">
+          <div style="font-size:24px">✍️</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">PNG с прозрачным фоном · убери фон на remove.bg</div>
+        </div>
+      </div>
+      <input type="file" id="signInput" accept="image/*" style="display:none" onchange="loadImage(this,'sign','signPreview')">
+      <button class="btn-outline" onclick="clearImage('sign','signPreview','✍️')" style="margin-top:6px;font-size:11px">Удалить подпись</button>
+    </div>
+  </div>
+
+  <!-- Уведомления -->
+  <div class="card">
+    <div class="section-title">🔔 Уведомления</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">НДС — напоминание об оплате</div>
+        <div class="toggle-sub">Уведомление за N дней до конца квартала</div>
+      </div>
+      <button class="toggle on" id="togVat" onclick="toggleNotif(this,'notif_vat')"></button>
+    </div>
+    <div style="padding:8px 0 12px;border-bottom:1px solid var(--border)">
+      <div class="notif-day">
+        <span style="font-size:12px;color:var(--muted)">За сколько дней напоминать:</span>
+        <input type="number" id="vatDays" value="7" min="1" max="30">
+        <span style="font-size:12px;color:var(--muted)">дней</span>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Зарплата — напоминание</div>
+        <div class="toggle-sub">Напомнить выплатить зарплату</div>
+      </div>
+      <button class="toggle on" id="togSalary" onclick="toggleNotif(this,'notif_salary')"></button>
+    </div>
+    <div style="padding:8px 0 12px;border-bottom:1px solid var(--border)">
+      <div class="notif-day">
+        <span style="font-size:12px;color:var(--muted)">День месяца для напоминания:</span>
+        <input type="number" id="salaryDay" value="25" min="1" max="31">
+        <span style="font-size:12px;color:var(--muted)">число</span>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Ежемесячный отчёт</div>
+        <div class="toggle-sub">Напомнить загрузить выписку в начале месяца</div>
+      </div>
+      <button class="toggle on" id="togReport" onclick="toggleNotif(this,'notif_report')"></button>
+    </div>
+    <button class="btn" onclick="saveNotifications()" style="margin-top:12px">💾 Сохранить уведомления</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">* Уведомления показываются при открытии приложения</div>
+  </div>
+
+  <!-- Аккаунт -->
+  <div class="card">
+    <div class="section-title">👤 Аккаунт</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="userEmail">—</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-outline" onclick="changePassword()">🔒 Сменить пароль</button>
+      <button class="btn-danger" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+// Загружаем настройки
+const settings = JSON.parse(localStorage.getItem('omschicken_settings') || '{}');
+const user = JSON.parse(localStorage.getItem('omschicken_user') || '{}');
+
+// Показываем email
+if (user.email) document.getElementById('userEmail').textContent = user.email;
+
+// Применяем тему
+function applyTheme(theme) {
+  document.body.classList.toggle('light', theme === 'light');
+  document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
+  document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+}
+
+function setTheme(theme, el) {
+  applyTheme(theme);
+  settings.theme = theme;
+  localStorage.setItem('omschicken_settings', JSON.stringify(settings));
+  showToast('✅ Тема изменена');
+}
+
+// Акцентный цвет
+function setAccent(color, el) {
+  document.documentElement.style.setProperty('--accent', color);
+  document.querySelectorAll('.accent-dot').forEach(d => d.style.border = '2px solid transparent');
+  el.style.border = '2px solid white';
+  settings.accent = color;
+  localStorage.setItem('omschicken_settings', JSON.stringify(settings));
+}
+
+// Инициализация темы и цвета
+applyTheme(settings.theme || 'dark');
+if (settings.accent) {
+  document.documentElement.style.setProperty('--accent', settings.accent);
+  document.querySelectorAll('.accent-dot').forEach(d => {
+    if (d.style.background === settings.accent) d.style.border = '2px solid white';
+  });
+}
+
+// Реквизиты
+const req = JSON.parse(localStorage.getItem('omschicken_seller') || '{}');
+if (req.name) document.getElementById('sName').value = req.name;
+if (req.inn) document.getElementById('sInn').value = req.inn;
+if (req.kpp) document.getElementById('sKpp').value = req.kpp;
+if (req.ogrn) document.getElementById('sOgrn').value = req.ogrn;
+if (req.addr) document.getElementById('sAddr').value = req.addr;
+if (req.phone) document.getElementById('sPhone').value = req.phone;
+if (req.email) document.getElementById('sEmail').value = req.email;
+if (req.director) document.getElementById('sDirector').value = req.director;
+if (req.buh) document.getElementById('sBuh').value = req.buh;
+if (req.bank) document.getElementById('sBank').value = req.bank;
+if (req.rs) document.getElementById('sRs').value = req.rs;
+if (req.bik) document.getElementById('sBik').value = req.bik;
+if (req.ks) document.getElementById('sKs').value = req.ks;
+
+function saveRequisites() {
+  const seller = {
+    name: document.getElementById('sName').value,
+    inn: document.getElementById('sInn').value,
+    kpp: document.getElementById('sKpp').value,
+    ogrn: document.getElementById('sOgrn').value,
+    addr: document.getElementById('sAddr').value,
+    phone: document.getElementById('sPhone').value,
+    email: document.getElementById('sEmail').value,
+    director: document.getElementById('sDirector').value,
+    buh: document.getElementById('sBuh').value,
+    bank: document.getElementById('sBank').value,
+    rs: document.getElementById('sRs').value,
+    bik: document.getElementById('sBik').value,
+    ks: document.getElementById('sKs').value,
+  };
+  localStorage.setItem('omschicken_seller', JSON.stringify(seller));
+  showToast('✅ Реквизиты сохранены');
+}
+
+// Логотип, печать, подпись
+function loadImage(input, key, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    localStorage.setItem('omschicken_' + key, data);
+    document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
+    showToast('✅ Изображение загружено');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(key, previewId, icon) {
+  localStorage.removeItem('omschicken_' + key);
+  document.getElementById(previewId).innerHTML = `<div style="font-size:28px">${icon}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Нажми для загрузки</div>`;
+  showToast('Изображение удалено');
+}
+
+// Инициализация превью
+['logo','stamp','sign'].forEach(key => {
+  const data = localStorage.getItem('omschicken_' + key);
+  const previewId = key + 'Preview';
+  if (data && document.getElementById(previewId)) {
+    document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
+  }
+});
+
+// Уведомления
+const notifSettings = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
+if (notifSettings.vatDays) document.getElementById('vatDays').value = notifSettings.vatDays;
+if (notifSettings.salaryDay) document.getElementById('salaryDay').value = notifSettings.salaryDay;
+['vat','salary','report'].forEach(key => {
+  const tog = document.getElementById('tog' + key.charAt(0).toUpperCase() + key.slice(1));
+  if (notifSettings['notif_' + key] === false) tog.classList.remove('on');
+});
+
+function toggleNotif(btn, key) {
+  btn.classList.toggle('on');
+  const notif = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
+  notif[key] = btn.classList.contains('on');
+  localStorage.setItem('omschicken_notif', JSON.stringify(notif));
+}
+
+function saveNotifications() {
+  const notif = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
+  notif.vatDays = document.getElementById('vatDays').value;
+  notif.salaryDay = document.getElementById('salaryDay').value;
+  localStorage.setItem('omschicken_notif', JSON.stringify(notif));
+  showToast('✅ Уведомления сохранены');
+}
+
+// Аккаунт
+function logout() {
+  localStorage.removeItem('omschicken_token');
+  localStorage.removeItem('omschicken_refresh');
+  localStorage.removeItem('omschicken_user');
+  window.location.href = '/login';
+}
+
+function changePassword() {
+  showToast('📧 Функция смены пароля — скоро');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
