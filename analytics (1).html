@@ -5,7 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ОМСЧИКЕН — Аналитика</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+// Автообновление токена
+(function() {
+  const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+  async function refresh() {
+    const r = localStorage.getItem('omschicken_refresh');
+    if (!r) return;
+    try {
+      const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {'apikey': SKEY, 'Content-Type': 'application/json'},
+        body: JSON.stringify({refresh_token: r})
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        localStorage.setItem('omschicken_token', data.access_token);
+        localStorage.setItem('omschicken_refresh', data.refresh_token);
+      }
+    } catch(e) {}
+  }
+  setInterval(refresh, 45 * 60 * 1000);
+})();
+
+</script>
 <style>
   :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
   *{margin:0;padding:0;box-sizing:border-box;}

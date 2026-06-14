@@ -328,6 +328,30 @@ function showPage(name,btn){
 }
 
 loadData();
+
+// Автообновление токена
+(function() {
+  const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+  async function refresh() {
+    const r = localStorage.getItem('omschicken_refresh');
+    if (!r) return;
+    try {
+      const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {'apikey': SKEY, 'Content-Type': 'application/json'},
+        body: JSON.stringify({refresh_token: r})
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        localStorage.setItem('omschicken_token', data.access_token);
+        localStorage.setItem('omschicken_refresh', data.refresh_token);
+      }
+    } catch(e) {}
+  }
+  setInterval(refresh, 45 * 60 * 1000);
+})();
+
 </script>
 </body>
 </html>

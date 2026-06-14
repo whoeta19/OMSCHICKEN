@@ -94,7 +94,6 @@
     <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 8px;cursor:pointer;max-width:140px;outline:none;margin-right:4px">
       <option value="">Компания...</option>
     </select>
-    <button onclick="window.location.href='/settings'" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">⚙️</button>
     <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">Выйти</button>
     <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
     <div class="header-meta" id="headerMeta">0 операций</div>
@@ -229,6 +228,42 @@ let userRules = JSON.parse(localStorage.getItem('omschicken_rules') || '{}');
 // Проверка авторизации
 const _token = localStorage.getItem('omschicken_token');
 if (!_token) window.location.href = '/login';
+
+// Автообновление токена
+const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+async function refreshToken() {
+  const refresh = localStorage.getItem('omschicken_refresh');
+  if (!refresh) { window.location.href = '/login'; return; }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
+      body: JSON.stringify({refresh_token: refresh})
+    });
+    const data = await r.json();
+    if (data.access_token) {
+      localStorage.setItem('omschicken_token', data.access_token);
+      localStorage.setItem('omschicken_refresh', data.refresh_token);
+    } else {
+      window.location.href = '/login';
+    }
+  } catch(e) {}
+}
+
+// Обновляем токен каждые 45 минут
+setInterval(refreshToken, 45 * 60 * 1000);
+
+// Перехватываем 401 ошибки
+const _origFetch = window.fetch;
+window.fetch = async function(...args) {
+  const r = await _origFetch(...args);
+  if (r.status === 401) {
+    await refreshToken();
+  }
+  return r;
+};
 
 function logout() {
   localStorage.removeItem('omschicken_token');
