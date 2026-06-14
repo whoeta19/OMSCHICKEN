@@ -320,12 +320,14 @@ function clearImage(key, previewId, icon) {
 }
 
 // Загрузка настроек из облака
-const _settToken = localStorage.getItem('omschicken_token') || '';
+// Token loaded dynamically
 
 async function loadCloudSettings() {
+  const tok = localStorage.getItem('omschicken_token') || '';
+  if (!tok) return;
   try {
     const r = await fetch('/api/company_settings?t=' + Date.now(), {
-      headers: {'Authorization': 'Bearer ' + _settToken},
+      headers: {'Authorization': 'Bearer ' + tok},
       cache: 'no-store'
     });
     const data = await r.json();
@@ -363,10 +365,11 @@ async function loadCloudSettings() {
 }
 
 async function saveToCloud(key, value) {
+  const tok = localStorage.getItem('omschicken_token') || '';
   try {
     await fetch('/api/company_settings', {
       method: 'POST',
-      headers: {'Content-Type':'application/json','Authorization':'Bearer '+_settToken},
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
       body: JSON.stringify({[key]: value})
     });
   } catch(e) {}
