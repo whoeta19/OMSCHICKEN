@@ -324,8 +324,9 @@ const _settToken = localStorage.getItem('omschicken_token') || '';
 
 async function loadCloudSettings() {
   try {
-    const r = await fetch('/api/company_settings', {
-      headers: {'Authorization': 'Bearer ' + _settToken}
+    const r = await fetch('/api/company_settings?t=' + Date.now(), {
+      headers: {'Authorization': 'Bearer ' + _settToken},
+      cache: 'no-store'
     });
     const data = await r.json();
     if (data && data.stamp) {
