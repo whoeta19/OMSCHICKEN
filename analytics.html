@@ -47,6 +47,9 @@
 <header>
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
   <div style="display:flex;gap:8px">
+    <select id="periodSelect" onchange="onPeriodChange()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;margin-right:4px">
+      <option value="all">Все периоды</option>
+    </select>
     <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
   </div>
@@ -114,6 +117,26 @@
 
 <script>
 let allTx = [];
+let filteredTx = [];
+let currentPeriod = 'all';
+
+function renderPeriodFilter() {
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('periodSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="all">Все периоды</option>' + 
+    periods.map(p=>`<option value="${p}" ${p===currentPeriod?'selected':''}>${p}</option>`).join('');
+}
+
+function onPeriodChange() {
+  currentPeriod = document.getElementById('periodSelect').value;
+  filteredTx = currentPeriod === 'all' ? allTx : allTx.filter(t=>t.period===currentPeriod);
+  document.querySelectorAll('canvas').forEach(c=>{
+    const chart = Chart.getChart(c);
+    if (chart) chart.destroy();
+  });
+  renderAll();
+}
 
 async function loadData() {
   document.getElementById('loadingMsg').style.display = 'block';
@@ -121,6 +144,8 @@ async function loadData() {
   try {
     const r = await fetch('/api/transactions');
     allTx = await r.json();
+    filteredTx = allTx;
+    renderPeriodFilter();
     renderAll();
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('content').style.display = 'block';
@@ -130,8 +155,8 @@ async function loadData() {
 }
 
 function renderAll() {
-  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-  const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const income = filteredTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = filteredTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const profit = income - expense;
   const margin = income > 0 ? (profit/income*100).toFixed(1) : 0;
 
@@ -140,10 +165,10 @@ function renderAll() {
   document.getElementById('kpiProfit').textContent = fmt(profit);
   document.getElementById('kpiProfit').className = 'stat-value ' + (profit >= 0 ? 'green' : 'red');
   document.getElementById('kpiMargin').textContent = margin + '%';
-  document.getElementById('kpiChicken').textContent = fmt(allTx.filter(t=>t.category==='chicken').reduce((s,t)=>s+Math.abs(t.amount),0));
-  document.getElementById('kpiPersonal').textContent = fmt(allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0));
-  document.getElementById('kpiSalary').textContent = fmt(allTx.filter(t=>t.category==='salary').reduce((s,t)=>s+Math.abs(t.amount),0));
-  document.getElementById('kpiBank').textContent = fmt(allTx.filter(t=>t.category==='bank').reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiChicken').textContent = fmt(filteredTx.filter(t=>t.category==='chicken').reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiPersonal').textContent = fmt(filteredTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiSalary').textContent = fmt(filteredTx.filter(t=>t.category==='salary').reduce((s,t)=>s+Math.abs(t.amount),0));
+  document.getElementById('kpiBank').textContent = fmt(filteredTx.filter(t=>t.category==='bank').reduce((s,t)=>s+Math.abs(t.amount),0));
 
   renderDaysChart();
   renderPieChart();
@@ -154,7 +179,7 @@ function renderAll() {
 
 function getDayData() {
   const days = {};
-  allTx.filter(t=>t.date).forEach(t => {
+  filteredTx.filter(t=>t.date).forEach(t => {
     const d = t.date;
     if (!days[d]) days[d] = {income:0, expense:0};
     if (t.amount > 0) days[d].income += Number(t.amount);
@@ -201,7 +226,7 @@ function renderPieChart() {
     {k:'bank',l:'🏦 Банк',c:'#c084fc'},
     {k:'unknown',l:'❓ Прочее',c:'#555'},
   ];
-  const data = cats.map(c=>({...c, val:allTx.filter(t=>t.category===c.k&&t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0)})).filter(c=>c.val>0);
+  const data = cats.map(c=>({...c, val:filteredTx.filter(t=>t.category===c.k&&t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0)})).filter(c=>c.val>0);
 
   const ctx = document.getElementById('chartPie').getContext('2d');
   new Chart(ctx, {
@@ -252,7 +277,7 @@ function renderProfitChart() {
 function renderTopLists() {
   // Топ покупателей
   const incomeMap = {};
-  allTx.filter(t=>t.amount>0).forEach(t=>{
+  filteredTx.filter(t=>t.amount>0).forEach(t=>{
     incomeMap[t.name] = (incomeMap[t.name]||0) + Number(t.amount);
   });
   const topInc = Object.entries(incomeMap).sort(([,a],[,b])=>b-a).slice(0,8);
@@ -265,7 +290,7 @@ function renderTopLists() {
 
   // Топ поставщиков
   const expenseMap = {};
-  allTx.filter(t=>t.amount<0).forEach(t=>{
+  filteredTx.filter(t=>t.amount<0).forEach(t=>{
     expenseMap[t.name] = (expenseMap[t.name]||0) + Math.abs(Number(t.amount));
   });
   const topExp = Object.entries(expenseMap).sort(([,a],[,b])=>b-a).slice(0,8);
