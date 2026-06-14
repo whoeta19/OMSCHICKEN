@@ -19,7 +19,7 @@ a{color:inherit;text-decoration:none;}
 nav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
 .nav-logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:20px;}
 .nav-logo span{color:var(--accent);}
-.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted);}
+.nav-links{display:flex;gap:28px;font-size:14px;color:var(--muted);align-items:center;}
 .nav-links a:hover{color:var(--text);}
 .nav-btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
 .nav-btn:hover{background:var(--accent2);}
@@ -392,25 +392,25 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="section-tag">Отзывы</div>
   <div class="section-title fade-up">Нам доверяют</div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:50px" class="stagger">
-    <div class="feature-card fade-up" style="text-align:left">
+    <div class="feature-card fade-up" style="text-align:left;display:flex;flex-direction:column;height:100%">
       <div style="font-size:20px;margin-bottom:12px;color:var(--accent)">★★★★★</div>
-      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted)">"Раньше тратил весь день на выписки и НДС. Теперь — 10 минут в месяц. OMSFIN изменил мой подход к бухгалтерии."</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted);flex:1">"Раньше тратил весь день на выписки и НДС. Теперь — 10 минут в месяц. OMSFIN изменил мой подход к бухгалтерии."</div>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff6b00,#ffaa44);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">А</div>
         <div><div style="font-size:13px;font-weight:500">Андрей К.</div><div style="font-size:11px;color:var(--muted)">ООО "АгроТрейд"</div></div>
       </div>
     </div>
-    <div class="feature-card fade-up" style="text-align:left">
+    <div class="feature-card fade-up" style="text-align:left;display:flex;flex-direction:column;height:100%">
       <div style="font-size:20px;margin-bottom:12px;color:var(--accent)">★★★★★</div>
-      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted)">"Наконец-то нормальный интерфейс! 1С и Эльба — это боль. OMSFIN — как iPhone среди телефонов."</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted);flex:1">"Наконец-то нормальный интерфейс! 1С и Эльба — это боль. OMSFIN — как iPhone среди телефонов."</div>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#818cf8,#22c55e);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">М</div>
         <div><div style="font-size:13px;font-weight:500">Мария С.</div><div style="font-size:11px;color:var(--muted)">ИП Соколова</div></div>
       </div>
     </div>
-    <div class="feature-card fade-up" style="text-align:left">
+    <div class="feature-card fade-up" style="text-align:left;display:flex;flex-direction:column;height:100%">
       <div style="font-size:20px;margin-bottom:12px;color:var(--accent)">★★★★★</div>
-      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted)">"Мультикомпания — это то что я искал. Веду 3 ООО в одном месте. Документы с печатью — вообще огонь."</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted);flex:1">"Мультикомпания — это то что я искал. Веду 3 ООО в одном месте. Документы с печатью — вообще огонь."</div>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">Д</div>
         <div><div style="font-size:13px;font-weight:500">Дмитрий В.</div><div style="font-size:11px;color:var(--muted)">Группа компаний "Восток"</div></div>
