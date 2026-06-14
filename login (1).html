@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ОМСЧИКЕН — Вход</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:380px;margin:20px;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:24px;text-align:center;margin-bottom:8px;}
+  .logo span{color:var(--accent);}
+  .subtitle{text-align:center;color:var(--muted);font-size:13px;margin-bottom:28px;}
+  .input-group{margin-bottom:14px;}
+  .input-group label{font-size:11px;color:var(--muted);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
+  .input-group input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+  .input-group input:focus{border-color:var(--accent);}
+  .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:13px 18px;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;width:100%;margin-top:8px;}
+  .btn:hover{background:var(--accent2);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:11px 18px;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;width:100%;margin-top:8px;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .error{background:#2a0a0a;border:1px solid var(--red);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-top:12px;display:none;}
+  .error.show{display:block;}
+  .success{background:#0a2a0a;border:1px solid var(--green);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--green);margin-top:12px;display:none;}
+  .success.show{display:block;}
+  .divider{text-align:center;color:var(--muted);font-size:12px;margin:16px 0;position:relative;}
+  .divider::before{content:'';position:absolute;left:0;top:50%;width:40%;height:1px;background:var(--border);}
+  .divider::after{content:'';position:absolute;right:0;top:50%;width:40%;height:1px;background:var(--border);}
+  .tabs{display:flex;gap:2px;margin-bottom:24px;background:var(--surface2);border-radius:8px;padding:3px;}
+  .tab-btn{flex:1;padding:8px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-radius:6px;transition:all 0.2s;}
+  .tab-btn.active{background:var(--accent);color:#000;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div class="subtitle">Бизнес-кабинет</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('login',this)">Войти</button>
+    <button class="tab-btn" onclick="showTab('register',this)">Регистрация</button>
+  </div>
+
+  <!-- Вход -->
+  <div id="tab-login">
+    <div class="input-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="oms@chicken.ru" autocomplete="email">
+    </div>
+    <div class="input-group">
+      <label>Пароль</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn" id="loginBtn" onclick="login()">Войти</button>
+    <div class="error" id="loginError"></div>
+  </div>
+
+  <!-- Регистрация -->
+  <div id="tab-register" style="display:none">
+    <div class="input-group">
+      <label>Название компании</label>
+      <input type="text" id="regCompany" placeholder="ООО Ромашка">
+    </div>
+    <div class="input-group">
+      <label>Email</label>
+      <input type="email" id="regEmail" placeholder="director@company.ru" autocomplete="email">
+    </div>
+    <div class="input-group">
+      <label>Пароль</label>
+      <input type="password" id="regPassword" placeholder="Минимум 6 символов" autocomplete="new-password">
+    </div>
+    <div class="input-group">
+      <label>Повтори пароль</label>
+      <input type="password" id="regPassword2" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <button class="btn" id="regBtn" onclick="register()">Создать аккаунт</button>
+    <div class="error" id="regError"></div>
+    <div class="success" id="regSuccess"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+const token = localStorage.getItem('omschicken_token');
+if (token) window.location.href = '/';
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const activeTab = document.getElementById('tab-login').style.display !== 'none' ? 'login' : 'register';
+    if (activeTab === 'login') login();
+    else register();
+  }
+});
+
+function showTab(name, btn) {
+  document.getElementById('tab-login').style.display = name === 'login' ? 'block' : 'none';
+  document.getElementById('tab-register').style.display = name === 'register' ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+
+  if (!email || !password) { showErr(err, 'Введи email и пароль'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Входим...';
+  err.classList.remove('show');
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    const data = await r.json();
+    if (data.access_token) {
+      localStorage.setItem('omschicken_token', data.access_token);
+      localStorage.setItem('omschicken_refresh', data.refresh_token);
+      localStorage.setItem('omschicken_user', JSON.stringify(data.user));
+      window.location.href = '/';
+    } else {
+      showErr(err, 'Неверный email или пароль');
+    }
+  } catch(e) {
+    showErr(err, 'Ошибка соединения');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Войти';
+}
+
+async function register() {
+  const company = document.getElementById('regCompany').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const password2 = document.getElementById('regPassword2').value;
+  const btn = document.getElementById('regBtn');
+  const err = document.getElementById('regError');
+  const success = document.getElementById('regSuccess');
+
+  err.classList.remove('show');
+  success.classList.remove('show');
+
+  if (!company) { showErr(err, 'Введи название компании'); return; }
+  if (!email) { showErr(err, 'Введи email'); return; }
+  if (password.length < 6) { showErr(err, 'Пароль минимум 6 символов'); return; }
+  if (password !== password2) { showErr(err, 'Пароли не совпадают'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Создаём аккаунт...';
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_KEY, 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        email, password,
+        data: { company_name: company }
+      })
+    });
+    const data = await r.json();
+
+    if (data.user || data.access_token) {
+      if (data.access_token) {
+        localStorage.setItem('omschicken_token', data.access_token);
+        localStorage.setItem('omschicken_refresh', data.refresh_token);
+        localStorage.setItem('omschicken_user', JSON.stringify(data.user));
+        window.location.href = '/';
+      } else {
+        success.textContent = '✅ Аккаунт создан! Проверь почту для подтверждения.';
+        success.classList.add('show');
+      }
+    } else {
+      showErr(err, data.msg || data.error_description || 'Ошибка регистрации');
+    }
+  } catch(e) {
+    showErr(err, 'Ошибка соединения');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Создать аккаунт';
+}
+
+function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+</script>
+</body>
+</html>
