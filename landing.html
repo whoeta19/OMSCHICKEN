@@ -118,6 +118,45 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 .footer-links{display:flex;gap:24px;font-size:13px;color:var(--muted);}
 .footer-copy{font-size:12px;color:var(--muted);}
 
+
+/* Анимации */
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.fade-up.visible{opacity:1;transform:translateY(0);}
+.fade-left{opacity:0;transform:translateX(-30px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.fade-left.visible{opacity:1;transform:translateX(0);}
+.fade-right{opacity:0;transform:translateX(30px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.fade-right.visible{opacity:1;transform:translateX(0);}
+.scale-in{opacity:0;transform:scale(0.9);transition:opacity 0.6s ease,transform 0.6s ease;}
+.scale-in.visible{opacity:1;transform:scale(1);}
+.stagger .feature-card:nth-child(1){transition-delay:0s;}
+.stagger .feature-card:nth-child(2){transition-delay:0.1s;}
+.stagger .feature-card:nth-child(3){transition-delay:0.2s;}
+.stagger .feature-card:nth-child(4){transition-delay:0.3s;}
+.stagger .feature-card:nth-child(5){transition-delay:0.4s;}
+.stagger .feature-card:nth-child(6){transition-delay:0.5s;}
+.stagger .feature-card:nth-child(7){transition-delay:0.0s;}
+.stagger .feature-card:nth-child(8){transition-delay:0.1s;}
+.stagger .feature-card:nth-child(9){transition-delay:0.2s;}
+
+/* Счётчик */
+.counter{display:inline-block;}
+
+/* Плавающие элементы */
+.float-1{animation:float1 6s ease-in-out infinite;}
+.float-2{animation:float2 8s ease-in-out infinite;}
+@keyframes float1{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+@keyframes float2{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+/* Градиентный текст */
+.gradient-text{background:linear-gradient(135deg,#ff6b00,#ffaa44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* Glow эффект на кнопках */
+.btn-primary{box-shadow:0 0 0 0 rgba(255,107,0,0);}
+.btn-primary:hover{box-shadow:0 8px 30px rgba(255,107,0,0.4);}
+
+/* Линия прогресса наверху */
+.progress-bar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:999;transition:width 0.1s;}
+
 /* MOBILE */
 @media(max-width:768px){
   nav{padding:14px 20px;}
@@ -134,6 +173,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 <body>
 
 <!-- NAV -->
+<div class="progress-bar" id="progressBar"></div>
 <nav>
   <div class="nav-logo">OMS<span>FIN</span></div>
   <div class="nav-links">
@@ -146,14 +186,14 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge">🚀 Новый стандарт бухгалтерии в России</div>
-  <h1>Бухгалтерия которая<br><span>работает за тебя</span></h1>
-  <p>Загрузи выписку из банка — OMSFIN сам классифицирует расходы, посчитает НДС, создаст документы и напомнит о платежах.</p>
-  <div class="hero-btns">
+  <div class="hero-badge fade-up">🚀 Новый стандарт бухгалтерии в России</div>
+  <h1 class="fade-up" style="transition-delay:0.1s">Бухгалтерия которая<br><span>работает за тебя</span></h1>
+  <p class="fade-up" style="transition-delay:0.2s">Загрузи выписку из банка — OMSFIN сам классифицирует расходы, посчитает НДС, создаст документы и напомнит о платежах.</p>
+  <div class="hero-btns fade-up" style="transition-delay:0.3s">
     <button class="btn-primary" onclick="window.location.href='/login'">Начать бесплатно</button>
     <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Узнать больше</button>
   </div>
-  <div class="hero-stats">
+  <div class="hero-stats fade-up" style="transition-delay:0.4s">
     <div class="hero-stat">
       <div class="hero-stat-num">5 мин</div>
       <div class="hero-stat-label">На настройку</div>
@@ -178,7 +218,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="preview-inner">
     <div class="section-tag">Интерфейс</div>
     <div class="section-title" style="text-align:center">Просто. Красиво. Быстро.</div>
-    <div class="app-preview">
+    <div class="app-preview scale-in">
       <div class="app-bar">
         <div class="app-logo-sm">OMS<span>FIN</span></div>
         <div style="font-size:11px;color:var(--muted)">362 операции · Май 2026</div>
@@ -211,48 +251,48 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="section-tag">Возможности</div>
   <div class="section-title">Всё что нужно<br>для бизнеса</div>
   <div class="section-sub">Заменяет бухгалтера, 1С и Excel. Работает прямо в браузере — на телефоне и компьютере.</div>
-  <div class="features-grid">
-    <div class="feature-card">
+  <div class="features-grid stagger">
+    <div class="feature-card fade-up">
       <div class="feature-icon">🏦</div>
       <div class="feature-title">Загрузка выписки</div>
       <div class="feature-desc">Поддержка Т-Банк, Сбер, Альфа. Операции классифицируются автоматически за секунды.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">🤖</div>
       <div class="feature-title">Умный классификатор</div>
       <div class="feature-desc">ИИ распределяет расходы по категориям. Обучается на твоих данных — становится точнее.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">🧾</div>
       <div class="feature-title">НДС автоматически</div>
       <div class="feature-desc">Книга продаж, книга покупок, расчёт НДС к уплате. Всё по ставке 10% для мяса птицы.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">📄</div>
       <div class="feature-title">Документы с печатью</div>
       <div class="feature-desc">Счета, накладные, акты, договоры. Загрузи свою печать и подпись — готово к отправке.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">📊</div>
       <div class="feature-title">Аналитика и графики</div>
       <div class="feature-desc">Доходы и расходы по дням, топ контрагентов, накопительный баланс. Фильтр по месяцам.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">🏢</div>
       <div class="feature-title">Мультикомпания</div>
       <div class="feature-desc">Управляй несколькими компаниями из одного аккаунта. Данные разделены.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">📥</div>
       <div class="feature-title">Экспорт в Excel</div>
       <div class="feature-desc">Три листа: операции, сводка по категориям, НДС. Для бухгалтера или налоговой.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">🔔</div>
       <div class="feature-title">Уведомления</div>
       <div class="feature-desc">Напоминания о НДС, зарплате, ежемесячной выписке. Никогда не пропустишь платёж.</div>
     </div>
-    <div class="feature-card">
+    <div class="feature-card fade-up">
       <div class="feature-icon">📱</div>
       <div class="feature-title">Мобильная версия</div>
       <div class="feature-desc">Полноценное приложение в браузере. Работает на iPhone и Android без установки.</div>
@@ -293,8 +333,8 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   <div class="section-tag">Тарифы</div>
   <div class="section-title">Честные цены</div>
   <div class="section-sub" style="margin:0 auto">Начни бесплатно. Плати только когда бизнес растёт.</div>
-  <div class="pricing-grid">
-    <div class="price-card">
+  <div class="pricing-grid stagger">
+    <div class="price-card fade-up">
       <div class="price-name">Старт</div>
       <div class="price-desc">Для начинающих</div>
       <div class="price-amount">0 <span>₽</span></div>
@@ -310,7 +350,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
       </ul>
       <button class="price-btn outline" onclick="window.location.href='/login'">Начать бесплатно</button>
     </div>
-    <div class="price-card popular">
+    <div class="price-card popular fade-up">
       <div class="popular-badge">⭐ ПОПУЛЯРНЫЙ</div>
       <div class="price-name">Бизнес</div>
       <div class="price-desc">Для активного бизнеса</div>
@@ -346,6 +386,62 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   </div>
 </section>
 
+
+<!-- ОТЗЫВЫ -->
+<section class="section" style="text-align:center">
+  <div class="section-tag">Отзывы</div>
+  <div class="section-title fade-up">Нам доверяют</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:50px" class="stagger">
+    <div class="feature-card fade-up" style="text-align:left">
+      <div style="font-size:20px;margin-bottom:12px;color:var(--accent)">★★★★★</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted)">"Раньше тратил весь день на выписки и НДС. Теперь — 10 минут в месяц. OMSFIN изменил мой подход к бухгалтерии."</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff6b00,#ffaa44);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">А</div>
+        <div><div style="font-size:13px;font-weight:500">Андрей К.</div><div style="font-size:11px;color:var(--muted)">ООО "АгроТрейд"</div></div>
+      </div>
+    </div>
+    <div class="feature-card fade-up" style="text-align:left">
+      <div style="font-size:20px;margin-bottom:12px;color:var(--accent)">★★★★★</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted)">"Наконец-то нормальный интерфейс! 1С и Эльба — это боль. OMSFIN — как iPhone среди телефонов."</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#818cf8,#22c55e);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">М</div>
+        <div><div style="font-size:13px;font-weight:500">Мария С.</div><div style="font-size:11px;color:var(--muted)">ИП Соколова</div></div>
+      </div>
+    </div>
+    <div class="feature-card fade-up" style="text-align:left">
+      <div style="font-size:20px;margin-bottom:12px;color:var(--accent)">★★★★★</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;color:var(--muted)">"Мультикомпания — это то что я искал. Веду 3 ООО в одном месте. Документы с печатью — вообще огонь."</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">Д</div>
+        <div><div style="font-size:13px;font-weight:500">Дмитрий В.</div><div style="font-size:11px;color:var(--muted)">Группа компаний "Восток"</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- КОНТАКТ -->
+<section class="section" id="contact" style="max-width:600px;text-align:center">
+  <div class="section-tag">Связаться</div>
+  <div class="section-title fade-up">Остались вопросы?</div>
+  <div class="section-sub fade-up" style="margin:0 auto 40px">Напиши нам — ответим в течение 2 часов.</div>
+  <div class="feature-card fade-up" style="text-align:left">
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Имя</label>
+      <input type="text" id="contactName" placeholder="Иван Иванов" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Email</label>
+      <input type="email" id="contactEmail" placeholder="ivan@company.ru" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Сообщение</label>
+      <textarea id="contactMsg" placeholder="Расскажи о своём бизнесе..." rows="4" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:Inter,sans-serif"></textarea>
+    </div>
+    <button class="btn-primary" onclick="sendContact()" style="width:100%;padding:12px">Отправить →</button>
+    <div id="contactResult" style="margin-top:10px;font-size:13px;text-align:center"></div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="cta">
   <h2>Готов попробовать?</h2>
@@ -363,6 +459,99 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   </div>
   <div class="footer-copy">© 2026 OMSFIN. Все права защищены.</div>
 </footer>
+
+
+<script>
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, {threshold: 0.1});
+
+document.querySelectorAll('.fade-up,.fade-left,.fade-right,.scale-in').forEach(el => {
+  observer.observe(el);
+});
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.body.scrollHeight - window.innerHeight;
+  const progress = (scrolled / total) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
+});
+
+// Animate counters
+function animateCounter(el, target, suffix) {
+  let start = 0;
+  const step = target / 60;
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) {
+      start = target;
+      clearInterval(timer);
+    }
+    el.textContent = Math.floor(start).toLocaleString('ru-RU') + suffix;
+  }, 16);
+}
+
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !e.target.dataset.animated) {
+      e.target.dataset.animated = 'true';
+      const counters = e.target.querySelectorAll('.hero-stat-num');
+      counters.forEach(c => {
+        const text = c.textContent;
+        if (text.includes('мин')) animateCounter(c, 5, ' мин');
+        else if (text === '0 ₽') {}
+        else if (text === 'НДС') {}
+        else if (text.includes('%')) animateCounter(c, 100, '%');
+      });
+    }
+  });
+}, {threshold: 0.5});
+
+const heroStats = document.querySelector('.hero-stats');
+if (heroStats) statsObserver.observe(heroStats);
+
+
+function sendContact() {
+  const name = document.getElementById('contactName').value.trim();
+  const email = document.getElementById('contactEmail').value.trim();
+  const msg = document.getElementById('contactMsg').value.trim();
+  const result = document.getElementById('contactResult');
+  
+  if (!name || !email || !msg) {
+    result.style.color = '#ef4444';
+    result.textContent = 'Заполни все поля';
+    return;
+  }
+  
+  // Отправляем на mailto
+  const subject = encodeURIComponent('Вопрос от ' + name + ' — OMSFIN');
+  const body = encodeURIComponent('Имя: ' + name + '\nEmail: ' + email + '\n\n' + msg);
+  window.open('mailto:mo@omchicken.ru?subject=' + subject + '&body=' + body);
+  
+  result.style.color = '#22c55e';
+  result.textContent = '✅ Открываем почтовый клиент...';
+}
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
+  });
+});
+
+// Trigger visible for hero elements immediately
+setTimeout(() => {
+  document.querySelectorAll('.hero .fade-up').forEach(el => el.classList.add('visible'));
+}, 100);
+</script>
 
 </body>
 </html>
