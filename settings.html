@@ -294,7 +294,8 @@ function saveRequisites() {
     ks: document.getElementById('sKs').value,
   };
   localStorage.setItem('omschicken_seller', JSON.stringify(seller));
-  showToast('✅ Реквизиты сохранены');
+  saveToCloud('seller', seller);
+  showToast('✅ Реквизиты сохранены и синхронизированы');
 }
 
 // Логотип, печать, подпись
@@ -306,7 +307,8 @@ function loadImage(input, key, previewId) {
     const data = e.target.result;
     localStorage.setItem('omschicken_' + key, data);
     document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
-    showToast('✅ Изображение загружено');
+    saveToCloud(key, data);
+    showToast('✅ Изображение загружено и синхронизировано');
   };
   reader.readAsDataURL(file);
 }
@@ -317,14 +319,68 @@ function clearImage(key, previewId, icon) {
   showToast('Изображение удалено');
 }
 
-// Инициализация превью
-['logo','stamp','sign'].forEach(key => {
-  const data = localStorage.getItem('omschicken_' + key);
-  const previewId = key + 'Preview';
-  if (data && document.getElementById(previewId)) {
-    document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
-  }
-});
+// Загрузка настроек из облака
+const _settToken = localStorage.getItem('omschicken_token') || '';
+
+async function loadCloudSettings() {
+  try {
+    const r = await fetch('/api/company_settings', {
+      headers: {'Authorization': 'Bearer ' + _settToken}
+    });
+    const data = await r.json();
+    if (data && data.stamp) {
+      localStorage.setItem('omschicken_stamp', data.stamp);
+    }
+    if (data && data.sign) {
+      localStorage.setItem('omschicken_sign', data.sign);
+    }
+    if (data && data.logo) {
+      localStorage.setItem('omschicken_logo', data.logo);
+    }
+    if (data && data.seller) {
+      localStorage.setItem('omschicken_seller', JSON.stringify(data.seller));
+      // Заполняем поля реквизитов
+      const s = data.seller;
+      if (s.name) document.getElementById('sName').value = s.name;
+      if (s.inn) document.getElementById('sInn').value = s.inn;
+      if (s.kpp) document.getElementById('sKpp').value = s.kpp;
+      if (s.ogrn) document.getElementById('sOgrn').value = s.ogrn;
+      if (s.addr) document.getElementById('sAddr').value = s.addr;
+      if (s.phone) document.getElementById('sPhone').value = s.phone;
+      if (s.email) document.getElementById('sEmail').value = s.email;
+      if (s.director) document.getElementById('sDirector').value = s.director;
+      if (s.buh) document.getElementById('sBuh').value = s.buh;
+      if (s.bank) document.getElementById('sBank').value = s.bank;
+      if (s.rs) document.getElementById('sRs').value = s.rs;
+      if (s.bik) document.getElementById('sBik').value = s.bik;
+      if (s.ks) document.getElementById('sKs').value = s.ks;
+    }
+  } catch(e) {}
+  // Показываем превью
+  initImagePreviews();
+}
+
+async function saveToCloud(key, value) {
+  try {
+    await fetch('/api/company_settings', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+_settToken},
+      body: JSON.stringify({[key]: value})
+    });
+  } catch(e) {}
+}
+
+function initImagePreviews() {
+  ['logo','stamp','sign'].forEach(key => {
+    const data = localStorage.getItem('omschicken_' + key);
+    const previewId = key + 'Preview';
+    if (data && document.getElementById(previewId)) {
+      document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
+    }
+  });
+}
+
+loadCloudSettings();
 
 // Уведомления
 const notifSettings = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
