@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ОМСЧИКЕН — Бухгалтерия</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:17px;}
+  .logo span{color:var(--accent);}
+  .header-right{display:flex;align-items:center;gap:10px;}
+  .sync-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;transition:all 0.2s;}
+  .sync-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;}
+  .sync-dot.offline{background:var(--red);}
+  .header-meta{font-size:11px;color:var(--muted);}
+  .tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+  .tab{padding:9px 14px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  main{padding:18px 20px;max-width:860px;margin:0 auto;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
+  .stat-value.green{color:var(--green);}.stat-value.red{color:var(--red);}.stat-value.orange{color:var(--accent);}
+  .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .btn:hover{background:var(--accent2);}
+  .btn-sm{padding:6px 12px;font-size:10px;}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+  .tx-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-bottom:5px;}
+  .tx-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tx-date{font-size:10px;color:var(--muted);margin-top:2px;}
+  .tx-amount{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;}
+  .tx-amount.plus{color:var(--green);}.tx-amount.minus{color:var(--red);}
+  .cat-badge{font-size:10px;padding:3px 7px;border-radius:20px;font-weight:500;white-space:nowrap;cursor:pointer;}
+  .cat-chicken{background:#1a3a1a;color:#4ade80;}.cat-income{background:#0a2a1a;color:#22c55e;}
+  .cat-personal{background:#3a1a0a;color:#fb923c;}.cat-transport{background:#1a1a3a;color:#818cf8;}
+  .cat-food{background:#2a1a0a;color:#fbbf24;}.cat-unknown{background:#2a2a2a;color:#888;}
+  .cat-salary{background:#1a2a3a;color:#38bdf8;}.cat-office{background:#2a2a1a;color:#a3e635;}
+  .cat-bank{background:#2a1a2a;color:#c084fc;}
+  .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;background:var(--surface);}
+  .upload-zone:hover{border-color:var(--accent);}
+  .upload-title{font-size:14px;font-weight:500;margin:6px 0 3px;}
+  .upload-sub{font-size:11px;color:var(--muted);}
+  .progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;display:none;}
+  .progress-wrap.active{display:block;}
+  .progress-track{background:var(--border);border-radius:4px;height:4px;margin-top:8px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width 0.4s;width:0%;}
+  .filter-bar{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;}
+  .filter-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+  .filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .empty{text-align:center;padding:36px 0;color:var(--muted);}
+  .empty-icon{font-size:32px;margin-bottom:8px;}
+  .page{display:none;}.page.active{display:block;}
+  .input-group{margin-bottom:10px;}
+  .input-group label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;}
+  .input-group input,.input-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+  .input-group input:focus,.input-group select:focus{border-color:var(--accent);}
+  .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .toast{position:fixed;bottom:20px;right:16px;left:16px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.3s;z-index:999;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .info-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;line-height:1.6;}
+  .info-box.success{border-color:var(--green);}
+  .chart-row{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+  .chart-item{display:flex;align-items:center;gap:8px;font-size:12px;}
+  .chart-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:8px;overflow:hidden;}
+  .chart-bar{height:100%;border-radius:4px;transition:width 0.5s;}
+  .chart-label{width:90px;color:var(--muted);font-size:11px;}
+  .chart-val{width:75px;text-align:right;font-family:'Unbounded',sans-serif;font-size:10px;}
+  .reclassify-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:6px;}
+  .reclassify-name{font-size:13px;font-weight:500;margin-bottom:4px;}
+  .reclassify-meta{font-size:11px;color:var(--muted);margin-bottom:8px;}
+  .cat-btns{display:flex;gap:5px;flex-wrap:wrap;}
+  .cat-btn{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+  .cat-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .cat-btn.active{background:var(--accent);color:#000;border-color:var(--accent);}
+  .rules-list{background:var(--surface2);border-radius:8px;padding:12px;margin-top:8px;font-size:12px;}
+  .rule-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
+  .rule-item:last-child{border-bottom:none;}
+  .del-rule{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;}
+  ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div class="header-right">
+    <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 8px;cursor:pointer;max-width:140px;outline:none;margin-right:4px">
+      <option value="">Компания...</option>
+    </select>
+    <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">Выйти</button>
+    <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
+    <div class="header-meta" id="headerMeta">0 операций</div>
+  </div>
+</header>
+<div class="tabs">
+  <button class="tab active" onclick="showPage('dashboard',this)">📊 Дашборд</button>
+  <button class="tab" onclick="showPage('transactions',this)">📋 Операции</button>
+  <button class="tab" onclick="showPage('reclassify',this)">🏷️ Разметка</button>
+  <button class="tab" onclick="showPage('add',this)">➕ Добавить</button>
+  <button class="tab" onclick="window.location.href='/docs'">📄 Документы</button>
+  <button class="tab" onclick="window.location.href='/analytics'">📊 Аналитика</button>
+  <button class="tab" onclick="window.location.href='/vat'">🧾 НДС</button>
+</div>
+<main>
+
+<div class="page active" id="page-dashboard">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div></div>
+    <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div></div>
+    <div class="stat-card"><div class="stat-label">Личные</div><div class="stat-value orange" id="statPersonal">0 ₽</div></div>
+  </div>
+  <div class="upload-zone" id="uploadZone">
+    <div style="font-size:26px">📂</div>
+    <div class="upload-title">Загрузить выписку из Т-Банк</div>
+    <div class="upload-sub">CSV файл · нажми для выбора · загружай каждый месяц отдельно</div>
+  </div>
+  <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+  <div class="progress-wrap" id="progressWrap">
+    <div id="progressText" style="font-size:13px;font-weight:500">Обрабатываю...</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+  <div class="section-title">Расходы по категориям</div>
+  <div id="chartArea"></div>
+  <div class="section-title" style="margin-top:8px">
+    Последние операции
+    <button class="btn-outline" onclick="showPage('transactions',document.querySelectorAll('.tab')[1])">Все →</button>
+  </div>
+  <div id="recentList"><div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div></div>
+</div>
+
+<div class="page" id="page-transactions">
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterTx('all',this)">Все</button>
+    <button class="filter-btn" onclick="filterTx('income',this)">💰 Доход</button>
+    <button class="filter-btn" onclick="filterTx('chicken',this)">🐔 Курятина</button>
+    <button class="filter-btn" onclick="filterTx('transport',this)">🚗 Транспорт</button>
+    <button class="filter-btn" onclick="filterTx('food',this)">🍽️ Еда</button>
+    <button class="filter-btn" onclick="filterTx('personal',this)">🛍️ Личное</button>
+    <button class="filter-btn" onclick="filterTx('salary',this)">👥 Зарплата</button>
+    <button class="filter-btn" onclick="filterTx('bank',this)">🏦 Банк</button>
+    <button class="filter-btn" onclick="filterTx('unknown',this)">❓ Прочее</button>
+  </div>
+  <div class="section-title">
+    <span id="txCount">Операции</span>
+    <button class="btn btn-sm" onclick="exportCSV()">📥 Экспорт</button>
+  </div>
+  <div id="txList"></div>
+</div>
+
+<div class="page" id="page-reclassify">
+  <div class="section-title">
+    🏷️ Разметка операций
+    <button class="btn btn-sm" onclick="saveRules()">💾 Сохранить правила</button>
+  </div>
+  <div class="info-box" style="margin-bottom:12px">
+    Нажми на категорию чтобы переназначить. Система запомнит и применит к похожим операциям.
+  </div>
+  <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+    <select id="reclassifyFilter" onchange="renderReclassify()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none">
+      <option value="unknown">Показать: Прочее</option>
+      <option value="all">Показать: Все</option>
+      <option value="income">Доход</option>
+      <option value="chicken">Курятина</option>
+      <option value="transport">Транспорт</option>
+      <option value="food">Еда</option>
+      <option value="personal">Личное</option>
+      <option value="salary">Зарплата</option>
+      <option value="bank">Банк</option>
+      <option value="office">Офис</option>
+    </select>
+    <span id="reclassifyCount" style="font-size:12px;color:var(--muted)"></span>
+  </div>
+  <div id="reclassifyList"></div>
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+    <div class="section-title">📚 Мои правила (<span id="rulesCount">0</span>)</div>
+    <div id="rulesList"></div>
+  </div>
+</div>
+
+<div class="page" id="page-add">
+  <div class="section-title">Добавить вручную</div>
+  <div class="input-row">
+    <div class="input-group"><label>Контрагент</label><input type="text" id="addName" placeholder="ООО Агросфера"></div>
+    <div class="input-group"><label>Сумма (- расход, + доход)</label><input type="number" id="addAmount" placeholder="-50000"></div>
+  </div>
+  <div class="input-row">
+    <div class="input-group"><label>Дата</label><input type="date" id="addDate"></div>
+    <div class="input-group"><label>Назначение</label><input type="text" id="addDesc" placeholder="Оплата по счёту..."></div>
+  </div>
+  <div class="input-group">
+    <label>Категория</label>
+    <select id="addCat">
+      <option value="">Автоматически</option>
+      <option value="income">💰 Доход от продаж</option>
+      <option value="chicken">🐔 Закупка курятины</option>
+      <option value="transport">🚗 Транспорт</option>
+      <option value="food">🍽️ Еда (личное)</option>
+      <option value="personal">🛍️ Личные расходы</option>
+      <option value="salary">👥 Зарплата</option>
+      <option value="office">🏢 Офис/Аренда</option>
+      <option value="bank">🏦 Банк/Кредиты</option>
+    </select>
+  </div>
+  <button class="btn" onclick="addManual()" style="width:100%;margin-bottom:12px">✅ Сохранить</button>
+  <div id="addResult"></div>
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+    <div class="section-title">Управление</div>
+    <button class="btn-outline" onclick="clearAll()" style="color:var(--red);border-color:var(--red);font-size:12px;padding:8px 14px">🗑️ Очистить ВСЕ данные</button>
+  </div>
+</div>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+let allTx = [];
+let currentFilter = 'all';
+let isUploading = false;
+let userRules = JSON.parse(localStorage.getItem('omschicken_rules') || '{}');
+
+// Проверка авторизации
+const _token = localStorage.getItem('omschicken_token');
+if (!_token) window.location.href = '/login';
+
+// Автообновление токена
+const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+async function refreshToken() {
+  const refresh = localStorage.getItem('omschicken_refresh');
+  if (!refresh) { window.location.href = '/login'; return; }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
+      body: JSON.stringify({refresh_token: refresh})
+    });
+    const data = await r.json();
+    if (data.access_token) {
+      localStorage.setItem('omschicken_token', data.access_token);
+      localStorage.setItem('omschicken_refresh', data.refresh_token);
+    } else {
+      window.location.href = '/login';
+    }
+  } catch(e) {}
+}
+
+// Обновляем токен каждые 45 минут
+setInterval(refreshToken, 45 * 60 * 1000);
+
+// Перехватываем 401 ошибки
+const _origFetch = window.fetch;
+window.fetch = async function(...args) {
+  const r = await _origFetch(...args);
+  if (r.status === 401) {
+    await refreshToken();
+  }
+  return r;
+};
+
+function logout() {
+  localStorage.removeItem('omschicken_token');
+  localStorage.removeItem('omschicken_refresh');
+  localStorage.removeItem('omschicken_user');
+  window.location.href = '/login';
+}
+
+function classify(name, description, amount) {
+  if (amount > 0) return 'income';
+  const text = (name + ' ' + description).toLowerCase();
+  for (const [keyword, category] of Object.entries(userRules)) {
+    if (text.includes(keyword.toLowerCase())) return category;
+  }
+  if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino|pizzasushiwok|chaihona|чайхона/.test(text)) return 'food';
+  if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин|rnazk|rosneft|смартлогистика|грузоперевозк|набокин/.test(text)) return 'transport';
+  if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike|lacoste|vnukovo|krc|симутин|подотчет/.test(text)) return 'personal';
+  if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|мясное дело|тихонов|мясокомбинат|chicken|бройлер/.test(text)) return 'chicken';
+  if (/зарплата|зп\b|аванс|выплата сотрудник|выдача зарплаты|выплата зарплаты/.test(text)) return 'salary';
+  if (/аренда|коворкинг|офис|склад|петрова/.test(text)) return 'office';
+  if (/овердрафт|погашение|задолженность по договору|плата за использованный|плата за активный|плата за обслуживание|обслуживание счета|комиссия за вывод|кредит/.test(text)) return 'bank';
+  return 'unknown';
+}
+
+async function apiGet() {
+  const token = localStorage.getItem('omschicken_token') || '';
+  const r = await fetch('/api/transactions', {
+    headers: {'Authorization': 'Bearer ' + token}
+  });
+  if (!r.ok) throw new Error('Ошибка сервера');
+  return r.json();
+}
+
+async function apiPost(txs) {
+  const token = localStorage.getItem('omschicken_token') || '';
+  const r = await fetch('/api/transactions', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
+    body: JSON.stringify(txs)
+  });
+  if (!r.ok) throw new Error('Ошибка сохранения');
+  return r.json();
+}
+
+async function apiDelete(period) {
+  const token = localStorage.getItem('omschicken_token') || '';
+  const r = await fetch('/api/transactions', {
+    method: 'DELETE',
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
+    body: JSON.stringify({period: period || null})
+  });
+  if (!r.ok) throw new Error('Ошибка удаления');
+}
+
+async function apiUpdateCategory(id, category) {
+  const token = localStorage.getItem('omschicken_token') || '';
+  const r = await fetch('/api/transactions', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
+    body: JSON.stringify({id, category})
+  });
+  return r.json();
+}
+
+// Мультикомпания
+let currentCompanyId = localStorage.getItem('omschicken_company') || null;
+
+async function loadCompanies() {
+  const token = localStorage.getItem('omschicken_token') || '';
+  try {
+    const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
+    const companies = await r.json();
+    const sel = document.getElementById('companySwitcher');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Все компании</option>' + 
+      companies.map(c=>`<option value="${c.id}" ${c.id===currentCompanyId?'selected':''}>${c.name}</option>`).join('');
+    // Если компаний нет — создаём ОМСЧИКЕН автоматически
+    if (companies.length === 0) {
+      await createDefaultCompany();
+    }
+  } catch(e) {}
+}
+
+async function createDefaultCompany() {
+  const token = localStorage.getItem('omschicken_token') || '';
+  const seller = JSON.parse(localStorage.getItem('omschicken_seller') || '{}');
+  const r = await fetch('/api/companies', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({name: seller.name || 'ООО "ОМСЧИКЕН"', inn: seller.inn || '5800015301'})
+  });
+  const company = await r.json();
+  if (company && company[0]) {
+    currentCompanyId = company[0].id;
+    localStorage.setItem('omschicken_company', currentCompanyId);
+    await loadCompanies();
+  }
+}
+
+function switchCompany(id) {
+  currentCompanyId = id || null;
+  if (id) localStorage.setItem('omschicken_company', id);
+  else localStorage.removeItem('omschicken_company');
+  syncNow();
+}
+
+async function syncNow() {
+  loadCompanies();
+  const btn = document.getElementById('syncBtn');
+  const dot = document.getElementById('syncDot');
+  if (btn) btn.innerHTML = '⏳ Синхронизация...';
+  try {
+    allTx = await apiGet();
+    if (dot) dot.className = 'sync-dot';
+    if (btn) btn.innerHTML = '<span class="sync-dot"></span>Синхронизировано';
+    renderAll();
+  } catch(e) {
+    if (dot) dot.className = 'sync-dot offline';
+    if (btn) btn.innerHTML = '<span class="sync-dot offline"></span>Нет связи';
+  }
+}
+
+document.getElementById('uploadZone').addEventListener('click', function() {
+  if (isUploading) return;
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', async function(e) {
+  if (isUploading) return;
+  const file = e.target.files[0];
+  if (!file) return;
+  isUploading = true;
+  this.value = '';
+  const text = await file.text();
+  await parseAndProcess(text);
+  isUploading = false;
+});
+
+async function parseAndProcess(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  // Определяем период из первой строки с датой
+  let monthKey = null;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(';');
+    const date = (cols[2]||'').trim();
+    if (date && date.includes('.') && date.length >= 8) {
+      const parts = date.split('.');
+      if (parts.length >= 3) { monthKey = parts[1] + '.' + parts[2]; break; }
+    }
+  }
+  const txs = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+    if (cols.length < 8) continue;
+    const type = cols[1] || '';
+    const date = cols[2] || '';
+    const amountRaw = cols[5] || '0';
+    const amount = parseFloat(amountRaw.replace(',','.')) * (type==='Дебет'?-1:1);
+    if (isNaN(amount)||amount===0) continue;
+    const description = cols[7] || '';
+    const counterparty = (cols[24]||'').replace(/^АО "ТБанк"$|^ТБанк$/gi,'').trim();
+    const name = counterparty.length>2 ? counterparty : description;
+    const category = classify(name, description, amount);
+    txs.push({name, amount, date, description, category, period: monthKey, is_personal:['personal','food'].includes(category)});
+  }
+  if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
+
+  const wrap = document.getElementById('progressWrap');
+  const fill = document.getElementById('progressFill');
+  const ptxt = document.getElementById('progressText');
+  wrap.classList.add('active');
+  fill.style.width = '20%';
+  ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
+
+  try {
+    await apiDelete(monthKey);
+    fill.style.width = '50%';
+    ptxt.textContent = 'Сохраняю операции...';
+    await apiPost(txs);
+    fill.style.width = '80%';
+    ptxt.textContent = 'Загружаю из базы...';
+    allTx = await apiGet();
+    fill.style.width = '100%';
+    const unknownCount = allTx.filter(t=>t.category==='unknown').length;
+    ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
+    setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
+    renderAll();
+    if (unknownCount > 0) showToast(`⚠️ ${unknownCount} в "Прочее" — зайди в Разметку`);
+    else showToast(`✅ Загружено ${txs.length} операций за ${monthKey}`);
+  } catch(e) {
+    wrap.classList.remove('active');
+    showToast('❌ Ошибка: ' + e.message);
+  }
+}
+
+function renderReclassify() {
+  const filter = document.getElementById('reclassifyFilter').value;
+  const filtered = filter === 'all' ? allTx.filter(t=>t.amount<0) : allTx.filter(t=>t.category===filter && t.amount<0);
+  document.getElementById('reclassifyCount').textContent = filtered.length + ' операций';
+  const cats = [
+    {k:'chicken',l:'🐔 Курятина'},{k:'transport',l:'🚗 Транспорт'},{k:'food',l:'🍽️ Еда'},
+    {k:'personal',l:'🛍️ Личное'},{k:'salary',l:'👥 Зарплата'},{k:'office',l:'🏢 Офис'},
+    {k:'bank',l:'🏦 Банк'},{k:'unknown',l:'❓ Прочее'}
+  ];
+  document.getElementById('reclassifyList').innerHTML = filtered.slice(0,50).map(tx => `
+    <div class="reclassify-row">
+      <div class="reclassify-name">${tx.name}</div>
+      <div class="reclassify-meta">${tx.date||'—'} · ${fmt(tx.amount)}</div>
+      <div class="cat-btns">
+        ${cats.map(c=>`<button class="cat-btn ${tx.category===c.k?'active':''}" onclick="reclassifyTx('${tx.id}','${c.k}','${tx.name}',this)">${c.l}</button>`).join('')}
+      </div>
+    </div>`).join('') || '<div class="empty"><div class="empty-icon">✅</div><div>Нет операций</div></div>';
+  renderRules();
+}
+
+async function reclassifyTx(id, category, name, btn) {
+  const tx = allTx.find(t=>t.id==id);
+  if (tx) { tx.category = category; tx.is_personal = ['personal','food'].includes(category); }
+  btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const keyword = name.toLowerCase().substring(0,20);
+  userRules[keyword] = category;
+  localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
+  await apiUpdateCategory(id, category);
+  renderAll();
+  renderRules();
+  showToast('✅ Категория обновлена');
+}
+
+function renderRules() {
+  const rules = Object.entries(userRules);
+  document.getElementById('rulesCount').textContent = rules.length;
+  const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',unknown:'❓'};
+  document.getElementById('rulesList').innerHTML = rules.length ?
+    `<div class="rules-list">${rules.map(([k,v])=>`
+      <div class="rule-item">
+        <span style="font-size:12px">"${k}" → ${cats[v]||'?'} ${v}</span>
+        <button class="del-rule" onclick="deleteRule('${k}')">✕</button>
+      </div>`).join('')}</div>` :
+    '<div style="font-size:12px;color:var(--muted)">Правил пока нет</div>';
+}
+
+function deleteRule(keyword) {
+  delete userRules[keyword];
+  localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
+  renderRules();
+}
+
+function saveRules() {
+  localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
+  showToast('✅ Правила сохранены');
+}
+
+function addManual() {
+  const name = document.getElementById('addName').value.trim();
+  const amount = parseFloat(document.getElementById('addAmount').value);
+  const date = document.getElementById('addDate').value || new Date().toISOString().split('T')[0];
+  const desc = document.getElementById('addDesc').value.trim();
+  const manualCat = document.getElementById('addCat').value;
+  if (!name||isNaN(amount)) { showToast('Заполни название и сумму'); return; }
+  const cat = manualCat || classify(name, desc, amount);
+  const tx = {name, amount, date, description:desc, category:cat, is_personal:['personal','food'].includes(cat)};
+  apiPost([tx]).then(()=>syncNow()).catch(e=>showToast('❌ '+e.message));
+  document.getElementById('addResult').innerHTML = `<div class="info-box success">✅ Сохранено: <strong>${name}</strong> — ${getCatBadge(cat)}</div>`;
+  document.getElementById('addName').value = '';
+  document.getElementById('addAmount').value = '';
+  document.getElementById('addDesc').value = '';
+  document.getElementById('addCat').value = '';
+}
+
+async function clearAll() {
+  if (!confirm('Удалить ВСЕ данные за все месяцы?')) return;
+  try {
+    await apiDelete(null);
+    allTx = [];
+    renderAll();
+    showToast('Все данные очищены');
+  } catch(e) { showToast('❌ '+e.message); }
+}
+
+function renderAll() {
+  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+  const personal = allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0);
+  document.getElementById('statIncome').textContent = fmt(income);
+  document.getElementById('statExpense').textContent = fmt(expense);
+  document.getElementById('statPersonal').textContent = fmt(personal);
+  document.getElementById('headerMeta').textContent = allTx.length+' операций';
+  renderChart();
+  const recent = allTx.slice(0,6);
+  document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
+  renderTxList();
+}
+
+function renderChart() {
+  const cats=[
+    {key:'chicken',label:'🐔 Курятина',color:'#4ade80'},
+    {key:'transport',label:'🚗 Транспорт',color:'#818cf8'},
+    {key:'food',label:'🍽️ Еда',color:'#fbbf24'},
+    {key:'personal',label:'🛍️ Личное',color:'#fb923c'},
+    {key:'salary',label:'👥 Зарплата',color:'#38bdf8'},
+    {key:'office',label:'🏢 Офис',color:'#a3e635'},
+    {key:'bank',label:'🏦 Банк',color:'#c084fc'},
+    {key:'unknown',label:'❓ Прочее',color:'#555'},
+  ];
+  const totals = cats.map(c=>({...c, val:allTx.filter(t=>t.category===c.key&&t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0)}));
+  const max = Math.max(...totals.map(t=>t.val),1);
+  const active = totals.filter(t=>t.val>0);
+  if (!active.length) { document.getElementById('chartArea').innerHTML='<div style="color:var(--muted);font-size:12px;margin-bottom:16px">Загрузи выписку чтобы увидеть аналитику</div>'; return; }
+  document.getElementById('chartArea').innerHTML = `<div class="chart-row">${active.map(c=>`
+    <div class="chart-item">
+      <div class="chart-label">${c.label}</div>
+      <div class="chart-bar-wrap"><div class="chart-bar" style="width:${(c.val/max*100).toFixed(0)}%;background:${c.color}"></div></div>
+      <div class="chart-val" style="color:${c.color}">${fmt(c.val)}</div>
+    </div>`).join('')}</div>`;
+}
+
+function renderTxList() {
+  const filtered = currentFilter==='all' ? allTx : currentFilter==='income' ? allTx.filter(t=>t.amount>0) : allTx.filter(t=>t.category===currentFilter);
+  document.getElementById('txCount').textContent = filtered.length+' операций';
+  document.getElementById('txList').innerHTML = filtered.length ? filtered.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🔍</div><div>Нет операций</div></div>';
+}
+
+function txHTML(tx) {
+  const plus = tx.amount>0;
+  return `<div class="tx-row">
+    <div style="min-width:0"><div class="tx-name">${tx.name}</div><div class="tx-date">${tx.date||''}</div></div>
+    <div>${getCatBadge(tx.category)}</div>
+    <div class="tx-amount ${plus?'plus':'minus'}">${plus?'+':''}${fmt(tx.amount)}</div>
+  </div>`;
+}
+
+function getCatBadge(cat) {
+  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🐔 Курятина'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],unknown:['cat-unknown','❓ Прочее']};
+  const[cls,lbl] = m[cat]||m.unknown;
+  return `<span class="cat-badge ${cls}">${lbl}</span>`;
+}
+
+function filterTx(cat,btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTxList();
+}
+
+function exportCSV() {
+  const rows = [['Дата','Контрагент','Сумма','Категория','Назначение']];
+  allTx.forEach(t=>rows.push([t.date,t.name,t.amount,t.category,t.description||'']));
+  const csv = '\ufeff'+rows.map(r=>r.join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'omschicken_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  showToast('📥 Файл скачан');
+}
+
+function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='reclassify') renderReclassify();
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+
+document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
+syncNow();
+</script>
+</body>
+</html>
