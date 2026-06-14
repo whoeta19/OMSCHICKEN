@@ -59,6 +59,9 @@
 <header>
   <div class="logo">ОМС<span>ЧИКЕН</span></div>
   <div style="display:flex;gap:8px">
+    <select id="periodSelect" onchange="onPeriodChange()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;margin-right:4px">
+      <option value="all">Все периоды</option>
+    </select>
     <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
     <button class="btn-outline no-print" onclick="window.print()">🖨️ Печать</button>
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
@@ -110,11 +113,31 @@
 
 <script>
 let allTx = [];
+let filteredTx = [];
+let currentPeriod = 'all';
+
+function renderPeriodFilter() {
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('periodSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="all">Все периоды</option>' + 
+    periods.map(p=>`<option value="${p}" ${p===currentPeriod?'selected':''}>${p}</option>`).join('');
+}
+
+function onPeriodChange() {
+  currentPeriod = document.getElementById('periodSelect').value;
+  filteredTx = currentPeriod === 'all' ? allTx : allTx.filter(t=>t.period===currentPeriod);
+  renderSummary();
+  renderSales();
+  renderPurchases();
+}
 
 async function loadData() {
   try {
     const r = await fetch('/api/transactions');
     allTx = await r.json();
+    filteredTx = allTx;
+    renderPeriodFilter();
     renderSummary();
     renderSales();
     renderPurchases();
@@ -130,13 +153,13 @@ function calcVat(amount, pct) {
 
 function renderSummary() {
   // Продажи (доходы от покупателей курятины)
-  const sales = allTx.filter(t => t.amount > 0 && t.category === 'income');
+  const sales = filteredTx.filter(t => t.amount > 0 && t.category === 'income');
   const totalSales = sales.reduce((s,t) => s + Number(t.amount), 0);
   const vatSales = calcVat(totalSales, 10);
   const salesNoVat = totalSales - vatSales;
 
   // Закупки курятины
-  const purchases = allTx.filter(t => t.amount < 0 && t.category === 'chicken');
+  const purchases = filteredTx.filter(t => t.amount < 0 && t.category === 'chicken');
   const totalPurchases = purchases.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
   const vatPurchases = calcVat(totalPurchases, 10);
   const purchasesNoVat = totalPurchases - vatPurchases;
@@ -237,7 +260,7 @@ function renderSummary() {
 }
 
 function renderSales() {
-  const sales = allTx.filter(t => t.amount > 0 && t.category === 'income');
+  const sales = filteredTx.filter(t => t.amount > 0 && t.category === 'income');
   let total = 0;
   let totalVat = 0;
 
@@ -267,7 +290,7 @@ function renderSales() {
 }
 
 function renderPurchases() {
-  const purchases = allTx.filter(t => t.amount < 0 && t.category === 'chicken');
+  const purchases = filteredTx.filter(t => t.amount < 0 && t.category === 'chicken');
   let total = 0;
   let totalVat = 0;
 
