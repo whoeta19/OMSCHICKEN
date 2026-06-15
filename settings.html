@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ОМСЧИКЕН — Настройки</title>
+<title>OMSFIN — Настройки</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
@@ -65,7 +65,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
   </div>
@@ -223,8 +223,8 @@
 
 <script>
 // Загружаем настройки
-const settings = JSON.parse(localStorage.getItem('omschicken_settings') || '{}');
-const user = JSON.parse(localStorage.getItem('omschicken_user') || '{}');
+const settings = JSON.parse(localStorage.getItem('omsfin_settings') || '{}');
+const user = JSON.parse(localStorage.getItem('omsfin_user') || '{}');
 
 // Показываем email
 if (user.email) document.getElementById('userEmail').textContent = user.email;
@@ -239,7 +239,7 @@ function applyTheme(theme) {
 function setTheme(theme, el) {
   applyTheme(theme);
   settings.theme = theme;
-  localStorage.setItem('omschicken_settings', JSON.stringify(settings));
+  localStorage.setItem('omsfin_settings', JSON.stringify(settings));
   showToast('✅ Тема изменена');
 }
 
@@ -249,7 +249,7 @@ function setAccent(color, el) {
   document.querySelectorAll('.accent-dot').forEach(d => d.style.border = '2px solid transparent');
   el.style.border = '2px solid white';
   settings.accent = color;
-  localStorage.setItem('omschicken_settings', JSON.stringify(settings));
+  localStorage.setItem('omsfin_settings', JSON.stringify(settings));
 }
 
 // Инициализация темы и цвета
@@ -262,7 +262,7 @@ if (settings.accent) {
 }
 
 // Реквизиты
-const req = JSON.parse(localStorage.getItem('omschicken_seller') || '{}');
+const req = JSON.parse(localStorage.getItem('omsfin_seller') || '{}');
 if (req.name) document.getElementById('sName').value = req.name;
 if (req.inn) document.getElementById('sInn').value = req.inn;
 if (req.kpp) document.getElementById('sKpp').value = req.kpp;
@@ -293,7 +293,7 @@ function saveRequisites() {
     bik: document.getElementById('sBik').value,
     ks: document.getElementById('sKs').value,
   };
-  localStorage.setItem('omschicken_seller', JSON.stringify(seller));
+  localStorage.setItem('omsfin_seller', JSON.stringify(seller));
   saveToCloud('seller', seller);
   showToast('✅ Реквизиты сохранены и синхронизированы');
 }
@@ -305,7 +305,7 @@ function loadImage(input, key, previewId) {
   const reader = new FileReader();
   reader.onload = e => {
     const data = e.target.result;
-    localStorage.setItem('omschicken_' + key, data);
+    localStorage.setItem('omsfin_' + key, data);
     document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
     saveToCloud(key, data);
     showToast('✅ Изображение загружено и синхронизировано');
@@ -314,7 +314,7 @@ function loadImage(input, key, previewId) {
 }
 
 function clearImage(key, previewId, icon) {
-  localStorage.removeItem('omschicken_' + key);
+  localStorage.removeItem('omsfin_' + key);
   document.getElementById(previewId).innerHTML = `<div style="font-size:28px">${icon}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Нажми для загрузки</div>`;
   showToast('Изображение удалено');
 }
@@ -323,7 +323,7 @@ function clearImage(key, previewId, icon) {
 // Token loaded dynamically
 
 async function loadCloudSettings() {
-  const tok = localStorage.getItem('omschicken_token') || '';
+  const tok = localStorage.getItem('omsfin_token') || '';
   if (!tok) { initImagePreviews(); return; }
   try {
     const r = await fetch('/api/company_settings?nc=' + Date.now(), {
@@ -332,22 +332,22 @@ async function loadCloudSettings() {
     });
     const data = await r.json();
     if (data && data.stamp) {
-      localStorage.setItem('omschicken_stamp', data.stamp);
+      localStorage.setItem('omsfin_stamp', data.stamp);
       const el = document.getElementById('stampPreview');
       if (el) el.innerHTML = '<img src="' + data.stamp + '" style="max-width:120px;max-height:120px;border-radius:8px">';
     }
     if (data && data.sign) {
-      localStorage.setItem('omschicken_sign', data.sign);
+      localStorage.setItem('omsfin_sign', data.sign);
       const el = document.getElementById('signPreview');
       if (el) el.innerHTML = '<img src="' + data.sign + '" style="max-height:60px;max-width:180px">';
     }
     if (data && data.logo) {
-      localStorage.setItem('omschicken_logo', data.logo);
+      localStorage.setItem('omsfin_logo', data.logo);
       const el = document.getElementById('logoPreview');
       if (el) el.innerHTML = '<img src="' + data.logo + '" style="max-width:120px;max-height:120px;border-radius:8px">';
     }
     if (data && data.seller) {
-      localStorage.setItem('omschicken_seller', JSON.stringify(data.seller));
+      localStorage.setItem('omsfin_seller', JSON.stringify(data.seller));
       // Заполняем поля реквизитов
       const s = data.seller;
       if (s.name) document.getElementById('sName').value = s.name;
@@ -368,7 +368,7 @@ async function loadCloudSettings() {
 }
 
 async function saveToCloud(key, value) {
-  const tok = localStorage.getItem('omschicken_token') || '';
+  const tok = localStorage.getItem('omsfin_token') || '';
   try {
     await fetch('/api/company_settings', {
       method: 'POST',
@@ -380,7 +380,7 @@ async function saveToCloud(key, value) {
 
 function initImagePreviews() {
   ['logo','stamp','sign'].forEach(key => {
-    const data = localStorage.getItem('omschicken_' + key);
+    const data = localStorage.getItem('omsfin_' + key);
     const previewId = key + 'Preview';
     if (data && document.getElementById(previewId)) {
       document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
@@ -391,7 +391,7 @@ function initImagePreviews() {
 loadCloudSettings();
 
 // Уведомления
-const notifSettings = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
+const notifSettings = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
 if (notifSettings.vatDays) document.getElementById('vatDays').value = notifSettings.vatDays;
 if (notifSettings.salaryDay) document.getElementById('salaryDay').value = notifSettings.salaryDay;
 ['vat','salary','report'].forEach(key => {
@@ -401,24 +401,24 @@ if (notifSettings.salaryDay) document.getElementById('salaryDay').value = notifS
 
 function toggleNotif(btn, key) {
   btn.classList.toggle('on');
-  const notif = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
+  const notif = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
   notif[key] = btn.classList.contains('on');
-  localStorage.setItem('omschicken_notif', JSON.stringify(notif));
+  localStorage.setItem('omsfin_notif', JSON.stringify(notif));
 }
 
 function saveNotifications() {
-  const notif = JSON.parse(localStorage.getItem('omschicken_notif') || '{}');
+  const notif = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
   notif.vatDays = document.getElementById('vatDays').value;
   notif.salaryDay = document.getElementById('salaryDay').value;
-  localStorage.setItem('omschicken_notif', JSON.stringify(notif));
+  localStorage.setItem('omsfin_notif', JSON.stringify(notif));
   showToast('✅ Уведомления сохранены');
 }
 
 // Аккаунт
 function logout() {
-  localStorage.removeItem('omschicken_token');
-  localStorage.removeItem('omschicken_refresh');
-  localStorage.removeItem('omschicken_user');
+  localStorage.removeItem('omsfin_token');
+  localStorage.removeItem('omsfin_refresh');
+  localStorage.removeItem('omsfin_user');
   window.location.href = '/login';
 }
 
@@ -438,7 +438,7 @@ function showToast(msg) {
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
   async function refresh() {
-    const r = localStorage.getItem('omschicken_refresh');
+    const r = localStorage.getItem('omsfin_refresh');
     if (!r) return;
     try {
       const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
@@ -448,8 +448,8 @@ function showToast(msg) {
       });
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('omschicken_token', data.access_token);
-        localStorage.setItem('omschicken_refresh', data.refresh_token);
+        localStorage.setItem('omsfin_token', data.access_token);
+        localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
     } catch(e) {}
   }

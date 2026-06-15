@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ОМСЧИКЕН — Документы</title>
+<title>OMSFIN — Документы</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
@@ -84,7 +84,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px;align-items:center">
     <button class="btn-outline" onclick="showPage('settings',document.querySelectorAll('.tab')[2])" style="font-size:11px;padding:5px 10px">⚙️ Настройки</button>
     <button class="btn-outline" onclick="window.location.href='/'" style="font-size:11px;padding:5px 10px">← Бухгалтерия</button>
@@ -273,11 +273,11 @@
 
 <script>
 let currentDocType = 'schet';
-let docHistory = JSON.parse(localStorage.getItem('omschicken_docs') || '[]');
-let stampImg = localStorage.getItem('omschicken_stamp') || '';
-let signImg = localStorage.getItem('omschicken_sign') || '';
+let docHistory = JSON.parse(localStorage.getItem('omsfin_docs') || '[]');
+let stampImg = localStorage.getItem('omsfin_stamp') || '';
+let signImg = localStorage.getItem('omsfin_sign') || '';
 
-let SELLER = JSON.parse(localStorage.getItem('omschicken_seller') || 'null') || {
+let SELLER = JSON.parse(localStorage.getItem('omsfin_seller') || 'null') || {
   name: 'ООО "ОМСЧИКЕН"',
   inn: '5800015301', kpp: '580001001', ogrn: '1255800003447',
   addr: '440013, г. Пенза, ул. Чаадаева, 72',
@@ -303,7 +303,7 @@ function loadStamp(input) {
   const reader = new FileReader();
   reader.onload = e => {
     stampImg = e.target.result;
-    localStorage.setItem('omschicken_stamp', stampImg);
+    localStorage.setItem('omsfin_stamp', stampImg);
     document.getElementById('stampPreviewWrap').innerHTML = `<img src="${stampImg}" class="stamp-preview" style="max-width:120px;max-height:120px">`;
     showToast('✅ Печать загружена!');
   };
@@ -316,7 +316,7 @@ function loadSign(input) {
   const reader = new FileReader();
   reader.onload = e => {
     signImg = e.target.result;
-    localStorage.setItem('omschicken_sign', signImg);
+    localStorage.setItem('omsfin_sign', signImg);
     document.getElementById('signPreviewWrap').innerHTML = `<img src="${signImg}" style="max-height:60px;max-width:180px">`;
     showToast('✅ Подпись загружена!');
   };
@@ -325,14 +325,14 @@ function loadSign(input) {
 
 function clearStamp() {
   stampImg = '';
-  localStorage.removeItem('omschicken_stamp');
+  localStorage.removeItem('omsfin_stamp');
   document.getElementById('stampPreviewWrap').innerHTML = '<div class="stamp-placeholder">🔵</div><div style="font-size:12px;color:var(--muted)">Нажми чтобы загрузить печать</div>';
   showToast('Печать удалена');
 }
 
 function clearSign() {
   signImg = '';
-  localStorage.removeItem('omschicken_sign');
+  localStorage.removeItem('omsfin_sign');
   document.getElementById('signPreviewWrap').innerHTML = '<div style="font-size:24px">✍️</div><div style="font-size:12px;color:var(--muted)">Загрузить подпись</div>';
   showToast('Подпись удалена');
 }
@@ -352,7 +352,7 @@ function saveSettings() {
     bik: document.getElementById('settingBik').value,
     ks: document.getElementById('settingKs').value,
   };
-  localStorage.setItem('omschicken_seller', JSON.stringify(SELLER));
+  localStorage.setItem('omsfin_seller', JSON.stringify(SELLER));
   showToast('✅ Реквизиты сохранены');
 }
 
@@ -667,7 +667,7 @@ function saveToHistory() {
     html: document.getElementById('docPreview').innerHTML
   };
   docHistory.unshift(doc);
-  localStorage.setItem('omschicken_docs', JSON.stringify(docHistory.slice(0,50)));
+  localStorage.setItem('omsfin_docs', JSON.stringify(docHistory.slice(0,50)));
   showToast('✅ Сохранено в историю');
   renderHistory();
 }
@@ -725,7 +725,7 @@ function printFromHistory(id) {
 
 function deleteDoc(id) {
   docHistory = docHistory.filter(d=>d.id!==id);
-  localStorage.setItem('omschicken_docs', JSON.stringify(docHistory));
+  localStorage.setItem('omsfin_docs', JSON.stringify(docHistory));
   renderHistory();
 }
 
@@ -749,7 +749,7 @@ initPreviews();
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
   async function refresh() {
-    const r = localStorage.getItem('omschicken_refresh');
+    const r = localStorage.getItem('omsfin_refresh');
     if (!r) return;
     try {
       const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
@@ -759,8 +759,8 @@ initPreviews();
       });
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('omschicken_token', data.access_token);
-        localStorage.setItem('omschicken_refresh', data.refresh_token);
+        localStorage.setItem('omsfin_token', data.access_token);
+        localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
     } catch(e) {}
   }

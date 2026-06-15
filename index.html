@@ -3,37 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ОМСЧИКЕН — Бухгалтерия</title>
+<title>OMSFIN — Бухгалтерия</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  :root{--bg:#0a0a0a;--surface:#111111;--surface2:#1a1a1a;--border:#222222;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#777;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
-  header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
-  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:17px;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.9);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;letter-spacing:-0.5px;}
   .logo span{color:var(--accent);}
-  .header-right{display:flex;align-items:center;gap:10px;}
-  .sync-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;transition:all 0.2s;}
+  .header-right{display:flex;align-items:center;gap:8px;}
+  .sync-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:6px 12px;cursor:pointer;transition:all 0.2s;}
   .sync-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;}
   .sync-dot.offline{background:var(--red);}
   .header-meta{font-size:11px;color:var(--muted);}
-  .tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
-  .tab{padding:9px 14px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;}
+  .tabs{display:flex;gap:1px;padding:0 24px;border-bottom:1px solid var(--border);background:rgba(10,10,10,0.9);backdrop-filter:blur(20px);overflow-x:auto;}
+  .tab{padding:12px 16px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;font-weight:500;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-  main{padding:18px 20px;max-width:860px;margin:0 auto;}
-  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
-  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;}
-  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
-  .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
+  .tab:hover{color:var(--text);}
+  main{padding:20px 24px;max-width:900px;margin:0 auto;}
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;transition:border-color 0.2s;}
+  .stat-card:hover{border-color:rgba(255,107,0,0.2);}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:500;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;}
   .stat-value.green{color:var(--green);}.stat-value.red{color:var(--red);}.stat-value.orange{color:var(--accent);}
-  .btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;}
-  .btn:hover{background:var(--accent2);}
+  .btn{background:linear-gradient(135deg,var(--accent),#ff8c35);color:#000;border:none;border-radius:10px;padding:10px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(255,107,0,0.2);}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,107,0,0.35);}
   .btn-sm{padding:6px 12px;font-size:10px;}
-  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:7px 14px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
   .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
   .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
-  .tx-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 14px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-bottom:5px;}
+  .tx-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 14px;display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin-bottom:5px;}
   .tx-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tx-date{font-size:10px;color:var(--muted);margin-top:2px;}
   .tx-amount{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;}
@@ -44,7 +46,7 @@
   .cat-food{background:#2a1a0a;color:#fbbf24;}.cat-unknown{background:#2a2a2a;color:#888;}
   .cat-salary{background:#1a2a3a;color:#38bdf8;}.cat-office{background:#2a2a1a;color:#a3e635;}
   .cat-bank{background:#2a1a2a;color:#c084fc;}
-  .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;background:var(--surface);}
+  .upload-zone{border:2px dashed var(--border);border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;background:var(--surface);}
   .upload-zone:hover{border-color:var(--accent);}
   .upload-title{font-size:14px;font-weight:500;margin:6px 0 3px;}
   .upload-sub{font-size:11px;color:var(--muted);}
@@ -151,7 +153,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">ОМС<span>ЧИКЕН</span></div>
+  <div class="logo">OMS<span>FIN</span></div>
   <div class="header-right">
     <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 8px;cursor:pointer;max-width:140px;outline:none;margin-right:4px">
       <option value="">Компания...</option>
@@ -285,10 +287,10 @@
 let allTx = [];
 let currentFilter = 'all';
 let isUploading = false;
-let userRules = JSON.parse(localStorage.getItem('omschicken_rules') || '{}');
+let userRules = JSON.parse(localStorage.getItem('omsfin_rules') || '{}');
 
 // Проверка авторизации
-const _token = localStorage.getItem('omschicken_token');
+const _token = localStorage.getItem('omsfin_token');
 if (!_token) window.location.href = '/landing';
 
 // Автообновление токена
@@ -296,7 +298,7 @@ const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
 async function refreshToken() {
-  const refresh = localStorage.getItem('omschicken_refresh');
+  const refresh = localStorage.getItem('omsfin_refresh');
   if (!refresh) { window.location.href = '/login'; return; }
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
@@ -306,8 +308,8 @@ async function refreshToken() {
     });
     const data = await r.json();
     if (data.access_token) {
-      localStorage.setItem('omschicken_token', data.access_token);
-      localStorage.setItem('omschicken_refresh', data.refresh_token);
+      localStorage.setItem('omsfin_token', data.access_token);
+      localStorage.setItem('omsfin_refresh', data.refresh_token);
     } else {
       window.location.href = '/login';
     }
@@ -328,9 +330,9 @@ window.fetch = async function(...args) {
 };
 
 function logout() {
-  localStorage.removeItem('omschicken_token');
-  localStorage.removeItem('omschicken_refresh');
-  localStorage.removeItem('omschicken_user');
+  localStorage.removeItem('omsfin_token');
+  localStorage.removeItem('omsfin_refresh');
+  localStorage.removeItem('omsfin_user');
   window.location.href = '/login';
 }
 
@@ -351,7 +353,7 @@ function classify(name, description, amount) {
 }
 
 async function apiGet() {
-  const token = localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omsfin_token') || '';
   const r = await fetch('/api/transactions', {
     headers: {'Authorization': 'Bearer ' + token}
   });
@@ -360,7 +362,7 @@ async function apiGet() {
 }
 
 async function apiPost(txs) {
-  const token = localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omsfin_token') || '';
   const r = await fetch('/api/transactions', {
     method: 'POST',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
@@ -371,7 +373,7 @@ async function apiPost(txs) {
 }
 
 async function apiDelete(period) {
-  const token = localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omsfin_token') || '';
   const r = await fetch('/api/transactions', {
     method: 'DELETE',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
@@ -381,7 +383,7 @@ async function apiDelete(period) {
 }
 
 async function apiUpdateCategory(id, category) {
-  const token = localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omsfin_token') || '';
   const r = await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
@@ -391,10 +393,10 @@ async function apiUpdateCategory(id, category) {
 }
 
 // Мультикомпания
-let currentCompanyId = localStorage.getItem('omschicken_company') || null;
+let currentCompanyId = localStorage.getItem('omsfin_company') || null;
 
 async function loadCompanies() {
-  const token = localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omsfin_token') || '';
   try {
     const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
     const companies = await r.json();
@@ -410,8 +412,8 @@ async function loadCompanies() {
 }
 
 async function createDefaultCompany() {
-  const token = localStorage.getItem('omschicken_token') || '';
-  const seller = JSON.parse(localStorage.getItem('omschicken_seller') || '{}');
+  const token = localStorage.getItem('omsfin_token') || '';
+  const seller = JSON.parse(localStorage.getItem('omsfin_seller') || '{}');
   const r = await fetch('/api/companies', {
     method: 'POST',
     headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -420,15 +422,15 @@ async function createDefaultCompany() {
   const company = await r.json();
   if (company && company[0]) {
     currentCompanyId = company[0].id;
-    localStorage.setItem('omschicken_company', currentCompanyId);
+    localStorage.setItem('omsfin_company', currentCompanyId);
     await loadCompanies();
   }
 }
 
 function switchCompany(id) {
   currentCompanyId = id || null;
-  if (id) localStorage.setItem('omschicken_company', id);
-  else localStorage.removeItem('omschicken_company');
+  if (id) localStorage.setItem('omsfin_company', id);
+  else localStorage.removeItem('omsfin_company');
   syncNow();
 }
 
@@ -552,7 +554,7 @@ async function reclassifyTx(id, category, name, btn) {
   btn.classList.add('active');
   const keyword = name.toLowerCase().substring(0,20);
   userRules[keyword] = category;
-  localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
+  localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
   await apiUpdateCategory(id, category);
   renderAll();
   renderRules();
@@ -574,12 +576,12 @@ function renderRules() {
 
 function deleteRule(keyword) {
   delete userRules[keyword];
-  localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
+  localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
   renderRules();
 }
 
 function saveRules() {
-  localStorage.setItem('omschicken_rules', JSON.stringify(userRules));
+  localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
   showToast('✅ Правила сохранены');
 }
 
@@ -681,7 +683,7 @@ function exportCSV() {
   const csv = '\ufeff'+rows.map(r=>r.join(';')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'omschicken_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download = 'omsfin_'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();
   showToast('📥 Файл скачан');
 }
