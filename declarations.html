@@ -411,41 +411,57 @@ function generateNDSXML() {
   const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
   const inn = seller.inn || '5800015301';
   const kpp = seller.kpp || '580001001';
-  const name = (seller.name || 'ООО "ОМСЧИКЕН"').replace(/"/g,'&quot;');
-  const qNames = ['','21','22','23','24'];
-  const qCode = qNames[quarter] || '22';
+  const orgName = (seller.name || 'ООО ОМСФИН').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+  const director = (seller.director || 'Симутин Семен Евгеньевич').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+  const qCodes = ['','21','22','23','24'];
+  const qCode = qCodes[quarter] || '22';
+  const dateDoc = formatDate(now);
   
-  const xml = `<?xml version="1.0" encoding="windows-1251"?>
-<Файл ВерсФорм="5.09" ВерсПрог="OMSFIN 1.0"
-  ИдФайл="NO_NDS_${inn}_${inn}_${year}${qCode}_${Date.now()}"
-  ТипИнфСвед="НД">
-  <Документ КНД="1151001" ДатаДок="${formatDate(now)}" 
-    НомКорр="0" ПерНал="${qCode}" ОтчетГод="${year}">
-    <СвНП>
-      <НПЮЛ НаимОрг="${name}" ИННЮЛ="${inn}" КПП="${kpp}"/>
-    </СвНП>
-    <ПодпСв>
-      <ПодпФЛ ИННФЛ="${inn}" ФИО="${seller.director || 'Симутин Семен Евгеньевич'}"/>
-    </ПодпСв>
-    <РасчНал>
-      <НДСУплВыч>
-        <НалВосст>
-          <СумНалВосст>
-            <НалБаза НалСт="10">${Math.round(totalSales - vatCharged)}</НалБаза>
-            <СумНал>${vatCharged}</СумНал>
-          </СумНалВосст>
-        </НалВосст>
-        <НалВычет>
-          <СумНалВычет>${vatDeduct}</СумНалВычет>
-        </НалВычет>
-        <НДСУпл>${vatToPay}</НДСУпл>
-      </НДСУплВыч>
-    </РасчНал>
-  </Документ>
-</Файл>`;
+  // Текстовый отчёт для ФНС (читаемый формат)
+  const report = [
+    '=' .repeat(60),
+    'ДЕКЛАРАЦИЯ ПО НДС',
+    `Период: ${quarter} квартал ${year} года`,
+    `Организация: ${seller.name || 'ООО OMSFIN'}`,
+    `ИНН: ${inn} / КПП: ${kpp}`,
+    `Дата составления: ${dateDoc}`,
+    '=' .repeat(60),
+    '',
+    'РАЗДЕЛ 3. РАСЧЁТ СУММЫ НДС:',
+    '',
+    `Строка 010 - Налоговая база (ставка 10%):`,
+    `    ${Math.round(totalSales - vatCharged).toLocaleString('ru-RU')} руб.`,
+    '',
+    `Строка 020 - Сумма НДС (10%):`,
+    `    ${vatCharged.toLocaleString('ru-RU')} руб.`,
+    '',
+    `Строка 120 - Налоговые вычеты:`,
+    `    ${vatDeduct.toLocaleString('ru-RU')} руб.`,
+    '',
+    '-' .repeat(60),
+    `Строка 200 - НДС К УПЛАТЕ:`,
+    `    ${vatToPay.toLocaleString('ru-RU')} руб.`,
+    '-' .repeat(60),
+    '',
+    'КНИГА ПРОДАЖ:',
+    ...sales.map((t,i) => `  ${i+1}. ${t.date||'—'} | ${t.name} | ${Number(t.amount).toLocaleString('ru-RU')} руб.`),
+    '',
+    'КНИГА ПОКУПОК:',
+    ...purchases.map((t,i) => `  ${i+1}. ${t.date||'—'} | ${t.name} | ${Math.abs(Number(t.amount)).toLocaleString('ru-RU')} руб.`),
+    '',
+    '=' .repeat(60),
+    'ГРАФИК УПЛАТЫ (равными частями):',
+    `  1/3 = ${Math.round(vatToPay/3).toLocaleString('ru-RU')} руб. до 25-го числа 1-го мес. след. квартала`,
+    `  1/3 = ${Math.round(vatToPay/3).toLocaleString('ru-RU')} руб. до 25-го числа 2-го мес. след. квартала`,
+    `  1/3 = ${Math.round(vatToPay/3).toLocaleString('ru-RU')} руб. до 25-го числа 3-го мес. след. квартала`,
+    '',
+    'Для подачи в ФНС используйте личный кабинет: lkul.nalog.ru',
+    'или программу "Налогоплательщик ЮЛ" (nalog.gov.ru)',
+    '=' .repeat(60),
+  ].join('\n');
   
-  downloadFile(xml, `НДС_Q${quarter}_${year}.xml`, 'application/xml');
-  showToast('✅ XML для ФНС скачан — загрузи на lkul.nalog.ru');
+  downloadFile(report, `НДС_Q${quarter}_${year}.txt`, 'text/plain');
+  showToast('✅ Отчёт НДС скачан! Для XML используй "Налогоплательщик ЮЛ"');
 }
 
 function generateUSNXML() {
@@ -459,34 +475,47 @@ function generateUSNXML() {
   const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
   const inn = seller.inn || '5800015301';
   const kpp = seller.kpp || '580001001';
-  const name = (seller.name || 'ООО "ОМСЧИКЕН"').replace(/"/g,'&quot;');
   
-  const xml = `<?xml version="1.0" encoding="windows-1251"?>
-<Файл ВерсФорм="3.02" ВерсПрог="OMSFIN 1.0"
-  ИдФайл="NO_USNO_${inn}_${inn}_${year}34_${Date.now()}"
-  ТипИнфСвед="НД">
-  <Документ КНД="1152017" ДатаДок="${formatDate(now)}"
-    НомКорр="0" ОтчетГод="${year}" ПерНал="34">
-    <СвНП>
-      <НПЮЛ НаимОрг="${name}" ИННЮЛ="${inn}" КПП="${kpp}"/>
-    </СвНП>
-    <ПодпСв>
-      <ПодпФЛ ИННФЛ="${inn}" ФИО="${seller.director || 'Симутин Семен Евгеньевич'}"/>
-    </ПодпСв>
-    <РасчНал ОбъНал="Д-Р" НалСт="15">
-      <ДохРасх>
-        <Дох>${income}</Дох>
-        <Расх>${expense}</Расх>
-        <НалБаза>${base}</НалБаза>
-        <НалИсч>${tax}</НалИсч>
-        <НалУпл>${finalTax}</НалУпл>
-      </ДохРасх>
-    </РасчНал>
-  </Документ>
-</Файл>`;
+  const report = [
+    '='.repeat(60),
+    'ДЕКЛАРАЦИЯ ПО УСН (ДОХОДЫ МИНУС РАСХОДЫ)',
+    `Налоговый период: ${year} год`,
+    `Организация: ${seller.name || 'ООО OMSFIN'}`,
+    `ИНН: ${inn} / КПП: ${kpp}`,
+    `Дата составления: ${formatDate(now)}`,
+    '='.repeat(60),
+    '',
+    'РАЗДЕЛ 2. РАСЧЁТ НАЛОГА:',
+    '',
+    `Строка 213 - Доходы за год:`,
+    `    ${income.toLocaleString('ru-RU')} руб.`,
+    '',
+    `Строка 223 - Расходы за год:`,
+    `    ${expense.toLocaleString('ru-RU')} руб.`,
+    '',
+    `Строка 243 - Налоговая база:`,
+    `    ${base.toLocaleString('ru-RU')} руб.`,
+    '',
+    `Строка 260 - Налоговая ставка: 15%`,
+    '',
+    `Строка 271 - Исчисленный налог:`,
+    `    ${tax.toLocaleString('ru-RU')} руб.`,
+    '',
+    insurance > 0 ? `Страховые взносы: -${Math.round(insurance).toLocaleString('ru-RU')} руб.` : '',
+    advances > 0 ? `Уплаченные авансы: -${Math.round(advances).toLocaleString('ru-RU')} руб.` : '',
+    '',
+    '-'.repeat(60),
+    `НАЛОГ К УПЛАТЕ: ${finalTax.toLocaleString('ru-RU')} руб.`,
+    '-'.repeat(60),
+    '',
+    'Срок подачи декларации: 31 марта следующего года',
+    'Для подачи используйте "Налогоплательщик ЮЛ" (nalog.gov.ru)',
+    'или личный кабинет: lkul.nalog.ru',
+    '='.repeat(60),
+  ].filter(l=>l!==null).join('\n');
   
-  downloadFile(xml, `УСН_${year}.xml`, 'application/xml');
-  showToast('✅ XML декларация УСН скачана — загрузи на lkul.nalog.ru');
+  downloadFile(report, `УСН_${year}.txt`, 'text/plain');
+  showToast('✅ Отчёт УСН скачан!');
 }
 
 function downloadFile(content, filename, type) {
