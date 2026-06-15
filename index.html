@@ -289,7 +289,7 @@ let userRules = JSON.parse(localStorage.getItem('omschicken_rules') || '{}');
 
 // Проверка авторизации
 const _token = localStorage.getItem('omschicken_token');
-if (!_token) window.location.href = '/login';
+if (!_token) window.location.href = '/landing';
 
 // Автообновление токена
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
