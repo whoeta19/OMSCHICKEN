@@ -499,13 +499,13 @@ async function doChangePassword() {
       body: JSON.stringify({password: newPass})
     });
     const d = await r.json();
-    if (d.id) {
-      showToast('✅ Пароль изменён!');
+    if (d.ok) {
+      showToast('✅ Пароль успешно изменён!');
       document.getElementById('changePassBlock').style.display = 'none';
       document.getElementById('newPassInput').value = '';
       document.getElementById('newPassInput2').value = '';
     } else {
-      showToast('❌ ' + (d.message || 'Ошибка'));
+      showToast('❌ ' + (d.error || 'Ошибка'));
     }
   } catch(e) {
     showToast('❌ Ошибка соединения');
