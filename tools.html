@@ -338,19 +338,30 @@
   <div class="tool-panel" id="tool-taxsys">
     <div class="card">
       <div class="section-title">Сравнение систем налогообложения</div>
+      <div class="input-group">
+        <label>Форма организации</label>
+        <select id="tsOrgType" onchange="updateOrgType()">
+          <option value="ip">ИП</option>
+          <option value="ooo">ООО</option>
+        </select>
+      </div>
       <div class="input-row">
         <div class="input-group"><label>Доходы за год (руб.)</label><input type="number" id="tsIncome" placeholder="5 000 000" oninput="calcTaxSys()"></div>
         <div class="input-group"><label>Расходы за год (руб.)</label><input type="number" id="tsExpense" placeholder="3 000 000" oninput="calcTaxSys()"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>Страховые взносы ИП (руб.)</label><input type="number" id="tsInsurance" placeholder="49 500" value="49500" oninput="calcTaxSys()"></div>
-        <div class="input-group"><label>Регион (ставка УСН 15%)</label>
+        <div class="input-group" id="tsInsuranceBlock"><label>Страховые взносы ИП (руб.)</label><input type="number" id="tsInsurance" placeholder="49 500" value="49500" oninput="calcTaxSys()"></div>
+        <div class="input-group"><label>Ставка УСН (доходы-расходы)</label>
           <select id="tsRegion" onchange="calcTaxSys()">
             <option value="15">Стандартная 15%</option>
             <option value="10">Льготная 10%</option>
             <option value="5">Льготная 5%</option>
           </select>
         </div>
+      </div>
+      <div class="input-row" id="tsOooBlock" style="display:none">
+        <div class="input-group"><label>Дивиденды (% от прибыли)</label><input type="number" id="tsDividends" placeholder="80" value="80" oninput="calcTaxSys()"></div>
+        <div class="input-group"><label>Зарплата директора (руб./мес.)</label><input type="number" id="tsDirectorSalary" placeholder="50000" value="0" oninput="calcTaxSys()"></div>
       </div>
       <button class="btn" onclick="calcTaxSys()">Сравнить</button>
       <div class="result-block" id="taxsysResult">
@@ -570,42 +581,86 @@ function calcPenalty() {
 }
 
 // СИСТЕМЫ НАЛОГООБЛОЖЕНИЯ
+function updateOrgType() {
+  const isIP = document.getElementById('tsOrgType').value === 'ip';
+  document.getElementById('tsInsuranceBlock').style.display = isIP ? 'block' : 'none';
+  document.getElementById('tsOooBlock').style.display = isIP ? 'none' : 'block';
+  calcTaxSys();
+}
+
 function calcTaxSys() {
   const income = parseFloat(document.getElementById('tsIncome').value) || 0;
   const expense = parseFloat(document.getElementById('tsExpense').value) || 0;
-  const insurance = parseFloat(document.getElementById('tsInsurance').value) || 0;
   const usnRate = parseFloat(document.getElementById('tsRegion').value) / 100;
+  const orgType = document.getElementById('tsOrgType').value;
   if (!income) return;
   
   const profit = income - expense;
-  
-  // УСН 6% (доходы)
-  const usn6base = income;
-  let usn6tax = usn6base * 0.06;
-  usn6tax = Math.max(0, usn6tax - insurance);
-  const usn6net = profit - usn6tax;
-  
-  // УСН 15% (доходы - расходы)
-  const usn15base = Math.max(0, income - expense - insurance);
-  const usn15min = income * 0.01; // минимальный налог 1%
-  const usn15tax = Math.max(usn15base * usnRate, usn15min);
-  const usn15net = profit - insurance - usn15tax;
-  
-  // ОСНО (упрощённо)
-  const vat = income * 10/110;
-  const vatBuy = expense * 10/110;
-  const vatNet = vat - vatBuy;
-  const npbase = Math.max(0, income - expense - vatNet);
-  const np = npbase * 0.20;
-  const osnoNet = profit - vatNet - np;
-  
-  const results = [
-    {name:'УСН 6%', tax:usn6tax, net:usn6net, desc:`Налог с оборота ${fmt(usn6tax)}`},
-    {name:`УСН ${usnRate*100}%`, tax:usn15tax, net:usn15net, desc:`Налог с прибыли ${fmt(usn15tax)}`},
-    {name:'ОСНО', tax:vatNet+np, net:osnoNet, desc:`НДС ${fmt(vatNet)} + НП ${fmt(np)}`},
-  ];
+  let results = [];
+
+  if (orgType === 'ip') {
+    const insurance = parseFloat(document.getElementById('tsInsurance').value) || 0;
+    
+    // УСН 6% (доходы)
+    let usn6tax = income * 0.06;
+    usn6tax = Math.max(0, usn6tax - insurance);
+    const usn6net = profit - insurance - usn6tax;
+    
+    // УСН 15% (доходы - расходы)
+    const usn15base = Math.max(0, income - expense - insurance);
+    const usn15tax = Math.max(usn15base * usnRate, income * 0.01);
+    const usn15net = profit - insurance - usn15tax;
+    
+    // ОСНО ИП (НДФЛ 13%)
+    const vat = income * 10/110;
+    const vatBuy = expense * 10/110;
+    const vatNet = Math.max(0, vat - vatBuy);
+    const ndflBase = Math.max(0, income - expense - vatNet - insurance);
+    const ndfl = ndflBase * 0.13;
+    const osnoNet = profit - insurance - vatNet - ndfl;
+    
+    results = [
+      {name:'УСН 6%', tax:usn6tax+insurance, net:usn6net, desc:`Налог ${fmt(usn6tax)} + взносы ${fmt(insurance)}`},
+      {name:`УСН ${usnRate*100}%`, tax:usn15tax+insurance, net:usn15net, desc:`Налог ${fmt(usn15tax)} + взносы ${fmt(insurance)}`},
+      {name:'ОСНО (ИП)', tax:vatNet+ndfl+insurance, net:osnoNet, desc:`НДС ${fmt(vatNet)} + НДФЛ ${fmt(ndfl)}`},
+    ];
+  } else {
+    // ООО
+    const dirSalary = (parseFloat(document.getElementById('tsDirectorSalary').value) || 0) * 12;
+    const dirTax = dirSalary * (0.13 + 0.30); // НДФЛ + взносы
+    const divPct = (parseFloat(document.getElementById('tsDividends').value) || 80) / 100;
+    
+    // УСН 6% ООО
+    let usn6tax = income * 0.06;
+    const usn6profit = profit - dirSalary - dirTax;
+    const usn6div = Math.max(0, usn6profit - usn6tax) * divPct * 0.13;
+    const usn6net = Math.max(0, usn6profit - usn6tax) * (1 - divPct * 0.13);
+    
+    // УСН 15% ООО  
+    const usn15base = Math.max(0, income - expense - dirSalary - dirTax);
+    const usn15tax = Math.max(usn15base * usnRate, income * 0.01);
+    const usn15profit = profit - dirSalary - dirTax - usn15tax;
+    const usn15net = Math.max(0, usn15profit) * (1 - divPct * 0.13);
+    
+    // ОСНО ООО
+    const vat = income * 10/110;
+    const vatBuy = expense * 10/110;
+    const vatNet = Math.max(0, vat - vatBuy);
+    const npBase = Math.max(0, income - expense - vatNet - dirSalary - dirTax);
+    const np = npBase * 0.20;
+    const osnoProfit = profit - vatNet - np - dirSalary - dirTax;
+    const osnoNet = Math.max(0, osnoProfit) * (1 - divPct * 0.13);
+    
+    results = [
+      {name:'УСН 6%', tax:usn6tax+dirTax, net:usn6net, desc:`Налог ${fmt(usn6tax)} + зарплата дир. ${fmt(dirSalary)}`},
+      {name:`УСН ${usnRate*100}%`, tax:usn15tax+dirTax, net:usn15net, desc:`Налог ${fmt(usn15tax)} + зарплата дир. ${fmt(dirSalary)}`},
+      {name:'ОСНО (ООО)', tax:vatNet+np+dirTax, net:osnoNet, desc:`НДС ${fmt(vatNet)} + налог на прибыль ${fmt(np)}`},
+    ];
+  }
   
   const bestIdx = results.reduce((best,r,i) => r.net > results[best].net ? i : best, 0);
+  const worst = results.reduce((w,r,i) => r.net < results[w].net ? i : w, 0);
+  const saving = results[bestIdx].net - results[worst].net;
   
   document.getElementById('taxCompare').innerHTML = results.map((r,i)=>`
     <div class="tax-card ${i===bestIdx?'best':''}">
@@ -613,16 +668,12 @@ function calcTaxSys() {
       <div class="tax-card-name">${r.name}</div>
       <div class="tax-card-amount" style="color:${i===bestIdx?'var(--green)':'var(--text)'}">${fmt(r.net)}</div>
       <div class="tax-card-desc">чистая прибыль</div>
-      <div class="tax-card-desc" style="margin-top:4px">${r.desc}</div>
+      <div class="tax-card-desc" style="margin-top:4px;color:var(--muted)">${r.desc}</div>
     </div>`).join('');
-  
-  const best = results[bestIdx];
-  const worst = results.reduce((w,r,i) => r.net < results[w].net ? i : w, 0);
-  const saving = best.net - results[worst].net;
   
   document.getElementById('taxRecommend').innerHTML = `
     <div style="font-weight:600;margin-bottom:6px">💡 Рекомендация:</div>
-    <div>При ваших показателях <strong>${best.name}</strong> выгоднее всего — чистая прибыль <strong>${fmt(best.net)}</strong>. 
+    <div>При ваших показателях <strong>${results[bestIdx].name}</strong> выгоднее всего — чистая прибыль <strong>${fmt(results[bestIdx].net)}</strong>. 
     Экономия по сравнению с худшим вариантом: <strong style="color:var(--green)">${fmt(saving)}</strong> в год.</div>`;
   
   document.getElementById('taxsysResult').classList.add('show');
