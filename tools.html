@@ -13,17 +13,18 @@
   .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
   .logo span{color:var(--accent);}
   main{padding:20px 24px;max-width:900px;margin:0 auto;}
-  .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
-  .tool-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:left;}
-  .tool-btn:hover,.tool-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.05);}
-  .tool-btn.active{border-color:var(--accent);}
-  .tool-icon{font-size:24px;margin-bottom:8px;}
-  .tool-name{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:4px;}
+  .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
+  .tool-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 14px;cursor:pointer;transition:all 0.25s;text-align:left;position:relative;overflow:hidden;}
+  .tool-btn:hover{border-color:rgba(255,107,0,0.4);background:rgba(255,107,0,0.04);transform:translateY(-1px);}
+  .tool-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.08);}
+
+  .tool-icon{font-size:26px;margin-bottom:10px;display:block;}
+  .tool-name{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;margin-bottom:4px;line-height:1.3;}
   .tool-desc{font-size:11px;color:var(--muted);line-height:1.4;}
   .tool-panel{display:none;}
   .tool-panel.active{display:block;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;}
-  .section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);padding-bottom:10px;border-bottom:1px solid var(--border);}
   .input-group{margin-bottom:12px;}
   .input-group label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;}
   .input-group input,.input-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all 0.2s;}
@@ -73,9 +74,9 @@
   <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
 </header>
 <main>
-  <div style="margin-bottom:20px">
-    <div style="font-family:Unbounded,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Финансовые инструменты</div>
-    <div style="font-size:22px;font-family:Unbounded,sans-serif;font-weight:900">Калькуляторы для бизнеса</div>
+  <div style="margin-bottom:24px">
+    <div style="font-family:Unbounded,sans-serif;font-size:22px;font-weight:900;margin-bottom:6px">⚡ Инструменты</div>
+    <div style="font-size:13px;color:var(--muted)">Всё что нужно предпринимателю — в одном месте</div>
   </div>
 
   <div class="tools-grid">
@@ -91,23 +92,23 @@
     </div>
     <div class="tool-btn" onclick="showTool('kp',this)">
       <div class="tool-icon">📄</div>
-      <div class="tool-name">КП</div>
-      <div class="tool-desc">Коммерческое предложение</div>
+      <div class="tool-name">Генератор КП</div>
+      <div class="tool-desc">Красивое коммерческое предложение</div>
     </div>
     <div class="tool-btn" onclick="showTool('enp',this)">
       <div class="tool-icon">🏦</div>
-      <div class="tool-name">ЕНП</div>
-      <div class="tool-desc">Распределение платежей</div>
+      <div class="tool-name">График ЕНП</div>
+      <div class="tool-desc">Когда и сколько платить в бюджет</div>
     </div>
     <div class="tool-btn" onclick="showTool('penalty',this)">
       <div class="tool-icon">⚠️</div>
       <div class="tool-name">Пени и штрафы</div>
-      <div class="tool-desc">Просрочка налогов</div>
+      <div class="tool-desc">Сколько должен за просрочку</div>
     </div>
     <div class="tool-btn" onclick="showTool('taxsys',this)">
       <div class="tool-icon">⚖️</div>
-      <div class="tool-name">Система налогов</div>
-      <div class="tool-desc">УСН 6% vs 15% vs ОСНО</div>
+      <div class="tool-name">Выбор системы</div>
+      <div class="tool-desc">УСН 6% vs 15% vs ОСНО — что выгоднее</div>
     </div>
   </div>
 
@@ -275,7 +276,16 @@
           <span class="result-total-label">💳 Итого на ЕНС за квартал</span>
           <span class="result-total-value" id="enp-total"></span>
         </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--muted)">* НДС уплачивается тремя равными частями до 25-го числа каждого из трёх месяцев следующего квартала. Остальные налоги — согласно своим срокам.</div>
+        <div style="margin-top:12px;padding:12px;background:rgba(255,107,0,0.05);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
+        <div style="font-size:11px;font-weight:600;margin-bottom:6px">📌 Важно знать про ЕНП:</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">
+          • НДС — тремя равными частями до 25-го числа<br>
+          • УСН аванс — до 28-го числа следующего месяца<br>
+          • НДФЛ — до 28-го числа текущего месяца<br>
+          • Взносы — до 28-го числа следующего месяца<br>
+          • КБК ЕНП: 182 0 10 61201 01 0000 510
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -302,7 +312,7 @@
       </div>
       <div class="input-group">
         <label>Ключевая ставка ЦБ (%)</label>
-        <input type="number" id="penRate" value="16" step="0.25">
+        <input type="number" id="penRate" value="21" step="0.25"><div style="font-size:10px;color:var(--muted);margin-top:3px">Текущая ставка ЦБ РФ: 21% (с ноября 2024)</div>
       </div>
       <button class="btn" onclick="calcPenalty()">Рассчитать пени</button>
       <div class="result-block" id="penResult">
@@ -315,7 +325,11 @@
           <span class="result-total-label">⚠️ Итого к доплате</span>
           <span class="result-total-value" id="pen-total"></span>
         </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--muted)">* Штраф 20% применяется если ФНС обнаружила недоимку. При самостоятельной уплате — только пени.</div>
+        <div style="margin-top:10px;padding:12px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:10px;font-size:11px;color:var(--muted);line-height:1.6">
+        ⚠️ <strong>Штраф 20%</strong> — если ФНС нашла сама<br>
+        ⚠️ <strong>Штраф 40%</strong> — при умышленной неуплате<br>
+        ✅ <strong>Только пени</strong> — если сам нашёл и заплатил до проверки
+      </div>
       </div>
     </div>
   </div>
