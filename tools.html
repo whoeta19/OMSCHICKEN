@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMSFIN — Инструменты</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
+  .logo span{color:var(--accent);}
+  main{padding:20px 24px;max-width:900px;margin:0 auto;}
+  .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+  .tool-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:left;}
+  .tool-btn:hover,.tool-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.05);}
+  .tool-btn.active{border-color:var(--accent);}
+  .tool-icon{font-size:24px;margin-bottom:8px;}
+  .tool-name{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:4px;}
+  .tool-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+  .tool-panel{display:none;}
+  .tool-panel.active{display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);}
+  .input-group{margin-bottom:12px;}
+  .input-group label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;}
+  .input-group input,.input-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all 0.2s;}
+  .input-group input:focus,.input-group select:focus{border-color:rgba(255,107,0,0.5);}
+  .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .input-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .btn{background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(255,107,0,0.25);}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(255,107,0,0.4);}
+  .result-block{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+  .result-block.show{display:block;}
+  .result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+  .result-row:last-child{border-bottom:none;}
+  .result-label{font-size:12px;color:var(--muted);}
+  .result-value{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;}
+  .result-value.green{color:var(--green);}
+  .result-value.red{color:var(--red);}
+  .result-value.orange{color:var(--accent);}
+  .result-total{display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:10px;margin-top:10px;}
+  .result-total-label{font-size:13px;font-weight:600;}
+  .result-total-value{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;color:var(--accent);}
+  .kp-output{background:#fff;color:#000;padding:20px;border-radius:10px;margin-top:14px;font-family:'Times New Roman',serif;font-size:11pt;display:none;}
+  .kp-output.show{display:block;}
+  .tax-compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;}
+  .tax-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+  .tax-card.best{border-color:var(--green);background:rgba(34,197,94,0.05);}
+  .tax-card-name{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:8px;}
+  .tax-card-amount{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bottom:4px;}
+  .tax-card-desc{font-size:10px;color:var(--muted);}
+  .enp-timeline{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+  .enp-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+  .enp-date{font-size:12px;color:var(--muted);}
+  .enp-name{font-size:13px;font-weight:500;}
+  .enp-amount{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--accent);}
+  .btn-outline{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
+  .btn-outline:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
+  @media(max-width:600px){
+    .tools-grid{grid-template-columns:repeat(2,1fr);}
+    .input-row{grid-template-columns:1fr;}
+    .input-row-3{grid-template-columns:1fr;}
+    .tax-compare{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">OMS<span>FIN</span></div>
+  <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
+</header>
+<main>
+  <div style="margin-bottom:20px">
+    <div style="font-family:Unbounded,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Финансовые инструменты</div>
+    <div style="font-size:22px;font-family:Unbounded,sans-serif;font-weight:900">Калькуляторы для бизнеса</div>
+  </div>
+
+  <div class="tools-grid">
+    <div class="tool-btn active" onclick="showTool('salary',this)">
+      <div class="tool-icon">👥</div>
+      <div class="tool-name">Зарплата</div>
+      <div class="tool-desc">НДФЛ и страховые взносы</div>
+    </div>
+    <div class="tool-btn" onclick="showTool('deal',this)">
+      <div class="tool-icon">📦</div>
+      <div class="tool-name">Рентабельность</div>
+      <div class="tool-desc">Прибыль с одной сделки</div>
+    </div>
+    <div class="tool-btn" onclick="showTool('kp',this)">
+      <div class="tool-icon">📄</div>
+      <div class="tool-name">КП</div>
+      <div class="tool-desc">Коммерческое предложение</div>
+    </div>
+    <div class="tool-btn" onclick="showTool('enp',this)">
+      <div class="tool-icon">🏦</div>
+      <div class="tool-name">ЕНП</div>
+      <div class="tool-desc">Распределение платежей</div>
+    </div>
+    <div class="tool-btn" onclick="showTool('penalty',this)">
+      <div class="tool-icon">⚠️</div>
+      <div class="tool-name">Пени и штрафы</div>
+      <div class="tool-desc">Просрочка налогов</div>
+    </div>
+    <div class="tool-btn" onclick="showTool('taxsys',this)">
+      <div class="tool-icon">⚖️</div>
+      <div class="tool-name">Система налогов</div>
+      <div class="tool-desc">УСН 6% vs 15% vs ОСНО</div>
+    </div>
+  </div>
+
+  <!-- ЗАРПЛАТА -->
+  <div class="tool-panel active" id="tool-salary">
+    <div class="card">
+      <div class="section-title">Расчёт зарплаты с налогами</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Оклад (gross, до вычета НДФЛ)</label>
+          <input type="number" id="salaryGross" placeholder="100 000" oninput="calcSalary()">
+        </div>
+        <div class="input-group">
+          <label>Тип сотрудника</label>
+          <select id="salaryType" onchange="calcSalary()">
+            <option value="regular">Обычный</option>
+            <option value="invalid">Инвалид 1-2 группы</option>
+            <option value="over65">Старше 65 лет</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Налоговый вычет (руб.)</label>
+          <input type="number" id="salaryDeduct" placeholder="0" value="0" oninput="calcSalary()">
+        </div>
+        <div class="input-group">
+          <label>Работодатель</label>
+          <select id="employerType" onchange="calcSalary()">
+            <option value="regular">ООО/АО</option>
+            <option value="small">МСП (малое предприятие)</option>
+            <option value="it">IT-аккредитованная</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcSalary()">Рассчитать</button>
+      <div class="result-block" id="salaryResult">
+        <div class="result-row"><span class="result-label">Оклад (gross)</span><span class="result-value" id="sr-gross"></span></div>
+        <div class="result-row"><span class="result-label">НДФЛ 13%</span><span class="result-value red" id="sr-ndfl"></span></div>
+        <div class="result-row"><span class="result-label">Сотрудник получит (net)</span><span class="result-value green" id="sr-net"></span></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div class="result-row"><span class="result-label">ПФР (22% / 10% сверх лимита)</span><span class="result-value orange" id="sr-pfr"></span></div>
+        <div class="result-row"><span class="result-label">ФСС (2.9%)</span><span class="result-value orange" id="sr-fss"></span></div>
+        <div class="result-row"><span class="result-label">ФОМС (5.1%)</span><span class="result-value orange" id="sr-foms"></span></div>
+        <div class="result-row"><span class="result-label">Итого взносов</span><span class="result-value orange" id="sr-vznosy"></span></div>
+        <div class="result-total">
+          <span class="result-total-label">💰 Реальная стоимость сотрудника</span>
+          <span class="result-total-value" id="sr-total"></span>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">* Расчёт приблизительный. Ставки могут отличаться в зависимости от льгот и региона.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- РЕНТАБЕЛЬНОСТЬ СДЕЛКИ -->
+  <div class="tool-panel" id="tool-deal">
+    <div class="card">
+      <div class="section-title">Рентабельность сделки</div>
+      <div class="input-row">
+        <div class="input-group"><label>Выручка (цена продажи)</label><input type="number" id="dealRevenue" placeholder="500 000" oninput="calcDeal()"></div>
+        <div class="input-group"><label>Себестоимость товара</label><input type="number" id="dealCost" placeholder="300 000" oninput="calcDeal()"></div>
+      </div>
+      <div class="input-row-3">
+        <div class="input-group"><label>Транспорт</label><input type="number" id="dealTransport" placeholder="15 000" value="0" oninput="calcDeal()"></div>
+        <div class="input-group"><label>Зарплата (доля)</label><input type="number" id="dealSalary" placeholder="10 000" value="0" oninput="calcDeal()"></div>
+        <div class="input-group"><label>Прочие расходы</label><input type="number" id="dealOther" placeholder="5 000" value="0" oninput="calcDeal()"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>НДС с продажи (%)</label>
+          <select id="dealVatSale" onchange="calcDeal()">
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="0">Без НДС</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>НДС с закупки (%)</label>
+          <select id="dealVatBuy" onchange="calcDeal()">
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="0">Без НДС</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcDeal()">Рассчитать</button>
+      <div class="result-block" id="dealResult">
+        <div class="result-row"><span class="result-label">Выручка с НДС</span><span class="result-value green" id="dr-revenue"></span></div>
+        <div class="result-row"><span class="result-label">НДС с продажи (к уплате)</span><span class="result-value red" id="dr-vat-sale"></span></div>
+        <div class="result-row"><span class="result-label">НДС с закупки (к вычету)</span><span class="result-value green" id="dr-vat-buy"></span></div>
+        <div class="result-row"><span class="result-label">НДС итого к уплате</span><span class="result-value red" id="dr-vat-total"></span></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div class="result-row"><span class="result-label">Себестоимость</span><span class="result-value red" id="dr-cost"></span></div>
+        <div class="result-row"><span class="result-label">Транспорт</span><span class="result-value red" id="dr-transport"></span></div>
+        <div class="result-row"><span class="result-label">Зарплата</span><span class="result-value red" id="dr-salary"></span></div>
+        <div class="result-row"><span class="result-label">Прочие расходы</span><span class="result-value red" id="dr-other"></span></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div class="result-row"><span class="result-label">Валовая прибыль</span><span class="result-value" id="dr-gross"></span></div>
+        <div class="result-row"><span class="result-label">Рентабельность</span><span class="result-value" id="dr-margin"></span></div>
+        <div class="result-total">
+          <span class="result-total-label">💰 Чистая прибыль со сделки</span>
+          <span class="result-total-value" id="dr-profit"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- КП -->
+  <div class="tool-panel" id="tool-kp">
+    <div class="card">
+      <div class="section-title">Генератор коммерческого предложения</div>
+      <div class="input-row">
+        <div class="input-group"><label>Компания получателя</label><input type="text" id="kpBuyer" placeholder="ООО Покупатель"></div>
+        <div class="input-group"><label>Контактное лицо</label><input type="text" id="kpContact" placeholder="Иван Иванович"></div>
+      </div>
+      <div class="input-group"><label>Предмет предложения</label><input type="text" id="kpSubject" placeholder="Поставка мяса куриного охлаждённого"></div>
+      <div class="input-row">
+        <div class="input-group"><label>Цена за кг (с НДС)</label><input type="number" id="kpPrice" placeholder="220"></div>
+        <div class="input-group"><label>Минимальный заказ (кг)</label><input type="number" id="kpMinOrder" placeholder="500"></div>
+      </div>
+      <div class="input-group"><label>Срок поставки</label><input type="text" id="kpDelivery" placeholder="1-3 рабочих дня"></div>
+      <div class="input-group"><label>Условия оплаты</label><input type="text" id="kpPayment" placeholder="100% предоплата / отсрочка 5 дней"></div>
+      <div class="input-group"><label>Особые условия / преимущества</label><textarea id="kpAdvantages" rows="3" placeholder="Собственное производство, ветеринарные документы, доставка по Пензенской области"></textarea></div>
+      <button class="btn" onclick="genKP()">📄 Сгенерировать КП</button>
+    </div>
+    <div class="kp-output" id="kpOutput"></div>
+    <div id="kpActions" style="display:none;margin-top:10px;display:none">
+      <button class="btn" onclick="printKP()">🖨️ Печать / PDF</button>
+    </div>
+  </div>
+
+  <!-- ЕНП -->
+  <div class="tool-panel" id="tool-enp">
+    <div class="card">
+      <div class="section-title">Разбивка платежей по ЕНП</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Квартал</label>
+          <select id="enpQuarter">
+            <option value="1">I квартал</option>
+            <option value="2" selected>II квартал</option>
+            <option value="3">III квартал</option>
+            <option value="4">IV квартал</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Год</label>
+          <input type="number" id="enpYear" value="2026">
+        </div>
+      </div>
+      <div class="input-row-3">
+        <div class="input-group"><label>НДС к уплате</label><input type="number" id="enpVat" placeholder="175 525" oninput="calcENP()"></div>
+        <div class="input-group"><label>Аванс УСН</label><input type="number" id="enpUsn" placeholder="0" value="0" oninput="calcENP()"></div>
+        <div class="input-group"><label>НДФЛ за сотрудников</label><input type="number" id="enpNdfl" placeholder="0" value="0" oninput="calcENP()"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Страховые взносы</label><input type="number" id="enpVznosy" placeholder="0" value="0" oninput="calcENP()"></div>
+        <div class="input-group"><label>Прочие налоги</label><input type="number" id="enpOther" placeholder="0" value="0" oninput="calcENP()"></div>
+      </div>
+      <button class="btn" onclick="calcENP()">Рассчитать</button>
+      <div class="result-block" id="enpResult">
+        <div style="font-size:13px;font-weight:500;margin-bottom:12px">📅 График платежей на ЕНС:</div>
+        <div class="enp-timeline" id="enpTimeline"></div>
+        <div class="result-total" style="margin-top:12px">
+          <span class="result-total-label">💳 Итого на ЕНС за квартал</span>
+          <span class="result-total-value" id="enp-total"></span>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">* НДС уплачивается тремя равными частями до 25-го числа каждого из трёх месяцев следующего квартала. Остальные налоги — согласно своим срокам.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПЕНИ -->
+  <div class="tool-panel" id="tool-penalty">
+    <div class="card">
+      <div class="section-title">Калькулятор пеней и штрафов</div>
+      <div class="input-row">
+        <div class="input-group"><label>Сумма недоимки (руб.)</label><input type="number" id="penAmount" placeholder="100 000"></div>
+        <div class="input-group">
+          <label>Тип налога</label>
+          <select id="penType">
+            <option value="nds">НДС</option>
+            <option value="usn">УСН</option>
+            <option value="ndfl">НДФЛ</option>
+            <option value="vznosy">Страховые взносы</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Дата срока уплаты</label><input type="date" id="penDateFrom"></div>
+        <div class="input-group"><label>Дата фактической уплаты</label><input type="date" id="penDateTo"></div>
+      </div>
+      <div class="input-group">
+        <label>Ключевая ставка ЦБ (%)</label>
+        <input type="number" id="penRate" value="16" step="0.25">
+      </div>
+      <button class="btn" onclick="calcPenalty()">Рассчитать пени</button>
+      <div class="result-block" id="penResult">
+        <div class="result-row"><span class="result-label">Сумма недоимки</span><span class="result-value" id="pen-amount"></span></div>
+        <div class="result-row"><span class="result-label">Дней просрочки</span><span class="result-value orange" id="pen-days"></span></div>
+        <div class="result-row"><span class="result-label">Ставка пеней (1/300 КС)</span><span class="result-value" id="pen-rate"></span></div>
+        <div class="result-row"><span class="result-label">Пени за просрочку</span><span class="result-value red" id="pen-penalty"></span></div>
+        <div class="result-row"><span class="result-label">Штраф (20% от недоимки)</span><span class="result-value red" id="pen-fine"></span></div>
+        <div class="result-total">
+          <span class="result-total-label">⚠️ Итого к доплате</span>
+          <span class="result-total-value" id="pen-total"></span>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">* Штраф 20% применяется если ФНС обнаружила недоимку. При самостоятельной уплате — только пени.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- СИСТЕМЫ НАЛОГООБЛОЖЕНИЯ -->
+  <div class="tool-panel" id="tool-taxsys">
+    <div class="card">
+      <div class="section-title">Сравнение систем налогообложения</div>
+      <div class="input-row">
+        <div class="input-group"><label>Доходы за год (руб.)</label><input type="number" id="tsIncome" placeholder="5 000 000" oninput="calcTaxSys()"></div>
+        <div class="input-group"><label>Расходы за год (руб.)</label><input type="number" id="tsExpense" placeholder="3 000 000" oninput="calcTaxSys()"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Страховые взносы ИП (руб.)</label><input type="number" id="tsInsurance" placeholder="49 500" value="49500" oninput="calcTaxSys()"></div>
+        <div class="input-group"><label>Регион (ставка УСН 15%)</label>
+          <select id="tsRegion" onchange="calcTaxSys()">
+            <option value="15">Стандартная 15%</option>
+            <option value="10">Льготная 10%</option>
+            <option value="5">Льготная 5%</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcTaxSys()">Сравнить</button>
+      <div class="result-block" id="taxsysResult">
+        <div class="tax-compare" id="taxCompare"></div>
+        <div style="margin-top:14px;padding:12px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:10px;font-size:13px" id="taxRecommend"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+<script>
+function showTool(name, btn) {
+  document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tool-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
+function fmtPct(n){return n.toFixed(1)+'%';}
+
+// ЗАРПЛАТА
+function calcSalary() {
+  const gross = parseFloat(document.getElementById('salaryGross').value) || 0;
+  if (!gross) return;
+  const deduct = parseFloat(document.getElementById('salaryDeduct').value) || 0;
+  const empType = document.getElementById('employerType').value;
+  
+  const ndfl = Math.max(0, (gross - deduct) * 0.13);
+  const net = gross - ndfl;
+  
+  let pfrRate = 0.22, fssRate = 0.029, fomsRate = 0.051;
+  if (empType === 'small') { pfrRate = 0.10; fssRate = 0.005; fomsRate = 0.05; }
+  if (empType === 'it') { pfrRate = 0.06; fssRate = 0.015; fomsRate = 0.008; }
+  
+  const pfr = gross * pfrRate;
+  const fss = gross * fssRate;
+  const foms = gross * fomsRate;
+  const vznosy = pfr + fss + foms;
+  const total = gross + vznosy;
+  
+  document.getElementById('sr-gross').textContent = fmt(gross);
+  document.getElementById('sr-ndfl').textContent = '-' + fmt(ndfl);
+  document.getElementById('sr-net').textContent = fmt(net);
+  document.getElementById('sr-pfr').textContent = fmt(pfr);
+  document.getElementById('sr-fss').textContent = fmt(fss);
+  document.getElementById('sr-foms').textContent = fmt(foms);
+  document.getElementById('sr-vznosy').textContent = fmt(vznosy);
+  document.getElementById('sr-total').textContent = fmt(total);
+  document.getElementById('salaryResult').classList.add('show');
+}
+
+// РЕНТАБЕЛЬНОСТЬ
+function calcDeal() {
+  const revenue = parseFloat(document.getElementById('dealRevenue').value) || 0;
+  const cost = parseFloat(document.getElementById('dealCost').value) || 0;
+  const transport = parseFloat(document.getElementById('dealTransport').value) || 0;
+  const salary = parseFloat(document.getElementById('dealSalary').value) || 0;
+  const other = parseFloat(document.getElementById('dealOther').value) || 0;
+  const vatSalePct = parseFloat(document.getElementById('dealVatSale').value) || 0;
+  const vatBuyPct = parseFloat(document.getElementById('dealVatBuy').value) || 0;
+  if (!revenue) return;
+  
+  const vatSale = revenue * vatSalePct / (100 + vatSalePct);
+  const vatBuy = cost * vatBuyPct / (100 + vatBuyPct);
+  const vatNet = vatSale - vatBuy;
+  const totalExpense = cost + transport + salary + other + vatNet;
+  const grossProfit = revenue - totalExpense;
+  const margin = revenue > 0 ? (grossProfit / revenue * 100) : 0;
+  
+  document.getElementById('dr-revenue').textContent = fmt(revenue);
+  document.getElementById('dr-vat-sale').textContent = '-' + fmt(vatSale);
+  document.getElementById('dr-vat-buy').textContent = '+' + fmt(vatBuy);
+  document.getElementById('dr-vat-total').textContent = '-' + fmt(vatNet);
+  document.getElementById('dr-cost').textContent = '-' + fmt(cost);
+  document.getElementById('dr-transport').textContent = '-' + fmt(transport);
+  document.getElementById('dr-salary').textContent = '-' + fmt(salary);
+  document.getElementById('dr-other').textContent = '-' + fmt(other);
+  document.getElementById('dr-gross').textContent = fmt(grossProfit);
+  document.getElementById('dr-gross').className = 'result-value ' + (grossProfit >= 0 ? 'green' : 'red');
+  document.getElementById('dr-margin').textContent = fmtPct(margin);
+  document.getElementById('dr-margin').className = 'result-value ' + (margin >= 15 ? 'green' : margin >= 5 ? 'orange' : 'red');
+  document.getElementById('dr-profit').textContent = fmt(grossProfit);
+  document.getElementById('dealResult').classList.add('show');
+}
+
+// КП
+function genKP() {
+  const buyer = document.getElementById('kpBuyer').value || '—';
+  const contact = document.getElementById('kpContact').value || '—';
+  const subject = document.getElementById('kpSubject').value || 'Поставка товаров';
+  const price = document.getElementById('kpPrice').value || '—';
+  const minOrder = document.getElementById('kpMinOrder').value || '—';
+  const delivery = document.getElementById('kpDelivery').value || '—';
+  const payment = document.getElementById('kpPayment').value || '—';
+  const advantages = document.getElementById('kpAdvantages').value || '—';
+  const S = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
+  const date = new Date().toLocaleDateString('ru-RU');
+  
+  const kp = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <div style="font-size:9pt;color:#666">Кому:</div>
+        <div style="font-weight:bold">${buyer}</div>
+        <div style="font-size:9pt">Контактное лицо: ${contact}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:bold;font-size:14pt">${S.name || 'ООО ОМСЧИКЕН'}</div>
+        <div style="font-size:9pt">ИНН: ${S.inn || '5800015301'}</div>
+        <div style="font-size:9pt">${S.phone || ''}</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-weight:bold;font-size:14pt;margin:16px 0;border-top:2px solid #ff6b00;border-bottom:2px solid #ff6b00;padding:10px">
+      КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ
+    </div>
+    <div style="font-size:9pt;color:#666;margin-bottom:12px">Дата: ${date}</div>
+    <p style="margin-bottom:12px">Уважаемый(ая) ${contact}!</p>
+    <p style="margin-bottom:12px">Компания <strong>${S.name || 'ООО ОМСЧИКЕН'}</strong> рада предложить Вам следующие условия сотрудничества:</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <tr style="background:#f5f5f5"><td style="padding:8px;border:1px solid #ddd;font-weight:bold;width:40%">Предмет предложения</td><td style="padding:8px;border:1px solid #ddd">${subject}</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold">Цена</td><td style="padding:8px;border:1px solid #ddd"><strong>${price} руб./кг</strong> (с НДС 10%)</td></tr>
+      <tr style="background:#f5f5f5"><td style="padding:8px;border:1px solid #ddd;font-weight:bold">Минимальный заказ</td><td style="padding:8px;border:1px solid #ddd">${minOrder} кг</td></tr>
+      <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold">Срок поставки</td><td style="padding:8px;border:1px solid #ddd">${delivery}</td></tr>
+      <tr style="background:#f5f5f5"><td style="padding:8px;border:1px solid #ddd;font-weight:bold">Условия оплаты</td><td style="padding:8px;border:1px solid #ddd">${payment}</td></tr>
+    </table>
+    <p style="font-weight:bold;margin-bottom:8px">Наши преимущества:</p>
+    <p style="margin-bottom:16px">${advantages.replace(/\n/g,'<br>')}</p>
+    <p style="margin-bottom:16px">Все поставки сопровождаются ветеринарными документами, декларациями соответствия и необходимыми сертификатами качества.</p>
+    <p style="margin-bottom:20px">Мы открыты к переговорам и готовы рассмотреть индивидуальные условия для долгосрочного сотрудничества.</p>
+    <div style="display:flex;justify-content:space-between;margin-top:24px;border-top:1px solid #ddd;padding-top:16px">
+      <div>
+        <div style="font-weight:bold">${S.director || 'Директор'}</div>
+        <div style="font-size:9pt">${S.name || ''}</div>
+        <div style="font-size:9pt">${S.phone || ''}</div>
+      </div>
+      <div style="text-align:right;font-size:9pt;color:#666">
+        <div>Действительно до: ${new Date(Date.now()+30*86400000).toLocaleDateString('ru-RU')}</div>
+      </div>
+    </div>`;
+  
+  document.getElementById('kpOutput').innerHTML = kp;
+  document.getElementById('kpOutput').classList.add('show');
+  document.getElementById('kpActions').style.display = 'flex';
+  document.getElementById('kpOutput').scrollIntoView({behavior:'smooth'});
+}
+
+function printKP() {
+  const content = document.getElementById('kpOutput').innerHTML;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11pt;padding:20mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}@media print{@page{margin:15mm}}</style></head><body>${content}</body></html>`);
+  win.document.close();
+  setTimeout(()=>win.print(),500);
+}
+
+// ЕНП
+function calcENP() {
+  const vat = parseFloat(document.getElementById('enpVat').value) || 0;
+  const usn = parseFloat(document.getElementById('enpUsn').value) || 0;
+  const ndfl = parseFloat(document.getElementById('enpNdfl').value) || 0;
+  const vznosy = parseFloat(document.getElementById('enpVznosy').value) || 0;
+  const other = parseFloat(document.getElementById('enpOther').value) || 0;
+  const q = parseInt(document.getElementById('enpQuarter').value);
+  const year = parseInt(document.getElementById('enpYear').value);
+  
+  const total = vat + usn + ndfl + vznosy + other;
+  const vatPart = vat / 3;
+  
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const startMonth = q * 3;
+  
+  const timeline = [];
+  if (ndfl > 0) timeline.push({date:`28 ${months[startMonth-2]} ${year}`, name:'НДФЛ за предыдущий период', amount:ndfl, color:'#818cf8'});
+  if (vznosy > 0) timeline.push({date:`28 ${months[startMonth-2]} ${year}`, name:'Страховые взносы', amount:vznosy, color:'#38bdf8'});
+  if (usn > 0) timeline.push({date:`28 ${months[startMonth-2]} ${year}`, name:`Аванс УСН за ${q} квартал`, amount:usn, color:'#4ade80'});
+  if (vat > 0) {
+    timeline.push({date:`25 ${months[startMonth]} ${year}`, name:`НДС за ${q} кв. (1/3)`, amount:vatPart, color:'#ff6b00'});
+    timeline.push({date:`25 ${months[startMonth+1]} ${year}`, name:`НДС за ${q} кв. (2/3)`, amount:vatPart, color:'#ff6b00'});
+    timeline.push({date:`25 ${months[(startMonth+2)%12]} ${startMonth+2 >= 12 ? year+1 : year}`, name:`НДС за ${q} кв. (3/3)`, amount:vatPart, color:'#ff6b00'});
+  }
+  if (other > 0) timeline.push({date:`28 ${months[startMonth-2]} ${year}`, name:'Прочие налоги', amount:other, color:'#fbbf24'});
+  
+  document.getElementById('enpTimeline').innerHTML = timeline.map(t=>`
+    <div class="enp-item">
+      <div><div class="enp-name">${t.name}</div><div class="enp-date">до ${t.date}</div></div>
+      <div class="enp-amount" style="color:${t.color}">${fmt(t.amount)}</div>
+    </div>`).join('');
+  
+  document.getElementById('enp-total').textContent = fmt(total);
+  document.getElementById('enpResult').classList.add('show');
+}
+
+// ПЕНИ
+function calcPenalty() {
+  const amount = parseFloat(document.getElementById('penAmount').value) || 0;
+  if (!amount) return;
+  const dateFrom = new Date(document.getElementById('penDateFrom').value);
+  const dateTo = new Date(document.getElementById('penDateTo').value);
+  const rate = parseFloat(document.getElementById('penRate').value) || 16;
+  if (!dateFrom || !dateTo || dateTo <= dateFrom) { alert('Укажи даты'); return; }
+  
+  const days = Math.ceil((dateTo - dateFrom) / (1000*60*60*24));
+  const penaltyRate = rate / 300 / 100;
+  let penalty = 0;
+  if (days <= 30) penalty = amount * penaltyRate * days;
+  else penalty = amount * penaltyRate * 30 + amount * (rate/150/100) * (days - 30);
+  
+  const fine = amount * 0.20;
+  const total = amount + penalty + fine;
+  
+  document.getElementById('pen-amount').textContent = fmt(amount);
+  document.getElementById('pen-days').textContent = days + ' дней';
+  document.getElementById('pen-rate').textContent = (rate/300).toFixed(4) + '% в день';
+  document.getElementById('pen-penalty').textContent = fmt(penalty);
+  document.getElementById('pen-fine').textContent = fmt(fine);
+  document.getElementById('pen-total').textContent = fmt(total);
+  document.getElementById('penResult').classList.add('show');
+}
+
+// СИСТЕМЫ НАЛОГООБЛОЖЕНИЯ
+function calcTaxSys() {
+  const income = parseFloat(document.getElementById('tsIncome').value) || 0;
+  const expense = parseFloat(document.getElementById('tsExpense').value) || 0;
+  const insurance = parseFloat(document.getElementById('tsInsurance').value) || 0;
+  const usnRate = parseFloat(document.getElementById('tsRegion').value) / 100;
+  if (!income) return;
+  
+  const profit = income - expense;
+  
+  // УСН 6% (доходы)
+  const usn6base = income;
+  let usn6tax = usn6base * 0.06;
+  usn6tax = Math.max(0, usn6tax - insurance);
+  const usn6net = profit - usn6tax;
+  
+  // УСН 15% (доходы - расходы)
+  const usn15base = Math.max(0, income - expense - insurance);
+  const usn15min = income * 0.01; // минимальный налог 1%
+  const usn15tax = Math.max(usn15base * usnRate, usn15min);
+  const usn15net = profit - insurance - usn15tax;
+  
+  // ОСНО (упрощённо)
+  const vat = income * 10/110;
+  const vatBuy = expense * 10/110;
+  const vatNet = vat - vatBuy;
+  const npbase = Math.max(0, income - expense - vatNet);
+  const np = npbase * 0.20;
+  const osnoNet = profit - vatNet - np;
+  
+  const results = [
+    {name:'УСН 6%', tax:usn6tax, net:usn6net, desc:`Налог с оборота ${fmt(usn6tax)}`},
+    {name:`УСН ${usnRate*100}%`, tax:usn15tax, net:usn15net, desc:`Налог с прибыли ${fmt(usn15tax)}`},
+    {name:'ОСНО', tax:vatNet+np, net:osnoNet, desc:`НДС ${fmt(vatNet)} + НП ${fmt(np)}`},
+  ];
+  
+  const bestIdx = results.reduce((best,r,i) => r.net > results[best].net ? i : best, 0);
+  
+  document.getElementById('taxCompare').innerHTML = results.map((r,i)=>`
+    <div class="tax-card ${i===bestIdx?'best':''}">
+      ${i===bestIdx?'<div style="font-size:10px;color:var(--green);margin-bottom:4px">✅ ВЫГОДНЕЕ</div>':''}
+      <div class="tax-card-name">${r.name}</div>
+      <div class="tax-card-amount" style="color:${i===bestIdx?'var(--green)':'var(--text)'}">${fmt(r.net)}</div>
+      <div class="tax-card-desc">чистая прибыль</div>
+      <div class="tax-card-desc" style="margin-top:4px">${r.desc}</div>
+    </div>`).join('');
+  
+  const best = results[bestIdx];
+  const worst = results.reduce((w,r,i) => r.net < results[w].net ? i : w, 0);
+  const saving = best.net - results[worst].net;
+  
+  document.getElementById('taxRecommend').innerHTML = `
+    <div style="font-weight:600;margin-bottom:6px">💡 Рекомендация:</div>
+    <div>При ваших показателях <strong>${best.name}</strong> выгоднее всего — чистая прибыль <strong>${fmt(best.net)}</strong>. 
+    Экономия по сравнению с худшим вариантом: <strong style="color:var(--green)">${fmt(saving)}</strong> в год.</div>`;
+  
+  document.getElementById('taxsysResult').classList.add('show');
+}
+
+// Инициализация дат для калькулятора пеней
+document.getElementById('penDateFrom').value = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+document.getElementById('penDateTo').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
