@@ -456,7 +456,21 @@ function logout() {
 }
 
 function changePassword() {
-  showToast('📧 Функция смены пароля — скоро');
+  const newPass = prompt('Введи новый пароль (минимум 6 символов):');
+  if (!newPass || newPass.length < 6) { showToast('❌ Пароль слишком короткий'); return; }
+  const tok = localStorage.getItem('omschicken_token') || '';
+  fetch('https://sqyppamdxahvvkoxovpu.supabase.co/auth/v1/user', {
+    method: 'PUT',
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM',
+      'Authorization': 'Bearer ' + tok,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({password: newPass})
+  }).then(r=>r.json()).then(d=>{
+    if (d.id) { showToast('✅ Пароль успешно изменён!'); }
+    else { showToast('❌ Ошибка: ' + (d.message || 'попробуй снова')); }
+  });
 }
 
 function showToast(msg) {
@@ -489,24 +503,6 @@ function showToast(msg) {
   setInterval(refresh, 45 * 60 * 1000);
 })();
 
-async function checkTelegramStatus() {
-  const tok = localStorage.getItem("omschicken_token") || "";
-  if (!tok) { document.getElementById("tgStatus").style.display="none"; document.getElementById("tgNotLinked").style.display="block"; return; }
-  try {
-    const r = await fetch("/api/telegram_link", {headers:{"Authorization":"Bearer "+tok}});
-    const d = await r.json();
-    document.getElementById("tgStatus").style.display="none";
-    if (d.linked) { document.getElementById("tgLinked").style.display="block"; if(document.getElementById("tgId")) document.getElementById("tgId").textContent="ID: "+d.telegram_id; }
-    else { document.getElementById("tgNotLinked").style.display="block"; }
-  } catch(e) { document.getElementById("tgStatus").textContent="Ошибка"; }
-}
-async function linkTelegram() {
-  const tok = localStorage.getItem("omschicken_token") || "";
-  const r = await fetch("/api/telegram_link", {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+tok}});
-  const d = await r.json();
-  if (d.code) { document.getElementById("tgCode").textContent=d.code; document.getElementById("tgLink").href="https://t.me/omsfin_bot?start="+d.code; document.getElementById("tgCodeBlock").style.display="block"; }
-}
-checkTelegramStatus();
 </script>
 </body>
 </html>
