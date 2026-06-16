@@ -489,6 +489,24 @@ function showToast(msg) {
   setInterval(refresh, 45 * 60 * 1000);
 })();
 
+async function checkTelegramStatus() {
+  const tok = localStorage.getItem("omschicken_token") || "";
+  if (!tok) { document.getElementById("tgStatus").style.display="none"; document.getElementById("tgNotLinked").style.display="block"; return; }
+  try {
+    const r = await fetch("/api/telegram_link", {headers:{"Authorization":"Bearer "+tok}});
+    const d = await r.json();
+    document.getElementById("tgStatus").style.display="none";
+    if (d.linked) { document.getElementById("tgLinked").style.display="block"; if(document.getElementById("tgId")) document.getElementById("tgId").textContent="ID: "+d.telegram_id; }
+    else { document.getElementById("tgNotLinked").style.display="block"; }
+  } catch(e) { document.getElementById("tgStatus").textContent="Ошибка"; }
+}
+async function linkTelegram() {
+  const tok = localStorage.getItem("omschicken_token") || "";
+  const r = await fetch("/api/telegram_link", {method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+tok}});
+  const d = await r.json();
+  if (d.code) { document.getElementById("tgCode").textContent=d.code; document.getElementById("tgLink").href="https://t.me/omsfin_bot?start="+d.code; document.getElementById("tgCodeBlock").style.display="block"; }
+}
+checkTelegramStatus();
 </script>
 </body>
 </html>
