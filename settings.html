@@ -470,9 +470,28 @@ async function doChangePassword() {
   const newPass2 = document.getElementById('newPassInput2').value;
   if (!newPass || newPass.length < 6) { showToast('❌ Минимум 6 символов'); return; }
   if (newPass !== newPass2) { showToast('❌ Пароли не совпадают'); return; }
-  const tok = localStorage.getItem('omschicken_token') || '';
+  
+  // Сначала обновляем токен
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+  let tok = localStorage.getItem('omschicken_token') || '';
+  try {
+    const ref = localStorage.getItem('omschicken_refresh');
+    if (ref) {
+      const rr = await fetch(SURL + '/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        headers: {'apikey': SKEY, 'Content-Type': 'application/json'},
+        body: JSON.stringify({refresh_token: ref})
+      });
+      const rd = await rr.json();
+      if (rd.access_token) {
+        tok = rd.access_token;
+        localStorage.setItem('omschicken_token', tok);
+        localStorage.setItem('omschicken_refresh', rd.refresh_token);
+      }
+    }
+  } catch(e) {}
+
   try {
     const r = await fetch('/api/change_password', {
       method: 'POST',
@@ -521,7 +540,6 @@ function showToast(msg) {
     } catch(e) {}
   }
   setInterval(refresh, 45 * 60 * 1000);
-  refresh();
 })();
 
 </script>
