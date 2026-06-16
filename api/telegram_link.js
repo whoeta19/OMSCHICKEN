@@ -25,10 +25,20 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       userId = d.id || null;
-    } catch(e) {}
+      if (d.error) console.error('Auth error:', d.error, d.message);
+    } catch(e) {
+      console.error('Auth exception:', e.message);
+    }
   }
 
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  // Если токен не прошёл — возвращаем debug info
+  if (!userId) {
+    return res.status(401).json({ 
+      error: 'Unauthorized', 
+      hasToken: !!userToken,
+      tokenStart: userToken ? userToken.substring(0,20) : null
+    });
+  }
 
   if (req.method === 'POST') {
     // Генерируем код привязки
