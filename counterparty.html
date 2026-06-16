@@ -173,26 +173,65 @@ async function fetchFromEGRUL(inn) {
   return null;
 }
 
-function parseEGRUL(data, inn) {
-  // Парсим данные ЕГРЮЛ
-  const name = data.НаимЮЛПолн || data.НаимЮЛСокр || inn;
-  const isActive = !data.ДатаПрекрЮЛ;
-  const regDate = data.ДатаРег ? new Date(data.ДатаРег).toLocaleDateString('ru-RU') : '—';
-  const ageYears = data.ДатаРег ? Math.floor((Date.now() - new Date(data.ДатаРег)) / (365.25*24*60*60*1000)) : 0;
-  const director = data.СвРуковИСП?.ФИОРук || '—';
-  const address = data.АдрЮЛФИАС?.АдрПолн || '—';
+function parseEGRUL(raw, inn) {
+  // Данные приходят в raw.СвЮЛ
+  const data = raw.СвЮЛ || raw;
+  
+  const svNaim = data.СвНаимЮЛ || {};
+  const name = svNaim.НаимЮЛПолн || svNaim.НаимЮЛСокр || data.НаимЮЛПолн || inn;
+  
+  const svZap = data.СвЗапЕГРЮЛ || {};
+  const isActive = !data.СвПрекрЮЛ && !data.ДатаПрекрЮЛ;
+  
+  const svReg = data.СвОбрЮЛ || {};
+  const regDateRaw = svReg.ДатаРег || data.ДатаРег;
+  const regDate = regDateRaw ? new Date(regDateRaw).toLocaleDateString('ru-RU') : '—';
+  const ageYears = regDateRaw ? Math.floor((Date.now() - new Date(regDateRaw)) / (365.25*24*60*60*1000)) : 0;
+  
+  // Руководитель
+  const svRuk = data.СвРуковИСП || {};
+  const fio = svRuk.ФИОРук || (Array.isArray(data.СвУчредит) ? '' : '');
+  const directorPost = svRuk.НаимДолжн || 'Генеральный директор';
+  
+  // Адрес
+  const svAdr = data.СвАдрЮЛФИАС || data.АдрЮЛФИАС || {};
+  const address = svAdr.АдрПолн || svAdr.НаимМО || '—';
+  
+  // ОГРН КПП
+  const ogrn = data.ОГРН || svReg.ОГРН || '—';
+  const kpp = data.КПП || '—';
+  
+  // ОКВЭД
+  const okved = data.СвОКВЭД?.СвОКВЭДОсн?.КодОКВЭД || '—';
+  const okvedName = data.СвОКВЭД?.СвОКВЭДОсн?.НаимОКВЭД || '—';
+  
+  // Уставный капитал
+  const capital = data.СвУстКап?.СумУстКап || 0;
   
   let riskScore = 100;
   let risks = [], positives = [];
-  if (!isActive) { riskScore -= 60; risks.push('Компания ликвидирована'); }
-  if (ageYears < 1) { riskScore -= 20; risks.push('Компания зарегистрирована менее года'); }
-  if (isActive) positives.push('Компания действует');
-  if (ageYears >= 5) positives.push(`Работает ${ageYears} лет`);
   
-  return {name, inn, kpp: data.КПП||'—', ogrn: data.ОГРН||'—', type:'ЮЛ',
-    status: isActive?'ACTIVE':'LIQUIDATED', statusText: isActive?'Действующая':'Ликвидирована',
-    isActive, regDate, ageYears, address, director, directorPost:'Директор',
-    capital:0, okved:'—', riskScore, risks, positives};
+  if (!isActive) { riskScore -= 60; risks.push('Компания не действует'); }
+  if (ageYears < 1) { riskScore -= 20; risks.push('Зарегистрирована менее года назад'); }
+  else if (ageYears < 3) { riskScore -= 10; risks.push('Молодая компания (менее 3 лет)'); }
+  if (capital > 0 && capital <= 10000) { riskScore -= 10; risks.push('Минимальный уставный капитал (10 000 ₽)'); }
+  
+  if (isActive) positives.push('Компания действующая');
+  if (ageYears >= 5) positives.push(`Работает ${ageYears} ${ageYears>=5&&ageYears<=20?'лет':ageYears>=2?'года':'год'}`);
+  if (capital > 100000) positives.push(`Уставный капитал ${(capital/1000).toFixed(0)} тыс. ₽`);
+  if (ogrn !== '—') positives.push('Данные подтверждены ЕГРЮЛ');
+  
+  riskScore = Math.max(0, Math.min(100, riskScore));
+  
+  return {
+    name, inn, kpp, ogrn, type: 'ЮЛ',
+    status: isActive ? 'ACTIVE' : 'LIQUIDATED',
+    statusText: isActive ? 'Действующая' : 'Ликвидирована',
+    isActive, regDate, ageYears, address,
+    director: fio || '—', directorPost,
+    capital, okved, okvedName,
+    riskScore, risks, positives
+  };
 }
 
 async function searchByName(name) {
