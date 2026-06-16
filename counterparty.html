@@ -174,62 +174,86 @@ async function fetchFromEGRUL(inn) {
 }
 
 function parseEGRUL(raw, inn) {
-  // Данные приходят в raw.СвЮЛ
-  const data = raw.СвЮЛ || raw;
+  const d = raw.СвЮЛ || raw;
+  const attr = d['@attributes'] || {};
   
-  const svNaim = data.СвНаимЮЛ || {};
-  const name = svNaim.НаимЮЛПолн || svNaim.НаимЮЛСокр || data.НаимЮЛПолн || inn;
+  // Название
+  const svNaim = d.СвНаимЮЛ || {};
+  const naimAttr = svNaim['@attributes'] || {};
+  const nameShort = svNaim.СвНаимЮЛСокр?.['@attributes']?.НаимСокр || '';
+  const name = nameShort || naimAttr.НаимЮЛПолн || attr.ОГРН || inn;
+  const fullName = naimAttr.НаимЮЛПолн || name;
   
-  const svZap = data.СвЗапЕГРЮЛ || {};
-  const isActive = !data.СвПрекрЮЛ && !data.ДатаПрекрЮЛ;
+  // Статус
+  const isActive = !d.СвПрекрЮЛ;
   
-  const svReg = data.СвОбрЮЛ || {};
-  const regDateRaw = svReg.ДатаРег || data.ДатаРег;
+  // Регистрация
+  const svReg = d.СвОбрЮЛ?.['@attributes'] || {};
+  const regDateRaw = svReg.ДатаРег || attr.ДатаОГРН;
   const regDate = regDateRaw ? new Date(regDateRaw).toLocaleDateString('ru-RU') : '—';
   const ageYears = regDateRaw ? Math.floor((Date.now() - new Date(regDateRaw)) / (365.25*24*60*60*1000)) : 0;
   
-  // Руководитель
-  const svRuk = data.СвРуковИСП || {};
-  const fio = svRuk.ФИОРук || (Array.isArray(data.СвУчредит) ? '' : '');
-  const directorPost = svRuk.НаимДолжн || 'Генеральный директор';
-  
   // Адрес
-  const svAdr = data.СвАдрЮЛФИАС || data.АдрЮЛФИАС || {};
-  const address = svAdr.АдрПолн || svAdr.НаимМО || '—';
+  const svAdr = d.СвАдресЮЛ?.АдресРФ?.['@attributes'] || {};
+  const region = d.СвАдресЮЛ?.АдресРФ?.Регион?.['@attributes']?.НаимРегион || '';
+  const street = d.СвАдресЮЛ?.АдресРФ?.Улица?.['@attributes'];
+  const streetStr = street ? `${street.ТипУлица} ${street.НаимУлица}` : '';
+  const dom = svAdr.Дом || '';
+  const index = svAdr.Индекс || '';
+  const address = [index, region, streetStr, dom].filter(Boolean).join(', ') || '—';
   
-  // ОГРН КПП
-  const ogrn = data.ОГРН || svReg.ОГРН || '—';
-  const kpp = data.КПП || '—';
+  // Руководитель
+  const svFl = d.СведДолжнФЛ?.СвФЛ?.['@attributes'] || {};
+  const svDolj = d.СведДолжнФЛ?.СвДолжн?.['@attributes'] || {};
+  const director = [svFl.Фамилия, svFl.Имя, svFl.Отчество].filter(Boolean).join(' ') || '—';
+  const directorPost = svDolj.НаимДолжн || 'Генеральный директор';
+  
+  // Реквизиты
+  const ogrn = attr.ОГРН || '—';
+  const kpp = attr.КПП || '—';
+  const opf = attr.ПолнНаимОПФ || '—';
   
   // ОКВЭД
-  const okved = data.СвОКВЭД?.СвОКВЭДОсн?.КодОКВЭД || '—';
-  const okvedName = data.СвОКВЭД?.СвОКВЭДОсн?.НаимОКВЭД || '—';
+  const okvedData = d.СвОКВЭДОтч?.СвОКВЭДОтчОсн?.['@attributes'] || {};
+  const okved = okvedData.КодОКВЭД || '—';
+  const okvedName = okvedData.НаимОКВЭД || '—';
   
   // Уставный капитал
-  const capital = data.СвУстКап?.СумУстКап || 0;
+  const capitalRaw = d.СвУстКап?.['@attributes']?.СумКап || 0;
+  const capital = parseFloat(capitalRaw) || 0;
   
+  // Налоговый орган
+  const nalog = d.СвРегОрг?.['@attributes']?.НаимНО || '—';
+  
+  // СФР
+  const sfr = d.СвРегСФР?.['@attributes']?.НаимСФР || '—';
+  const sfrNum = d.СвРегСФР?.['@attributes']?.РегНомСФР || '—';
+  
+  // Риск-скор
   let riskScore = 100;
   let risks = [], positives = [];
   
-  if (!isActive) { riskScore -= 60; risks.push('Компания не действует'); }
-  if (ageYears < 1) { riskScore -= 20; risks.push('Зарегистрирована менее года назад'); }
+  if (!isActive) { riskScore -= 60; risks.push('Компания ликвидирована'); }
+  if (ageYears < 1) { riskScore -= 25; risks.push('Зарегистрирована менее года назад'); }
   else if (ageYears < 3) { riskScore -= 10; risks.push('Молодая компания (менее 3 лет)'); }
-  if (capital > 0 && capital <= 10000) { riskScore -= 10; risks.push('Минимальный уставный капитал (10 000 ₽)'); }
+  if (capital > 0 && capital <= 10000) { riskScore -= 15; risks.push('Минимальный уставный капитал (10 000 ₽)'); }
   
   if (isActive) positives.push('Компания действующая');
-  if (ageYears >= 5) positives.push(`Работает ${ageYears} ${ageYears>=5&&ageYears<=20?'лет':ageYears>=2?'года':'год'}`);
-  if (capital > 100000) positives.push(`Уставный капитал ${(capital/1000).toFixed(0)} тыс. ₽`);
-  if (ogrn !== '—') positives.push('Данные подтверждены ЕГРЮЛ');
+  if (ageYears >= 5) positives.push(`Работает ${ageYears} лет (с ${regDate.split('.')[2]} года)`);
+  if (capital > 1000000) positives.push(`Крупный уставный капитал: ${(capital/1000000).toFixed(0)} млн ₽`);
+  else if (capital > 100000) positives.push(`Уставный капитал ${(capital/1000).toFixed(0)} тыс. ₽`);
+  if (ogrn !== '—') positives.push('Данные подтверждены ЕГРЮЛ ФНС');
+  if (director !== '—') positives.push(`Руководитель установлен`);
   
   riskScore = Math.max(0, Math.min(100, riskScore));
   
   return {
-    name, inn, kpp, ogrn, type: 'ЮЛ',
+    name, fullName, inn: attr.ИНН || inn, kpp, ogrn, type: 'ЮЛ', opf,
     status: isActive ? 'ACTIVE' : 'LIQUIDATED',
     statusText: isActive ? 'Действующая' : 'Ликвидирована',
     isActive, regDate, ageYears, address,
-    director: fio || '—', directorPost,
-    capital, okved, okvedName,
+    director, directorPost, capital,
+    okved, okvedName, nalog, sfr, sfrNum,
     riskScore, risks, positives
   };
 }
@@ -368,16 +392,21 @@ function renderResult(d) {
         </div>
       </div>
       
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${d.fullName || d.name}</div>
       <div class="info-grid">
         <div class="info-item"><div class="info-label">ИНН</div><div class="info-value">${d.inn}</div></div>
         <div class="info-item"><div class="info-label">КПП</div><div class="info-value">${d.kpp}</div></div>
         <div class="info-item"><div class="info-label">ОГРН</div><div class="info-value">${d.ogrn}</div></div>
-        <div class="info-item"><div class="info-label">Дата регистрации</div><div class="info-value">${d.regDate} ${d.ageYears > 0 ? `(${d.ageYears} лет)` : ''}</div></div>
-        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Адрес</div><div class="info-value">${d.address}</div></div>
+        <div class="info-item"><div class="info-label">Форма</div><div class="info-value">${d.opf || d.type}</div></div>
+        <div class="info-item"><div class="info-label">Дата регистрации</div><div class="info-value">${d.regDate}</div></div>
+        <div class="info-item"><div class="info-label">Возраст</div><div class="info-value">${d.ageYears} лет</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Юридический адрес</div><div class="info-value">${d.address}</div></div>
         <div class="info-item"><div class="info-label">Руководитель</div><div class="info-value">${d.director}</div></div>
         <div class="info-item"><div class="info-label">Должность</div><div class="info-value">${d.directorPost}</div></div>
-        <div class="info-item"><div class="info-label">Осн. ОКВЭД</div><div class="info-value">${d.okved}</div></div>
+        <div class="info-item"><div class="info-label">ОКВЭД</div><div class="info-value">${d.okved}</div></div>
+        <div class="info-item"><div class="info-label">Вид деятельности</div><div class="info-value">${d.okvedName}</div></div>
         <div class="info-item"><div class="info-label">Уст. капитал</div><div class="info-value">${d.capital > 0 ? d.capital.toLocaleString('ru-RU') + ' ₽' : '—'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Налоговый орган</div><div class="info-value">${d.nalog || '—'}</div></div>
       </div>
     </div>
     
