@@ -247,6 +247,11 @@
     <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="userEmail">—</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-outline" onclick="changePassword()">🔒 Сменить пароль</button>
+      <div id="changePassBlock" style="display:none;margin-top:12px;padding:14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+        <div style="margin-bottom:8px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Новый пароль</label><input type="password" id="newPassInput" placeholder="Минимум 6 символов" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none"></div>
+        <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Повтори пароль</label><input type="password" id="newPassInput2" placeholder="Повтори пароль" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none"></div>
+        <button onclick="doChangePassword()" style="background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Сохранить</button>
+      </div>
       <button class="btn-danger" onclick="logout()">Выйти</button>
     </div>
   </div>
@@ -456,21 +461,36 @@ function logout() {
 }
 
 function changePassword() {
-  const newPass = prompt('Введи новый пароль (минимум 6 символов):');
-  if (!newPass || newPass.length < 6) { showToast('❌ Пароль слишком короткий'); return; }
+  const block = document.getElementById('changePassBlock');
+  block.style.display = block.style.display === 'none' ? 'block' : 'none';
+}
+
+async function doChangePassword() {
+  const newPass = document.getElementById('newPassInput').value;
+  const newPass2 = document.getElementById('newPassInput2').value;
+  if (!newPass || newPass.length < 6) { showToast('❌ Минимум 6 символов'); return; }
+  if (newPass !== newPass2) { showToast('❌ Пароли не совпадают'); return; }
   const tok = localStorage.getItem('omschicken_token') || '';
-  fetch('https://sqyppamdxahvvkoxovpu.supabase.co/auth/v1/user', {
-    method: 'PUT',
-    headers: {
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM',
-      'Authorization': 'Bearer ' + tok,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({password: newPass})
-  }).then(r=>r.json()).then(d=>{
-    if (d.id) { showToast('✅ Пароль успешно изменён!'); }
-    else { showToast('❌ Ошибка: ' + (d.message || 'попробуй снова')); }
-  });
+  const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+  try {
+    const r = await fetch(SURL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: {'apikey': SKEY, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json'},
+      body: JSON.stringify({password: newPass})
+    });
+    const d = await r.json();
+    if (d.id) {
+      showToast('✅ Пароль изменён!');
+      document.getElementById('changePassBlock').style.display = 'none';
+      document.getElementById('newPassInput').value = '';
+      document.getElementById('newPassInput2').value = '';
+    } else {
+      showToast('❌ ' + (d.message || 'Ошибка'));
+    }
+  } catch(e) {
+    showToast('❌ Ошибка соединения');
+  }
 }
 
 function showToast(msg) {
