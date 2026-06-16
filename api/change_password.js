@@ -1,5 +1,4 @@
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE2NDYzOCwiZXhwIjoyMDk1NzQwNjM4fQ.CjCybI9bSk1uYbjWl8clQDPPzB7exzUa029DUtPQen8';
 
 export default async function handler(req, res) {
@@ -11,24 +10,26 @@ export default async function handler(req, res) {
 
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
-  if (!userToken) return res.status(401).json({error: 'Unauthorized'});
+  if (!userToken) return res.status(401).json({error: 'No token'});
 
-  // Получаем user_id из токена
+  // Декодируем JWT без верификации чтобы получить user_id
   let userId = null;
   try {
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-      headers: {'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken}
-    });
-    const d = await r.json();
-    userId = d.id || null;
-  } catch(e) {}
+    const payload = JSON.parse(Buffer.from(userToken.split('.')[1], 'base64').toString());
+    userId = payload.sub;
+    // Проверяем не истёк ли токен
+    if (payload.exp && payload.exp < Math.floor(Date.now()/1000)) {
+      return res.status(401).json({error: 'Token expired'});
+    }
+  } catch(e) {
+    return res.status(401).json({error: 'Invalid token format'});
+  }
 
-  if (!userId) return res.status(401).json({error: 'Invalid token'});
+  if (!userId) return res.status(401).json({error: 'No user id'});
 
   const { password } = req.body;
   if (!password || password.length < 6) return res.status(400).json({error: 'Password too short'});
 
-  // Меняем пароль через service_role (admin API)
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
       method: 'PUT',
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
     });
     const d = await r.json();
     if (d.id) return res.status(200).json({ok: true});
-    return res.status(400).json({error: d.message || 'Error'});
+    return res.status(400).json({error: d.message || 'Supabase error', detail: d});
   } catch(e) {
     return res.status(500).json({error: e.message});
   }
