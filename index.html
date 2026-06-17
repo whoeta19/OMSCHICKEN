@@ -350,8 +350,8 @@
   </div>
   <div class="upload-zone" id="uploadZone">
     <div style="font-size:26px">📂</div>
-    <div class="upload-title">Загрузить выписки из банков</div>
-    <div class="upload-sub">Т-Банк, Сбер, Альфа, ВТБ · можно несколько файлов сразу</div>
+    <div class="upload-title">Загрузить выписку из Т-Банк</div>
+    <div class="upload-sub">CSV файл · нажми для выбора · загружай каждый месяц отдельно</div>
   </div>
   <input type="file" id="fileInput" accept=".csv,.txt" multiple style="display:none">
   <div class="progress-wrap" id="progressWrap">
@@ -747,7 +747,7 @@ function toggleProfile() {
   const menu = document.getElementById('profileMenu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   // Показываем email
-  const user = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
+  const user = JSON.parse(localStorage.getItem('omschicken_user') || '{}');
   document.getElementById('profileEmail').textContent = user.email || 'Пользователь';
 }
 
@@ -815,7 +815,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
   isUploading = false;
 });
 
-// Определение банка по структуре CSV
+async // Определение банка по структуре CSV
 function detectBank(text) {
   const first = text.substring(0, 500).toLowerCase();
   if (first.includes('тбанк') || first.includes('тинькофф') || first.includes('tbank') || first.includes('операционный день')) return 'tbank';
@@ -978,7 +978,7 @@ function parseBank(text, bank) {
   return { txs, monthKey };
 }
 
-async function parseAndProcess(text) {
+function parseAndProcess(text) {
   const bank = detectBank(text);
   const bankNames = {tbank:'Т-Банк', sber:'Сбербанк', alfa:'Альфа-Банк', vtb:'ВТБ', raiff:'Райффайзен', open:'Открытие', psb:'ПСБ', unknown:'Банк'};
   console.log('Detected bank:', bank, bankNames[bank]);
