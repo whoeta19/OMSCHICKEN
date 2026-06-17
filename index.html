@@ -96,6 +96,7 @@
     <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div></div>
     <div class="stat-card"><div class="stat-label">Личные</div><div class="stat-value orange" id="statPersonal">0 ₽</div></div>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:8px"><button onclick="clearAllData()" style="background:none;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:6px 12px;color:#ef4444;font-size:11px;cursor:pointer">🗑️ Очистить</button></div>
   <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
     <div style="font-size:26px">📂</div>
     <div class="upload-title">Загрузить выписку из Т-Банк</div>
@@ -365,6 +366,11 @@ function filterTx(cat,btn) {
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTxList();
+}
+
+function clearAllData() {
+  if (!confirm("Удалить все операции?")) return;
+  fetch("/api/transactions", {method:"DELETE", body: JSON.stringify({}), headers:{"Content-Type":"application/json"}}).then(()=>{ allTx=[]; renderAll(); showToast("✅ Данные очищены"); });
 }
 
 function exportCSV() {
