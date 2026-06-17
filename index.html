@@ -523,7 +523,7 @@ window.fetch = async function(url, opts = {}) {
 };
 
 // Превентивное обновление каждые 30 минут
-setInterval(async () => { localStorage.removeItem(TOKEN_KEY); await getValidToken(); }, 30 * 60 * 1000);
+// auto refresh disabled
 
 function logout() {
   localStorage.removeItem('omschicken_token');
