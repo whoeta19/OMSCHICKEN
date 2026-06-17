@@ -236,87 +236,60 @@
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
 
   /* Мобильная адаптация */
-  @media (max-width: 768px) {
-    /* Шапка */
-    header{padding:12px 16px;}
-    .logo{font-size:16px;}
-    #companySwitcher{max-width:120px;font-size:13px;padding:7px 10px;}
+  @media (max-width: 600px) {
+    header{padding:10px 14px;}
+    .logo{font-size:14px;}
+    .header-right{gap:5px;}
+    .sync-btn{font-size:10px;padding:4px 8px;}
+    #companySwitcher{max-width:80px;font-size:10px;}
+    .header-meta{display:none;}
     
-    /* Скрываем таблетки — используем нижнее меню */
-    .nav-pills{display:none;}
+    .nav-pills{padding:8px 14px;overflow-x:auto;}
+    .pills-inner{gap:3px;padding:3px;}
+    .pill{padding:6px 10px;font-size:11px;}
     
-    /* Основной контент */
-    main{padding:14px 16px 90px;}
+    main{padding:12px 14px;padding-bottom:80px;}
     
-    /* Карточки статистики — крупнее */
-    .stats-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-    .stat-card{padding:16px;border-radius:16px;}
-    .stat-label{font-size:12px;margin-bottom:8px;letter-spacing:0.3px;}
-    .stat-value{font-size:22px;font-weight:900;}
+    .stats-row{grid-template-columns:1fr 1fr;gap:8px;}
+    .stat-value{font-size:13px;}
+    .stat-label{font-size:9px;}
     
-    /* Операции */
-    .tx-row{padding:14px 16px;border-radius:14px;margin-bottom:8px;grid-template-columns:1fr auto;}
+    .tx-row{grid-template-columns:1fr auto;gap:6px;padding:10px 12px;}
     .tx-row > div:nth-child(2){display:none;}
-    .tx-name{font-size:14px;}
-    .tx-date{font-size:12px;margin-top:3px;}
-    .tx-amount{font-size:14px;font-weight:700;}
+    .tx-name{font-size:12px;}
     
-    /* Заголовки секций */
-    .section-title{font-size:12px;margin-bottom:14px;}
-    
-    /* Кнопки — большие для пальцев */
-    .btn{padding:14px 20px;font-size:13px;border-radius:12px;min-height:48px;}
-    .btn-sm{padding:10px 14px;font-size:12px;}
-    .btn-outline{padding:12px 16px;font-size:13px;min-height:44px;}
-    
-    /* Зона загрузки */
-    .upload-zone{padding:28px 20px;border-radius:18px;}
-    .upload-title{font-size:16px;margin-top:8px;}
-    .upload-sub{font-size:13px;margin-top:6px;}
-    
-    /* Фильтры */
-    .filter-bar{gap:8px;flex-wrap:wrap;}
-    .filter-btn{font-size:13px;padding:8px 14px;min-height:40px;}
-    
-    /* Форма */
     .input-row{grid-template-columns:1fr;}
-    .input-group{margin-bottom:14px;}
-    .input-group label{font-size:13px;margin-bottom:6px;}
-    .input-group input,.input-group select{font-size:15px;padding:13px 15px;min-height:48px;}
+    .filter-bar{gap:4px;}
+    .filter-btn{font-size:10px;padding:4px 8px;}
     
-    /* Разметка */
-    .reclassify-row{padding:14px 16px;border-radius:14px;margin-bottom:10px;}
-    .reclassify-name{font-size:14px;}
-    .reclassify-meta{font-size:12px;margin-bottom:10px;}
-    .cat-btns{gap:6px;flex-wrap:wrap;}
-    .cat-btn{font-size:13px;padding:7px 12px;min-height:38px;}
+    .upload-zone{padding:18px;}
+    .upload-title{font-size:13px;}
+    .section-title{font-size:10px;}
     
-    /* Графики */
-    .chart-label{width:80px;font-size:12px;}
-    .chart-val{font-size:12px;}
-    .chart-bar-wrap{height:6px;}
+    .btn{padding:9px 14px;font-size:10px;}
+    .btn-sm{padding:5px 10px;font-size:9px;}
     
-    /* Предложения */
-    #suggestionsBlock > div > div{padding:14px 16px;border-radius:14px;margin-bottom:8px;}
+    .reclassify-row{padding:10px 12px;}
+    .cat-btns{gap:4px;}
+    .cat-btn{font-size:10px;padding:3px 7px;}
     
-    /* Мобильное меню */
+    .chart-label{width:70px;font-size:10px;}
+    .chart-val{width:60px;font-size:9px;}
+    
     .mobile-nav{display:flex!important;}
   }
   
-  @media (max-width: 380px) {
-    .stats-row{grid-template-columns:1fr;}
-    .stat-value{font-size:24px;}
-  }
-
   /* Нижнее меню */
   .mobile-nav{
     display:none;
     position:fixed;
     bottom:0;left:0;right:0;
-    background:#0a0a0a;
-    border-top:1px solid rgba(255,255,255,0.08);
+    background:rgba(8,8,8,0.95);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border-top:1px solid rgba(255,255,255,0.07);
     z-index:200;
-    padding:6px 0 env(safe-area-inset-bottom,10px);
+    padding:8px 0 env(safe-area-inset-bottom,8px);
   }
   .mobile-nav-items{
     display:flex;
@@ -328,12 +301,10 @@
   .mobile-nav-btn{
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:none;border:none;color:var(--muted);
-    font-size:11px;cursor:pointer;padding:6px 0;
-    gap:4px;flex:1;text-align:center;transition:all 0.2s;
-    min-height:50px;
+    font-size:10px;cursor:pointer;padding:4px 0;
+    gap:3px;flex:1;text-align:center;transition:all 0.2s;
   }
-  .mobile-nav-btn > span{font-size:10px;line-height:1;}
-  .mobile-nav-btn svg{margin-bottom:3px;}
+  .mobile-nav-btn span{font-size:20px;line-height:1;}
   .mobile-nav-btn.active{color:var(--accent);}
   .mobile-nav-btn:hover{color:var(--text);}
 </style>
@@ -379,8 +350,8 @@
   </div>
   <div class="upload-zone" id="uploadZone">
     <div style="font-size:26px">📂</div>
-    <div class="upload-title">Загрузить выписку из Т-Банк</div>
-    <div class="upload-sub">CSV файл · нажми для выбора · загружай каждый месяц отдельно</div>
+    <div class="upload-title">Загрузить выписки из банков</div>
+    <div class="upload-sub">Т-Банк, Сбер, Альфа, ВТБ · можно несколько файлов сразу</div>
   </div>
   <input type="file" id="fileInput" accept=".csv,.txt" multiple style="display:none">
   <div class="progress-wrap" id="progressWrap">
@@ -501,22 +472,58 @@ if (!localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(REFRESH_KEY)) {
 }
 
 async function getValidToken() {
-  // Просто возвращаем токен — не обновляем автоматически
-  return localStorage.getItem(TOKEN_KEY) || null;
+  const token = localStorage.getItem(TOKEN_KEY);
+  const refresh = localStorage.getItem(REFRESH_KEY);
+  
+  // Проверяем срок токена
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp - Math.floor(Date.now()/1000) > 300) return token;
+    } catch(e) {}
+  }
+  
+  // Обновляем
+  if (!refresh) { window.location.href = '/login'; return null; }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
+      body: JSON.stringify({refresh_token: refresh})
+    });
+    const data = await r.json();
+    if (data.access_token) {
+      localStorage.setItem(TOKEN_KEY, data.access_token);
+      localStorage.setItem(REFRESH_KEY, data.refresh_token);
+      return data.access_token;
+    }
+  } catch(e) {}
+  window.location.href = '/login';
+  return null;
 }
 
-// Простой перехват - добавляем токен к API запросам
+// Перехватываем все запросы к нашему API — автоматически добавляем токен
 const _origFetch = window.fetch;
-window.fetch = function(url, opts) {
-  opts = opts || {};
+window.fetch = async function(url, opts = {}) {
   if (typeof url === 'string' && url.startsWith('/api/')) {
-    const tok = localStorage.getItem(TOKEN_KEY);
-    if (tok) {
-      opts.headers = Object.assign({}, opts.headers || {}, {'Authorization': 'Bearer ' + tok});
+    const tok = await getValidToken();
+    if (tok) opts = {...opts, headers: {...(opts.headers||{}), 'Authorization': 'Bearer ' + tok}};
+    const r = await _origFetch(url, opts);
+    if (r.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      const newTok = await getValidToken();
+      if (newTok) {
+        opts.headers = {...(opts.headers||{}), 'Authorization': 'Bearer ' + newTok};
+        return _origFetch(url, opts);
+      }
     }
+    return r;
   }
   return _origFetch(url, opts);
 };
+
+// Превентивное обновление каждые 30 минут
+setInterval(async () => { localStorage.removeItem(TOKEN_KEY); await getValidToken(); }, 30 * 60 * 1000);
 
 function logout() {
   localStorage.removeItem('omschicken_token');
@@ -808,7 +815,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
   isUploading = false;
 });
 
-async // Определение банка по структуре CSV
+// Определение банка по структуре CSV
 function detectBank(text) {
   const first = text.substring(0, 500).toLowerCase();
   if (first.includes('тбанк') || first.includes('тинькофф') || first.includes('tbank') || first.includes('операционный день')) return 'tbank';
@@ -1187,26 +1194,19 @@ syncNow();
 <nav class="mobile-nav">
   <div class="mobile-nav-items">
     <button class="mobile-nav-btn active" id="mnav-dashboard" onclick="showPage('dashboard',this);setMobileActive(this)">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      <span>Главная</span>
+      <span>📊</span>Главная
     </button>
     <button class="mobile-nav-btn" id="mnav-transactions" onclick="showPage('transactions',this);setMobileActive(this)">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
-      <span>Операции</span>
-    </button>
-    <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)" style="position:relative">
-      <div style="width:44px;height:44px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:2px;box-shadow:0 4px 12px rgba(255,107,0,0.4)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </div>
-      <span>Добавить</span>
+      <span>📋</span>Операции
     </button>
     <button class="mobile-nav-btn" id="mnav-reclassify" onclick="showPage('reclassify',this);setMobileActive(this)">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10M7 12h10M7 17h6"/><circle cx="18" cy="17" r="2"/></svg>
-      <span>Разметка</span>
+      <span>🏷️</span>Разметка
+    </button>
+    <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)">
+      <span>➕</span>Добавить
     </button>
     <button class="mobile-nav-btn" onclick="window.location.href='/docs'">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      <span>Документы</span>
+      <span>📄</span>Документы
     </button>
   </div>
 </nav>
