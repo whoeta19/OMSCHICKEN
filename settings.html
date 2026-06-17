@@ -542,6 +542,20 @@ function showToast(msg) {
   setInterval(refresh, 45 * 60 * 1000);
 })();
 
+async function checkTelegramStatus() {
+  const st = document.getElementById('tgStatus');
+  let tok = localStorage.getItem('omschicken_token') || '';
+  if (!tok) { if(st) st.style.display='none'; document.getElementById('tgNotLinked').style.display='block'; return; }
+  try {
+    const r = await fetch('/api/telegram_link?nc='+Date.now(), {headers:{'Authorization':'Bearer '+tok}});
+    const d = await r.json();
+    if(st) st.style.display='none';
+    if (d.linked) { document.getElementById('tgLinked').style.display='block'; document.getElementById('tgId').textContent='ID: '+d.telegram_id; }
+    else { document.getElementById('tgNotLinked').style.display='block'; }
+  } catch(e) { if(st) st.textContent='Ошибка'; }
+}
+checkTelegramStatus();
+
 </script>
 </body>
 </html>
