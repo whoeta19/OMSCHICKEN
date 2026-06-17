@@ -39,7 +39,7 @@
   .upload-zone{border:1px dashed rgba(255,255,255,0.1);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;}
   .upload-zone:hover{border-color:rgba(255,107,0,0.4);background:rgba(255,107,0,0.03);}
   .upload-icon{font-size:32px;margin-bottom:8px;}
-  .upload-title{font-size:14px;font-weight:500;margin-bottom:4px;}
+  .upload-title{font-size:13px;font-weight:500;margin-bottom:4px;word-break:break-all;overflow:hidden;}
   .upload-sub{font-size:11px;color:#555;}
   .bank-logos{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
   .bank-logo{background:#161616;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:6px 12px;font-size:11px;color:#666;}
@@ -75,15 +75,15 @@
       <div class="features">
         <div class="feature">
           <div class="feature-icon">🏦</div>
-          <div class="feature-text"><strong>Загрузка выписки</strong>Т-Банк, Сбер, Альфа — автоматическая классификация</div>
+          <div class="feature-text"><strong>Загрузка выписки</strong>Импорт из Т-Банк, Сбер, Альфа с автоматической сортировкой по категориям</div>
         </div>
         <div class="feature">
           <div class="feature-icon">🧾</div>
-          <div class="feature-text"><strong>НДС и декларации</strong>Расчёт автоматически, XML для ФНС</div>
+          <div class="feature-text"><strong>НДС и отчётность</strong>Автоматический расчёт налогов и формирование XML для ФНС</div>
         </div>
         <div class="feature">
           <div class="feature-icon">📄</div>
-          <div class="feature-text"><strong>Документы по ГОСТу</strong>Счета, УПД, ТОРГ-12, договоры с печатью</div>
+          <div class="feature-text"><strong>Документы</strong>Счета, УПД, ТОРГ-12 и договоры с печатью и подписью</div>
         </div>
         <div class="feature">
           <div class="feature-icon">✈️</div>
@@ -206,7 +206,8 @@ function saveRequisites() {
 function fileSelected(input) {
   const file = input.files[0];
   if (!file) return;
-  document.getElementById('ob-file-name').textContent = file.name;
+  const shortName = file.name.length > 32 ? file.name.substring(0,32) + '…' : file.name;
+  document.getElementById('ob-file-name').textContent = shortName;
   const btn = document.getElementById('ob-upload-btn');
   btn.disabled = false;
   btn.style.opacity = '1';
