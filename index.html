@@ -460,17 +460,31 @@ let currentFilter = 'all';
 let isUploading = false;
 let userRules = JSON.parse(localStorage.getItem('omsfin_rules') || '{}');
 
-// Проверка авторизации
-const _token = localStorage.getItem('omsfin_token');
-if (!_token) window.location.href = '/landing';
-
-// Автообновление токена
+// Ключи хранилища
+const TOKEN_KEY = 'omschicken_token';
+const REFRESH_KEY = 'omschicken_refresh';
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
-async function refreshToken() {
-  const refresh = localStorage.getItem('omsfin_refresh');
-  if (!refresh) { window.location.href = '/login'; return; }
+// Проверка авторизации
+if (!localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(REFRESH_KEY)) {
+  window.location.href = '/landing';
+}
+
+async function getValidToken() {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const refresh = localStorage.getItem(REFRESH_KEY);
+  
+  // Проверяем срок токена
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp - Math.floor(Date.now()/1000) > 300) return token;
+    } catch(e) {}
+  }
+  
+  // Обновляем
+  if (!refresh) { window.location.href = '/landing'; return null; }
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST',
@@ -479,31 +493,44 @@ async function refreshToken() {
     });
     const data = await r.json();
     if (data.access_token) {
-      localStorage.setItem('omsfin_token', data.access_token);
-      localStorage.setItem('omsfin_refresh', data.refresh_token);
-    } else {
-      window.location.href = '/login';
+      localStorage.setItem(TOKEN_KEY, data.access_token);
+      localStorage.setItem(REFRESH_KEY, data.refresh_token);
+      return data.access_token;
     }
   } catch(e) {}
+  window.location.href = '/landing';
+  return null;
 }
 
-// Обновляем токен каждые 45 минут
-setInterval(refreshToken, 45 * 60 * 1000);
-
-// Перехватываем 401 ошибки
+// Перехватываем все запросы к нашему API — автоматически добавляем токен
 const _origFetch = window.fetch;
-window.fetch = async function(...args) {
-  const r = await _origFetch(...args);
-  if (r.status === 401) {
-    await refreshToken();
+window.fetch = async function(url, opts = {}) {
+  if (typeof url === 'string' && url.startsWith('/api/')) {
+    const tok = await getValidToken();
+    if (tok) opts = {...opts, headers: {...(opts.headers||{}), 'Authorization': 'Bearer ' + tok}};
+    const r = await _origFetch(url, opts);
+    if (r.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      const newTok = await getValidToken();
+      if (newTok) {
+        opts.headers = {...(opts.headers||{}), 'Authorization': 'Bearer ' + newTok};
+        return _origFetch(url, opts);
+      }
+    }
+    return r;
   }
-  return r;
+  return _origFetch(url, opts);
 };
 
+// Превентивное обновление каждые 30 минут
+setInterval(async () => { localStorage.removeItem(TOKEN_KEY); await getValidToken(); }, 30 * 60 * 1000);
+
 function logout() {
+  localStorage.removeItem('omschicken_token');
+  localStorage.removeItem('omschicken_refresh');
+  localStorage.removeItem('omschicken_user');
   localStorage.removeItem('omsfin_token');
   localStorage.removeItem('omsfin_refresh');
-  localStorage.removeItem('omsfin_user');
   window.location.href = '/login';
 }
 
