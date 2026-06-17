@@ -260,6 +260,13 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// Проверка авторизации
+(function() {
+  const tok = localStorage.getItem('omschicken_token');
+  const ref = localStorage.getItem('omschicken_refresh');
+  if (!tok && !ref) { window.location.href = '/login'; }
+})();
+
 // Загружаем настройки
 const settings = JSON.parse(localStorage.getItem('omsfin_settings') || '{}');
 const user = JSON.parse(localStorage.getItem('omsfin_user') || '{}');
