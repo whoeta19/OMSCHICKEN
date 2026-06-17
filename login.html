@@ -98,6 +98,15 @@
     <div class="error" id="regError"></div>
     <div class="success" id="regSuccess"></div>
   </div>
+
+    <!-- Забыл пароль -->
+    <div id="forgotForm" style="display:none;margin-top:16px;padding:16px;background:rgba(255,107,0,0.05);border:1px solid rgba(255,107,0,0.15);border-radius:12px">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Восстановление пароля</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Введи email — пришлём ссылку для сброса пароля</div>
+      <input type="email" id="forgotEmail" placeholder="email@example.com" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px">
+      <button onclick="sendReset()" style="width:100%;background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border:none;border-radius:8px;padding:10px;font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;cursor:pointer">Отправить ссылку</button>
+      <div id="forgotResult" style="margin-top:8px;font-size:12px;text-align:center"></div>
+    </div>
 </div>
 
 <script>
@@ -210,6 +219,36 @@ async function register() {
 }
 
 function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+
+const SUPABASE_URL_FP = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+const SUPABASE_KEY_FP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+function showForgot() {
+  const f = document.getElementById('forgotForm');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  const email = document.getElementById('emailInput');
+  if (email?.value) document.getElementById('forgotEmail').value = email.value;
+}
+
+async function sendReset() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const result = document.getElementById('forgotResult');
+  if (!email) { result.style.color='#ef4444'; result.textContent='Введи email'; return; }
+  
+  try {
+    const r = await fetch(`${SUPABASE_URL_FP}/auth/v1/recover`, {
+      method: 'POST',
+      headers: {'apikey': SUPABASE_KEY_FP, 'Content-Type': 'application/json'},
+      body: JSON.stringify({email, redirect_to: 'https://omschicken-u5dn.vercel.app/login'})
+    });
+    result.style.color = '#22c55e';
+    result.textContent = '✅ Письмо отправлено! Проверь почту.';
+  } catch(e) {
+    result.style.color = '#ef4444';
+    result.textContent = '❌ Ошибка отправки';
+  }
+}
+
 </script>
 </body>
 </html>
