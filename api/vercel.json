@@ -1,0 +1,23 @@
+{
+  "rewrites": [
+    {"source": "/api/telegram_link", "destination": "/api/telegram_link.js"},
+    {"source": "/onboarding", "destination": "/onboarding.html"},
+    {"source": "/counterparty", "destination": "/counterparty.html"},
+    {"source": "/tools", "destination": "/tools.html"},
+    {"source": "/declarations", "destination": "/declarations.html"},
+    {"source": "/settings", "destination": "/settings.html"},
+    {"source": "/login", "destination": "/login.html"},
+    {"source": "/landing", "destination": "/landing.html"},
+    {"source": "/", "destination": "/index.html"},
+    {"source": "/vat", "destination": "/vat.html"},
+    {"source": "/analytics", "destination": "/analytics.html"},
+    {"source": "/docs", "destination": "/docs.html"},
+    {"source": "/api/(.*)", "destination": "/api/$1"}
+  ],
+  "crons": [
+    {
+      "path": "/api/notify",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
