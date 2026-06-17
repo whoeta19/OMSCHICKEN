@@ -353,7 +353,7 @@
     <div class="upload-title">Загрузить выписку из Т-Банк</div>
     <div class="upload-sub">CSV файл · нажми для выбора · загружай каждый месяц отдельно</div>
   </div>
-  <input type="file" id="fileInput" accept=".csv,.txt" style="display:none">
+  <input type="file" id="fileInput" accept=".csv,.txt" multiple style="display:none">
   <div class="progress-wrap" id="progressWrap">
     <div id="progressText" style="font-size:13px;font-weight:500">Обрабатываю...</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -787,12 +787,31 @@ document.getElementById('uploadZone').addEventListener('click', function() {
 
 document.getElementById('fileInput').addEventListener('change', async function(e) {
   if (isUploading) return;
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
   isUploading = true;
   this.value = '';
-  const text = await file.text();
-  await parseAndProcess(text);
+  
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    if (files.length > 1) {
+      showToast(`📂 Файл ${fi+1}/${files.length}: ${file.name.substring(0,25)}...`);
+      await new Promise(r => setTimeout(r, 500));
+    }
+    try {
+      let text = await file.text();
+      // Если кириллица битая — пробуем windows-1251
+      if (text.includes('?????') || text.includes('\uFFFD')) {
+        const buf = await file.arrayBuffer();
+        text = new TextDecoder('windows-1251').decode(buf);
+      }
+      await parseAndProcess(text);
+    } catch(err) {
+      showToast('❌ Ошибка файла: ' + file.name.substring(0,20));
+    }
+  }
+  
+  if (files.length > 1) showToast(`✅ Загружено ${files.length} выписок!`);
   isUploading = false;
 });
 
