@@ -312,13 +312,19 @@
 <body>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
-  <div class="header-right">
-    <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:5px 8px;cursor:pointer;max-width:140px;outline:none;margin-right:4px">
-      <option value="">Компания...</option>
-    </select>
-    <button onclick="window.location.href='/settings'" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">⚙️</button><button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;margin-right:4px">Выйти</button>
-    <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
-    <div class="header-meta" id="headerMeta">0 операций</div>
+  <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;padding:6px 10px;cursor:pointer;max-width:160px;outline:none;">
+    <option value="">Компания...</option>
+  </select>
+  <div style="position:relative">
+    <button id="profileBtn" onclick="toggleProfile()" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;font-size:13px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;" id="profileAvatar">М</button>
+    <div id="profileMenu" style="display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:180px;z-index:200;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
+      <div id="profileEmail" style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px"></div>
+      <button onclick="window.location.href='/settings'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">⚙️ Настройки</button>
+      <button onclick="window.location.href='/declarations'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">📋 Декларации</button>
+      <button onclick="window.location.href='/tools'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">⚡ Инструменты</button>
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+      <button onclick="logout()" style="width:100%;text-align:left;background:none;border:none;color:#ef4444;font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">← Выйти</button>
+    </div>
   </div>
 </header>
 <div class="nav-pills">
@@ -330,9 +336,6 @@
     <button class="pill external" onclick="window.location.href='/docs'">📄 Документы</button>
     <button class="pill external" onclick="window.location.href='/analytics'">📊 Аналитика</button>
     <button class="pill external" onclick="window.location.href='/vat'">🧾 НДС</button>
-    <button class="pill external" onclick="window.location.href='/tools'">⚡ Инструменты</button>
-    <button class="pill external" onclick="window.location.href=`/declarations`">📋 Декларации</button>
-    
   </div>
 </div>
 <main>
@@ -710,6 +713,23 @@ function createDocFor(name, amount) {
   localStorage.setItem('omsfin_doc_prefill', JSON.stringify({buyer: name, amount}));
   window.location.href = '/docs';
 }
+
+function toggleProfile() {
+  const menu = document.getElementById('profileMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  // Показываем email
+  const user = JSON.parse(localStorage.getItem('omschicken_user') || '{}');
+  document.getElementById('profileEmail').textContent = user.email || 'Пользователь';
+}
+
+// Закрываем при клике вне
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('profileBtn');
+  const menu = document.getElementById('profileMenu');
+  if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
 
 function setMobileActive(btn) {
   document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
