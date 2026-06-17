@@ -815,7 +815,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
   isUploading = false;
 });
 
-async // Определение банка по структуре CSV
+// Определение банка по структуре CSV
 function detectBank(text) {
   const first = text.substring(0, 500).toLowerCase();
   if (first.includes('тбанк') || first.includes('тинькофф') || first.includes('tbank') || first.includes('операционный день')) return 'tbank';
