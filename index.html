@@ -818,7 +818,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
 // Определение банка по структуре CSV
 function detectBank(text) {
   const first = text.substring(0, 500).toLowerCase();
-  if (first.includes('тбанк') || first.includes('тинькофф') || first.includes('tbank') || first.includes('операционный день')) return 'tbank';
+  if (first.includes("тбанк") || first.includes("тинькофф") || first.includes("tbank") || first.includes("операционный день") || first.includes("тип операции") || first.includes("дебет") && first.includes("номер счёта")) return "tbank";
   if (first.includes('сбербанк') || first.includes('sberbank') || first.includes('сб рф')) return 'sber';
   if (first.includes('альфа') || first.includes('alfa') || first.includes('alpha')) return 'alfa';
   if (first.includes('втб') || first.includes('vtb')) return 'vtb';
