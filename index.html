@@ -989,9 +989,9 @@ async function parseAndProcess(text) {
   const wrap = document.getElementById('progressWrap');
   const fill = document.getElementById('progressFill');
   const ptxt = document.getElementById('progressText');
-  wrap.classList.add('active');
-  fill.style.width = '20%';
-  ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
+  if(wrap) wrap.classList.add('active');
+  if(fill) fill.style.width = '20%';
+  if(ptxt) ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
 
   try {
     await apiDelete(monthKey);
