@@ -236,78 +236,76 @@
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
 
   /* Мобильная адаптация */
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
+    /* Шапка */
     header{padding:12px 16px;}
-    .logo{font-size:15px;}
-    .header-right{gap:6px;}
-    #companySwitcher{max-width:110px;font-size:12px;padding:6px 8px;}
+    .logo{font-size:16px;}
+    #companySwitcher{max-width:120px;font-size:13px;padding:7px 10px;}
     
-    /* Навигация — горизонтальный скролл */
-    .nav-pills{padding:10px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    .pills-inner{gap:4px;padding:4px;}
-    .pill{padding:8px 14px;font-size:12px;}
+    /* Скрываем таблетки — используем нижнее меню */
+    .nav-pills{display:none;}
     
-    main{padding:14px 16px;padding-bottom:90px;}
+    /* Основной контент */
+    main{padding:14px 16px 90px;}
     
-    /* Карточки статистики — 2 колонки крупнее */
-    .stats-row{grid-template-columns:1fr 1fr;gap:10px;}
-    .stat-card{padding:14px;border-radius:14px;}
-    .stat-label{font-size:11px;margin-bottom:6px;}
-    .stat-value{font-size:18px;}
+    /* Карточки статистики — крупнее */
+    .stats-row{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+    .stat-card{padding:16px;border-radius:16px;}
+    .stat-label{font-size:12px;margin-bottom:8px;letter-spacing:0.3px;}
+    .stat-value{font-size:22px;font-weight:900;}
     
-    /* Операции — крупнее */
-    .tx-row{padding:12px 14px;border-radius:14px;margin-bottom:8px;}
-    .tx-name{font-size:13px;}
-    .tx-date{font-size:11px;}
-    .tx-amount{font-size:13px;}
+    /* Операции */
+    .tx-row{padding:14px 16px;border-radius:14px;margin-bottom:8px;grid-template-columns:1fr auto;}
+    .tx-row > div:nth-child(2){display:none;}
+    .tx-name{font-size:14px;}
+    .tx-date{font-size:12px;margin-top:3px;}
+    .tx-amount{font-size:14px;font-weight:700;}
+    
+    /* Заголовки секций */
+    .section-title{font-size:12px;margin-bottom:14px;}
+    
+    /* Кнопки — большие для пальцев */
+    .btn{padding:14px 20px;font-size:13px;border-radius:12px;min-height:48px;}
+    .btn-sm{padding:10px 14px;font-size:12px;}
+    .btn-outline{padding:12px 16px;font-size:13px;min-height:44px;}
     
     /* Зона загрузки */
-    .upload-zone{padding:24px 16px;border-radius:16px;}
-    .upload-title{font-size:15px;}
-    .upload-sub{font-size:12px;}
-    
-    /* Секции */
-    .section-title{font-size:11px;margin-bottom:12px;}
-    
-    /* Кнопки крупнее для пальцев */
-    .btn{padding:12px 18px;font-size:12px;border-radius:12px;}
-    .btn-sm{padding:8px 12px;font-size:11px;}
-    .btn-outline{padding:10px 14px;font-size:12px;}
+    .upload-zone{padding:28px 20px;border-radius:18px;}
+    .upload-title{font-size:16px;margin-top:8px;}
+    .upload-sub{font-size:13px;margin-top:6px;}
     
     /* Фильтры */
-    .filter-bar{gap:6px;flex-wrap:wrap;}
-    .filter-btn{font-size:12px;padding:6px 12px;}
+    .filter-bar{gap:8px;flex-wrap:wrap;}
+    .filter-btn{font-size:13px;padding:8px 14px;min-height:40px;}
+    
+    /* Форма */
+    .input-row{grid-template-columns:1fr;}
+    .input-group{margin-bottom:14px;}
+    .input-group label{font-size:13px;margin-bottom:6px;}
+    .input-group input,.input-group select{font-size:15px;padding:13px 15px;min-height:48px;}
     
     /* Разметка */
-    .reclassify-row{padding:12px 14px;border-radius:14px;}
-    .reclassify-name{font-size:13px;}
-    .cat-btns{gap:6px;}
-    .cat-btn{font-size:12px;padding:5px 10px;}
+    .reclassify-row{padding:14px 16px;border-radius:14px;margin-bottom:10px;}
+    .reclassify-name{font-size:14px;}
+    .reclassify-meta{font-size:12px;margin-bottom:10px;}
+    .cat-btns{gap:6px;flex-wrap:wrap;}
+    .cat-btn{font-size:13px;padding:7px 12px;min-height:38px;}
     
     /* Графики */
-    .chart-label{width:75px;font-size:11px;}
-    .chart-val{font-size:11px;}
-    
-    /* Форма добавления */
-    .input-row{grid-template-columns:1fr;}
-    .input-group label{font-size:12px;}
-    .input-group input,.input-group select{font-size:14px;padding:11px 13px;}
-    
-    /* Скрываем второй столбец в операциях */
-    .tx-row > div:nth-child(2){display:none;}
-    
-    /* Мобильное нижнее меню */
-    .mobile-nav{display:flex!important;}
+    .chart-label{width:80px;font-size:12px;}
+    .chart-val{font-size:12px;}
+    .chart-bar-wrap{height:6px;}
     
     /* Предложения */
-    #suggestionsBlock .suggest-name{font-size:13px;}
-    #suggestionsBlock .suggest-desc{font-size:11px;}
+    #suggestionsBlock > div > div{padding:14px 16px;border-radius:14px;margin-bottom:8px;}
+    
+    /* Мобильное меню */
+    .mobile-nav{display:flex!important;}
   }
   
   @media (max-width: 380px) {
     .stats-row{grid-template-columns:1fr;}
-    .stat-value{font-size:20px;}
-    .pill{padding:7px 10px;font-size:11px;}
+    .stat-value{font-size:24px;}
   }
 
   /* Нижнее меню */
@@ -334,7 +332,8 @@
     gap:4px;flex:1;text-align:center;transition:all 0.2s;
     min-height:50px;
   }
-  .mobile-nav-btn span{font-size:22px;line-height:1;}
+  .mobile-nav-btn > span{font-size:10px;line-height:1;}
+  .mobile-nav-btn svg{margin-bottom:3px;}
   .mobile-nav-btn.active{color:var(--accent);}
   .mobile-nav-btn:hover{color:var(--text);}
 </style>
@@ -1188,19 +1187,26 @@ syncNow();
 <nav class="mobile-nav">
   <div class="mobile-nav-items">
     <button class="mobile-nav-btn active" id="mnav-dashboard" onclick="showPage('dashboard',this);setMobileActive(this)">
-      <span>📊</span>Главная
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Главная</span>
     </button>
     <button class="mobile-nav-btn" id="mnav-transactions" onclick="showPage('transactions',this);setMobileActive(this)">
-      <span>📋</span>Операции
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      <span>Операции</span>
+    </button>
+    <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)" style="position:relative">
+      <div style="width:44px;height:44px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:2px;box-shadow:0 4px 12px rgba(255,107,0,0.4)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <span>Добавить</span>
     </button>
     <button class="mobile-nav-btn" id="mnav-reclassify" onclick="showPage('reclassify',this);setMobileActive(this)">
-      <span>🏷️</span>Разметка
-    </button>
-    <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)">
-      <span>➕</span>Добавить
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10M7 12h10M7 17h6"/><circle cx="18" cy="17" r="2"/></svg>
+      <span>Разметка</span>
     </button>
     <button class="mobile-nav-btn" onclick="window.location.href='/docs'">
-      <span>📄</span>Документы
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span>Документы</span>
     </button>
   </div>
 </nav>
