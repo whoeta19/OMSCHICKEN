@@ -484,7 +484,7 @@ async function getValidToken() {
   }
   
   // Обновляем
-  if (!refresh) { window.location.href = '/landing'; return null; }
+  if (!refresh) { window.location.href = '/login'; return null; }
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST',
@@ -498,7 +498,7 @@ async function getValidToken() {
       return data.access_token;
     }
   } catch(e) {}
-  window.location.href = '/landing';
+  window.location.href = '/login';
   return null;
 }
 
