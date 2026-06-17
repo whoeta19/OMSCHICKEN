@@ -311,19 +311,19 @@
 </head>
 <body>
 <header>
-  <div class="logo">OMS<span>FIN</span></div>
-  <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;padding:6px 10px;cursor:pointer;max-width:160px;outline:none;">
-    <option value="">Компания...</option>
-  </select>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo">OMS<span>FIN</span></div>
+    <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 8px;cursor:pointer;max-width:130px;outline:none;">
+      <option value="">Компания...</option>
+    </select>
+  </div>
   <div style="position:relative">
-    <button id="profileBtn" onclick="toggleProfile()" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;font-size:13px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;" id="profileAvatar">М</button>
+    <button id="profileBtn" onclick="toggleProfile()" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;font-size:12px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;">М</button>
     <div id="profileMenu" style="display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:180px;z-index:200;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
       <div id="profileEmail" style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px"></div>
-      <button onclick="window.location.href='/settings'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">⚙️ Настройки</button>
-      <button onclick="window.location.href='/declarations'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">📋 Декларации</button>
-      <button onclick="window.location.href='/tools'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">⚡ Инструменты</button>
+      <button onclick="window.location.href='/settings';document.getElementById('profileMenu').style.display='none'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">⚙️ Настройки</button>
       <div style="height:1px;background:var(--border);margin:4px 0"></div>
-      <button onclick="logout()" style="width:100%;text-align:left;background:none;border:none;color:#ef4444;font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">← Выйти</button>
+      <button onclick="logout()" style="width:100%;text-align:left;background:none;border:none;color:#ef4444;font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">← Выйти</button>
     </div>
   </div>
 </header>
