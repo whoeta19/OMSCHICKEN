@@ -1106,7 +1106,7 @@ function renderAll() {
   document.getElementById('statIncome').textContent = fmt(income);
   document.getElementById('statExpense').textContent = fmt(expense);
   document.getElementById('statPersonal').textContent = fmt(personal);
-  document.getElementById('headerMeta').textContent = allTx.length+' операций';
+  
   renderChart();
   const recent = allTx.slice(0,6);
   document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
