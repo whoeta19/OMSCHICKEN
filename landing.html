@@ -578,10 +578,15 @@ setTimeout(() => {
 }, 100);
 </script>
 
+
 <script>
 function goToApp() {
-  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omschicken_refresh');
-  window.location.href = tok ? '/' : '/login';
+  var tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omschicken_refresh');
+  if (tok) {
+    window.location.href = '/';
+  } else {
+    window.location.href = '/login';
+  }
 }
 </script>
 </body>
