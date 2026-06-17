@@ -818,7 +818,7 @@ document.getElementById('fileInput').addEventListener('change', async function(e
 // Определение банка по структуре CSV
 function detectBank(text) {
   const first = text.substring(0, 500).toLowerCase();
-  if (first.includes("тбанк") || first.includes("тинькофф") || first.includes("tbank") || first.includes("операционный день") || first.includes("тип операции") || first.includes("дебет") && first.includes("номер счёта")) return "tbank";
+  if (first.includes('тбанк') || first.includes('тинькофф') || first.includes('tbank') || first.includes('операционный день')) return 'tbank';
   if (first.includes('сбербанк') || first.includes('sberbank') || first.includes('сб рф')) return 'sber';
   if (first.includes('альфа') || first.includes('alfa') || first.includes('alpha')) return 'alfa';
   if (first.includes('втб') || first.includes('vtb')) return 'vtb';
@@ -989,9 +989,9 @@ async function parseAndProcess(text) {
   const wrap = document.getElementById('progressWrap');
   const fill = document.getElementById('progressFill');
   const ptxt = document.getElementById('progressText');
-  if(wrap) wrap.classList.add('active');
-  if(fill) fill.style.width = '20%';
-  if(ptxt) ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
+  wrap.classList.add('active');
+  fill.style.width = '20%';
+  ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
 
   try {
     await apiDelete(monthKey);
@@ -1106,7 +1106,7 @@ function renderAll() {
   document.getElementById('statIncome').textContent = fmt(income);
   document.getElementById('statExpense').textContent = fmt(expense);
   document.getElementById('statPersonal').textContent = fmt(personal);
-  
+  document.getElementById('headerMeta').textContent = allTx.length+' операций';
   renderChart();
   const recent = allTx.slice(0,6);
   document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
