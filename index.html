@@ -747,7 +747,7 @@ function toggleProfile() {
   const menu = document.getElementById('profileMenu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
   // Показываем email
-  const user = JSON.parse(localStorage.getItem('omschicken_user') || '{}');
+  const user = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
   document.getElementById('profileEmail').textContent = user.email || 'Пользователь';
 }
 
@@ -978,7 +978,7 @@ function parseBank(text, bank) {
   return { txs, monthKey };
 }
 
-function parseAndProcess(text) {
+async function parseAndProcess(text) {
   const bank = detectBank(text);
   const bankNames = {tbank:'Т-Банк', sber:'Сбербанк', alfa:'Альфа-Банк', vtb:'ВТБ', raiff:'Райффайзен', open:'Открытие', psb:'ПСБ', unknown:'Банк'};
   console.log('Detected bank:', bank, bankNames[bank]);
