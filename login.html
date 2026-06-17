@@ -105,7 +105,7 @@ const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
 const token = localStorage.getItem('omsfin_token');
-if (token) window.location.href = '/';
+if (token) window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding';
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
@@ -145,7 +145,7 @@ async function login() {
       localStorage.setItem('omsfin_token', data.access_token);
       localStorage.setItem('omsfin_refresh', data.refresh_token);
       localStorage.setItem('omsfin_user', JSON.stringify(data.user));
-      window.location.href = '/';
+      window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding';
     } else {
       showErr(err, 'Неверный email или пароль');
     }
@@ -193,7 +193,7 @@ async function register() {
         localStorage.setItem('omsfin_token', data.access_token);
         localStorage.setItem('omsfin_refresh', data.refresh_token);
         localStorage.setItem('omsfin_user', JSON.stringify(data.user));
-        window.location.href = '/';
+        window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding';
       } else {
         success.textContent = '✅ Аккаунт создан! Проверь почту для подтверждения.';
         success.classList.add('show');

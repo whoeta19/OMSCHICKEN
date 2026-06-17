@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMSFIN — Добро пожаловать</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#060608;color:#f5f5f5;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .wrap{width:100%;max-width:480px;padding:24px 20px;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:20px;text-align:center;margin-bottom:32px;}
+  .logo span{color:#ff6b00;}
+  .steps{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:32px;}
+  .step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);transition:all 0.3s;}
+  .step-dot.active{background:#ff6b00;width:24px;border-radius:4px;}
+  .step-dot.done{background:rgba(34,197,94,0.5);}
+  .card{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:28px;}
+  .step{display:none;}
+  .step.active{display:block;}
+  .step-num{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+  .step-title{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;margin-bottom:8px;line-height:1.2;}
+  .step-desc{font-size:13px;color:#666;line-height:1.6;margin-bottom:24px;}
+  .input-group{margin-bottom:12px;}
+  .input-group label{font-size:11px;color:#555;display:block;margin-bottom:5px;letter-spacing:0.3px;}
+  .input-group input{width:100%;background:#161616;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:11px 14px;color:#f5f5f5;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all 0.2s;}
+  .input-group input:focus{border-color:rgba(255,107,0,0.5);box-shadow:0 0 0 3px rgba(255,107,0,0.08);}
+  .input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{width:100%;background:linear-gradient(135deg,#ff6b00,#e55a00);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:8px;box-shadow:0 4px 20px rgba(255,107,0,0.3);}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(255,107,0,0.4);}
+  .btn-skip{width:100%;background:none;border:none;color:#444;font-size:12px;cursor:pointer;padding:10px;margin-top:4px;transition:all 0.2s;}
+  .btn-skip:hover{color:#666;}
+  .welcome-icon{font-size:48px;text-align:center;margin-bottom:16px;}
+  .features{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+  .feature{display:flex;align-items:center;gap:12px;padding:12px;background:#161616;border-radius:10px;}
+  .feature-icon{font-size:20px;width:36px;text-align:center;flex-shrink:0;}
+  .feature-text{font-size:13px;color:#ccc;}
+  .feature-text strong{color:#f5f5f5;display:block;margin-bottom:2px;}
+  .upload-zone{border:1px dashed rgba(255,255,255,0.1);border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;}
+  .upload-zone:hover{border-color:rgba(255,107,0,0.4);background:rgba(255,107,0,0.03);}
+  .upload-icon{font-size:32px;margin-bottom:8px;}
+  .upload-title{font-size:14px;font-weight:500;margin-bottom:4px;}
+  .upload-sub{font-size:11px;color:#555;}
+  .bank-logos{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
+  .bank-logo{background:#161616;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:6px 12px;font-size:11px;color:#666;}
+  .success-icon{font-size:56px;text-align:center;margin-bottom:16px;animation:pop 0.5s cubic-bezier(0.36,0.07,0.19,0.97);}
+  @keyframes pop{0%{transform:scale(0)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .progress{background:rgba(255,255,255,0.05);border-radius:4px;height:3px;margin-bottom:24px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#ff6b00,#ffaa44);border-radius:4px;transition:width 0.5s;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">OMS<span>FIN</span></div>
+  
+  <div class="steps">
+    <div class="step-dot active" id="dot-0"></div>
+    <div class="step-dot" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+  </div>
+
+  <div class="progress">
+    <div class="progress-fill" id="progressFill" style="width:25%"></div>
+  </div>
+
+  <div class="card">
+    
+    <!-- Шаг 0: Приветствие -->
+    <div class="step active" id="step-0">
+      <div class="welcome-icon">👋</div>
+      <div class="step-num">Добро пожаловать</div>
+      <div class="step-title">Твой бизнес-кабинет готов</div>
+      <div class="step-desc">OMSFIN автоматизирует бухгалтерию — загружай выписки из банка и получай полную картину финансов за секунды.</div>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🏦</div>
+          <div class="feature-text"><strong>Загрузка выписки</strong>Т-Банк, Сбер, Альфа — автоматическая классификация</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🧾</div>
+          <div class="feature-text"><strong>НДС и декларации</strong>Расчёт автоматически, XML для ФНС</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📄</div>
+          <div class="feature-text"><strong>Документы по ГОСТу</strong>Счета, УПД, ТОРГ-12, договоры с печатью</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">✈️</div>
+          <div class="feature-text"><strong>Telegram бот</strong>Финансовая сводка в мессенджере</div>
+        </div>
+      </div>
+      <button class="btn" onclick="nextStep()">Начать настройку →</button>
+    </div>
+
+    <!-- Шаг 1: Реквизиты -->
+    <div class="step" id="step-1">
+      <div class="step-num">Шаг 1 из 3</div>
+      <div class="step-title">Реквизиты компании</div>
+      <div class="step-desc">Они будут автоматически подставляться во все документы — счета, накладные, договоры.</div>
+      <div class="input-group"><label>Название компании</label><input type="text" id="ob-name" placeholder='ООО "Ромашка" или ИП Иванов И.И.'></div>
+      <div class="input-row">
+        <div class="input-group"><label>ИНН</label><input type="text" id="ob-inn" placeholder="1234567890" maxlength="12"></div>
+        <div class="input-group"><label>КПП</label><input type="text" id="ob-kpp" placeholder="123456789" maxlength="9"></div>
+      </div>
+      <div class="input-group"><label>Юридический адрес</label><input type="text" id="ob-addr" placeholder="г. Москва, ул. Пушкина, 1"></div>
+      <div class="input-group"><label>Руководитель</label><input type="text" id="ob-director" placeholder="Иванов Иван Иванович"></div>
+      <div class="input-row">
+        <div class="input-group"><label>Банк</label><input type="text" id="ob-bank" placeholder="АО «Т-Банк»"></div>
+        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ob-rs" placeholder="40702810..."></div>
+      </div>
+      <button class="btn" onclick="saveRequisites()">Сохранить и продолжить →</button>
+      <button class="btn-skip" onclick="nextStep()">Пропустить, настрою позже</button>
+    </div>
+
+    <!-- Шаг 2: Загрузка выписки -->
+    <div class="step" id="step-2">
+      <div class="step-num">Шаг 2 из 3</div>
+      <div class="step-title">Загрузи первую выписку</div>
+      <div class="step-desc">Скачай CSV-выписку из интернет-банка и загрузи сюда — данные появятся мгновенно.</div>
+      <div class="bank-logos">
+        <div class="bank-logo">Т-Банк</div>
+        <div class="bank-logo">Сбер</div>
+        <div class="bank-logo">Альфа</div>
+        <div class="bank-logo">ВТБ</div>
+      </div>
+      <div class="upload-zone" onclick="document.getElementById('ob-file').click()">
+        <div class="upload-icon">📂</div>
+        <div class="upload-title" id="ob-file-name">Нажми чтобы выбрать файл</div>
+        <div class="upload-sub">CSV файл из интернет-банка</div>
+      </div>
+      <input type="file" id="ob-file" accept=".csv,.txt" style="display:none" onchange="fileSelected(this)">
+      <div style="font-size:11px;color:#444;margin-bottom:16px;line-height:1.6">
+        <strong style="color:#666">Как скачать выписку из Т-Банк:</strong><br>
+        Счёт → Выписка → Период → Формат CSV → Скачать
+      </div>
+      <button class="btn" id="ob-upload-btn" onclick="nextStep()" style="opacity:0.5" disabled>Продолжить →</button>
+      <button class="btn-skip" onclick="nextStep()">Пропустить, загружу позже</button>
+    </div>
+
+    <!-- Шаг 3: Готово -->
+    <div class="step" id="step-3">
+      <div class="success-icon">🎉</div>
+      <div class="step-num">Всё готово!</div>
+      <div class="step-title">Кабинет настроен</div>
+      <div class="step-desc">Теперь ты можешь пользоваться всеми функциями OMSFIN. Начни с загрузки выписки или создания документа.</div>
+      <div class="features">
+        <div class="feature" onclick="finish('/')" style="cursor:pointer">
+          <div class="feature-icon">📊</div>
+          <div class="feature-text"><strong>Дашборд</strong>Финансовая сводка и аналитика</div>
+        </div>
+        <div class="feature" onclick="finish('/docs')" style="cursor:pointer">
+          <div class="feature-icon">📄</div>
+          <div class="feature-text"><strong>Документы</strong>Создать счёт или накладную</div>
+        </div>
+        <div class="feature" onclick="finish('/tools')" style="cursor:pointer">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-text"><strong>Инструменты</strong>Калькулятор зарплаты и НДС</div>
+        </div>
+      </div>
+      <button class="btn" onclick="finish('/')">Перейти в кабинет →</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentStep = 0;
+const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+function nextStep() {
+  document.getElementById('step-'+currentStep).classList.remove('active');
+  document.getElementById('dot-'+currentStep).classList.remove('active');
+  document.getElementById('dot-'+currentStep).classList.add('done');
+  currentStep++;
+  document.getElementById('step-'+currentStep).classList.add('active');
+  document.getElementById('dot-'+currentStep).classList.add('active');
+  document.getElementById('progressFill').style.width = ((currentStep+1)/4*100) + '%';
+}
+
+function saveRequisites() {
+  const seller = {
+    name: document.getElementById('ob-name').value,
+    inn: document.getElementById('ob-inn').value,
+    kpp: document.getElementById('ob-kpp').value,
+    addr: document.getElementById('ob-addr').value,
+    director: document.getElementById('ob-director').value,
+    bank: document.getElementById('ob-bank').value,
+    rs: document.getElementById('ob-rs').value,
+  };
+  localStorage.setItem('omschicken_seller', JSON.stringify(seller));
+  
+  // Сохраняем в облако
+  const tok = localStorage.getItem('omschicken_token') || '';
+  if (tok) {
+    fetch('/api/company_settings', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
+      body: JSON.stringify({seller})
+    });
+  }
+  nextStep();
+}
+
+function fileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('ob-file-name').textContent = file.name;
+  const btn = document.getElementById('ob-upload-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  // Сохраняем файл для главной страницы
+  localStorage.setItem('omsfin_pending_file', file.name);
+}
+
+function finish(url) {
+  localStorage.setItem('omsfin_onboarded', '1');
+  window.location.href = url;
+}
+</script>
+</body>
+</html>
