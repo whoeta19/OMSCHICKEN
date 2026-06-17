@@ -468,7 +468,7 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 // Проверка авторизации
 if (!localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(REFRESH_KEY)) {
-  window.location.href = '/landing';
+  window.location.href = '/login';
 }
 
 async function getValidToken() {
