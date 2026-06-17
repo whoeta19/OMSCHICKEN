@@ -206,7 +206,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
     <a href="#pricing">Тарифы</a>
     <a href="#how">Как работает</a>
   </div>
-  <button class="nav-btn" onclick="window.location.href='/login'">Попробовать бесплатно →</button>
+  <button class="nav-btn" onclick="window.location.href=localStorage.getItem('omschicken_token')?'/':'login'">Попробовать бесплатно →</button>
 </nav>
 
 <!-- HERO -->
@@ -215,7 +215,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   <h1 class="fade-up" style="transition-delay:0.1s">Бухгалтерия которая<br><span>работает за тебя</span></h1>
   <p class="fade-up" style="transition-delay:0.2s">Загрузи выписку из банка — OMSFIN сам классифицирует расходы, посчитает НДС, создаст документы и напомнит о платежах.</p>
   <div class="hero-btns fade-up" style="transition-delay:0.3s">
-    <button class="btn-primary" onclick="window.location.href='/login'">Начать бесплатно</button>
+    <button class="btn-primary" onclick="window.location.href=localStorage.getItem('omschicken_token')?'/':'login'">Начать бесплатно</button>
     <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Узнать больше</button>
   </div>
   <div class="hero-stats fade-up" style="transition-delay:0.4s">
@@ -373,7 +373,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
         <li class="no">Экспорт в Excel</li>
         <li class="no">Мультикомпания</li>
       </ul>
-      <button class="price-btn outline" onclick="window.location.href='/login'">Начать бесплатно</button>
+      <button class="price-btn outline" onclick="window.location.href=localStorage.getItem('omschicken_token')?'/':'login'">Начать бесплатно</button>
     </div>
     <div class="price-card popular fade-up">
       <div class="popular-badge">⭐ ПОПУЛЯРНЫЙ</div>
@@ -390,7 +390,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
         <li>Экспорт в Excel</li>
         <li class="no">ИИ советник</li>
       </ul>
-      <button class="price-btn primary" onclick="window.location.href='/login'">Попробовать бесплатно</button>
+      <button class="price-btn primary" onclick="window.location.href=localStorage.getItem('omschicken_token')?'/':'login'">Попробовать бесплатно</button>
     </div>
     <div class="price-card">
       <div class="price-name">Про</div>
@@ -406,7 +406,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
         <li>API интеграция</li>
         <li>Авто-отчётность в ФНС</li>
       </ul>
-      <button class="price-btn outline" onclick="window.location.href='/login'">Выбрать Про</button>
+      <button class="price-btn outline" onclick="window.location.href=localStorage.getItem('omschicken_token')?'/':'login'">Выбрать Про</button>
     </div>
   </div>
 </section>
@@ -471,7 +471,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 <section class="cta">
   <h2>Готов попробовать?</h2>
   <p>Регистрация занимает 30 секунд. Первый месяц бесплатно.</p>
-  <button class="btn-primary" onclick="window.location.href='/login'" style="font-size:13px;padding:16px 36px">Начать бесплатно →</button>
+  <button class="btn-primary" onclick="window.location.href=localStorage.getItem('omschicken_token')?'/':'login'" style="font-size:13px;padding:16px 36px">Начать бесплатно →</button>
 </section>
 
 <!-- FOOTER -->
