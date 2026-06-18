@@ -1032,7 +1032,7 @@ async function parseAndProcess(text) {
       const dc = cols[27] || '';
       if (dc !== 'D'
        && dc !== 'C') continue;
-      const amountRaw = (cols[31] || cols[30] || '0').replace(/[^0-9,.-]/g,'').replace(',', '.');
+      const amountRaw = (cols[12] || cols[13] || '0').replace(/[^0-9,.-]/g,'').replace(',', '.');
       const absAmount = parseFloat(amountRaw);
       if (isNaN(absAmount) || absAmount === 0) continue;
       const amount = (dc === 'D') ? -absAmount : absAmount;
