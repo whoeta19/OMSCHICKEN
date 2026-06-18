@@ -98,6 +98,10 @@ nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:2
 .price-btn.primary:hover{background:var(--accent2);}
 .price-btn.outline{background:none;border:1px solid var(--border);color:var(--text);}
 .price-btn.outline:hover{border-color:var(--accent);color:var(--accent);}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.count-anim{animation:countUp 0.6s ease forwards;}
+.pain-item{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted);transition:all 0.3s;}
+.pain-item:hover{border-color:rgba(255,107,0,0.3);color:var(--text);}
 
 /* STEPS */
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:60px;}
@@ -211,29 +215,40 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge fade-up">🚀 Новый стандарт бухгалтерии в России</div>
-  <h1 class="fade-up" style="transition-delay:0.1s">Бухгалтерия которая<br><span>работает за тебя</span></h1>
-  <p class="fade-up" style="transition-delay:0.2s">Загрузи выписку из банка — OMSFIN сам классифицирует расходы, посчитает НДС, создаст документы и напомнит о платежах.</p>
-  <div class="hero-btns fade-up" style="transition-delay:0.3s">
-    <button class="btn-primary" onclick="goToApp()">Начать бесплатно</button>
-    <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Узнать больше</button>
+  <div class="hero-badge fade-up">● Уже используют предприниматели по всей России</div>
+  <h1 class="fade-up" style="transition-delay:0.1s">Загрузи выписку —<br>получи <span>готовую бухгалтерию</span><br>за 5 минут</h1>
+  <p class="fade-up" style="transition-delay:0.2s">Больше никаких таблиц Excel и ручного подсчёта НДС. OMSFIN автоматически разбирает выписку из банка, считает налоги и формирует документы.</p>
+  
+  <!-- Боли -->
+  <div class="fade-up" style="transition-delay:0.25s;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:32px">
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Считаю НДС вручную каждый квартал</div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Операции в Excel по 2 часа</div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Забываю про дедлайны ФНС</div>
   </div>
+
+  <div class="hero-btns fade-up" style="transition-delay:0.3s">
+    <button class="btn-primary" onclick="goToApp()" style="font-size:13px;padding:16px 32px">Попробовать бесплатно →</button>
+    <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Как это работает</button>
+  </div>
+  
+  <div class="fade-up" style="transition-delay:0.35s;margin-top:16px;font-size:12px;color:var(--muted)">Без кредитной карты · Бесплатно навсегда для малого бизнеса</div>
+
   <div class="hero-stats fade-up" style="transition-delay:0.4s">
     <div class="hero-stat">
       <div class="hero-stat-num">5 мин</div>
-      <div class="hero-stat-label">На настройку</div>
+      <div class="hero-stat-label">До первого результата</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">−70%</div>
+      <div class="hero-stat-label">Ручной работы</div>
     </div>
     <div class="hero-stat">
       <div class="hero-stat-num">0 ₽</div>
       <div class="hero-stat-label">Для старта</div>
     </div>
     <div class="hero-stat">
-      <div class="hero-stat-num">НДС</div>
-      <div class="hero-stat-label">Считается автоматически</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">100%</div>
-      <div class="hero-stat-label">Облачное хранение</div>
+      <div class="hero-stat-num">24/7</div>
+      <div class="hero-stat-label">Доступ с любого устройства</div>
     </div>
   </div>
 </section>
@@ -241,8 +256,9 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 <!-- APP PREVIEW -->
 <div class="preview-section">
   <div class="preview-inner">
-    <div class="section-tag">Интерфейс</div>
-    <div class="section-title" style="text-align:center">Просто. Красиво. Быстро.</div>
+    <div class="section-tag">Что ты получишь через 5 минут</div>
+    <div class="section-title" style="text-align:center">Вот так выглядит<br>твой кабинет</div>
+    <p style="text-align:center;color:var(--muted);margin-top:12px;font-size:15px">Загрузил выписку — получил полную картину бизнеса</p>
     <div class="app-preview scale-in">
       <div class="app-bar">
         <div class="app-logo-sm">OMS<span>FIN</span></div>
