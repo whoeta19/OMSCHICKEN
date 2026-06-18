@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Декларации</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -157,7 +158,7 @@
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="generateUSNXML()">📥 Скачать XML для ФНС</button>
+        <button class="btn" onclick="exportUSNExcel()">📊 Скачать Excel для ФНС</button>
         <button class="btn-outline" onclick="openFNS()">🌐 Открыть кабинет ФНС</button>
       </div>
     </div>
@@ -220,7 +221,7 @@
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Уплатить тремя равными частями: до 25-го числа каждого из трёх месяцев следующего квартала.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="generateNDSXML()">📥 Скачать XML для ФНС</button>
+        <button class="btn" onclick="exportNDSExcel()">📊 Скачать Excel для ФНС</button>
         <button class="btn-outline" onclick="openFNS()">🌐 Открыть кабинет ФНС</button>
       </div>
     </div>
@@ -295,6 +296,10 @@
       <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налоговая база</span><span id="ndfl_base" style="font-weight:600"></span></div>
       <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--muted)">НДФЛ к уплате</span><span id="ndfl_pay" style="font-weight:700;color:var(--accent);font-size:15px"></span></div>
     </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
+      <button class="btn" onclick="exportNDFLExcel()">📊 Скачать Excel для ФНС</button>
+    </div>
   </div>
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
@@ -312,7 +317,7 @@
 <div class="page" id="page-profit">
   <div class="section-title">💰 Налог на прибыль</div>
   <div class="info-box" style="margin-bottom:16px;font-size:12px">
-    Ежеквартальные авансовые платежи + годовая декларация. Ставка 20% (3% в федеральный бюджет + 17% в региональный). Подаётся до 25-го числа после квартала, годовая — до 25 марта.
+    Ежеквартальные авансовые платежи + годовая декларация. Ставка 25% (8% в федеральный бюджет + 17% в региональный). Подаётся до 25-го числа после квартала, годовая — до 25 марта.
   </div>
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px">
@@ -323,12 +328,16 @@
       <div class="input-group"><label>Внереализационные доходы</label><input type="number" id="profit_other_in" oninput="calcProfit()" placeholder="0" value="0"></div>
       <div class="input-group"><label>Внереализационные расходы</label><input type="number" id="profit_other_ex" oninput="calcProfit()" placeholder="0" value="0"></div>
       <div class="input-group"><label>Авансы уплаченные (руб.)</label><input type="number" id="profit_paid" oninput="calcProfit()" placeholder="0" value="0"></div>
-      <div class="input-group"><label>Ставка (%)</label><input type="number" id="profit_rate" oninput="calcProfit()" value="20"></div>
+      <div class="input-group"><label>Ставка (%)</label><input type="number" id="profit_rate" oninput="calcProfit()" value="25"></div>
     </div>
     <div id="profit_result" style="margin-top:14px;padding:14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налоговая база (прибыль)</span><span id="profit_base" style="font-weight:600">0 ₽</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налог начисленный (20%)</span><span id="profit_tax" style="font-weight:600;color:var(--red)">0 ₽</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налог начисленный (25%)</span><span id="profit_tax" style="font-weight:600;color:var(--red)">0 ₽</span></div>
       <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">К доплате</span><span id="profit_pay" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
+      <button class="btn" onclick="exportProfitExcel()">📊 Скачать Excel для ФНС</button>
     </div>
   </div>
 
@@ -356,14 +365,18 @@
       <div class="input-group"><label>Кол-во застрахованных лиц</label><input type="number" id="rsv_persons" oninput="calcRsv()" placeholder="0"></div>
       <div class="input-group"><label>Фонд оплаты труда (руб.)</label><input type="number" id="rsv_fot" oninput="calcRsv()" placeholder="0"></div>
     </div>
-    <div style="margin-top:4px;font-size:11px;color:var(--muted)">Тариф для МСП: 30% до порога, 15% сверх (792 000 ₽ в 2026)</div>
+    <div style="margin-top:4px;font-size:11px;color:var(--muted)">Единый тариф 2026: 30% в пределах базы 2 979 000 ₽ на сотрудника в год, 15,1% — сверх базы (льготы для МСП отменены с 2026 года)</div>
     
     <div id="rsv_result" style="margin-top:14px;padding:14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">ОПС (22% / 10%)</span><span id="rsv_ops" style="font-weight:600">0 ₽</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">ОМС (5.1%)</span><span id="rsv_oms" style="font-weight:600">0 ₽</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">ОСС (2.9%)</span><span id="rsv_oss" style="font-weight:600">0 ₽</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">из них ОПС (доля ~73%)</span><span id="rsv_ops" style="font-weight:600">0 ₽</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">из них ОМС (доля ~17%)</span><span id="rsv_oms" style="font-weight:600">0 ₽</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">из них ОСС (доля ~10%)</span><span id="rsv_oss" style="font-weight:600">0 ₽</span></div>
       <div style="height:1px;background:rgba(255,107,0,0.2);margin:8px 0"></div>
-      <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Итого взносов</span><span id="rsv_total" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Итого взносов (единый тариф)</span><span id="rsv_total" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
+      <button class="btn" onclick="exportRSVExcel()">📊 Скачать Excel для ФНС</button>
     </div>
   </div>
 
@@ -436,6 +449,10 @@
       <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Итого к уплате</span><span id="efs_total" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
     </div>
     <div style="margin-top:10px;font-size:11px;color:var(--muted)">Тариф зависит от класса профессионального риска (от 0.2% до 8.5%). Для оптовой торговли мясом птицей (ОКВЭД 46.32) — обычно 0.2%.</div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
+      <button class="btn" onclick="exportEFSExcel()">📊 Скачать Excel для СФР</button>
+    </div>
   </div>
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
@@ -587,125 +604,209 @@ function renderCalendar() {
 }
 
 
-function generateNDSXML() {
+// ─── Общий помощник: создаёт и скачивает Excel-файл с одним листом "Декларация" ──
+function exportDeclarationExcel(filename, title, rows) {
+  if (typeof XLSX === 'undefined') { showToast('❌ Библиотека Excel не загрузилась'); return; }
+  const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
+  const inn = seller.inn || '5800015301';
+  const orgName = seller.name || 'ООО "ОМСЧИКЕН"';
+
+  const sheetData = [
+    [title],
+    [`Организация: ${orgName}  /  ИНН: ${inn}`],
+    [`Дата составления: ${formatDate(now)}`],
+    [],
+    ['Строка', 'Показатель', 'Сумма (руб.)'],
+    ...rows
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+  ws['!cols'] = [{wch: 10}, {wch: 55}, {wch: 18}];
+  ws['!merges'] = [
+    {s: {r:0,c:0}, e: {r:0,c:2}},
+    {s: {r:1,c:0}, e: {r:1,c:2}},
+    {s: {r:2,c:0}, e: {r:2,c:2}}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Декларация');
+  XLSX.writeFile(wb, filename);
+  showToast('✅ Excel-файл скачан — перенеси суммы в кабинет ФНС');
+}
+
+// ─── НДС: раздел 3 (строки 010-118, 120-190) + раздел 1 (200/210) ──────────────
+function exportNDSExcel() {
   const sales = allTx.filter(t=>t.amount>0&&t.category==='income');
   const purchases = allTx.filter(t=>t.amount<0&&t.category==='chicken');
   const totalSales = sales.reduce((s,t)=>s+Number(t.amount),0);
   const totalPurchases = purchases.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const vatCharged = Math.round(totalSales * 10/110);
+  const salesBaseNoVat = Math.round(totalSales - vatCharged);
   const vatDeduct = Math.round(totalPurchases * 10/110);
-  const vatToPay = Math.max(0, vatCharged - vatDeduct);
-  const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
-  const inn = seller.inn || '5800015301';
-  const kpp = seller.kpp || '580001001';
-  const orgName = (seller.name || 'ООО ОМСФИН').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-  const director = (seller.director || 'Симутин Семен Евгеньевич').replace(/[<>&"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-  const qCodes = ['','21','22','23','24'];
-  const qCode = qCodes[quarter] || '22';
-  const dateDoc = formatDate(now);
-  const fileId = 'NO_NDS_' + inn + '_' + inn + '_' + year + qCode + '_' + Date.now();
-  
-  const xml = '<?xml version="1.0" encoding="windows-1251"?>' + 
-'<Файл ВерсФорм="5.09" ВерсПрог="OMSFIN 1.0" ИдФайл="' + fileId + '" ТипИнфСвед="НД">' +
-'<Документ КНД="1151001" ДатаДок="' + dateDoc + '" НомКорр="0" ПерНал="' + qCode + '" ОтчетГод="' + year + '">' +
-'<СвНП><НПЮЛ НаимОрг="' + orgName + '" ИННЮЛ="' + inn + '" КПП="' + kpp + '"/></СвНП>' +
-'<ПодпСв><ПодпФЛ ИННФЛ="' + inn + '" ФИО="' + director + '"/></ПодпСв>' +
-'<РасчНал><НДСУплВыч>' +
-'<НалВосст><СумНалВосст>' +
-'<НалБаза НалСт="10">' + Math.round(totalSales - vatCharged) + '</НалБаза>' +
-'<СумНал>' + vatCharged + '</СумНал>' +
-'</СумНалВосст></НалВосст>' +
-'<НалВычет><СумНалВычет>' + vatDeduct + '</СумНалВычет></НалВычет>' +
-'<НДСУпл>' + vatToPay + '</НДСУпл>' +
-'</НДСУплВыч></РасчНал>' +
-'</Документ></Файл>';
+  const diff = vatCharged - vatDeduct;
+  const toPay = Math.max(0, diff);
+  const toRefund = Math.max(0, -diff);
+  const qNames = ['', 'I', 'II', 'III', 'IV'];
 
-  downloadFile(xml, 'НДС_Q' + quarter + '_' + year + '.xml', 'application/xml');
-  showToast('✅ XML для ФНС скачан в windows-1251!');
+  const rows = [
+    ['', 'РАЗДЕЛ 3. РАСЧЁТ СУММЫ НАЛОГА', ''],
+    ['020', 'Реализация (налоговая база по ставке 10%)', salesBaseNoVat],
+    ['020', 'Сумма НДС начисленная (10%)', vatCharged],
+    ['118', 'Общая сумма НДС, исчисленная с учётом восстановленных сумм', vatCharged],
+    ['120', 'Сумма НДС к вычету (приобретение товаров/работ/услуг)', vatDeduct],
+    ['190', 'Общая сумма НДС, подлежащая вычету', vatDeduct],
+    ['', '', ''],
+    ['', 'РАЗДЕЛ 1. ИТОГОВАЯ СУММА НАЛОГА', ''],
+    ['200', 'Сумма налога к уплате в бюджет (стр.118 − стр.190, если > 0)', toPay],
+    ['210', 'Сумма налога к возмещению из бюджета (если стр.190 > стр.118)', toRefund],
+    ['', '', ''],
+    ['', 'График уплаты — равными частями до 25-го числа каждого из 3 месяцев следующего квартала', ''],
+    ['', '1-й платёж', Math.round(toPay/3)],
+    ['', '2-й платёж', Math.round(toPay/3)],
+    ['', '3-й платёж', toPay - 2*Math.round(toPay/3)],
+  ];
+
+  exportDeclarationExcel(
+    `НДС_${qNames[quarter]}кв_${year}.xlsx`,
+    `ДЕКЛАРАЦИЯ ПО НДС — ${qNames[quarter]} квартал ${year}`,
+    rows
+  );
 }
 
-function generateUSNXML() {
+// ─── УСН: раздел 2.2 (доходы минус расходы) ────────────────────────────────────
+function exportUSNExcel() {
   const income = Math.round(allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0));
   const expense = Math.round(allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0));
-  const base = Math.max(0, income - expense);
+  const insurance = Math.round(parseFloat(document.getElementById('insuranceAmount')?.value) || 0);
+  const advances = Math.round(parseFloat(document.getElementById('advanceAmount')?.value) || 0);
+  const base = Math.max(0, income - expense - insurance);
   const tax = Math.round(base * 0.15);
-  const insurance = parseFloat(document.getElementById('insuranceAmount')?.value) || 0;
-  const advances = parseFloat(document.getElementById('advanceAmount')?.value) || 0;
-  const finalTax = Math.max(0, tax - Math.round(insurance) - Math.round(advances));
-  const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
-  const inn = seller.inn || '5800015301';
-  const kpp = seller.kpp || '580001001';
-  
-  const report = [
-    '='.repeat(60),
-    'ДЕКЛАРАЦИЯ ПО УСН (ДОХОДЫ МИНУС РАСХОДЫ)',
-    `Налоговый период: ${year} год`,
-    `Организация: ${seller.name || 'ООО OMSFIN'}`,
-    `ИНН: ${inn} / КПП: ${kpp}`,
-    `Дата составления: ${formatDate(now)}`,
-    '='.repeat(60),
-    '',
-    'РАЗДЕЛ 2. РАСЧЁТ НАЛОГА:',
-    '',
-    `Строка 213 - Доходы за год:`,
-    `    ${income.toLocaleString('ru-RU')} руб.`,
-    '',
-    `Строка 223 - Расходы за год:`,
-    `    ${expense.toLocaleString('ru-RU')} руб.`,
-    '',
-    `Строка 243 - Налоговая база:`,
-    `    ${base.toLocaleString('ru-RU')} руб.`,
-    '',
-    `Строка 260 - Налоговая ставка: 15%`,
-    '',
-    `Строка 271 - Исчисленный налог:`,
-    `    ${tax.toLocaleString('ru-RU')} руб.`,
-    '',
-    insurance > 0 ? `Страховые взносы: -${Math.round(insurance).toLocaleString('ru-RU')} руб.` : '',
-    advances > 0 ? `Уплаченные авансы: -${Math.round(advances).toLocaleString('ru-RU')} руб.` : '',
-    '',
-    '-'.repeat(60),
-    `НАЛОГ К УПЛАТЕ: ${finalTax.toLocaleString('ru-RU')} руб.`,
-    '-'.repeat(60),
-    '',
-    'Срок подачи декларации: 31 марта следующего года',
-    'Для подачи используйте "Налогоплательщик ЮЛ" (nalog.gov.ru)',
-    'или личный кабинет: lkul.nalog.ru',
-    '='.repeat(60),
-  ].filter(l=>l!==null).join('\n');
-  
-  downloadFile(report, `УСН_${year}.txt`, 'text/plain');
-  showToast('✅ Отчёт УСН скачан!');
+  const finalTax = Math.max(0, tax - advances);
+
+  const rows = [
+    ['', 'РАЗДЕЛ 2.2. РАСЧЁТ НАЛОГА (ДОХОДЫ − РАСХОДЫ)', ''],
+    ['213', 'Сумма полученных доходов за год', income],
+    ['223', 'Сумма произведённых расходов за год (вкл. страховые взносы)', expense + insurance],
+    ['243', 'Налоговая база для исчисления налога', base],
+    ['260', 'Ставка налога, %', 15],
+    ['271', 'Сумма исчисленного налога', tax],
+    ['', '', ''],
+    ['', 'РАЗДЕЛ 1.2. ИТОГ', ''],
+    ['100', 'Уплаченные авансовые платежи', advances],
+    ['100', 'Сумма налога к доплате за налоговый период', finalTax],
+  ];
+
+  exportDeclarationExcel(`УСН_${year}.xlsx`, `ДЕКЛАРАЦИЯ ПО УСН (доходы минус расходы) — ${year} год`, rows);
 }
 
-function downloadFile(content, filename, type) {
-  // Для XML используем windows-1251 через TextEncoder workaround
-  if (filename.endsWith('.xml')) {
-    // Конвертируем в windows-1251
-    const win1251 = encodeToWin1251(content);
-    const blob = new Blob([win1251], {type: 'application/xml'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-  } else {
-    const blob = new Blob([content], {type: type + ';charset=utf-8'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-  }
+// ─── 6-НДФЛ: раздел 1 и 2 ───────────────────────────────────────────────────────
+function exportNDFLExcel() {
+  const sum = Math.round(parseFloat(document.getElementById('ndfl_sum')?.value) || 0);
+  const rate = parseFloat(document.getElementById('ndfl_rate')?.value) || 13;
+  const persons = Math.round(parseFloat(document.getElementById('ndfl_persons')?.value) || 0);
+  const income = Math.round(parseFloat(document.getElementById('ndfl_income')?.value) || 0);
+  const deduct = Math.round(parseFloat(document.getElementById('ndfl_deduct')?.value) || 0);
+  const base = Math.max(0, income - deduct);
+  const pay = Math.round(base * rate / 100);
+  const qNames = ['', 'I квартал', 'Полугодие', '9 месяцев', 'Год'];
+
+  const rows = [
+    ['', 'РАЗДЕЛ 1. ОБЯЗАННОСТИ НАЛОГОВОГО АГЕНТА', ''],
+    ['020', 'КБК', '182 1 01 02010 01 1000 110'],
+    ['021', 'Сумма НДФЛ, подлежащая перечислению', pay || sum],
+    ['', '', ''],
+    ['', 'РАЗДЕЛ 2. СВОДНЫЕ ПОКАЗАТЕЛИ', ''],
+    ['100', 'Ставка налога, %', rate],
+    ['110', 'Количество физлиц, получивших доход', persons],
+    ['110', 'Сумма начисленного дохода', income],
+    ['130', 'Сумма налоговых вычетов', deduct],
+    ['', 'Налоговая база (доход − вычеты)', base],
+    ['140', 'Сумма исчисленного налога', pay],
+    ['160', 'Сумма удержанного налога', sum || pay],
+  ];
+
+  exportDeclarationExcel(`6НДФЛ_${qNames[quarter]}_${year}.xlsx`, `РАСЧЁТ 6-НДФЛ — ${qNames[quarter]} ${year}`, rows);
 }
 
-function encodeToWin1251(str) {
-  // Таблица кириллицы windows-1251
-  const map = {'А':192,'Б':193,'В':194,'Г':195,'Д':196,'Е':197,'Ж':198,'З':199,'И':200,'Й':201,'К':202,'Л':203,'М':204,'Н':205,'О':206,'П':207,'Р':208,'С':209,'Т':210,'У':211,'Ф':212,'Х':213,'Ц':214,'Ч':215,'Ш':216,'Щ':217,'Ъ':218,'Ы':219,'Ь':220,'Э':221,'Ю':222,'Я':223,'а':224,'б':225,'в':226,'г':227,'д':228,'е':229,'ж':230,'з':231,'и':232,'й':233,'к':234,'л':235,'м':236,'н':237,'о':238,'п':239,'р':240,'с':241,'т':242,'у':243,'ф':244,'х':245,'ц':246,'ч':247,'ш':248,'щ':249,'ъ':250,'ы':251,'ь':252,'э':253,'ю':254,'я':255,'Ё':168,'ё':184};
-  const bytes = new Uint8Array(str.length);
-  for (let i = 0; i < str.length; i++) {
-    const c = str[i];
-    bytes[i] = map[c] || c.charCodeAt(0);
-  }
-  return bytes;
+// ─── Налог на прибыль: лист 02 ─────────────────────────────────────────────────
+function exportProfitExcel() {
+  const income = Math.round(parseFloat(document.getElementById('profit_income')?.value) || 0);
+  const expense = Math.round(parseFloat(document.getElementById('profit_expense')?.value) || 0);
+  const otherIn = Math.round(parseFloat(document.getElementById('profit_other_in')?.value) || 0);
+  const otherEx = Math.round(parseFloat(document.getElementById('profit_other_ex')?.value) || 0);
+  const paid = Math.round(parseFloat(document.getElementById('profit_paid')?.value) || 0);
+  const rate = parseFloat(document.getElementById('profit_rate')?.value) || 25;
+  const base = Math.max(0, income + otherIn - expense - otherEx);
+  const tax = Math.round(base * rate / 100);
+  const taxFed = Math.round(base * 0.08);
+  const taxReg = Math.round(base * 0.17);
+  const pay = Math.max(0, tax - paid);
+  const qNames = ['', 'I квартал', 'Полугодие', '9 месяцев', 'Год'];
+
+  const rows = [
+    ['', 'ЛИСТ 02. РАСЧЁТ НАЛОГА', ''],
+    ['010', 'Доходы от реализации', income],
+    ['020', 'Расходы, уменьшающие доходы от реализации', expense],
+    ['030', 'Внереализационные доходы', otherIn],
+    ['040', 'Внереализационные расходы', otherEx],
+    ['060', 'Итого прибыль (налоговая база)', base],
+    ['140', 'Ставка налога — всего, %', rate],
+    ['150', 'в т.ч. в федеральный бюджет (8%)', taxFed],
+    ['160', 'в т.ч. в региональный бюджет (17%)', taxReg],
+    ['180', 'Сумма исчисленного налога — всего', tax],
+    ['210', 'Сумма авансовых платежей, уплаченных ранее', paid],
+    ['270', 'Сумма налога к доплате', pay],
+  ];
+
+  exportDeclarationExcel(`НалогНаПрибыль_${qNames[quarter]}_${year}.xlsx`, `ДЕКЛАРАЦИЯ ПО НАЛОГУ НА ПРИБЫЛЬ — ${qNames[quarter]} ${year}`, rows);
+}
+
+// ─── РСВ: единый тариф ──────────────────────────────────────────────────────────
+function exportRSVExcel() {
+  const fot = Math.round(parseFloat(document.getElementById('rsv_fot')?.value) || 0);
+  const persons = Math.round(parseFloat(document.getElementById('rsv_persons')?.value) || 0);
+  const LIMIT = 2979000;
+  const safePersons = persons > 0 ? persons : 1;
+  const perPerson = fot / safePersons;
+  let total = 0;
+  if (perPerson <= LIMIT) total = fot * 0.30;
+  else total = safePersons * LIMIT * 0.30 + (fot - safePersons * LIMIT) * 0.151;
+  total = Math.round(Math.max(0, total));
+  const qNames = ['', 'I квартал', 'Полугодие', '9 месяцев', 'Год'];
+
+  const rows = [
+    ['', 'РАЗДЕЛ 1. СВОДНЫЕ ДАННЫЕ ОБ ОБЯЗАТЕЛЬСТВАХ ПЛАТЕЛЬЩИКА', ''],
+    ['010', 'Количество застрахованных физлиц', persons],
+    ['030', 'Сумма выплат и иных вознаграждений (ФОТ)', fot],
+    ['', 'Единая предельная база на 2026 год', LIMIT],
+    ['', 'Тариф в пределах базы, %', 30],
+    ['', 'Тариф сверх базы, %', 15.1],
+    ['', '', ''],
+    ['051', 'Итого исчислено страховых взносов (единый тариф)', total],
+  ];
+
+  exportDeclarationExcel(`РСВ_${qNames[quarter]}_${year}.xlsx`, `РАСЧЁТ ПО СТРАХОВЫМ ВЗНОСАМ (РСВ) — ${qNames[quarter]} ${year}`, rows);
+}
+
+// ─── ЕФС-1: подраздел 3 — взносы на травматизм ─────────────────────────────────
+function exportEFSExcel() {
+  const fot = Math.round(parseFloat(document.getElementById('efs_fot')?.value) || 0);
+  const rate = parseFloat(document.getElementById('efs_rate')?.value) || 0.2;
+  const discount = parseFloat(document.getElementById('efs_discount')?.value) || 0;
+  const effectiveRate = Math.max(0, rate - discount);
+  const total = Math.round(fot * effectiveRate / 100);
+  const qNames = ['', 'I квартал', 'Полугодие', '9 месяцев', 'Год'];
+
+  const rows = [
+    ['', 'ЕФС-1, РАЗДЕЛ 2, ПОДРАЗДЕЛ 3. ВЗНОСЫ НА СТРАХОВАНИЕ ОТ НС И ПЗ', ''],
+    ['', 'База для начисления взносов (ФОТ за квартал)', fot],
+    ['', 'Тариф (класс профриска), %', rate],
+    ['', 'Скидка/надбавка, %', discount],
+    ['', 'Эффективный тариф, %', effectiveRate],
+    ['', 'Сумма взносов к уплате', total],
+  ];
+
+  exportDeclarationExcel(`ЕФС1_${qNames[quarter]}_${year}.xlsx`, `ЕФС-1 — ВЗНОСЫ НА ТРАВМАТИЗМ — ${qNames[quarter]} ${year}`, rows);
 }
 
 function formatDate(d) {
@@ -716,65 +817,6 @@ function formatDate(d) {
 
 function openFNS() {
   window.open('https://lkul.nalog.ru', '_blank');
-}
-
-function exportUSN() {
-  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-  const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const base = Math.max(0, income - expense);
-  const tax = base * 0.15;
-  
-  const text = `ЗАГОТОВКА ДЕКЛАРАЦИИ УСН ${year}
-ООО "ОМСЧИКЕН" / ИНН 5800015301
-
-РАЗДЕЛ 2. РАСЧЁТ НАЛОГОВОЙ БАЗЫ И СУММЫ НАЛОГА
-Строка 210 (Доходы): ${Math.round(income)}
-Строка 220 (Расходы): ${Math.round(expense)}
-Строка 240 (Налоговая база): ${Math.round(base)}
-Строка 260 (Ставка): 15%
-Строка 270 (Налог): ${Math.round(tax)}
-
-ВНИМАНИЕ: Это предварительный расчёт.
-Перед подачей проверьте у бухгалтера!`;
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));
-  a.download = `УСН_заготовка_${year}.txt`;
-  a.click();
-  showToast('📥 Заготовка скачана');
-}
-
-function exportNDS() {
-  const sales = allTx.filter(t=>t.amount>0&&t.category==='income');
-  const purchases = allTx.filter(t=>t.amount<0&&t.category==='chicken');
-  const totalSales = sales.reduce((s,t)=>s+Number(t.amount),0);
-  const totalPurchases = purchases.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const vatCharged = totalSales * 10/110;
-  const vatDeduct = totalPurchases * 10/110;
-  const vatToPay = vatCharged - vatDeduct;
-  const qNames = ['I','II','III','IV'];
-  
-  const text = `ЗАГОТОВКА ДЕКЛАРАЦИИ НДС ${qNames[quarter-1]} КВАРТАЛ ${year}
-ООО "ОМСЧИКЕН" / ИНН 5800015301
-
-РАЗДЕЛ 1. СУММА НДС К УПЛАТЕ
-Строка 010 (Выручка): ${Math.round(totalSales)}
-Строка 020 (НДС начисленный 10%): ${Math.round(vatCharged)}
-Строка 120 (НДС к вычету): ${Math.round(vatDeduct)}
-Строка 200 (НДС к уплате): ${Math.round(vatToPay)}
-
-ГРАФИК УПЛАТЫ (тремя частями):
-1/3 = ${Math.round(vatToPay/3)} руб. до 25-го числа 1-го месяца след. квартала
-1/3 = ${Math.round(vatToPay/3)} руб. до 25-го числа 2-го месяца след. квартала
-1/3 = ${Math.round(vatToPay/3)} руб. до 25-го числа 3-го месяца след. квартала
-
-ВНИМАНИЕ: Это предварительный расчёт!`;
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));
-  a.download = `НДС_заготовка_Q${quarter}_${year}.txt`;
-  a.click();
-  showToast('📥 Заготовка НДС скачана');
 }
 
 function getMonthName(m) {
@@ -821,10 +863,20 @@ function calcProfit() {
 
 function calcRsv() {
   const fot = parseFloat(document.getElementById('rsv_fot').value) || 0;
-  const ops = Math.round(fot * 0.22);
-  const oms = Math.round(fot * 0.051);
-  const oss = Math.round(fot * 0.029);
-  const total = ops + oms + oss;
+  const persons = parseFloat(document.getElementById('rsv_persons').value) || 1;
+  const LIMIT = 2979000; // единая предельная база 2026
+  const perPerson = persons > 0 ? fot / persons : fot;
+  let total = 0;
+  if (perPerson <= LIMIT) {
+    total = fot * 0.30;
+  } else {
+    total = persons * LIMIT * 0.30 + (fot - persons * LIMIT) * 0.151;
+  }
+  total = Math.round(Math.max(0, total));
+  // Условная раскладка по видам страхования для отображения (ОПС/ОМС/ОСС из общего тарифа)
+  const ops = Math.round(total * (22/30));
+  const oms = Math.round(total * (5.1/30));
+  const oss = total - ops - oms;
   document.getElementById('rsv_ops').textContent = fmt(ops);
   document.getElementById('rsv_oms').textContent = fmt(oms);
   document.getElementById('rsv_oss').textContent = fmt(oss);
