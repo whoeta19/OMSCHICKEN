@@ -8,6 +8,9 @@ const adminHeaders = {
   'Content-Type': 'application/json'
 };
 
+const BASE_URL = 'https://omschicken-u5dn.vercel.app';
+const REMIND_DAYS = [30, 14, 7, 3, 1];
+
 async function sendTelegram(chatId, text) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: 'POST',
@@ -20,8 +23,23 @@ function fmt(n) {
   return Math.abs(n).toLocaleString('ru-RU', {maximumFractionDigits: 0}) + ' ₽';
 }
 
+function declDays(n) {
+  if (n === 1) return 'день';
+  if (n >= 2 && n <= 4) return 'дня';
+  return 'дней';
+}
+
+function daysUntil(date, now) {
+  return Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+}
+
+function nearestDeadline(deadlines, now) {
+  const next = deadlines.find(d => d > now);
+  if (!next) return { deadline: null, days: null };
+  return { deadline: next, days: daysUntil(next, now) };
+}
+
 export default async function handler(req, res) {
-  // Проверяем что это cron запрос от Vercel
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && req.method !== 'GET') {
     return res.status(401).json({error: 'Unauthorized'});
@@ -31,103 +49,191 @@ export default async function handler(req, res) {
   const day = now.getDate();
   const month = now.getMonth();
   const year = now.getFullYear();
-  
-  // Определяем текущий квартал
-  const quarter = Math.floor(month / 3) + 1;
-  const quarterEndMonth = quarter * 3; // месяц конца квартала (1-12)
-  
-  // Дата уплаты НДС — 25-е число следующего за кварталом месяца
+
+  // ─── Дедлайны по налогам ───────────────────────────────────────────────────
+
+  // НДС — уплата 25-го числа месяца, следующего за кварталом
   const vatDeadlines = [
-    new Date(year, 3, 25), // 25 апреля (Q1)
-    new Date(year, 6, 25), // 25 июля (Q2)  
-    new Date(year, 9, 25), // 25 октября (Q3)
-    new Date(year + 1, 0, 25), // 25 января (Q4)
+    new Date(year, 3, 25),
+    new Date(year, 6, 25),
+    new Date(year, 9, 25),
+    new Date(year + 1, 0, 25),
   ];
-  
-  // Ближайший дедлайн НДС
-  const nextVatDeadline = vatDeadlines.find(d => d > now);
-  const daysToVat = nextVatDeadline ? Math.ceil((nextVatDeadline - now) / (1000*60*60*24)) : null;
-  
-  // Конец месяца
+
+  // 6-НДФЛ — сдача до 25-го числа месяца после квартала (+ годовой 25 февраля)
+  const ndflDeadlines = [
+    new Date(year, 1, 25),
+    new Date(year, 3, 25),
+    new Date(year, 6, 25),
+    new Date(year, 9, 25),
+    new Date(year + 1, 1, 25),
+  ];
+
+  // РСВ — те же сроки что и 6-НДФЛ
+  const rsvDeadlines = [
+    new Date(year, 1, 25),
+    new Date(year, 3, 25),
+    new Date(year, 6, 25),
+    new Date(year, 9, 25),
+    new Date(year + 1, 1, 25),
+  ];
+
+  // ЕФС-1 (СФР) — те же сроки
+  const efs1Deadlines = [
+    new Date(year, 1, 25),
+    new Date(year, 3, 25),
+    new Date(year, 6, 25),
+    new Date(year, 9, 25),
+    new Date(year + 1, 1, 25),
+  ];
+
+  // Налог на прибыль — авансы до 28-го числа месяца после квартала
+  const profitDeadlines = [
+    new Date(year, 2, 28),
+    new Date(year, 3, 28),
+    new Date(year, 6, 28),
+    new Date(year, 9, 28),
+    new Date(year + 1, 2, 28),
+  ];
+
+  const vat    = nearestDeadline(vatDeadlines, now);
+  const ndfl   = nearestDeadline(ndflDeadlines, now);
+  const rsv    = nearestDeadline(rsvDeadlines, now);
+  const efs1   = nearestDeadline(efs1Deadlines, now);
+  const profit = nearestDeadline(profitDeadlines, now);
+
   const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
   const daysToMonthEnd = lastDayOfMonth - day;
-  
+
   try {
-    // Получаем всех пользователей с привязанным Telegram
     const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?select=telegram_id,user_id`, {
       headers: {...adminHeaders, 'Prefer': 'return=representation'}
     });
     const users = await r.json();
-    
+
     if (!Array.isArray(users) || !users.length) {
       return res.status(200).json({ok: true, message: 'No users with Telegram'});
     }
-    
+
     let notified = 0;
-    
+
     for (const user of users) {
       const {telegram_id, user_id} = user;
-      
-      // Получаем транзакции пользователя
+
       const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${user_id}&limit=5000`, {
         headers: {...adminHeaders, 'Prefer': 'return=representation'}
       });
       const txs = await txR.json();
-      if (!Array.isArray(txs) || !txs.length) continue;
-      
-      const income = txs.filter(t=>t.amount>0&&t.category==='income').reduce((s,t)=>s+Number(t.amount),0);
-      const purchases = txs.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-      const vatToPay = Math.round((income * 10/110) - (purchases * 10/110));
-      
+
       const messages = [];
-      
-      // НДС напоминание
-      if (daysToVat !== null && [30, 14, 7, 3, 1].includes(daysToVat) && vatToPay > 0) {
+
+      // ── НДС ───────────────────────────────────────────────────────────────
+      if (vat.days !== null && REMIND_DAYS.includes(vat.days)) {
+        let vatToPay = 0;
+        if (Array.isArray(txs) && txs.length) {
+          const income    = txs.filter(t => t.amount > 0 && t.category === 'income').reduce((s, t) => s + Number(t.amount), 0);
+          const purchases = txs.filter(t => t.amount < 0 && t.category === 'chicken').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+          vatToPay = Math.round((income * 10 / 110) - (purchases * 10 / 110));
+        }
+        if (vatToPay > 0) {
+          messages.push(
+            `🧾 <b>Напоминание: уплата НДС</b>\n\n` +
+            `До срока: <b>${vat.days} ${declDays(vat.days)}</b>\n` +
+            `Срок: <b>${vat.deadline.toLocaleDateString('ru-RU')}</b>\n` +
+            `НДС к уплате: <b>${fmt(vatToPay)}</b>\n` +
+            `Уплачивается тремя частями по ${fmt(vatToPay / 3)}\n\n` +
+            `<a href="${BASE_URL}/vat.html">Открыть расчёт НДС →</a>`
+          );
+        }
+      }
+
+      // ── 6-НДФЛ ────────────────────────────────────────────────────────────
+      if (ndfl.days !== null && REMIND_DAYS.includes(ndfl.days)) {
         messages.push(
-          `🧾 <b>Напоминание об уплате НДС</b>\n\n` +
-          `До срока уплаты осталось: <b>${daysToVat} ${daysToVat === 1 ? 'день' : daysToVat < 5 ? 'дня' : 'дней'}</b>\n` +
-          `Срок: <b>${nextVatDeadline.toLocaleDateString('ru-RU')}</b>\n` +
-          `НДС к уплате: <b>${fmt(vatToPay)}</b>\n\n` +
-          `Уплачивается тремя частями по ${fmt(vatToPay/3)}\n\n` +
-          `<a href="https://omschicken-u5dn.vercel.app/vat">Открыть расчёт НДС →</a>`
+          `👤 <b>Напоминание: сдача 6-НДФЛ</b>\n\n` +
+          `До срока: <b>${ndfl.days} ${declDays(ndfl.days)}</b>\n` +
+          `Срок сдачи: <b>${ndfl.deadline.toLocaleDateString('ru-RU')}</b>\n\n` +
+          `Расчёт сумм налога на доходы физических лиц.\n` +
+          `Сдаётся в ФНС за каждый квартал.\n\n` +
+          `<a href="${BASE_URL}/declarations.html">Открыть декларации →</a>`
         );
       }
-      
-      // Конец месяца — напоминание загрузить выписку
+
+      // ── РСВ ───────────────────────────────────────────────────────────────
+      if (rsv.days !== null && REMIND_DAYS.includes(rsv.days)) {
+        messages.push(
+          `📋 <b>Напоминание: сдача РСВ</b>\n\n` +
+          `До срока: <b>${rsv.days} ${declDays(rsv.days)}</b>\n` +
+          `Срок сдачи: <b>${rsv.deadline.toLocaleDateString('ru-RU')}</b>\n\n` +
+          `Расчёт по страховым взносам.\n` +
+          `Сдаётся в ФНС за каждый квартал.\n\n` +
+          `<a href="${BASE_URL}/declarations.html">Открыть декларации →</a>`
+        );
+      }
+
+      // ── ЕФС-1 (СФР) ───────────────────────────────────────────────────────
+      if (efs1.days !== null && REMIND_DAYS.includes(efs1.days)) {
+        messages.push(
+          `🏥 <b>Напоминание: сдача ЕФС-1 (СФР)</b>\n\n` +
+          `До срока: <b>${efs1.days} ${declDays(efs1.days)}</b>\n` +
+          `Срок сдачи: <b>${efs1.deadline.toLocaleDateString('ru-RU')}</b>\n\n` +
+          `Единая форма сведений (СФР).\n` +
+          `Включает взносы на травматизм и сведения о застрахованных.\n\n` +
+          `<a href="${BASE_URL}/declarations.html">Открыть декларации →</a>`
+        );
+      }
+
+      // ── Налог на прибыль ──────────────────────────────────────────────────
+      if (profit.days !== null && REMIND_DAYS.includes(profit.days)) {
+        messages.push(
+          `💼 <b>Напоминание: налог на прибыль</b>\n\n` +
+          `До срока уплаты аванса: <b>${profit.days} ${declDays(profit.days)}</b>\n` +
+          `Срок: <b>${profit.deadline.toLocaleDateString('ru-RU')}</b>\n\n` +
+          `Авансовый платёж по налогу на прибыль организаций.\n` +
+          `Ставка: 25% от прибыли (с 2025 года).\n\n` +
+          `<a href="${BASE_URL}/declarations.html">Открыть декларации →</a>`
+        );
+      }
+
+      // ── Конец месяца ──────────────────────────────────────────────────────
       if (daysToMonthEnd <= 2) {
         messages.push(
           `📊 <b>Конец месяца</b>\n\n` +
-          `Не забудь загрузить выписку из банка за ${now.toLocaleDateString('ru-RU', {month:'long', year:'numeric'})}.\n\n` +
-          `<a href="https://omschicken-u5dn.vercel.app">Открыть OMSFIN →</a>`
+          `Не забудь загрузить выписку из банка за ${now.toLocaleDateString('ru-RU', {month: 'long', year: 'numeric'})}.\n\n` +
+          `<a href="${BASE_URL}">Открыть OMSFIN →</a>`
         );
       }
-      
-      // Зарплата — 25-е число
+
+      // ── Зарплата ──────────────────────────────────────────────────────────
       if (day === 23) {
         messages.push(
-          `👥 <b>Напоминание о зарплате</b>\n\n` +
+          `👥 <b>Напоминание: зарплата</b>\n\n` +
           `Через 2 дня — 25-е число.\n` +
           `Не забудь выплатить зарплату сотрудникам.\n\n` +
-          `<a href="https://omschicken-u5dn.vercel.app">Открыть OMSFIN →</a>`
+          `<a href="${BASE_URL}">Открыть OMSFIN →</a>`
         );
       }
-      
-      // Отправляем все уведомления
+
       for (const msg of messages) {
         await sendTelegram(telegram_id, msg);
         notified++;
       }
     }
-    
+
     return res.status(200).json({
       ok: true,
       users: users.length,
       notified,
-      daysToVat,
-      daysToMonthEnd
+      deadlines: {
+        vat:    { date: vat.deadline,    days: vat.days    },
+        ndfl:   { date: ndfl.deadline,   days: ndfl.days   },
+        rsv:    { date: rsv.deadline,    days: rsv.days    },
+        efs1:   { date: efs1.deadline,   days: efs1.days   },
+        profit: { date: profit.deadline, days: profit.days },
+      }
     });
-    
-  } catch(e) {
+
+  } catch (e) {
     return res.status(500).json({error: e.message});
   }
 }
