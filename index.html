@@ -343,34 +343,78 @@
 <main>
 
 <div class="page active" id="page-dashboard">
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div></div>
-    <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div></div>
-    <div class="stat-card"><div class="stat-label">Личные</div><div class="stat-value orange" id="statPersonal">0 ₽</div></div>
-  </div>
-  <div style="margin-bottom:8px">
-    <button onclick="clearAll()" style="background:none;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:6px 12px;color:#ef4444;font-size:11px;cursor:pointer">🗑️ Очистить данные</button>
-  </div>
-  <div class="upload-zone" id="uploadZone">
-    <div style="font-size:26px">📂</div>
-    <div class="upload-title">Загрузить выписки из банков</div>
-    <div class="upload-sub">Т-Банк, Сбер, Альфа, ВТБ · можно несколько файлов сразу</div>
-  </div>
+  <!-- Скрытые элементы для совместимости -->
   <input type="file" id="fileInput" accept=".csv,.txt" multiple style="display:none">
-  <div class="progress-wrap" id="progressWrap">
+  <div class="progress-wrap" id="progressWrap" style="display:none">
     <div id="progressText" style="font-size:13px;font-weight:500">Обрабатываю...</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   </div>
-  <!-- Умные предложения -->
-  <div id="suggestionsBlock" style="display:none;margin-bottom:16px"></div>
-  
-  <div class="section-title">Расходы по категориям</div>
-  <div id="chartArea"></div>
-  <div class="section-title" style="margin-top:8px">
-    Последние операции
-    <button class="btn-outline" onclick="showPage('transactions',document.querySelectorAll('.tab')[1])">Все →</button>
+
+  <!-- Приветствие -->
+  <div style="margin-bottom:18px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="homeDate">Загрузка...</div>
+    <div style="font-size:20px;font-weight:700" id="homeGreeting">Добро пожаловать</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:3px" id="homeSub">Синхронизировано</div>
   </div>
-  <div id="recentList"><div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div></div>
+
+  <!-- Быстрые действия -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px">
+    <div onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:20px;margin-bottom:6px">📂</div>
+      <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
+    </div>
+    <div onclick="window.location.href='/docs'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:20px;margin-bottom:6px">📄</div>
+      <div style="font-size:10px;color:var(--muted)">Создать счёт</div>
+    </div>
+    <div onclick="window.location.href='/vat'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:20px;margin-bottom:6px">🧾</div>
+      <div style="font-size:10px;color:var(--muted)">Расчёт НДС</div>
+    </div>
+    <div onclick="window.location.href='/counterparty'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:20px;margin-bottom:6px">🔍</div>
+      <div style="font-size:10px;color:var(--muted)">Контрагент</div>
+    </div>
+  </div>
+
+  <!-- Статистика -->
+  <div class="stats-row" style="margin-bottom:16px">
+    <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
+    <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
+    <div class="stat-card"><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
+  </div>
+
+  <!-- Уведомления + Аналитика -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Рекомендации</div>
+      <div id="suggestionsBlock"></div>
+      <div id="homeSuggestions" style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:12px;color:var(--muted);padding:8px 0">Загрузи выписку для анализа</div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Расходы по категориям</div>
+      <div id="chartArea"></div>
+    </div>
+  </div>
+
+  <!-- Последние операции -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Последние операции</div>
+      <button class="btn-outline" onclick="showPage('transactions',document.querySelectorAll('.pill')[1])" style="font-size:10px;padding:4px 10px">Все →</button>
+    </div>
+    <div id="recentList"><div class="empty"><div class="empty-icon">📂</div><div>Загрузи выписку чтобы увидеть операции</div></div></div>
+  </div>
+
+  <!-- Кнопка очистки (скрытая внизу) -->
+  <div style="margin-top:12px;text-align:right">
+    <button onclick="clearAll()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:4px 8px">🗑️ Очистить данные</button>
+  </div>
+
+  <!-- Зона загрузки (скрытая) -->
+  <div id="uploadZone" style="display:none"></div>
 </div>
 
 <div class="page" id="page-transactions">
@@ -1156,6 +1200,33 @@ async function clearAll() {
   } catch(e) { showToast('❌ '+e.message); }
 }
 
+function initHome() {
+  const now = new Date();
+  const days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const dateEl = document.getElementById('homeDate');
+  const greetEl = document.getElementById('homeGreeting');
+  const subEl = document.getElementById('homeSub');
+  if (dateEl) dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const h = now.getHours();
+  const greet = h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+  const user = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
+  if (greetEl) greetEl.textContent = greet + (user.email ? ', ' + user.email.split('@')[0] : '');
+  if (subEl) subEl.textContent = allTx.length > 0 ? allTx.length + ' операций · Синхронизировано' : 'Данные не загружены';
+  
+  // НДС дедлайн
+  const vatEl = document.getElementById('statVatDeadline');
+  if (vatEl) {
+    const q = Math.floor(now.getMonth() / 3);
+    const deadlines = [new Date(now.getFullYear(),3,25),new Date(now.getFullYear(),6,25),new Date(now.getFullYear(),9,25),new Date(now.getFullYear()+1,0,25)];
+    const next = deadlines.find(d => d > now);
+    if (next) {
+      const days2 = Math.ceil((next - now) / (1000*60*60*24));
+      vatEl.textContent = 'до ' + next.toLocaleDateString('ru-RU') + ' · ' + days2 + ' дн.';
+    }
+  }
+}
+
 function renderAll() {
   const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
@@ -1169,6 +1240,7 @@ function renderAll() {
   document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
   renderTxList();
   renderSuggestions();
+  initHome();
 }
 
 function renderChart() {
