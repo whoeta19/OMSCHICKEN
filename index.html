@@ -1026,7 +1026,7 @@ async function parseAndProcess(text) {
   } else if (bank === 'alfa') {
     for (let i = 2; i < lines.length; i++) {
       const cols = lines[i].split('\t').map(c => c.trim());
-      if (cols.length < 32) continue;
+      if (cols.length < 10) continue;
       const dateStr = cols[2] || '';
       if (!dateStr.match(/\d{2}\.\d{2}\.\d{4}/)) continue;
       const dc = cols[27] || '';
