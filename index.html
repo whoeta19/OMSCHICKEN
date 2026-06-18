@@ -77,8 +77,6 @@
 </head>
 <body>
 <header>
-  <div class="logo">ОМС<span>ЧИКЕН</span></div>
-  <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;align-items:center;gap:8px">
     <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 8px;cursor:pointer;max-width:130px;outline:none;">
@@ -93,10 +91,6 @@
         <button onclick="logout()" style="width:100%;text-align:left;background:none;border:none;color:#ef4444;font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">← Выйти</button>
       </div>
     </div>
-  </div>
-</header>
-    <button class="sync-btn" onclick="syncNow()" id="syncBtn"><span class="sync-dot" id="syncDot"></span>Синхронизация</button>
-    <div class="header-meta" id="headerMeta">0 операций</div>
   </div>
 </header>
 <div class="tabs">
