@@ -245,18 +245,7 @@ function detectBankType(t){const h=t.substring(0,300).toLowerCase();if(h.include
 async function parseAndProcess(text) {
   const lines = text.split('\n').filter(l => l.trim());
   const txs = [];
-  const bank = function detectBankType(t){
-  const h = t.substring(0, 500).toLowerCase();
-  if (h.includes('тбанк') || h.includes('тинькофф') || h.includes('номер счёта') || (h.includes('дебет') && h.includes('кредит'))) return 'tbank';
-  if (h.includes('сбербанк') || h.includes('сб рф')) return 'sber';
-  // ВТБ — определяем по структуре: много колонок, первая строка содержит пустые значения
-  const lines = t.split('\n');
-  if (lines.length > 1) {
-    const cols = lines[1].split(';');
-    if (cols.length >= 8 && cols[0] === '' && cols[1] === '') return 'vtb';
-  }
-  return 'tbank';
-}tBankType(text);
+  const bank = detectBankType(text);
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
     if (cols.length < 8) continue;
