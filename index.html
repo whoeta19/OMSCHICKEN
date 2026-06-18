@@ -406,6 +406,18 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 document.getElementById('addDate').value=new Date().toISOString().split('T')[0];
 syncNow();
+
+function toggleProfile(){
+  var m=document.getElementById('profileMenu');
+  m.style.display=m.style.display==='none'?'block':'none';
+  var u=JSON.parse(localStorage.getItem('omsfin_user')||localStorage.getItem('omschicken_user')||'{}');
+  document.getElementById('profileEmail').textContent=u.email||'';
+}
+document.addEventListener('click',function(e){
+  var b=document.getElementById('profileBtn');
+  var m=document.getElementById('profileMenu');
+  if(m&&b&&b.contains&&!b.contains(e.target)&&!m.contains(e.target))m.style.display='none';
+});
 </script>
 </body>
 </html>
