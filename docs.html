@@ -136,6 +136,11 @@
       <div class="doc-type-name">ПКО (КО-1)</div>
       <div class="doc-type-desc">Приходный ордер</div>
     </div>
+    <div class="doc-type-btn" id="btn-ttn" onclick="selectDoc('ttn',this)">
+      <div class="doc-type-icon">🚛</div>
+      <div class="doc-type-name">ТТН</div>
+      <div class="doc-type-desc">Товарно-транспортная</div>
+    </div>
   </div>
 
   <!-- Реквизиты контрагента -->
@@ -213,7 +218,25 @@
 
 <!-- ИСТОРИЯ -->
 <div class="page" id="page-history">
-  <div class="section-title">История документов</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div class="section-title" style="margin:0">Библиотека документов</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <select id="filterType" onchange="renderHistory()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none">
+        <option value="">Все типы</option>
+        <option value="schet">Счёт</option>
+        <option value="upd">УПД</option>
+        <option value="torg12">ТОРГ-12</option>
+        <option value="ttn">ТТН</option>
+        <option value="sf">Счёт-фактура</option>
+        <option value="akt">Акт КС-2</option>
+        <option value="dog">Договор</option>
+        <option value="dover">Доверенность</option>
+        <option value="ko1">ПКО</option>
+      </select>
+      <input type="text" id="filterBuyer" oninput="renderHistory()" placeholder="Контрагент..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none;width:140px">
+      <input type="month" id="filterMonth" onchange="renderHistory()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none">
+    </div>
+  </div>
   <div id="historyList"></div>
 </div>
 
@@ -437,6 +460,7 @@ function generateDoc() {
     case 'dog': html = genDOG(buyer, doc, totalAll); break;
     case 'dover': html = genDOVER(buyer, doc); break;
     case 'ko1': html = genKO1(buyer, doc, totalAll); break;
+    case 'ttn': html = genTTN(items, buyer, doc, totalNoVat, totalVat, totalAll); break;
   }
   
   document.getElementById('docPreview').innerHTML = html;
@@ -773,6 +797,52 @@ function genKO1(buyer, doc, total) {
     </div>`;
 }
 
+function genTTN(items, buyer, doc, noVat, vat, total) {
+  return `
+    <div style="text-align:right;font-size:9pt;margin-bottom:4px">Форма 1-Т<br>Унифицированная форма утверждена Постановлением Госкомстата РФ от 28.11.1997 № 78</div>
+    <div class="title-center">ТОВАРНО-ТРАНСПОРТНАЯ НАКЛАДНАЯ № ${doc.num}</div>
+    <div style="text-align:center;margin-bottom:8px">Дата: «${doc.date}» г.</div>
+    <table style="margin-bottom:6px">
+      <tr><td class="bold small" style="width:20%;background:#f0f0f0">Грузоотправитель:</td><td>${S.name}<br><span class="small">ИНН/КПП: ${S.inn}/${S.kpp} | ${S.addr}</span></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Грузополучатель:</td><td>${buyer.name}<br><span class="small">ИНН/КПП: ${buyer.inn} | ${buyer.addr}</span></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Плательщик:</td><td>${buyer.name}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Пункт погрузки:</td><td>${S.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Пункт разгрузки:</td><td>${buyer.addr}</td></tr>
+    </table>
+    <div class="bold" style="margin:8px 0 4px">Раздел 1. Товарный раздел</div>
+    <table>
+      <thead>
+        <tr><th>№</th><th>Наименование товара</th><th>Ед.</th><th>Кол-во</th><th>Масса брутто, кг</th><th>Цена без НДС</th><th>Сумма без НДС</th><th>НДС %</th><th>Сумма НДС</th><th>Сумма с НДС</th></tr>
+      </thead>
+      <tbody>
+        ${items.map((i,n)=>`<tr><td class="center">${n+1}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="center">—</td><td class="right">${fmtN(i.price)}</td><td class="right">${fmtN(i.sum)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
+        <tr><td colspan="6" class="right bold">Итого:</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:8px;font-size:9pt">Всего отпущено на сумму: <strong>${fmtN(total)} руб. (${sumWords(total)})</strong></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+      <div style="border:1px solid #000;padding:8px;font-size:9pt">
+        <div class="bold">Сдал:</div>
+        <div style="margin-top:8px">${signHTML('Водитель')} _________________<br><span class="small">(подпись) (расшифровка)</span></div>
+        <div style="text-align:center;margin-top:6px">${stampHTML()}</div>
+        <div style="margin-top:6px">Отпуск разрешил: ${signHTML('')} ${S.director}</div>
+      </div>
+      <div style="border:1px solid #000;padding:8px;font-size:9pt">
+        <div class="bold">Принял:</div>
+        <div style="margin-top:8px">_________________ ${buyer.director}<br><span class="small">(подпись) (расшифровка)</span></div>
+        <div style="margin-top:6px">М.П.</div>
+        <div style="margin-top:6px">Груз получил грузополучатель:<br>_________________ _________________</div>
+      </div>
+    </div>
+    <div class="bold" style="margin-top:12px;margin-bottom:4px">Раздел 2. Транспортный раздел</div>
+    <table>
+      <tr><td class="bold small" style="background:#f0f0f0;width:30%">Организация-перевозчик:</td><td></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Марка автомобиля / № гос. знак:</td><td></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">ФИО водителя / удост. №:</td><td></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Путевой лист №:</td><td></td></tr>
+    </table>`;
+}
+
 function sumWords(n) {
   // Упрощённо
   const num = Math.floor(n);
@@ -798,7 +868,7 @@ function printDoc() {
 }
 
 function saveHistory() {
-  const docNames = {schet:'Счёт',upd:'УПД',torg12:'ТОРГ-12',sf:'Счёт-фактура',akt:'Акт КС-2',dog:'Договор',dover:'Доверенность М-2',ko1:'ПКО КО-1'};
+  const docNames = {schet:'Счёт',upd:'УПД',torg12:'ТОРГ-12',sf:'Счёт-фактура',akt:'Акт КС-2',dog:'Договор',dover:'Доверенность М-2',ko1:'ПКО КО-1',ttn:'ТТН'};
   const item = {
     id: Date.now(), type: currentDoc,
     typeName: docNames[currentDoc],
@@ -815,9 +885,19 @@ function saveHistory() {
 }
 
 function renderHistory() {
-  const icons = {schet:'🧾',upd:'📋',torg12:'📦',sf:'💰',akt:'✅',dog:'📝',dover:'📜',ko1:'💵'};
-  document.getElementById('historyList').innerHTML = history.length ?
-    history.map(d=>`
+  const icons = {schet:'🧾',upd:'📋',torg12:'📦',sf:'💰',akt:'✅',dog:'📝',dover:'📜',ko1:'💵',ttn:'🚛'};
+  const filterType = document.getElementById('filterType')?.value || '';
+  const filterBuyer = (document.getElementById('filterBuyer')?.value || '').toLowerCase();
+  const filterMonth = document.getElementById('filterMonth')?.value || '';
+  
+  let filtered = history.filter(d => {
+    if (filterType && d.type !== filterType) return false;
+    if (filterBuyer && !d.buyer.toLowerCase().includes(filterBuyer)) return false;
+    if (filterMonth && !d.date.startsWith(filterMonth)) return false;
+    return true;
+  });
+  document.getElementById('historyList').innerHTML = filtered.length ?
+    filtered.map(d=>`
       <div class="history-item">
         <div style="font-size:28px">${icons[d.type]||'📄'}</div>
         <div style="flex:1">
@@ -827,7 +907,7 @@ function renderHistory() {
         <button class="btn-outline" style="padding:5px 10px;font-size:11px" onclick="printFromHistory(${d.id})">🖨️</button>
         <button onclick="deleteHistory(${d.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px">✕</button>
       </div>`).join('') :
-    '<div style="text-align:center;padding:40px;color:var(--muted)">История пуста</div>';
+    '<div style="text-align:center;padding:40px;color:var(--muted)">Документы не найдены</div>';
 }
 
 function printFromHistory(id) {
