@@ -187,6 +187,7 @@ function classify(name, description, amount) {
   if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|птицекомбинат|мясокомбинат|мясоперерабатыв|chicken|бройлер|индейк/.test(text)) return 'chicken';
   if (/зарплата|зп\b|аванс|выплата сотрудник/.test(text)) return 'salary';
   if (/аренда|коворкинг|офис|склад/.test(text)) return 'office';
+  if (/овердрафт|кредит|погашение|банк|комиссия за вывод|плата за|обслуживание счет|лимит/.test(text)) return 'bank';
   return 'unknown';
 }
 
