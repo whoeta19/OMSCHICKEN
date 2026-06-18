@@ -358,7 +358,7 @@
   </div>
 
   <!-- Быстрые действия -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
     <div onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">📂</div>
       <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
@@ -376,6 +376,13 @@
       <div style="font-size:10px;color:var(--muted)">Контрагент</div>
     </div>
   </div>
+
+  <!-- Отмена последней загрузки (появляется после загрузки выписки) -->
+  <div id="undoUploadBar" style="display:none;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:18px;font-size:12px">
+    <span id="undoUploadText" style="color:var(--muted)"></span>
+    <button onclick="clearLastUpload()" style="background:none;border:none;color:#ff6b00;font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px">↺ Отменить загрузку</button>
+  </div>
+
 
   <!-- Статистика -->
   <div class="stats-row" style="margin-bottom:16px">
@@ -505,6 +512,7 @@
 let allTx = [];
 let currentFilter = 'all';
 let isUploading = false;
+let lastUploadedPeriod = null;
 let userRules = JSON.parse(localStorage.getItem('omsfin_rules') || '{}');
 
 // Ключи хранилища
@@ -1232,6 +1240,15 @@ async function parseAndProcess(text) {
     ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
     setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
     renderAll();
+    if (monthKey) {
+      lastUploadedPeriod = monthKey;
+      const bar = document.getElementById('undoUploadBar');
+      const barText = document.getElementById('undoUploadText');
+      if (bar && barText) {
+        barText.textContent = `Загружено ${txs.length} операций за ${monthKey}`;
+        bar.style.display = 'flex';
+      }
+    }
     if (unknownCount > 0) showToast(`⚠️ ${unknownCount} в "Прочее" — зайди в Разметку`);
     else showToast(`✅ Загружено ${txs.length} операций за ${monthKey}`);
   } catch(e) {
@@ -1320,8 +1337,23 @@ async function clearAll() {
   try {
     await apiDelete(null);
     allTx = [];
+    lastUploadedPeriod = null;
+    document.getElementById('undoUploadBar').style.display = 'none';
     renderAll();
     showToast('Все данные очищены');
+  } catch(e) { showToast('❌ '+e.message); }
+}
+
+async function clearLastUpload() {
+  if (!lastUploadedPeriod) return;
+  if (!confirm(`Удалить операции за ${lastUploadedPeriod}, загруженные последней выпиской?`)) return;
+  try {
+    await apiDelete(lastUploadedPeriod);
+    allTx = await apiGet();
+    document.getElementById('undoUploadBar').style.display = 'none';
+    lastUploadedPeriod = null;
+    renderAll();
+    showToast('✅ Загрузка отменена');
   } catch(e) { showToast('❌ '+e.message); }
 }
 
