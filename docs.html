@@ -233,8 +233,16 @@
         <option value="dover">Доверенность</option>
         <option value="ko1">ПКО</option>
       </select>
-      <input type="text" id="filterBuyer" oninput="renderHistory()" placeholder="Контрагент..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none;width:140px">
+      <input type="text" id="filterBuyer" oninput="renderHistory()" placeholder="Контрагент..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none;width:130px">
       <input type="month" id="filterMonth" onchange="renderHistory()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none">
+      <input type="number" id="filterAmtMin" oninput="renderHistory()" placeholder="Сумма от" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none;width:90px">
+      <input type="number" id="filterAmtMax" oninput="renderHistory()" placeholder="до" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none;width:80px">
+      <select id="filterSort" onchange="renderHistory()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:11px;outline:none">
+        <option value="date_desc">Дата ↓</option>
+        <option value="date_asc">Дата ↑</option>
+        <option value="sum_desc">Сумма ↓</option>
+        <option value="sum_asc">Сумма ↑</option>
+      </select>
     </div>
   </div>
   <div id="historyList"></div>
@@ -890,11 +898,28 @@ function renderHistory() {
   const filterBuyer = (document.getElementById('filterBuyer')?.value || '').toLowerCase();
   const filterMonth = document.getElementById('filterMonth')?.value || '';
   
+  const filterAmtMin = parseFloat(document.getElementById('filterAmtMin')?.value) || 0;
+  const filterAmtMax = parseFloat(document.getElementById('filterAmtMax')?.value) || Infinity;
+  const filterSort = document.getElementById('filterSort')?.value || 'date_desc';
+
   let filtered = history.filter(d => {
     if (filterType && d.type !== filterType) return false;
     if (filterBuyer && !d.buyer.toLowerCase().includes(filterBuyer)) return false;
     if (filterMonth && !d.date.startsWith(filterMonth)) return false;
+    const amt = parseFloat((d.total || '').replace(/[^\d.]/g,'')) || 0;
+    if (filterAmtMin > 0 && amt < filterAmtMin) return false;
+    if (filterAmtMax < Infinity && amt > filterAmtMax) return false;
     return true;
+  });
+
+  filtered.sort((a, b) => {
+    if (filterSort === 'date_desc') return b.date.localeCompare(a.date);
+    if (filterSort === 'date_asc') return a.date.localeCompare(b.date);
+    const aAmt = parseFloat((a.total||'').replace(/[^\d.]/g,'')) || 0;
+    const bAmt = parseFloat((b.total||'').replace(/[^\d.]/g,'')) || 0;
+    if (filterSort === 'sum_desc') return bAmt - aAmt;
+    if (filterSort === 'sum_asc') return aAmt - bAmt;
+    return 0;
   });
   document.getElementById('historyList').innerHTML = filtered.length ?
     filtered.map(d=>`

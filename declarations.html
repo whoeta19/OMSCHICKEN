@@ -69,6 +69,7 @@
   <button class="tab" onclick="showPage('ndfl',this)">👥 6-НДФЛ</button>
   <button class="tab" onclick="showPage('profit',this)">💰 Налог на прибыль</button>
   <button class="tab" onclick="showPage('rsv',this)">🏦 РСВ</button>
+  <button class="tab" onclick="showPage('efs',this)">📤 ЕФС-1 (СФР)</button>
   <button class="tab" onclick="showPage('calendar',this)">📅 Календарь</button>
 </div>
 <main>
@@ -374,6 +375,74 @@
       <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface2);border-radius:8px"><span>За апрель–июнь 2026</span><span style="color:var(--accent)">до 25 июля 2026</span></div>
       <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface2);border-radius:8px"><span>За июль–сентябрь 2026</span><span style="color:var(--muted)">до 25 октября 2026</span></div>
       <div style="display:flex;justify-content:space-between;padding:8px;background:var(--surface2);border-radius:8px"><span>За октябрь–декабрь 2026</span><span style="color:var(--muted)">до 25 января 2027</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ЕФС-1 (СФР) -->
+<div class="page" id="page-efs">
+  <div class="section-title">📤 ЕФС-1 — Единая форма сведений (СФР)</div>
+  <div class="info-box" style="margin-bottom:16px;font-size:12px">
+    С 2023 года ЕФС-1 заменяет СЗВ-М, СЗВ-ТД, СЗВ-СТАЖ, ДСВ-3, 4-ФСС. Подаётся в Социальный фонд России (СФР).
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:12px">Подраздел 1.1 — Сведения о трудовой деятельности</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Аналог СЗВ-ТД. При приёме/увольнении/переводе — не позднее следующего рабочего дня.</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+        <div style="padding:8px;background:var(--surface2);border-radius:8px">
+          <div style="font-weight:500;margin-bottom:2px">При приёме на работу</div>
+          <div style="color:var(--muted)">Не позднее следующего рабочего дня</div>
+        </div>
+        <div style="padding:8px;background:var(--surface2);border-radius:8px">
+          <div style="font-weight:500;margin-bottom:2px">При увольнении</div>
+          <div style="color:var(--muted)">Не позднее следующего рабочего дня</div>
+        </div>
+        <div style="padding:8px;background:var(--surface2);border-radius:8px">
+          <div style="font-weight:500;margin-bottom:2px">При переводе</div>
+          <div style="color:var(--muted)">Не позднее 25-го следующего месяца</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:12px">Подраздел 1.2 — Стаж</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Аналог СЗВ-СТАЖ. Ежегодно до 25 января.</div>
+      <div style="padding:8px;background:var(--surface2);border-radius:8px;font-size:11px;margin-bottom:6px">
+        <div style="font-weight:500;margin-bottom:2px">Годовой отчёт за 2026</div>
+        <div style="color:var(--accent)">до 25 января 2027</div>
+      </div>
+      <div style="font-size:12px;font-weight:600;margin-top:12px;margin-bottom:8px">Подраздел 3 — Взносы на НС и ПЗ (4-ФСС)</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Ежеквартально до 25-го числа.</div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:11px">
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--surface2);border-radius:6px"><span>1 кв. 2026</span><span style="color:var(--muted)">до 25 апр.</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--surface2);border-radius:6px"><span>2 кв. 2026</span><span style="color:var(--accent)">до 25 июл.</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--surface2);border-radius:6px"><span>3 кв. 2026</span><span style="color:var(--muted)">до 25 окт.</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 8px;background:var(--surface2);border-radius:6px"><span>4 кв. 2026</span><span style="color:var(--muted)">до 25 янв.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:14px">Расчёт взносов на НС и ПЗ (травматизм)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="input-group"><label>ФОТ за квартал (руб.)</label><input type="number" id="efs_fot" oninput="calcEfs()" placeholder="0"></div>
+      <div class="input-group"><label>Тариф НС и ПЗ (%)</label><input type="number" id="efs_rate" oninput="calcEfs()" value="0.2" step="0.1"></div>
+      <div class="input-group"><label>Скидка/надбавка (%)</label><input type="number" id="efs_discount" oninput="calcEfs()" value="0" step="0.1"></div>
+    </div>
+    <div id="efs_result" style="margin-top:12px;padding:14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--muted)">Взносы по базовому тарифу</span><span id="efs_base_amt" style="font-weight:600">0 ₽</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Итого к уплате</span><span id="efs_total" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted)">Тариф зависит от класса профессионального риска (от 0.2% до 8.5%). Для оптовой торговли мясом птицей (ОКВЭД 46.32) — обычно 0.2%.</div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">📌 Персональные сведения о физлицах</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">С 2024 года включены в ЕФС-1 Подраздел 1.1. Подаются при любых кадровых изменениях.</div>
+    <div style="padding:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;font-size:12px">
+      ✅ Включает: ФИО, СНИЛС, ИНН, дата рождения, гражданство, должность, дата приёма/увольнения, вид договора (трудовой/ГПХ)
     </div>
   </div>
 </div>
@@ -763,6 +832,19 @@ function calcRsv() {
 }
 
 function fmt(n) { return Math.abs(n).toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽'; }
+
+
+function calcEfs() {
+  const fot = parseFloat(document.getElementById('efs_fot').value) || 0;
+  const rate = parseFloat(document.getElementById('efs_rate').value) || 0.2;
+  const discount = parseFloat(document.getElementById('efs_discount').value) || 0;
+  const effectiveRate = Math.max(0, rate - discount);
+  const base = Math.round(fot * rate / 100);
+  const total = Math.round(fot * effectiveRate / 100);
+  const fmt = n => Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0}) + ' ₽';
+  document.getElementById('efs_base_amt').textContent = fmt(base);
+  document.getElementById('efs_total').textContent = fmt(total);
+}
 
 </script>
 </body>
