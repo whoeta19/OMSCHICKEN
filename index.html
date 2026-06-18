@@ -978,7 +978,7 @@ function parseBank(text, bank) {
   return { txs, monthKey };
 }
 
-function parseAndProcess(text) {
+async function parseAndProcess(text) {
   const bank = detectBank(text);
   const bankNames = {tbank:'Т-Банк', sber:'Сбербанк', alfa:'Альфа-Банк', vtb:'ВТБ', raiff:'Райффайзен', open:'Открытие', psb:'ПСБ', unknown:'Банк'};
   console.log('Detected bank:', bank, bankNames[bank]);
