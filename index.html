@@ -348,6 +348,9 @@
     <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div></div>
     <div class="stat-card"><div class="stat-label">Личные</div><div class="stat-value orange" id="statPersonal">0 ₽</div></div>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:8px">
+    <button onclick="clearAll()" style="background:none;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:6px 12px;color:#ef4444;font-size:11px;cursor:pointer">🗑️ Очистить данные</button>
+  </div>
   <div class="upload-zone" id="uploadZone">
     <div style="font-size:26px">📂</div>
     <div class="upload-title">Загрузить выписки из банков</div>
@@ -979,11 +982,28 @@ function parseBank(text, bank) {
 }
 
 async function parseAndProcess(text) {
-  const bank = detectBank(text);
-  const bankNames = {tbank:'Т-Банк', sber:'Сбербанк', alfa:'Альфа-Банк', vtb:'ВТБ', raiff:'Райффайзен', open:'Открытие', psb:'ПСБ', unknown:'Банк'};
-  console.log('Detected bank:', bank, bankNames[bank]);
-  
-  const { txs, monthKey } = parseBank(text, bank);
+  // Простой парсер Т-Банк
+  const lines = text.split('\n').filter(l => l.trim());
+  const txs = [];
+  let monthKey = null;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+    if (cols.length < 8) continue;
+    const type = cols[1] || '';
+    const dateStr = cols[2] || '';
+    const amountRaw = (cols[5] || '0').replace(',','.');
+    const amount = parseFloat(amountRaw) * (type==='Дебет'?-1:1);
+    if (isNaN(amount)||amount===0) continue;
+    if (!monthKey && dateStr.includes('.')) {
+      const p = dateStr.split('.');
+      if (p.length >= 3) monthKey = p[1] + '.' + p[2];
+    }
+    const description = cols[7] || '';
+    const counterparty = (cols[24]||'').replace(/^АО "ТБанк"$|^ТБанк$/gi,'').trim();
+    const name = counterparty.length>2 ? counterparty : description;
+    const category = classify(name, description, amount);
+    txs.push({name, amount, date:dateStr, description, category, period:monthKey, is_personal:['personal','food'].includes(category)});
+  }
   if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
 
   const wrap = document.getElementById('progressWrap');
@@ -1106,7 +1126,7 @@ function renderAll() {
   document.getElementById('statIncome').textContent = fmt(income);
   document.getElementById('statExpense').textContent = fmt(expense);
   document.getElementById('statPersonal').textContent = fmt(personal);
-  document.getElementById('headerMeta').textContent = allTx.length+' операций';
+  // headerMeta removed
   renderChart();
   const recent = allTx.slice(0,6);
   document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
