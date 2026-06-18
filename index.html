@@ -1030,8 +1030,9 @@ async function parseAndProcess(text) {
       const dateStr = cols[2] || '';
       if (!dateStr.match(/\d{2}\.\d{2}\.\d{4}/)) continue;
       const dc = cols[27] || '';
-      if (dc !== 'D' && dc !== 'C') continue;
-      const amountRaw = (cols[31] || '0').replace(',', '.');
+      if (dc !== 'D'
+       && dc !== 'C') continue;
+      const amountRaw = (cols[31] || cols[30] || '0').replace(/[^0-9,.-]/g,'').replace(',', '.');
       const absAmount = parseFloat(amountRaw);
       if (isNaN(absAmount) || absAmount === 0) continue;
       const amount = (dc === 'D') ? -absAmount : absAmount;
