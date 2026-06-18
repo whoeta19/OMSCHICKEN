@@ -9,7 +9,7 @@ const adminHeaders = {
 };
 
 const BASE_URL = 'https://omschicken-u5dn.vercel.app';
-const REMIND_DAYS = [30, 14, 7, 3, 1, 37];
+const REMIND_DAYS = [30, 14, 7, 3, 1, 38];
 
 async function sendTelegram(chatId, text) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
