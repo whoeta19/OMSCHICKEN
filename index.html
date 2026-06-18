@@ -947,28 +947,76 @@ function parseBank(text, bank) {
       txs.push({ name: description, amount, date: parsed.date, description, category: classify(description, description, amount), period: monthKey, is_personal: false });
     }
   } else if (bank === 'alfa') {
-    // Альфа: Дата;Описание операции;Сумма списания;Сумма пополнения;...
-    let headerRow = -1;
-    for (let i = 0; i < lines.length; i++) {
+    // Альфа: выгрузка "Клиент-Банк" — TAB-разделённый файл с английскими тех.заголовками
+    // (statement_unid, Date, d_c, sum_rur, plat_name, plat_inn, pol_name, pol_inn, text70, ...)
+    // Колонки могут сдвигаться между версиями выгрузки, поэтому ищем их по имени заголовка,
+    // а не по фиксированному индексу.
+    const myInn = '5800015301';
+
+    // Находим строку с тех.заголовками (содержит и 'd_c', и 'sum_rur')
+    let hdrRow = -1;
+    for (let i = 0; i < Math.min(5, lines.length); i++) {
       const l = lines[i].toLowerCase();
-      if (l.includes('дата') && l.includes('сумма')) { headerRow = i; break; }
+      if (l.includes('d_c') && l.includes('sum_rur')) { hdrRow = i; break; }
     }
-    const start = headerRow >= 0 ? headerRow + 1 : 1;
+
+    // Дефолтные индексы (на случай если заголовок не нашёлся) — по последней известной выгрузке
+    let dateIdx = 2, dcIdx = 27, amtIdx = 32, descIdx = 65;
+    let payerIdx = 34, payerInnIdx = 35, recvIdx = 42, recvInnIdx = 43;
+
+    if (hdrRow >= 0) {
+      const hdr = parseLine(lines[hdrRow], '\t').map(h => h.trim().toLowerCase());
+      const find = name => hdr.findIndex(h => h === name);
+      const dateI = find('date'); if (dateI >= 0) dateIdx = dateI;
+      const dcI = find('d_c'); if (dcI >= 0) dcIdx = dcI;
+      const amtI = find('sum_rur'); if (amtI >= 0) amtIdx = amtI;
+      const descI = find('text70'); if (descI >= 0) descIdx = descI;
+      const payerI = find('plat_name'); if (payerI >= 0) payerIdx = payerI;
+      const payerInnI = find('plat_inn'); if (payerInnI >= 0) payerInnIdx = payerInnI;
+      const recvI = find('pol_name'); if (recvI >= 0) recvIdx = recvI;
+      const recvInnI = find('pol_inn'); if (recvInnI >= 0) recvInnIdx = recvInnI;
+    }
+
+    const start = hdrRow >= 0 ? hdrRow + 1 : 0;
     for (let i = start; i < lines.length; i++) {
-      const cols = parseLine(lines[i], sep);
-      if (cols.length < 3) continue;
-      const dateStr = cols[0] || '';
+      const cols = parseLine(lines[i], '\t');
+      if (cols.length < 10) continue;
+
+      const dateStr = cols[dateIdx] || '';
       const parsed = extractDate(dateStr);
       if (!parsed) continue;
+
+      const dc = (cols[dcIdx] || '').trim();
+      if (dc !== 'D' && dc !== 'C') continue;
+
+      const amountRaw = (cols[amtIdx] || '0').replace(/\s/g, '').replace(',', '.');
+      const absAmount = parseFloat(amountRaw);
+      if (isNaN(absAmount) || absAmount === 0) continue;
+      const amount = dc === 'D' ? -absAmount : absAmount;
+
       if (!monthKey) monthKey = parsed.month;
-      const description = cols[1] || '';
-      const outRaw = (cols[2] || '0').replace(/[^0-9,.-]/g, '').replace(',', '.');
-      const inRaw = (cols[3] || '0').replace(/[^0-9,.-]/g, '').replace(',', '.');
-      const out = parseFloat(outRaw) || 0;
-      const inp = parseFloat(inRaw) || 0;
-      const amount = inp > 0 ? inp : -out;
-      if (amount === 0) continue;
-      txs.push({ name: description, amount, date: parsed.date, description, category: classify(description, description, amount), period: monthKey, is_personal: false });
+
+      const description = (cols[descIdx] || '').substring(0, 100);
+      const payer = (cols[payerIdx] || '').trim();
+      const payerInn = (cols[payerInnIdx] || '').trim();
+      const receiver = (cols[recvIdx] || '').trim();
+      const receiverInn = (cols[recvInnIdx] || '').trim();
+
+      let name = amount > 0
+        ? (payerInn !== myInn ? payer : receiver)
+        : (receiverInn !== myInn ? receiver : payer);
+      name = name.replace(/ООО "ОМСЧИКЕН"|ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ОМСЧИКЕН"/gi, '').trim() || description.substring(0, 60);
+
+      const category = classify(name, description, amount);
+      txs.push({
+        name: name || description.substring(0, 40) || 'Операция',
+        amount,
+        date: parsed.date,
+        description,
+        category,
+        period: monthKey,
+        is_personal: ['personal', 'food'].includes(category)
+      });
     }
   } else if (bank === 'vtb') {
     // ВТБ: Дата;Описание;Дебет;Кредит;Остаток
