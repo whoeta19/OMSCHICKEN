@@ -240,16 +240,23 @@ async function handleFile(e) {
   e.target.value = '';
 }
 
+function detectBankType(t){const h=t.substring(0,300).toLowerCase();if(h.includes("вид операции")&&h.includes("идентификатор"))return"vtb";if(h.includes("сбербанк")||h.includes("сб рф"))return"sber";return"tbank";}
+
 async function parseAndProcess(text) {
   const lines = text.split('\n').filter(l => l.trim());
   const txs = [];
+  const bank = detectBankType(text);
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
     if (cols.length < 8) continue;
     const type = cols[1] || '';
     const date = cols[2] || '';
     const amountRaw = cols[5] || '0';
-    const amount = parseFloat(amountRaw.replace(',','.')) * (type==='Дебет'?-1:1);
+    const isVTB = bank === 'vtb';
+const vidOp = isVTB ? (cols[6]||'').toLowerCase() : '';
+const amount = isVTB ? 
+  (parseFloat(amountRaw.replace(',','.')) * (vidOp.includes('списани')||vidOp.includes('дебет')||vidOp.includes('перевод')||vidOp.includes('оплата') ? -1 : 1)) :
+  (parseFloat(amountRaw.replace(',','.')) * (type==='Дебет'?-1:1));
     if (isNaN(amount)||amount===0) continue;
     const description = cols[7] || '';
     const counterparty = (cols[24]||'').replace(/^АО "ТБанк"$|^ТБанк$/gi,'').trim();
