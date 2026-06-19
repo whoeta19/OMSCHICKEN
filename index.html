@@ -618,7 +618,7 @@ function classify(name, description, amount) {
 }
 
 async function apiGet() {
-  const token = localStorage.getItem('omsfin_token') || '';
+  const token = localStorage.getItem(TOKEN_KEY) || '';
   const r = await fetch('/api/transactions', {
     headers: {'Authorization': 'Bearer ' + token}
   });
@@ -627,7 +627,7 @@ async function apiGet() {
 }
 
 async function apiPost(txs) {
-  const token = localStorage.getItem('omsfin_token') || '';
+  const token = localStorage.getItem(TOKEN_KEY) || '';
   const r = await fetch('/api/transactions', {
     method: 'POST',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
@@ -638,7 +638,7 @@ async function apiPost(txs) {
 }
 
 async function apiDelete(period) {
-  const token = localStorage.getItem('omsfin_token') || '';
+  const token = localStorage.getItem(TOKEN_KEY) || '';
   const r = await fetch('/api/transactions', {
     method: 'DELETE',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
@@ -648,7 +648,7 @@ async function apiDelete(period) {
 }
 
 async function apiUpdateCategory(id, category) {
-  const token = localStorage.getItem('omsfin_token') || '';
+  const token = localStorage.getItem(TOKEN_KEY) || '';
   const r = await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
@@ -661,7 +661,7 @@ async function apiUpdateCategory(id, category) {
 let currentCompanyId = localStorage.getItem('omsfin_company') || null;
 
 async function loadCompanies() {
-  const token = localStorage.getItem('omsfin_token') || '';
+  const token = localStorage.getItem(TOKEN_KEY) || '';
   try {
     const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
     const companies = await r.json();
@@ -677,7 +677,7 @@ async function loadCompanies() {
 }
 
 async function createDefaultCompany() {
-  const token = localStorage.getItem('omsfin_token') || '';
+  const token = localStorage.getItem(TOKEN_KEY) || '';
   const seller = JSON.parse(localStorage.getItem('omsfin_seller') || '{}');
   const r = await fetch('/api/companies', {
     method: 'POST',

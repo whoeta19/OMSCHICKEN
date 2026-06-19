@@ -361,7 +361,7 @@ function clearImage(key, previewId, icon) {
 // Token loaded dynamically
 
 async function loadCloudSettings() {
-  const tok = localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   if (!tok) { initImagePreviews(); return; }
   try {
     const r = await fetch('/api/company_settings?nc=' + Date.now(), {
@@ -406,7 +406,7 @@ async function loadCloudSettings() {
 }
 
 async function saveToCloud(key, value) {
-  const tok = localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   try {
     await fetch('/api/company_settings', {
       method: 'POST',
@@ -524,7 +524,7 @@ function showToast(msg) {
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
   async function refresh() {
-    const r = localStorage.getItem('omsfin_refresh');
+    const r = localStorage.getItem('omschicken_refresh') || localStorage.getItem('omsfin_refresh');
     if (!r) return;
     try {
       const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
@@ -534,8 +534,8 @@ function showToast(msg) {
       });
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('omsfin_token', data.access_token);
-        localStorage.setItem('omsfin_refresh', data.refresh_token);
+        localStorage.setItem('omschicken_token', data.access_token);
+        localStorage.setItem('omschicken_refresh', data.refresh_token);
       }
     } catch(e) {}
   }

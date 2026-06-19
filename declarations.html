@@ -477,7 +477,7 @@ const quarter = Math.floor(now.getMonth() / 3) + 1;
 const year = now.getFullYear();
 
 async function loadData() {
-  const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   try {
     const r = await fetch('/api/transactions', {headers:{'Authorization':'Bearer '+token}});
     allTx = await r.json();

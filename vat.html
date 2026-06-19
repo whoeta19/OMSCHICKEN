@@ -271,7 +271,10 @@ function onPeriodChange() {
 
 async function loadData() {
   try {
-    const r = await fetch('/api/transactions');
+    const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+    const r = await fetch('/api/transactions', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
     allTx = await r.json();
     filteredTx = allTx;
     renderPeriodFilter();
@@ -471,7 +474,7 @@ loadData();
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
   async function refresh() {
-    const r = localStorage.getItem('omsfin_refresh');
+    const r = localStorage.getItem('omschicken_refresh') || localStorage.getItem('omsfin_refresh');
     if (!r) return;
     try {
       const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
@@ -481,8 +484,8 @@ loadData();
       });
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('omsfin_token', data.access_token);
-        localStorage.setItem('omsfin_refresh', data.refresh_token);
+        localStorage.setItem('omschicken_token', data.access_token);
+        localStorage.setItem('omschicken_refresh', data.refresh_token);
       }
     } catch(e) {}
   }
