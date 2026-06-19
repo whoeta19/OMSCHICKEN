@@ -329,15 +329,15 @@
 </header>
 <div class="nav-pills">
   <div class="pills-inner">
-    <button class="pill active" onclick="showPage('dashboard',this)">📊 Дашборд</button>
-    <button class="pill" onclick="showPage('transactions',this)">📋 Операции</button>
-    <button class="pill" onclick="showPage('reclassify',this)">🏷️ Разметка</button>
-    <button class="pill" onclick="showPage('add',this)">➕ Добавить</button>
-    <button class="pill external" onclick="window.location.href='/docs'">📄 Документы</button>
-    <button class="pill external" onclick="window.location.href='/analytics'">📊 Аналитика</button>
-    <button class="pill external" onclick="window.location.href='/vat'">🧾 НДС</button>
-    <button class="pill external" onclick="window.location.href='/declarations'">📋 Декларации</button>
-    <button class="pill external" onclick="window.location.href='/tools'">⚡ Инструменты</button>
+    <button class="pill active" data-role="director,accountant" onclick="showPage('dashboard',this)">📊 Дашборд</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('transactions',this)">📋 Операции</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('reclassify',this)">🏷️ Разметка</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('add',this)">➕ Добавить</button>
+    <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">📄 Документы</button>
+    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/analytics'">📊 Аналитика</button>
+    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/vat'">🧾 НДС</button>
+    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/declarations'">📋 Декларации</button>
+    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/tools'">⚡ Инструменты</button>
   </div>
 </div>
 <main>
@@ -359,19 +359,19 @@
 
   <!-- Быстрые действия -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
-    <div onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div data-role="director,accountant" onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">📂</div>
       <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
     </div>
-    <div onclick="window.location.href='/docs'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div data-role="director,accountant,employee" onclick="window.location.href='/docs'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">📄</div>
       <div style="font-size:10px;color:var(--muted)">Создать счёт</div>
     </div>
-    <div onclick="window.location.href='/vat'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div data-role="director,accountant" onclick="window.location.href='/vat'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">🧾</div>
       <div style="font-size:10px;color:var(--muted)">Расчёт НДС</div>
     </div>
-    <div onclick="window.location.href='/counterparty'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div data-role="director,accountant" onclick="window.location.href='/counterparty'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">🔍</div>
       <div style="font-size:10px;color:var(--muted)">Контрагент</div>
     </div>
@@ -697,6 +697,38 @@ function switchCompany(id) {
   if (id) localStorage.setItem('omsfin_company', id);
   else localStorage.removeItem('omsfin_company');
   syncNow();
+  applyRoleAccess();
+}
+
+// ─── Доступ по ролям ────────────────────────────────────────────────────────
+// Важно: это UX-слой (скрывает кнопки/разделы для удобства), а не замена
+// реальной проверке прав на сервере — она сделана отдельно внутри api/*.js.
+let currentUserRole = null;
+
+async function applyRoleAccess() {
+  if (!currentCompanyId) {
+    // Без выбранной компании показываем всё как есть (одиночный режим без команды)
+    document.querySelectorAll('[data-role]').forEach(el => el.style.display = '');
+    return;
+  }
+
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  try {
+    const r = await fetch(`/api/members?company_id=${currentCompanyId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await r.json();
+    if (data.error) { currentUserRole = null; return; }
+
+    currentUserRole = data.myRole;
+
+    document.querySelectorAll('[data-role]').forEach(el => {
+      const allowed = (el.getAttribute('data-role') || '').split(',').map(s => s.trim());
+      el.style.display = allowed.includes(currentUserRole) ? '' : 'none';
+    });
+  } catch (e) {
+    // Если не удалось определить роль — не блокируем интерфейс
+  }
 }
 
 
@@ -963,6 +995,7 @@ function setMobileActive(btn) {
 }
 async function syncNow() {
   loadCompanies();
+  applyRoleAccess();
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
   if (btn) btn.innerHTML = '⏳ Синхронизация...';
