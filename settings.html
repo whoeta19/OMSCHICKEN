@@ -126,6 +126,41 @@
     <button class="btn" onclick="saveRequisites()">💾 Сохранить реквизиты</button>
   </div>
 
+  <!-- Команда -->
+  <div class="card">
+    <div class="section-title">👥 Команда</div>
+    <div id="teamLoading" style="font-size:13px;color:var(--muted)">Загрузка...</div>
+    <div id="teamContent" style="display:none">
+
+      <div id="teamMembersList" style="margin-bottom:16px"></div>
+
+      <!-- Только директор видит блок приглашений -->
+      <div id="teamInviteBlock" style="display:none">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Пригласить нового участника:</div>
+        <div class="input-row" style="margin-bottom:10px">
+          <select id="inviteRole" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none">
+            <option value="accountant">Бухгалтер</option>
+            <option value="employee">Сотрудник</option>
+          </select>
+          <button class="btn" onclick="createInvite()" style="margin-top:0">Создать код приглашения</button>
+        </div>
+        <div id="inviteResult" style="display:none;margin-top:10px;padding:12px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px;font-size:13px">
+          Код приглашения: <b id="inviteCodeText" style="font-family:monospace;font-size:15px;letter-spacing:1px"></b>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Действует 7 дней. Передай его участнику — он введёт код на этой же странице.</div>
+        </div>
+      </div>
+
+      <!-- Любой пользователь может ввести код, чтобы присоединиться к чужой компании -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Есть код приглашения от другой компании?</div>
+        <div class="input-row">
+          <input type="text" id="joinCodeInput" placeholder="Введи код" style="text-transform:uppercase">
+          <button class="btn" onclick="acceptInvite()" style="margin-top:0">Присоединиться</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Логотип и печать -->
   <div class="card">
     <div class="section-title">🖼️ Логотип и печать</div>
@@ -361,7 +396,7 @@ function clearImage(key, previewId, icon) {
 // Token loaded dynamically
 
 async function loadCloudSettings() {
-  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omsfin_token') || '';
   if (!tok) { initImagePreviews(); return; }
   try {
     const r = await fetch('/api/company_settings?nc=' + Date.now(), {
@@ -406,7 +441,7 @@ async function loadCloudSettings() {
 }
 
 async function saveToCloud(key, value) {
-  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omsfin_token') || '';
   try {
     await fetch('/api/company_settings', {
       method: 'POST',
@@ -427,6 +462,149 @@ function initImagePreviews() {
 }
 
 loadCloudSettings();
+loadTeam();
+
+// ─── Команда: роли и приглашения ───────────────────────────────────────────
+const ROLE_NAMES = { director: 'Директор', accountant: 'Бухгалтер', employee: 'Сотрудник' };
+
+function getAuthToken() {
+  return localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+}
+
+function getCurrentCompanyId() {
+  return localStorage.getItem('omsfin_company') || '';
+}
+
+async function loadTeam() {
+  const companyId = getCurrentCompanyId();
+  const loadingEl = document.getElementById('teamLoading');
+  const contentEl = document.getElementById('teamContent');
+  if (!companyId) {
+    loadingEl.textContent = 'Сначала выбери компанию на главной странице';
+    return;
+  }
+
+  try {
+    const token = getAuthToken();
+    const r = await fetch(`/api/members?company_id=${companyId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await r.json();
+    if (data.error) { loadingEl.textContent = '❌ ' + data.error; return; }
+
+    const { members, myRole } = data;
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
+
+    document.getElementById('teamMembersList').innerHTML = members.map(m => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px">${m.email || 'Без email'}${m.is_me ? ' <span style="color:var(--muted)">(вы)</span>' : ''}</div>
+          <div style="font-size:11px;color:var(--muted)">${ROLE_NAMES[m.role] || m.role}</div>
+        </div>
+        ${myRole === 'director' && !m.is_me ? `
+          <div style="display:flex;gap:6px;align-items:center">
+            ${m.role !== 'director' ? `
+              <select onchange="changeRole('${m.user_id}', this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px">
+                <option value="accountant" ${m.role === 'accountant' ? 'selected' : ''}>Бухгалтер</option>
+                <option value="employee" ${m.role === 'employee' ? 'selected' : ''}>Сотрудник</option>
+              </select>
+              <button onclick="removeMember('${m.user_id}')" style="background:none;border:none;color:var(--red);font-size:12px;cursor:pointer">✕</button>
+            ` : ''}
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+
+    document.getElementById('teamInviteBlock').style.display = myRole === 'director' ? 'block' : 'none';
+  } catch (e) {
+    loadingEl.textContent = '❌ Ошибка загрузки команды';
+  }
+}
+
+async function createInvite() {
+  const companyId = getCurrentCompanyId();
+  const role = document.getElementById('inviteRole').value;
+  const token = getAuthToken();
+
+  try {
+    const r = await fetch('/api/members', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: companyId, role })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+
+    document.getElementById('inviteCodeText').textContent = data.code;
+    document.getElementById('inviteResult').style.display = 'block';
+  } catch (e) {
+    showToast('❌ Ошибка создания приглашения');
+  }
+}
+
+async function acceptInvite() {
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if (!code) { showToast('Введи код'); return; }
+  const token = getAuthToken();
+
+  try {
+    const r = await fetch('/api/members', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'accept_invite', code })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+
+    showToast(`✅ Вы присоединились как ${ROLE_NAMES[data.role] || data.role}`);
+    document.getElementById('joinCodeInput').value = '';
+    // Переключаемся на новую компанию и обновляем список команды
+    localStorage.setItem('omsfin_company', data.company_id);
+    loadTeam();
+  } catch (e) {
+    showToast('❌ Ошибка присоединения');
+  }
+}
+
+async function changeRole(targetUserId, newRole) {
+  const companyId = getCurrentCompanyId();
+  const token = getAuthToken();
+
+  try {
+    const r = await fetch('/api/members', {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'change_role', company_id: companyId, target_user_id: targetUserId, new_role: newRole })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+    showToast('✅ Роль изменена');
+    loadTeam();
+  } catch (e) {
+    showToast('❌ Ошибка изменения роли');
+  }
+}
+
+async function removeMember(targetUserId) {
+  if (!confirm('Убрать этого участника из компании?')) return;
+  const companyId = getCurrentCompanyId();
+  const token = getAuthToken();
+
+  try {
+    const r = await fetch('/api/members', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: companyId, target_user_id: targetUserId })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+    showToast('✅ Участник удалён');
+    loadTeam();
+  } catch (e) {
+    showToast('❌ Ошибка удаления');
+  }
+}
 
 // Уведомления
 const notifSettings = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
@@ -524,7 +702,7 @@ function showToast(msg) {
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
   async function refresh() {
-    const r = localStorage.getItem('omschicken_refresh') || localStorage.getItem('omsfin_refresh');
+    const r = localStorage.getItem('omsfin_refresh');
     if (!r) return;
     try {
       const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
@@ -534,8 +712,8 @@ function showToast(msg) {
       });
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('omschicken_token', data.access_token);
-        localStorage.setItem('omschicken_refresh', data.refresh_token);
+        localStorage.setItem('omsfin_token', data.access_token);
+        localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
     } catch(e) {}
   }
