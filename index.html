@@ -893,6 +893,28 @@ async function scanCounterpartyRadar() {
 
 // Упрощённый парсер ЕГРЮЛ-ответа специально для фонового радара (без полного UI как в counterparty.html)
 function parseRadarEGRUL(raw, inn) {
+  // ИП — другая структура ответа, без устав. капитала и юр. наименования
+  if (raw.СвИП) {
+    const d = raw.СвИП;
+    const attr = d['@attributes'] || {};
+    const fio = d.СвФЛ?.ФИОРус?.['@attributes'] || {};
+    const name = ['ИП', fio.Фамилия, fio.Имя, fio.Отчество].filter(Boolean).join(' ') || inn;
+
+    const isActive = !d.СвПрекрИП;
+    const regDateRaw = attr.ДатаОГРНИП;
+    const ageYears = regDateRaw ? (Date.now() - new Date(regDateRaw)) / (365.25*24*60*60*1000) : 0;
+
+    let riskScore = 100;
+    let risks = [];
+    if (!isActive) { riskScore -= 60; risks.push('ИП прекратил деятельность'); }
+    if (regDateRaw && ageYears < 1) { riskScore -= 25; risks.push('Зарегистрирован менее года назад'); }
+    else if (regDateRaw && ageYears < 3) { riskScore -= 10; risks.push('Молодой ИП (менее 3 лет)'); }
+    riskScore = Math.max(0, Math.min(100, riskScore));
+
+    return { name, inn, isActive, riskScore, risks };
+  }
+
+  // Юрлицо (ООО/АО/...)
   const d = raw.СвЮЛ || raw;
   const attr = d['@attributes'] || {};
   const svNaim = d.СвНаимЮЛ || {};
@@ -903,15 +925,15 @@ function parseRadarEGRUL(raw, inn) {
   const isActive = !d.СвПрекрЮЛ;
   const svReg = d.СвОбрЮЛ?.['@attributes'] || {};
   const regDateRaw = svReg.ДатаРег || attr.ДатаОГРН;
-  const ageYears = regDateRaw ? Math.floor((Date.now() - new Date(regDateRaw)) / (365.25*24*60*60*1000)) : 0;
+  const ageYears = regDateRaw ? (Date.now() - new Date(regDateRaw)) / (365.25*24*60*60*1000) : 0;
   const capitalRaw = d.СвУстКап?.['@attributes']?.СумКап || 0;
   const capital = parseFloat(capitalRaw) || 0;
 
   let riskScore = 100;
   let risks = [];
   if (!isActive) { riskScore -= 60; risks.push('Компания ликвидирована'); }
-  if (ageYears < 1) { riskScore -= 25; risks.push('Зарегистрирована менее года назад'); }
-  else if (ageYears < 3) { riskScore -= 10; risks.push('Молодая компания (менее 3 лет)'); }
+  if (regDateRaw && ageYears < 1) { riskScore -= 25; risks.push('Зарегистрирована менее года назад'); }
+  else if (regDateRaw && ageYears < 3) { riskScore -= 10; risks.push('Молодая компания (менее 3 лет)'); }
   if (capital > 0 && capital <= 10000) { riskScore -= 15; risks.push('Минимальный уставный капитал'); }
   riskScore = Math.max(0, Math.min(100, riskScore));
 
