@@ -619,21 +619,31 @@ function classify(name, description, amount) {
 
 async function apiGet() {
   const token = localStorage.getItem(TOKEN_KEY) || '';
-  const r = await fetch('/api/transactions', {
+  const url = currentCompanyId ? `/api/transactions?company_id=${currentCompanyId}` : '/api/transactions';
+  const r = await fetch(url, {
     headers: {'Authorization': 'Bearer ' + token}
   });
-  if (!r.ok) throw new Error('Ошибка сервера');
+  if (!r.ok) {
+    if (r.status === 403) { const d = await r.json().catch(()=>({})); throw new Error(d.error || 'Недостаточно прав'); }
+    throw new Error('Ошибка сервера');
+  }
   return r.json();
 }
 
 async function apiPost(txs) {
   const token = localStorage.getItem(TOKEN_KEY) || '';
+  const payload = currentCompanyId
+    ? (Array.isArray(txs) ? txs.map(t => ({...t, company_id: currentCompanyId})) : {...txs, company_id: currentCompanyId})
+    : txs;
   const r = await fetch('/api/transactions', {
     method: 'POST',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
-    body: JSON.stringify(txs)
+    body: JSON.stringify(payload)
   });
-  if (!r.ok) throw new Error('Ошибка сохранения');
+  if (!r.ok) {
+    if (r.status === 403) { const d = await r.json().catch(()=>({})); throw new Error(d.error || 'Недостаточно прав'); }
+    throw new Error('Ошибка сохранения');
+  }
   return r.json();
 }
 
@@ -642,9 +652,12 @@ async function apiDelete(period) {
   const r = await fetch('/api/transactions', {
     method: 'DELETE',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
-    body: JSON.stringify({period: period || null})
+    body: JSON.stringify({period: period || null, company_id: currentCompanyId || undefined})
   });
-  if (!r.ok) throw new Error('Ошибка удаления');
+  if (!r.ok) {
+    if (r.status === 403) { const d = await r.json().catch(()=>({})); throw new Error(d.error || 'Недостаточно прав'); }
+    throw new Error('Ошибка удаления');
+  }
 }
 
 async function apiUpdateCategory(id, category) {
@@ -652,7 +665,7 @@ async function apiUpdateCategory(id, category) {
   const r = await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
-    body: JSON.stringify({id, category})
+    body: JSON.stringify({id, category, company_id: currentCompanyId || undefined})
   });
   return r.json();
 }
