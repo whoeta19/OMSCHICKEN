@@ -155,16 +155,9 @@ async function fetchFromEGRUL(inn) {
     }
   } catch(e) {}
   
-  // Fallback — пробуем через dadata с другим токеном
+  // Fallback — пробуем через Dadata (через серверный прокси, токен скрыт)
   try {
-    const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'
-      },
-      body: JSON.stringify({query: inn, count: 1})
-    });
+    const r = await fetch(`/api/dadata?action=findById&inn=${inn}`);
     const d = await r.json();
     if (d.suggestions && d.suggestions.length > 0) {
       return parseDadata(d.suggestions[0]);
@@ -260,14 +253,7 @@ function parseEGRUL(raw, inn) {
 
 async function searchByName(name) {
   try {
-    const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Token d1c0b01cf36b05abf50a6bf77e97df50fede4c88'
-      },
-      body: JSON.stringify({query: name, count: 5})
-    });
+    const r = await fetch(`/api/dadata?action=suggest&query=${encodeURIComponent(name)}`);
     const d = await r.json();
     if (d.suggestions && d.suggestions.length > 0) {
       return d.suggestions.map(s => parseDadata(s));

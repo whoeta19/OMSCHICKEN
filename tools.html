@@ -652,7 +652,7 @@ function calcTaxSys() {
     const vatBuy = expense * 10/110;
     const vatNet = Math.max(0, vat - vatBuy);
     const npBase = Math.max(0, income - expense - vatNet - dirSalary - dirTax);
-    const np = npBase * 0.20;
+    const np = npBase * 0.25;
     const osnoProfit = profit - vatNet - np - dirSalary - dirTax;
     const osnoNet = Math.max(0, osnoProfit) * (1 - divPct * 0.13);
     
