@@ -605,7 +605,7 @@ function renderCalendar() {
 
 
 // ─── Общий помощник: создаёт и скачивает Excel-файл с одним листом "Декларация" ──
-function exportDeclarationExcel(filename, title, rows) {
+function exportDeclarationExcel(filename, title, rows, markQuarterly) {
   if (typeof XLSX === 'undefined') { showToast('❌ Библиотека Excel не загрузилась'); return; }
   const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
   const inn = seller.inn || '5800015301';
@@ -632,6 +632,16 @@ function exportDeclarationExcel(filename, title, rows) {
   XLSX.utils.book_append_sheet(wb, ws, 'Декларация');
   XLSX.writeFile(wb, filename);
   showToast('✅ Excel-файл скачан — перенеси суммы в кабинет ФНС');
+
+  // Отмечаем для виджета "Закрытие месяца" на главной, что квартальная форма выгружена
+  if (markQuarterly) {
+    try {
+      const quarterKey = Math.floor(now.getMonth() / 3) + 1 + 'q' + year;
+      const exports = JSON.parse(localStorage.getItem('omsfin_decl_exports') || '{}');
+      exports[quarterKey] = true;
+      localStorage.setItem('omsfin_decl_exports', JSON.stringify(exports));
+    } catch (e) {}
+  }
 }
 
 // ─── НДС: раздел 3 (строки 010-118, 120-190) + раздел 1 (200/210) ──────────────
@@ -725,7 +735,7 @@ function exportNDFLExcel() {
     ['160', 'Сумма удержанного налога', sum || pay],
   ];
 
-  exportDeclarationExcel(`6НДФЛ_${qNames[quarter]}_${year}.xlsx`, `РАСЧЁТ 6-НДФЛ — ${qNames[quarter]} ${year}`, rows);
+  exportDeclarationExcel(`6НДФЛ_${qNames[quarter]}_${year}.xlsx`, `РАСЧЁТ 6-НДФЛ — ${qNames[quarter]} ${year}`, rows, true);
 }
 
 // ─── Налог на прибыль: лист 02 ─────────────────────────────────────────────────
@@ -785,7 +795,7 @@ function exportRSVExcel() {
     ['051', 'Итого исчислено страховых взносов (единый тариф)', total],
   ];
 
-  exportDeclarationExcel(`РСВ_${qNames[quarter]}_${year}.xlsx`, `РАСЧЁТ ПО СТРАХОВЫМ ВЗНОСАМ (РСВ) — ${qNames[quarter]} ${year}`, rows);
+  exportDeclarationExcel(`РСВ_${qNames[quarter]}_${year}.xlsx`, `РАСЧЁТ ПО СТРАХОВЫМ ВЗНОСАМ (РСВ) — ${qNames[quarter]} ${year}`, rows, true);
 }
 
 // ─── ЕФС-1: подраздел 3 — взносы на травматизм ─────────────────────────────────
@@ -806,7 +816,7 @@ function exportEFSExcel() {
     ['', 'Сумма взносов к уплате', total],
   ];
 
-  exportDeclarationExcel(`ЕФС1_${qNames[quarter]}_${year}.xlsx`, `ЕФС-1 — ВЗНОСЫ НА ТРАВМАТИЗМ — ${qNames[quarter]} ${year}`, rows);
+  exportDeclarationExcel(`ЕФС1_${qNames[quarter]}_${year}.xlsx`, `ЕФС-1 — ВЗНОСЫ НА ТРАВМАТИЗМ — ${qNames[quarter]} ${year}`, rows, true);
 }
 
 function formatDate(d) {

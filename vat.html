@@ -208,6 +208,41 @@
       <tbody id="vatRatesTable"></tbody>
     </table>
   </div>
+
+  <!-- Перенос налоговой нагрузки во времени -->
+  <div class="stat-card" style="padding:20px;margin-top:16px">
+    <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:6px">⏱️ Перенос налоговой нагрузки во времени</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Подвинь дату планируемой закупки — посмотри как изменится НДС в текущем и следующем квартале</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма закупки (с НДС)</label>
+        <input type="number" id="shiftAmount" oninput="calcTaxShift()" placeholder="500 000" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Планируемая дата оплаты</label>
+        <input type="date" id="shiftDate" oninput="calcTaxShift()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;outline:none">
+      </div>
+    </div>
+
+    <div id="shiftResult" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div style="background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px;padding:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px" id="shiftQ1Label">Если оплатить в текущем квартале</div>
+          <div style="font-size:13px;margin-bottom:4px">Вычет НДС: <b id="shiftQ1Vat" style="color:var(--green)"></b></div>
+          <div style="font-size:13px">НДС к уплате за период: <b id="shiftQ1Total" style="color:var(--accent)"></b></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Срок уплаты: <span id="shiftQ1Deadline"></span></div>
+        </div>
+        <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.15);border-radius:10px;padding:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px" id="shiftQ2Label">Если оплатить в следующем квартале</div>
+          <div style="font-size:13px;margin-bottom:4px">Вычет НДС: <b id="shiftQ2Vat" style="color:var(--green)"></b></div>
+          <div style="font-size:13px">НДС к уплате за период: <b id="shiftQ2Total" style="color:var(--accent)"></b></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Срок уплаты: <span id="shiftQ2Deadline"></span></div>
+        </div>
+      </div>
+      <div id="shiftAdvice" class="info-box" style="font-size:12px"></div>
+    </div>
+  </div>
 </div>
 
 </main>
@@ -497,6 +532,86 @@ function renderVatRatesTable() {
   });
   tbody.innerHTML = rows.join('');
 }
+
+// ─── Перенос налоговой нагрузки во времени ─────────────────────────────────────
+function quarterInfo(date) {
+  const q = Math.floor(date.getMonth() / 3); // 0-3
+  const year = date.getFullYear();
+  // Срок уплаты НДС — 25-е число первого месяца следующего за кварталом
+  const deadlineMonth = (q + 1) * 3; // 3,6,9,12 (0-indexed: апрель=3, июль=6, ...)
+  let deadlineYear = year, dm = deadlineMonth;
+  if (dm > 11) { dm = 0; deadlineYear += 1; }
+  const deadline = new Date(deadlineYear, dm, 25);
+  const qNames = ['I', 'II', 'III', 'IV'];
+  return { q, year, deadline, label: `${qNames[q]} квартал ${year}` };
+}
+
+function nextQuarterDate(date) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + 3);
+  return d;
+}
+
+function calcTaxShift() {
+  const amount = parseFloat(document.getElementById('shiftAmount').value) || 0;
+  const dateStr = document.getElementById('shiftDate').value;
+  const result = document.getElementById('shiftResult');
+  if (!amount || !dateStr) { result.style.display = 'none'; return; }
+
+  const chosenDate = new Date(dateStr + 'T00:00:00');
+  const vatDeduct = Math.round(amount * 10 / 110);
+
+  // Текущий (выбранная дата) и следующий квартал (та же дата +3 месяца)
+  const qNow = quarterInfo(chosenDate);
+  const qNext = quarterInfo(nextQuarterDate(chosenDate));
+
+  // НДС к уплате за эти периоды по фактическим данным выписки (без учёта самой сделки)
+  function vatForQuarter(qi) {
+    const periodTx = allTx.filter(t => {
+      if (!t.period) return false;
+      const [mm, yyyy] = t.period.split('.');
+      const txDate = new Date(parseInt(yyyy), parseInt(mm) - 1, 1);
+      return quarterInfo(txDate).q === qi.q && quarterInfo(txDate).year === qi.year;
+    });
+    const sales = periodTx.filter(t => t.amount > 0 && t.category === 'income').reduce((s,t) => s + Number(t.amount), 0);
+    const purchases = periodTx.filter(t => t.amount < 0 && t.category === 'chicken').reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
+    const vatOut = sales * 10 / 110;
+    const vatIn = purchases * 10 / 110;
+    return { vatOut, vatIn };
+  }
+
+  const baseNow = vatForQuarter(qNow);
+  const baseNext = vatForQuarter(qNext);
+
+  // Сценарий A: оплата попадает в qNow → вычет применяется в qNow
+  const totalNowA = Math.max(0, baseNow.vatOut - (baseNow.vatIn + vatDeduct));
+  // Сценарий B: оплата попадает в qNext → вычет применяется в qNext, qNow остаётся без него
+  const totalNowB = Math.max(0, baseNow.vatOut - baseNow.vatIn);
+  const totalNextB = Math.max(0, baseNext.vatOut - (baseNext.vatIn + vatDeduct));
+
+  document.getElementById('shiftQ1Label').textContent = `Если оплатить в ${qNow.label}`;
+  document.getElementById('shiftQ1Vat').textContent = fmt(vatDeduct);
+  document.getElementById('shiftQ1Total').textContent = fmt(totalNowA);
+  document.getElementById('shiftQ1Deadline').textContent = qNow.deadline.toLocaleDateString('ru-RU');
+
+  document.getElementById('shiftQ2Label').textContent = `Если оплатить в ${qNext.label}`;
+  document.getElementById('shiftQ2Vat').textContent = fmt(vatDeduct);
+  document.getElementById('shiftQ2Total').textContent = fmt(totalNextB);
+  document.getElementById('shiftQ2Deadline').textContent = qNext.deadline.toLocaleDateString('ru-RU');
+
+  const diff = totalNowB - totalNowA; // насколько вычет снижает текущий платёж, если применить сейчас
+  const adviceEl = document.getElementById('shiftAdvice');
+  if (diff > 0) {
+    adviceEl.innerHTML = `💡 Если оплатить <b>сейчас</b> (в ${qNow.label}), НДС к уплате за этот период снизится на <b>${fmt(diff)}</b> — вычет уменьшит текущий платёж от ${qNow.deadline.toLocaleDateString('ru-RU')}. Перенос на ${qNext.label} отложит экономию на 3 месяца, но текущий платёж окажется на ${fmt(diff)} выше.`;
+  } else {
+    adviceEl.innerHTML = `Вычет не уменьшает текущий платёж (НДС к уплате за ${qNow.label} уже нулевой или в возмещении) — момент оплаты в рамках одного квартала здесь не критичен.`;
+  }
+
+  result.style.display = 'block';
+}
+
+// Дефолтная дата — сегодня
+document.getElementById('shiftDate').value = new Date().toISOString().split('T')[0];
 
 </script>
 </body>
