@@ -791,7 +791,7 @@ function renderSuggestions() {
   Object.entries(recentByInn).forEach(([inn, t]) => {
     const info = radarCache[inn];
     if (!info || info.riskScore === undefined) return;
-    if (info.riskScore >= 75) return; // низкий риск — не показываем
+    if (info.riskScore >= 80) return; // низкий риск — не показываем
     const isIncome = t.amount > 0;
     const sevColor = info.riskScore < 50 ? '#ef4444' : '#ff6b00';
     const sevIcon = info.riskScore < 50 ? '🚨' : '⚠️';
