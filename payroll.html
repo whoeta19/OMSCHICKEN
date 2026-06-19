@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMSFIN — Зарплата</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:40px;}
+  .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
+  .logo span{color:var(--accent);}
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border)}
+  main{max-width:920px;margin:0 auto;padding:24px 16px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;}
+  .section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .input-group{margin-bottom:10px}
+  .input-group label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px}
+  .input-group input,.input-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none}
+  .input-row{display:grid;grid-template-columns:2fr 1.2fr 1fr;gap:10px}
+  .btn{background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(255,107,0,0.25)}
+  .btn-sm{font-size:10px;padding:7px 14px}
+  .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 16px;font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;cursor:pointer}
+  .emp-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .emp-row:last-child{border-bottom:none}
+  .emp-name{font-weight:500}
+  .emp-pos{font-size:11px;color:var(--muted)}
+  .emp-salary{font-family:'Unbounded',sans-serif;font-weight:700;color:var(--accent)}
+  .empty{text-align:center;padding:30px;color:var(--muted);font-size:13px}
+  .period-picker{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+  .period-picker input{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-size:13px}
+  .run-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:10px;margin-bottom:8px;font-size:13px}
+  .run-status{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600}
+  .run-status.planned{background:rgba(255,107,0,0.15);color:var(--accent)}
+  .run-status.paid{background:rgba(34,197,94,0.15);color:var(--green)}
+  .summary-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+  .summary-card{background:var(--surface2);border-radius:10px;padding:14px;text-align:center}
+  .summary-label{font-size:10px;color:var(--muted);margin-bottom:6px}
+  .summary-value{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:100;display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">OMS<span>FIN</span></div>
+  <a href="/" style="color:var(--muted);font-size:12px;text-decoration:none">← На главную</a>
+</header>
+
+<main>
+  <!-- Сотрудники -->
+  <div class="card">
+    <div class="section-title">
+      <span>👥 Сотрудники</span>
+      <span id="empCount" style="color:var(--text)"></span>
+    </div>
+    <div id="empList"></div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div class="input-row" style="margin-bottom:8px">
+        <div class="input-group" style="margin-bottom:0"><input type="text" id="newEmpName" placeholder="ФИО сотрудника"></div>
+        <div class="input-group" style="margin-bottom:0"><input type="text" id="newEmpPos" placeholder="Должность"></div>
+        <div class="input-group" style="margin-bottom:0"><input type="number" id="newEmpSalary" placeholder="Оклад ₽"></div>
+      </div>
+      <button class="btn btn-sm" onclick="addEmployee()">+ Добавить сотрудника</button>
+    </div>
+  </div>
+
+  <!-- Начисление за месяц -->
+  <div class="card">
+    <div class="section-title"><span>🧮 Начисление за период</span></div>
+    <div class="period-picker">
+      <input type="month" id="payrollPeriod">
+      <button class="btn" onclick="calculatePayroll()">Начислить за этот месяц</button>
+    </div>
+    <div id="calcResult"></div>
+  </div>
+
+  <!-- История выплат -->
+  <div class="card">
+    <div class="section-title"><span>📋 История начислений</span></div>
+    <div id="historyList"><div class="empty">Загрузка...</div></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN_KEY = 'omschicken_token';
+function getToken() { return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omsfin_token') || ''; }
+function getCompanyId() { return localStorage.getItem('omsfin_company') || ''; }
+
+function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+let employees = [];
+
+async function loadEmployees() {
+  const companyId = getCompanyId();
+  if (!companyId) {
+    document.getElementById('empList').innerHTML = '<div class="empty">Сначала выбери компанию на главной странице</div>';
+    return;
+  }
+  try {
+    const r = await fetch(`/api/employees?resource=employees&company_id=${companyId}`, {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    });
+    const data = await r.json();
+    if (data.error) { document.getElementById('empList').innerHTML = `<div class="empty">❌ ${data.error}</div>`; return; }
+
+    employees = (data || []).filter(e => e.is_active !== false);
+    document.getElementById('empCount').textContent = employees.length + ' чел.';
+
+    if (!employees.length) {
+      document.getElementById('empList').innerHTML = '<div class="empty">Пока нет сотрудников — добавь первого ниже</div>';
+      return;
+    }
+
+    document.getElementById('empList').innerHTML = employees.map(e => `
+      <div class="emp-row">
+        <div>
+          <div class="emp-name">${e.full_name}</div>
+          <div class="emp-pos">${e.position || 'Без должности'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="emp-salary">${fmt(e.salary)}</div>
+          <button onclick="removeEmployee('${e.id}')" style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer">✕</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('empList').innerHTML = '<div class="empty">❌ Ошибка загрузки</div>';
+  }
+}
+
+async function addEmployee() {
+  const companyId = getCompanyId();
+  if (!companyId) { showToast('Сначала выбери компанию'); return; }
+
+  const full_name = document.getElementById('newEmpName').value.trim();
+  const position = document.getElementById('newEmpPos').value.trim();
+  const salary = parseFloat(document.getElementById('newEmpSalary').value);
+
+  if (!full_name) { showToast('Введи ФИО сотрудника'); return; }
+  if (!salary || salary <= 0) { showToast('Введи оклад'); return; }
+
+  try {
+    const r = await fetch('/api/employees?resource=employees', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: companyId, full_name, position, salary })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+
+    document.getElementById('newEmpName').value = '';
+    document.getElementById('newEmpPos').value = '';
+    document.getElementById('newEmpSalary').value = '';
+    showToast('✅ Сотрудник добавлен');
+    loadEmployees();
+  } catch (e) {
+    showToast('❌ Ошибка добавления');
+  }
+}
+
+async function removeEmployee(id) {
+  if (!confirm('Уволить сотрудника? История его начислений сохранится.')) return;
+  const companyId = getCompanyId();
+
+  try {
+    const r = await fetch('/api/employees?resource=employees', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: companyId, id })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+    showToast('✅ Сотрудник удалён из активных');
+    loadEmployees();
+  } catch (e) {
+    showToast('❌ Ошибка удаления');
+  }
+}
+
+async function calculatePayroll() {
+  const companyId = getCompanyId();
+  if (!companyId) { showToast('Сначала выбери компанию'); return; }
+
+  const monthInput = document.getElementById('payrollPeriod').value; // формат YYYY-MM
+  if (!monthInput) { showToast('Выбери месяц'); return; }
+  const [yyyy, mm] = monthInput.split('-');
+  const period = `${mm}.${yyyy}`;
+
+  try {
+    const r = await fetch('/api/employees?resource=payroll', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: companyId, action: 'calculate', period })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+
+    const runs = data.runs || [];
+    const totalGross = runs.reduce((s, r) => s + Number(r.salary_gross), 0);
+    const totalNdfl = runs.reduce((s, r) => s + Number(r.ndfl), 0);
+    const totalContrib = runs.reduce((s, r) => s + Number(r.contributions), 0);
+
+    document.getElementById('calcResult').innerHTML = `
+      <div class="summary-row">
+        <div class="summary-card"><div class="summary-label">Начислено (gross)</div><div class="summary-value">${fmt(totalGross)}</div></div>
+        <div class="summary-card"><div class="summary-label">НДФЛ к перечислению</div><div class="summary-value" style="color:var(--accent)">${fmt(totalNdfl)}</div></div>
+        <div class="summary-card"><div class="summary-label">Страховые взносы</div><div class="summary-value" style="color:var(--red)">${fmt(totalContrib)}</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);text-align:center">Начислено за ${period} для ${runs.length} сотрудников. Подробности — в истории ниже.</div>
+    `;
+
+    showToast(`✅ Начислено за ${period}`);
+    loadHistory();
+  } catch (e) {
+    showToast('❌ Ошибка начисления');
+  }
+}
+
+async function markPaid(id) {
+  try {
+    const r = await fetch('/api/employees?resource=payroll', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_id: getCompanyId(), action: 'mark_paid', id })
+    });
+    const data = await r.json();
+    if (data.error) { showToast('❌ ' + data.error); return; }
+    showToast('✅ Отмечено как выплачено');
+    loadHistory();
+  } catch (e) {
+    showToast('❌ Ошибка');
+  }
+}
+
+async function loadHistory() {
+  const companyId = getCompanyId();
+  if (!companyId) return;
+
+  try {
+    const r = await fetch(`/api/employees?resource=payroll&company_id=${companyId}`, {
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    });
+    const data = await r.json();
+    if (data.error) { document.getElementById('historyList').innerHTML = `<div class="empty">❌ ${data.error}</div>`; return; }
+
+    if (!data.length) {
+      document.getElementById('historyList').innerHTML = '<div class="empty">Пока нет начислений</div>';
+      return;
+    }
+
+    const empById = {};
+    employees.forEach(e => empById[e.id] = e.full_name);
+
+    document.getElementById('historyList').innerHTML = data.map(run => `
+      <div class="run-row">
+        <div>
+          <div style="font-weight:500">${empById[run.employee_id] || 'Сотрудник'} · ${run.period}</div>
+          <div style="font-size:11px;color:var(--muted)">Начислено ${fmt(run.salary_gross)} · НДФЛ ${fmt(run.ndfl)} · К выплате ${fmt(run.salary_net)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="run-status ${run.status}">${run.status === 'paid' ? 'Выплачено' : 'Запланировано'}</span>
+          ${run.status !== 'paid' ? `<button class="btn-outline" onclick="markPaid('${run.id}')">Отметить выплату</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('historyList').innerHTML = '<div class="empty">❌ Ошибка загрузки</div>';
+  }
+}
+
+// Дефолтный период — текущий месяц
+const now = new Date();
+document.getElementById('payrollPeriod').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+loadEmployees();
+loadHistory();
+</script>
+</body>
+</html>
