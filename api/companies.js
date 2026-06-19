@@ -1,5 +1,6 @@
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE2NDYzOCwiZXhwIjoyMDk1NzQwNjM4fQ.CjCybI9bSk1uYbjWl8clQDPPzB7exzUa029DUtPQen8';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -41,6 +42,21 @@ export default async function handler(req, res) {
         body: JSON.stringify(body)
       });
       const data = await r.json();
+
+      // Создатель компании автоматически становится её директором
+      const newCompany = Array.isArray(data) ? data[0] : data;
+      if (newCompany?.id && userId) {
+        await fetch(`${SUPABASE_URL}/rest/v1/company_members`, {
+          method: 'POST',
+          headers: {
+            'apikey': SERVICE_KEY,
+            'Authorization': 'Bearer ' + SERVICE_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ company_id: newCompany.id, user_id: userId, role: 'director' })
+        });
+      }
+
       return res.status(200).json(data);
     }
 
