@@ -258,6 +258,16 @@ async function loadHistory() {
   if (!companyId) return;
 
   try {
+    // Загружаем всех сотрудников (включая уволенных) для корректного отображения имён
+    let allEmps = employees;
+    if (!allEmps.length) {
+      const er = await fetch(`/api/employees?resource=employees&company_id=${companyId}`, {
+        headers: { 'Authorization': 'Bearer ' + getToken() }
+      });
+      const ed = await er.json();
+      if (Array.isArray(ed)) allEmps = ed;
+    }
+
     const r = await fetch(`/api/employees?resource=payroll&company_id=${companyId}`, {
       headers: { 'Authorization': 'Bearer ' + getToken() }
     });
@@ -270,7 +280,7 @@ async function loadHistory() {
     }
 
     const empById = {};
-    employees.forEach(e => empById[e.id] = e.full_name);
+    allEmps.forEach(e => empById[e.id] = e.full_name);
 
     document.getElementById('historyList').innerHTML = data.map(run => `
       <div class="run-row">

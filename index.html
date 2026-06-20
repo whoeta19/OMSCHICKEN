@@ -332,6 +332,49 @@
   #profileMenu, #undoUploadBar, #monthCloserCard{
     box-shadow:var(--shadow);
   }
+
+  /* Налоговый календарь */
+  .tax-deadline{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:all 0.2s;}
+  .tax-deadline:hover{border-color:rgba(255,107,0,0.2);}
+  .tax-deadline.overdue{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.03);}
+  .tax-deadline.soon{border-color:rgba(255,107,0,0.3);background:rgba(255,107,0,0.03);}
+  .tax-deadline.done{opacity:0.45;}
+  .tax-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap;}
+  .tax-badge.usn{background:rgba(56,189,248,0.15);color:#38bdf8;}
+  .tax-badge.nds{background:rgba(163,230,53,0.15);color:#a3e635;}
+  .tax-badge.ndfl{background:rgba(251,146,60,0.15);color:#fb923c;}
+  .tax-badge.vznosy{background:rgba(192,132,252,0.15);color:#c084fc;}
+  .tax-badge.pribyl{background:rgba(34,197,94,0.15);color:#22c55e;}
+  .usn-calc-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+  .usn-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .usn-row:last-child{border-bottom:none;}
+
+  /* Прогноз баланса */
+  .forecast-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .forecast-month{width:50px;font-size:11px;color:var(--muted);}
+  .forecast-track{flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:8px;overflow:hidden;}
+  .forecast-fill{height:100%;border-radius:4px;transition:width 0.6s;}
+  .forecast-val{width:80px;text-align:right;font-family:'Unbounded',sans-serif;font-size:10px;}
+
+  /* AI-ассистент */
+  .ai-fab{position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.45);z-index:300;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(255,107,0,0.6);}
+  @media(min-width:601px){.ai-fab{bottom:24px;}}
+  .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:340px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid rgba(255,107,0,0.2);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:400;overflow:hidden;flex-direction:column;}
+  .ai-modal.open{display:flex;}
+  @media(min-width:601px){.ai-modal{bottom:88px;}}
+  .ai-modal-header{padding:14px 16px;background:linear-gradient(135deg,rgba(255,107,0,0.15),rgba(255,170,68,0.08));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .ai-messages{height:280px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+  .ai-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.5;}
+  .ai-msg.bot{background:var(--surface2);border-radius:12px 12px 12px 2px;align-self:flex-start;}
+  .ai-msg.user{background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border-radius:12px 12px 2px 12px;align-self:flex-end;}
+  .ai-input-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;}
+  .ai-input-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;}
+  .ai-input-row input:focus{border-color:rgba(255,107,0,0.5);}
+  .ai-send{background:linear-gradient(135deg,var(--accent),#e55a00);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+  .ai-quick-btns{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);}
+  .ai-quick{font-size:10px;padding:4px 9px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+  .ai-quick:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
 </style>
 </head>
 <body>
@@ -366,6 +409,7 @@
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/declarations'">📋 Декларации</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/payroll'">👥 Зарплата</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/tools'">⚡ Инструменты</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('taxes',this)">🗓️ Налоги</button>
   </div>
 </div>
 <main>
@@ -555,6 +599,41 @@
     <div class="section-title">Управление</div>
     <button class="btn-outline" onclick="clearAll()" style="color:var(--red);border-color:var(--red);font-size:12px;padding:8px 14px">🗑️ Очистить ВСЕ данные</button>
   </div>
+</div>
+
+<!-- НАЛОГОВЫЙ КАЛЕНДАРЬ -->
+<div class="page" id="page-taxes">
+
+  <!-- УСН Калькулятор -->
+  <div class="usn-calc-card" id="usnCalcCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700">📊 Налог УСН — текущий год</div>
+      <div style="display:flex;gap:6px">
+        <button id="usnRateBtn6" onclick="setUsnRate(6)" class="filter-btn active" style="padding:3px 10px">6% (Доходы)</button>
+        <button id="usnRateBtn15" onclick="setUsnRate(15)" class="filter-btn" style="padding:3px 10px">15% (Д−Р)</button>
+      </div>
+    </div>
+    <div id="usnResult"></div>
+  </div>
+
+  <!-- Прогноз баланса -->
+  <div class="usn-calc-card" id="forecastCard">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:12px">📈 Прогноз денежного потока (3 месяца)</div>
+    <div id="forecastResult"></div>
+  </div>
+
+  <!-- Календарь дедлайнов -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700">🗓️ Налоговый календарь 2026</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      <button onclick="filterDeadlines('all',this)" class="filter-btn active" style="padding:3px 9px;font-size:10px">Все</button>
+      <button onclick="filterDeadlines('usn',this)" class="filter-btn" style="padding:3px 9px;font-size:10px">УСН</button>
+      <button onclick="filterDeadlines('nds',this)" class="filter-btn" style="padding:3px 9px;font-size:10px">НДС</button>
+      <button onclick="filterDeadlines('ndfl',this)" class="filter-btn" style="padding:3px 9px;font-size:10px">НДФЛ</button>
+      <button onclick="filterDeadlines('vznosy',this)" class="filter-btn" style="padding:3px 9px;font-size:10px">Взносы</button>
+    </div>
+  </div>
+  <div id="taxDeadlinesList"></div>
 </div>
 
 </main>
@@ -1608,32 +1687,6 @@ async function clearLastUpload() {
   } catch(e) { showToast('❌ '+e.message); }
 }
 
-function initHome() {
-  const now = new Date();
-  const days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  const dateEl = document.getElementById('homeDate');
-  const greetEl = document.getElementById('homeGreeting');
-  const subEl = document.getElementById('homeSub');
-  if (dateEl) dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
-  const h = now.getHours();
-  const greet = h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
-  const user = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
-  if (greetEl) greetEl.textContent = greet + (user.email ? ', ' + user.email.split('@')[0] : '');
-  if (subEl) subEl.textContent = allTx.length > 0 ? allTx.length + ' операций · Синхронизировано' : 'Данные не загружены';
-  
-  // НДС дедлайн
-  const vatEl = document.getElementById('statVatDeadline');
-  if (vatEl) {
-    const q = Math.floor(now.getMonth() / 3);
-    const deadlines = [new Date(now.getFullYear(),3,25),new Date(now.getFullYear(),6,25),new Date(now.getFullYear(),9,25),new Date(now.getFullYear()+1,0,25)];
-    const next = deadlines.find(d => d > now);
-    if (next) {
-      const days2 = Math.ceil((next - now) / (1000*60*60*24));
-      vatEl.textContent = 'до ' + next.toLocaleDateString('ru-RU') + ' · ' + days2 + ' дн.';
-    }
-  }
-}
 
 function renderAll() {
   const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
@@ -1920,12 +1973,377 @@ function showPage(name,btn){
   if(btn)btn.classList.add('active');
   if(name==='reclassify') renderReclassify();
   if(name==='recurring') renderRecurring();
+  if(name==='taxes') { renderUSN(); renderForecast(); renderTaxCalendar(); }
+}
+
+// ─── Приветствие по названию компании ─────────────────────────────────────────
+function initHome() {
+  const now = new Date();
+  const days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const dateEl = document.getElementById('homeDate');
+  const greetEl = document.getElementById('homeGreeting');
+  const subEl = document.getElementById('homeSub');
+  if (dateEl) dateEl.textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  const h = now.getHours();
+  const greet = h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
+  const sel = document.getElementById('companySwitcher');
+  const companyName = sel && sel.selectedIndex > 0 ? sel.options[sel.selectedIndex].text : '';
+  const user = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
+  const displayName = companyName || (user.email ? user.email.split('@')[0] : '');
+  if (greetEl) greetEl.textContent = greet + (displayName ? ', ' + displayName : '');
+  if (subEl) subEl.textContent = allTx.length > 0 ? allTx.length + ' операций · Синхронизировано' : 'Данные не загружены';
+  const vatEl = document.getElementById('statVatDeadline');
+  if (vatEl) {
+    const deadlines = [new Date(now.getFullYear(),3,25),new Date(now.getFullYear(),6,25),new Date(now.getFullYear(),9,25),new Date(now.getFullYear()+1,0,25)];
+    const next = deadlines.find(d => d > now);
+    if (next) { const d2 = Math.ceil((next-now)/(864e5)); vatEl.textContent = 'до '+next.toLocaleDateString('ru-RU')+' · '+d2+' дн.'; }
+  }
+}
+
+// ─── УСН Калькулятор ───────────────────────────────────────────────────────────
+let usnRate = 6;
+function setUsnRate(r) {
+  usnRate = r;
+  document.getElementById('usnRateBtn6').classList.toggle('active', r===6);
+  document.getElementById('usnRateBtn15').classList.toggle('active', r===15);
+  renderUSN();
+}
+
+function renderUSN() {
+  const el = document.getElementById('usnResult');
+  if (!el) return;
+  const now = new Date();
+  const year = now.getFullYear();
+  const yearTx = allTx.filter(t => { const y = (t.date||'').split('.')[2]; return y == year; });
+  if (!yearTx.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">Загрузи выписку чтобы увидеть расчёт УСН</div>';
+    return;
+  }
+  const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const taxBase = usnRate===6 ? income : Math.max(0, income-expense);
+  const minTax = usnRate===15 ? income*0.01 : 0;
+  const tax = Math.max(taxBase*usnRate/100, minTax);
+
+  const quarters = [
+    {q:'I кв. (янв–мар)', months:[1,2,3]},
+    {q:'II кв. (апр–июн)', months:[4,5,6]},
+    {q:'III кв. (июл–сен)', months:[7,8,9]},
+    {q:'IV кв. (окт–дек)', months:[10,11,12]},
+  ];
+  let cumIncome = 0, cumExpense = 0, prevTax = 0;
+  const qRows = quarters.map(({q, months}) => {
+    const qTx = yearTx.filter(t => { const m = parseInt((t.date||'').split('.')[1]); return months.includes(m); });
+    const qInc = qTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+    const qExp = qTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+    cumIncome += qInc; cumExpense += qExp;
+    const cumBase = usnRate===6 ? cumIncome : Math.max(0,cumIncome-cumExpense);
+    const cumTax = Math.max(cumBase*usnRate/100, usnRate===15?cumIncome*0.01:0);
+    const advance = Math.max(0, cumTax - prevTax);
+    prevTax = cumTax;
+    const qEnd = months[2];
+    const deadlines = {3:'28 апреля',6:'28 июля',9:'28 октября',12:'9 января '+(year+1)};
+    const deadline = deadlines[qEnd];
+    const isCurrent = now.getMonth()+1 <= months[2] && now.getMonth()+1 >= months[0];
+    return `<div class="usn-row" ${isCurrent?'style="background:rgba(255,107,0,0.04);border-radius:8px;padding:7px 8px"':''}>
+      <div>
+        <div style="font-size:12px;font-weight:500">${q}</div>
+        <div style="font-size:10px;color:var(--muted)">Срок: ${deadline}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--accent)">${fmt(advance)}</div>
+        <div style="font-size:10px;color:var(--muted)">аванс к уплате</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Доход ${year}</div>
+        <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--green)">${fmt(income)}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Расход ${year}</div>
+        <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--red)">${fmt(expense)}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Налог итого</div>
+        <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--accent)">${fmt(tax)}</div>
+      </div>
+    </div>
+    ${qRows}
+    <div style="margin-top:8px;font-size:10px;color:var(--muted)">* Уменьшение на страховые взносы не учтено — вычтите их вручную.</div>`;
+}
+
+// ─── Прогноз денежного потока ──────────────────────────────────────────────────
+function renderForecast() {
+  const el = document.getElementById('forecastResult');
+  if (!el) return;
+  if (!allTx.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px">Загрузи выписку чтобы увидеть прогноз</div>';
+    return;
+  }
+  const now = new Date();
+  const avgByMonth = {};
+  allTx.forEach(t => {
+    const p = t.period || '';
+    if (!avgByMonth[p]) avgByMonth[p] = {inc:0, exp:0};
+    if (t.amount > 0) avgByMonth[p].inc += Number(t.amount);
+    else avgByMonth[p].exp += Math.abs(Number(t.amount));
+  });
+  const periods = Object.keys(avgByMonth).filter(p=>/^\d{2}\.\d{4}$/.test(p));
+  const last3 = periods.slice(-3);
+  if (!last3.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px">Недостаточно данных для прогноза</div>'; return; }
+  const avgInc = last3.reduce((s,p)=>s+avgByMonth[p].inc,0)/last3.length;
+  const avgExp = last3.reduce((s,p)=>s+avgByMonth[p].exp,0)/last3.length;
+  const recurringExp = allTx.filter(t=>t.is_recurring&&t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const monthNames=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const months = [1,2,3].map(i => {
+    const d = new Date(now.getFullYear(), now.getMonth()+i, 1);
+    return { label: monthNames[d.getMonth()]+' '+d.getFullYear(), inc: avgInc, exp: avgExp, net: avgInc-avgExp };
+  });
+  const maxAbs = Math.max(...months.map(m=>Math.abs(m.net)), 1);
+  el.innerHTML = `
+    <div style="margin-bottom:10px;font-size:11px;color:var(--muted)">На основе среднего за последние ${last3.length} мес. + регулярные платежи.</div>
+    ${months.map(m => {
+      const col = m.net >= 0 ? 'var(--green)' : 'var(--red)';
+      const w = Math.round(Math.abs(m.net)/maxAbs*100);
+      return `<div class="forecast-bar">
+        <div class="forecast-month">${m.label}</div>
+        <div style="flex:1">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px">+${fmt(m.inc)} / −${fmt(m.exp)}</div>
+          <div class="forecast-track"><div class="forecast-fill" style="width:${w}%;background:${col}"></div></div>
+        </div>
+        <div class="forecast-val" style="color:${col}">${m.net>=0?'+':''}${fmt(m.net)}</div>
+      </div>`;
+    }).join('')}
+    ${recurringExp>0 ? `<div style="margin-top:8px;font-size:10px;color:var(--muted)">📌 Регулярные расходы: ${fmt(recurringExp)}/мес учтены в прогнозе.</div>` : ''}`;
+}
+
+// ─── Налоговый календарь 2026 ──────────────────────────────────────────────────
+const TAX_DEADLINES_2026 = [
+  {date:'2026-01-28',title:'НДФЛ: период 1–22 января',type:'ndfl',who:'Работодатели'},
+  {date:'2026-01-28',title:'НДС за IV кв. 2025 (1/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-01-28',title:'Страховые взносы за декабрь',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-02-25',title:'НДС за IV кв. 2025 (2/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-02-28',title:'НДФЛ: период 23 янв – 22 фев',type:'ndfl',who:'Работодатели'},
+  {date:'2026-02-28',title:'Страховые взносы за январь',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-03-25',title:'НДС за IV кв. 2025 (3/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-03-28',title:'Налог на прибыль за 2025 год',type:'pribyl',who:'ООО на ОСН'},
+  {date:'2026-03-28',title:'НДФЛ: период 23 фев – 22 мар',type:'ndfl',who:'Работодатели'},
+  {date:'2026-03-28',title:'Страховые взносы за февраль',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-03-31',title:'Декларация УСН за 2025 (ООО)',type:'usn',who:'ООО на УСН'},
+  {date:'2026-04-25',title:'НДС за I кв. 2026 (1/3) + декларация',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-04-28',title:'УСН аванс за I кв. 2026 (ООО)',type:'usn',who:'ООО на УСН'},
+  {date:'2026-04-28',title:'Налог на прибыль аванс I кв.',type:'pribyl',who:'ООО на ОСН'},
+  {date:'2026-04-28',title:'НДФЛ: период 23 мар – 22 апр',type:'ndfl',who:'Работодатели'},
+  {date:'2026-04-28',title:'Страховые взносы за март',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-04-30',title:'УСН за 2025 (ИП) + декларация 3-НДФЛ',type:'usn',who:'ИП на УСН'},
+  {date:'2026-04-30',title:'УСН аванс за I кв. 2026 (ИП)',type:'usn',who:'ИП на УСН'},
+  {date:'2026-05-26',title:'НДС за I кв. 2026 (2/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-05-28',title:'НДФЛ: период 23 апр – 22 мая',type:'ndfl',who:'Работодатели'},
+  {date:'2026-05-28',title:'Страховые взносы за апрель',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-06-25',title:'НДС за I кв. 2026 (3/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-06-28',title:'НДФЛ: период 23 мая – 22 июн',type:'ndfl',who:'Работодатели'},
+  {date:'2026-06-28',title:'Страховые взносы за май',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-07-25',title:'НДС за II кв. 2026 (1/3) + декларация',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-07-28',title:'УСН аванс за полугодие 2026',type:'usn',who:'Все на УСН'},
+  {date:'2026-07-28',title:'Налог на прибыль аванс полугодие',type:'pribyl',who:'ООО на ОСН'},
+  {date:'2026-07-28',title:'НДФЛ: период 23 июн – 22 июл',type:'ndfl',who:'Работодатели'},
+  {date:'2026-07-28',title:'Страховые взносы за июнь',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-08-25',title:'НДС за II кв. 2026 (2/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-08-28',title:'НДФЛ: период 23 июл – 22 авг',type:'ndfl',who:'Работодатели'},
+  {date:'2026-08-28',title:'Страховые взносы за июль',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-09-25',title:'НДС за II кв. 2026 (3/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-09-28',title:'НДФЛ: период 23 авг – 22 сен',type:'ndfl',who:'Работодатели'},
+  {date:'2026-09-28',title:'Страховые взносы за август',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-10-26',title:'НДС за III кв. 2026 (1/3) + декларация',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-10-28',title:'УСН аванс за 9 мес. 2026',type:'usn',who:'Все на УСН'},
+  {date:'2026-10-28',title:'Налог на прибыль аванс 9 мес.',type:'pribyl',who:'ООО на ОСН'},
+  {date:'2026-10-28',title:'НДФЛ: период 23 сен – 22 окт',type:'ndfl',who:'Работодатели'},
+  {date:'2026-10-28',title:'Страховые взносы за сентябрь',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-11-25',title:'НДС за III кв. 2026 (2/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-11-28',title:'НДФЛ: период 23 окт – 22 ноя',type:'ndfl',who:'Работодатели'},
+  {date:'2026-11-28',title:'Страховые взносы за октябрь',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-12-25',title:'НДС за III кв. 2026 (3/3)',type:'nds',who:'ООО на ОСН'},
+  {date:'2026-12-28',title:'НДФЛ: период 23 ноя – 22 дек',type:'ndfl',who:'Работодатели'},
+  {date:'2026-12-28',title:'Страховые взносы за ноябрь',type:'vznosy',who:'Все работодатели'},
+  {date:'2026-12-31',title:'Фиксированные взносы ИП за 2026',type:'vznosy',who:'ИП'},
+  {date:'2027-01-09',title:'УСН за 2026 год + декларация (ООО)',type:'usn',who:'ООО на УСН'},
+  {date:'2027-01-28',title:'Страховые взносы за декабрь 2026',type:'vznosy',who:'Все работодатели'},
+];
+
+let deadlineFilter = 'all';
+function filterDeadlines(type, btn) {
+  deadlineFilter = type;
+  document.querySelectorAll('#page-taxes .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderTaxCalendar();
+}
+
+function renderTaxCalendar() {
+  const el = document.getElementById('taxDeadlinesList');
+  if (!el) return;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const soon = new Date(now); soon.setDate(soon.getDate()+14);
+  const typeNames = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взносы',pribyl:'Прибыль'};
+  const filtered = TAX_DEADLINES_2026.filter(d => deadlineFilter==='all' || d.type===deadlineFilter);
+  el.innerHTML = filtered.map(d => {
+    const dt = new Date(d.date); dt.setHours(0,0,0,0);
+    const overdue = dt < now;
+    const isSoon = !overdue && dt <= soon;
+    const daysLeft = Math.ceil((dt-now)/(864e5));
+    const cls = overdue ? 'overdue' : isSoon ? 'soon' : '';
+    const daysStr = overdue ? 'Прошёл' : daysLeft===0 ? 'Сегодня!' : `через ${daysLeft} дн.`;
+    const daysColor = overdue ? 'var(--red)' : isSoon ? 'var(--accent)' : 'var(--muted)';
+    return `<div class="tax-deadline ${cls}">
+      <div style="font-size:22px;width:32px;text-align:center">${{usn:'📊',nds:'🧾',ndfl:'👤',vznosy:'🏛️',pribyl:'💹'}[d.type]||'📋'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:500;margin-bottom:3px">${d.title}</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span class="tax-badge ${d.type}">${typeNames[d.type]||d.type}</span>
+          <span style="font-size:10px;color:var(--muted)">${d.who}</span>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:11px;font-weight:600;color:${daysColor}">${daysStr}</div>
+        <div style="font-size:10px;color:var(--muted)">${dt.toLocaleDateString('ru-RU')}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);text-align:center;padding:20px">Нет дедлайнов для этого фильтра</div>';
+}
+
+// ─── AI Ассистент ──────────────────────────────────────────────────────────────
+let aiOpen = false;
+function toggleAI() {
+  aiOpen = !aiOpen;
+  document.getElementById('aiModal').classList.toggle('open', aiOpen);
+  if (aiOpen) document.getElementById('aiInput').focus();
+}
+
+function aiSend() {
+  const inp = document.getElementById('aiInput');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  aiAsk(q);
+}
+
+function aiAsk(q) {
+  if (!aiOpen) { aiOpen=true; document.getElementById('aiModal').classList.add('open'); }
+  const msgs = document.getElementById('aiMessages');
+  msgs.innerHTML += `<div class="ai-msg user">${q}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  const thinking = document.createElement('div');
+  thinking.className = 'ai-msg bot';
+  thinking.textContent = '...';
+  msgs.appendChild(thinking);
+  msgs.scrollTop = msgs.scrollHeight;
+  setTimeout(() => {
+    thinking.innerHTML = aiAnswer(q);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 400);
+}
+
+function aiAnswer(q) {
+  const ql = q.toLowerCase();
+  const now = new Date();
+  const year = now.getFullYear();
+  const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
+  const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+
+  if (/доход|выруч|заработ/.test(ql)) {
+    if (!income) return 'Данных о доходах за этот год пока нет. Загрузи выписку на главной странице.';
+    const m = now.getMonth();
+    const avgMonth = income / (m+1);
+    return `За ${year} год: <b>${fmt(income)}</b><br>Среднемесячный доход: <b>${fmt(avgMonth)}</b><br><br>Данные за ${m+1} из 12 месяцев.`;
+  }
+  if (/расход|трат|списан/.test(ql)) {
+    if (!expense) return 'Данных о расходах пока нет. Загрузи выписку.';
+    const top = Object.entries(
+      yearTx.filter(t=>t.amount<0).reduce((acc,t)=>{acc[t.category]=(acc[t.category]||0)+Math.abs(t.amount);return acc;},{})
+    ).sort(([,a],[,b])=>b-a).slice(0,4);
+    const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Еда',unknown:'❓ Прочее'};
+    return `Всего расходов за ${year}: <b>${fmt(expense)}</b><br><br>Топ категории:<br>${top.map(([k,v])=>`• ${cats[k]||k}: ${fmt(v)}`).join('<br>')}`;
+  }
+  if (/усн|налог|аванс/.test(ql)) {
+    if (!income) return 'Нет данных для расчёта УСН. Загрузи выписку.';
+    const tax6 = income*0.06;
+    const tax15 = Math.max((income-expense)*0.15, income*0.01);
+    return `УСН расчёт за ${year}:<br><br>• <b>УСН 6%</b> с доходов: <b>${fmt(tax6)}</b><br>• <b>УСН 15%</b> с прибыли: <b>${fmt(Math.max(0,tax15))}</b><br><br>Вычти страховые взносы (до 50% налога для ООО). Перейди в раздел 🗓️ Налоги для детального расчёта по кварталам.`;
+  }
+  if (/ндс|nds/.test(ql)) {
+    const vat = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0)*10/110;
+    const vatIn = yearTx.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0)*10/110;
+    const next = [new Date(year,3,25),new Date(year,6,25),new Date(year,9,25),new Date(year+1,0,25)].find(d=>d>now);
+    const days = next ? Math.ceil((next-now)/864e5) : 0;
+    return `НДС к уплате (расчётно):<br>• НДС с продаж: <b>${fmt(vat)}</b><br>• Вычет по закупкам: <b>${fmt(vatIn)}</b><br>• К доплате: <b>${fmt(Math.max(0,vat-vatIn))}</b><br><br>Следующий срок: ${next?.toLocaleDateString('ru-RU')} (через ${days} дн.).<br>Точный расчёт — в разделе 🧾 НДС.`;
+  }
+  if (/дедлайн|срок|когда плат|следующ/.test(ql)) {
+    const upcoming = TAX_DEADLINES_2026.filter(d=>new Date(d.date)>now).slice(0,3);
+    return 'Ближайшие налоговые дедлайны:<br><br>' + upcoming.map(d=>`• ${new Date(d.date).toLocaleDateString('ru-RU')}: <b>${d.title}</b>`).join('<br>');
+  }
+  if (/топ расход|крупн|больш/.test(ql)) {
+    const sorted = [...yearTx].filter(t=>t.amount<0).sort((a,b)=>a.amount-b.amount).slice(0,5);
+    if (!sorted.length) return 'Нет данных о расходах.';
+    return `Топ-5 расходов за ${year}:<br><br>${sorted.map((t,i)=>`${i+1}. ${t.name?.substring(0,30)||'—'}: <b>${fmt(t.amount)}</b>`).join('<br>')}`;
+  }
+  if (/прогноз|следующ месяц|план/.test(ql)) {
+    if (!allTx.length) return 'Нет данных для прогноза. Загрузи выписку.';
+    const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].slice(-3);
+    const avgI = periods.reduce((s,p)=>s+allTx.filter(t=>t.period===p&&t.amount>0).reduce((a,t)=>a+Number(t.amount),0),0)/Math.max(1,periods.length);
+    const avgE = periods.reduce((s,p)=>s+allTx.filter(t=>t.period===p&&t.amount<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0),0)/Math.max(1,periods.length);
+    const net = avgI-avgE;
+    return `Прогноз на следующий месяц:<br>• Доход: ~<b>${fmt(avgI)}</b><br>• Расход: ~<b>${fmt(avgE)}</b><br>• Чистый поток: <b style="color:${net>=0?'#22c55e':'#ef4444'}">${net>=0?'+':''}${fmt(net)}</b><br><br>На основе среднего за последние ${periods.length} мес. Детали — в разделе 🗓️ Налоги.`;
+  }
+  if (/зарплат|сотрудник|персонал/.test(ql)) {
+    const salaryTotal = yearTx.filter(t=>t.category==='salary'&&t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+    if (!salaryTotal) return 'Расходов на зарплату в этом году не найдено. Проверь категоризацию в разделе 🏷️ Разметка.';
+    return `Зарплатные расходы за ${year}: <b>${fmt(salaryTotal)}</b><br><br>Управление сотрудниками и начислениями — в разделе 👥 Зарплата.`;
+  }
+  if (/прибыл|профит|чистый/.test(ql)) {
+    const profit = income-expense;
+    return `Финансовый результат за ${year}:<br>• Доходы: <b>${fmt(income)}</b><br>• Расходы: <b>${fmt(expense)}</b><br>• Прибыль: <b style="color:${profit>=0?'#22c55e':'#ef4444'}">${profit>=0?'+':''}${fmt(profit)}</b><br><br>Это управленческий расчёт по выписке. Для бухгалтерской прибыли учитываются также начисления и амортизация.`;
+  }
+  if (/привет|здравству|добрый|помог/.test(ql)) {
+    return 'Привет! Я анализирую ваши финансовые данные. Спросите меня:<br>• "Какой у меня доход за этот год?"<br>• "Сколько налог УСН?"<br>• "Когда платить НДС?"<br>• "Топ расходов?"<br>• "Прогноз на следующий месяц?"';
+  }
+  return `Понял вопрос: "${q}"<br><br>Я анализирую ваши данные в режиме реального времени. Попробуй спросить конкретнее:<br>• О доходах, расходах или прибыли<br>• О налогах (УСН, НДС)<br>• О дедлайнах отчётности<br>• О прогнозе потока<br>• О топ расходах или контрагентах`;
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
 document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
 syncNow();
 </script>
+
+<!-- AI Ассистент -->
+<button class="ai-fab" onclick="toggleAI()" title="Спросить ИИ-ассистента">🤖</button>
+<div class="ai-modal" id="aiModal">
+  <div class="ai-modal-header">
+    <div>
+      <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700">ОМС-Ассистент</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Анализирую ваши данные</div>
+    </div>
+    <button onclick="toggleAI()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px">✕</button>
+  </div>
+  <div class="ai-quick-btns">
+    <button class="ai-quick" onclick="aiAsk('Какой у меня доход за этот год?')">💰 Доход</button>
+    <button class="ai-quick" onclick="aiAsk('Сколько налог УСН?')">📊 УСН</button>
+    <button class="ai-quick" onclick="aiAsk('Когда платить НДС?')">🗓️ Дедлайн</button>
+    <button class="ai-quick" onclick="aiAsk('Топ расходов?')">📉 Расходы</button>
+    <button class="ai-quick" onclick="aiAsk('Прогноз на следующий месяц?')">🔮 Прогноз</button>
+  </div>
+  <div class="ai-messages" id="aiMessages">
+    <div class="ai-msg bot">Привет! Я анализирую ваши финансовые данные и могу ответить на вопросы о доходах, расходах, налогах и сроках. Спросите меня что-нибудь или нажмите одну из кнопок выше.</div>
+  </div>
+  <div class="ai-input-row">
+    <input type="text" id="aiInput" placeholder="Задайте вопрос..." onkeydown="if(event.key==='Enter')aiSend()">
+    <button class="ai-send" onclick="aiSend()">➤</button>
+  </div>
+</div>
 
 <!-- Мобильное нижнее меню -->
 <nav class="mobile-nav">
