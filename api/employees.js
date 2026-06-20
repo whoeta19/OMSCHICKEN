@@ -33,10 +33,38 @@ async function getUserRole(companyId, userId) {
   return d[0]?.role || null;
 }
 
-// НДФЛ 13% (упрощённо, без учёта прогрессивной шкалы 15% свыше 5 млн/год — добавить отдельно при необходимости)
-// Страховые взносы — единый тариф 2026: 30% в пределах базы 2 979 000 ₽/год на сотрудника, 15.1% сверх
+// НДФЛ — прогрессивная шкала 2026: 13% до 2.4 млн/год, 15% до 5 млн, 18% до 20 млн,
+// 20% до 50 млн, 22% свыше. Повышенная ставка применяется только к сумме превышения порога,
+// расчёт идёт нарастающим итогом с начала года.
+const NDFL_BRACKETS = [
+  { upTo: 2400000, rate: 0.13 },
+  { upTo: 5000000, rate: 0.15 },
+  { upTo: 20000000, rate: 0.18 },
+  { upTo: 50000000, rate: 0.20 },
+  { upTo: Infinity, rate: 0.22 },
+];
+
+function calcNdfl(salaryGross, employeeYearTotalBefore = 0) {
+  const totalAfter = employeeYearTotalBefore + salaryGross;
+  let ndfl = 0;
+  let prevBracketEnd = 0;
+
+  for (const bracket of NDFL_BRACKETS) {
+    const bracketStart = Math.max(prevBracketEnd, employeeYearTotalBefore);
+    const bracketEnd = Math.min(bracket.upTo, totalAfter);
+    if (bracketEnd > bracketStart) {
+      ndfl += (bracketEnd - bracketStart) * bracket.rate;
+    }
+    prevBracketEnd = bracket.upTo;
+    if (totalAfter <= bracket.upTo) break;
+  }
+
+  return Math.round(ndfl);
+}
+
+// Страховые взносы — единый тариф 2026: 30% до базы 2 979 000 ₽/год на сотрудника, 15.1% сверх.
 function calcPayroll(salaryGross, employeeYearTotal = 0) {
-  const ndfl = Math.round(salaryGross * 0.13);
+  const ndfl = calcNdfl(salaryGross, employeeYearTotal);
   const salaryNet = salaryGross - ndfl;
 
   const LIMIT = 2979000;

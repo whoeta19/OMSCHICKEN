@@ -143,9 +143,8 @@
         <div class="input-group">
           <label>Работодатель</label>
           <select id="employerType" onchange="calcSalary()">
-            <option value="regular">ООО/АО</option>
-            <option value="small">МСП (малое предприятие)</option>
-            <option value="it">IT-аккредитованная</option>
+            <option value="regular">ООО/АО — обычный тариф</option>
+            <option value="it">IT-аккредитованная компания</option>
           </select>
         </div>
       </div>
@@ -155,14 +154,12 @@
         <div class="result-row"><span class="result-label">НДФЛ 13%</span><span class="result-value red" id="sr-ndfl"></span></div>
         <div class="result-row"><span class="result-label">Сотрудник получит (net)</span><span class="result-value green" id="sr-net"></span></div>
         <div style="height:1px;background:var(--border);margin:10px 0"></div>
-        <div class="result-row"><span class="result-label">ПФР (22% / 10% сверх лимита)</span><span class="result-value orange" id="sr-pfr"></span></div>
-        <div class="result-row"><span class="result-label">ФСС (2.9%)</span><span class="result-value orange" id="sr-fss"></span></div>
-        <div class="result-row"><span class="result-label">ФОМС (5.1%)</span><span class="result-value orange" id="sr-foms"></span></div>
-        <div class="result-row"><span class="result-label">Итого взносов</span><span class="result-value orange" id="sr-vznosy"></span></div>
+        <div class="result-row"><span class="result-label" id="sr-vznosy-label">Страховые взносы (30% — единый тариф)</span><span class="result-value orange" id="sr-vznosy"></span></div>
         <div class="result-total">
           <span class="result-total-label">💰 Реальная стоимость сотрудника</span>
           <span class="result-total-value" id="sr-total"></span>
         </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">НДФЛ рассчитан по прогрессивной шкале 2026 года (13–22%) исходя из оклада × 12 месяцев. Взносы — для дохода сотрудника с начала года в пределах 2 979 000 ₽. Если зарплата сотрудника менялась в течение года или есть другие доходы — для точного расчёта используй модуль <a href="/payroll" style="color:var(--accent)">Зарплата</a>.</div>
         <div style="margin-top:10px;font-size:11px;color:var(--muted)">* Расчёт приблизительный. Ставки могут отличаться в зависимости от льгот и региона.</div>
       </div>
     </div>
@@ -394,26 +391,48 @@ function calcSalary() {
   if (!gross) return;
   const deduct = parseFloat(document.getElementById('salaryDeduct').value) || 0;
   const empType = document.getElementById('employerType').value;
-  
-  const ndfl = Math.max(0, (gross - deduct) * 0.13);
+
+  // НДФЛ — прогрессивная шкала 2026 (13/15/18/20/22%), пороги — на годовой доход.
+  // Здесь предполагаем, что оклад одинаковый каждый месяц, поэтому считаем от годовой суммы (gross×12)
+  // и делим обратно на 12, чтобы показать налог за этот месяц.
+  const monthlyBase = Math.max(0, gross - deduct);
+  const yearlyBase = monthlyBase * 12;
+  const ndflBrackets = [
+    { upTo: 2400000, rate: 0.13 },
+    { upTo: 5000000, rate: 0.15 },
+    { upTo: 20000000, rate: 0.18 },
+    { upTo: 50000000, rate: 0.20 },
+    { upTo: Infinity, rate: 0.22 },
+  ];
+  let yearlyNdfl = 0, prevEnd = 0;
+  for (const b of ndflBrackets) {
+    const segment = Math.min(b.upTo, yearlyBase) - prevEnd;
+    if (segment > 0) yearlyNdfl += segment * b.rate;
+    prevEnd = b.upTo;
+    if (yearlyBase <= b.upTo) break;
+  }
+  const ndfl = yearlyNdfl / 12;
   const net = gross - ndfl;
-  
-  let pfrRate = 0.22, fssRate = 0.029, fomsRate = 0.051;
-  if (empType === 'small') { pfrRate = 0.10; fssRate = 0.005; fomsRate = 0.05; }
-  if (empType === 'it') { pfrRate = 0.06; fssRate = 0.015; fomsRate = 0.008; }
-  
-  const pfr = gross * pfrRate;
-  const fss = gross * fssRate;
-  const foms = gross * fomsRate;
-  const vznosy = pfr + fss + foms;
+
+  // Единый тариф страховых взносов 2026: 30% в пределах базы 2 979 000 ₽/год, 15.1% сверх.
+  // Для IT-аккредитованных компаний — льготный тариф 15% / 7.6% сверх (с 2026 года повышен с 7.6%).
+  // Расчёт ниже предполагает, что это первый месяц в пределах базы (без учёта накопленного дохода за год) —
+  // для точного расчёта в течение года используется модуль /payroll.
+  let rateLabel, vznosy;
+  if (empType === 'it') {
+    rateLabel = 'Страховые взносы (15% — льгота для IT)';
+    vznosy = gross * 0.15;
+  } else {
+    rateLabel = 'Страховые взносы (30% — единый тариф)';
+    vznosy = gross * 0.30;
+  }
+
   const total = gross + vznosy;
-  
+
   document.getElementById('sr-gross').textContent = fmt(gross);
   document.getElementById('sr-ndfl').textContent = '-' + fmt(ndfl);
   document.getElementById('sr-net').textContent = fmt(net);
-  document.getElementById('sr-pfr').textContent = fmt(pfr);
-  document.getElementById('sr-fss').textContent = fmt(fss);
-  document.getElementById('sr-foms').textContent = fmt(foms);
+  document.getElementById('sr-vznosy-label').textContent = rateLabel;
   document.getElementById('sr-vznosy').textContent = fmt(vznosy);
   document.getElementById('sr-total').textContent = fmt(total);
   document.getElementById('salaryResult').classList.add('show');
@@ -593,6 +612,38 @@ function updateOrgType() {
   calcTaxSys();
 }
 
+// НДФЛ — прогрессивная шкала зарплаты 2026: 13/15/18/20/22% по годовым порогам
+function progressiveSalaryNdfl(yearlyBase) {
+  const brackets = [
+    { upTo: 2400000, rate: 0.13 },
+    { upTo: 5000000, rate: 0.15 },
+    { upTo: 20000000, rate: 0.18 },
+    { upTo: 50000000, rate: 0.20 },
+    { upTo: Infinity, rate: 0.22 },
+  ];
+  let ndfl = 0, prevEnd = 0;
+  for (const b of brackets) {
+    const seg = Math.min(b.upTo, yearlyBase) - prevEnd;
+    if (seg > 0) ndfl += seg * b.rate;
+    prevEnd = b.upTo;
+    if (yearlyBase <= b.upTo) break;
+  }
+  return ndfl;
+}
+
+// НДФЛ с дивидендов — отдельная двухступенчатая шкала 2026: 13% до 2.4 млн/год, 15% сверх (своя база, не складывается с зарплатой)
+function dividendNdfl(yearlyDividends) {
+  if (yearlyDividends <= 2400000) return yearlyDividends * 0.13;
+  return 2400000 * 0.13 + (yearlyDividends - 2400000) * 0.15;
+}
+
+// Страховые взносы — единый тариф 2026: 30% до базы 2 979 000 ₽/год, 15.1% сверх
+function yearlyContributions(yearlySalary) {
+  const LIMIT = 2979000;
+  if (yearlySalary <= LIMIT) return yearlySalary * 0.30;
+  return LIMIT * 0.30 + (yearlySalary - LIMIT) * 0.151;
+}
+
 function calcTaxSys() {
   const income = parseFloat(document.getElementById('tsIncome').value) || 0;
   const expense = parseFloat(document.getElementById('tsExpense').value) || 0;
@@ -616,50 +667,57 @@ function calcTaxSys() {
     const usn15tax = Math.max(usn15base * usnRate, income * 0.01);
     const usn15net = profit - insurance - usn15tax;
     
-    // ОСНО ИП (НДФЛ 13%)
+    // ОСНО ИП — НДФЛ по прогрессивной шкале (предполагается, что это весь годовой доход ИП)
     const vat = income * 10/110;
     const vatBuy = expense * 10/110;
     const vatNet = Math.max(0, vat - vatBuy);
     const ndflBase = Math.max(0, income - expense - vatNet - insurance);
-    const ndfl = ndflBase * 0.13;
+    const ndfl = progressiveSalaryNdfl(ndflBase);
     const osnoNet = profit - insurance - vatNet - ndfl;
     
     results = [
       {name:'УСН 6%', tax:usn6tax+insurance, net:usn6net, desc:`Налог ${fmt(usn6tax)} + взносы ${fmt(insurance)}`},
       {name:`УСН ${usnRate*100}%`, tax:usn15tax+insurance, net:usn15net, desc:`Налог ${fmt(usn15tax)} + взносы ${fmt(insurance)}`},
-      {name:'ОСНО (ИП)', tax:vatNet+ndfl+insurance, net:osnoNet, desc:`НДС ${fmt(vatNet)} + НДФЛ ${fmt(ndfl)}`},
+      {name:'ОСНО (ИП)', tax:vatNet+ndfl+insurance, net:osnoNet, desc:`НДС ${fmt(vatNet)} + НДФЛ ${fmt(ndfl)} (прогрессивная шкала)`},
     ];
   } else {
     // ООО
-    const dirSalary = (parseFloat(document.getElementById('tsDirectorSalary').value) || 0) * 12;
-    const dirTax = dirSalary * (0.13 + 0.30); // НДФЛ + взносы
+    const dirSalaryYearly = (parseFloat(document.getElementById('tsDirectorSalary').value) || 0) * 12;
+    const dirNdfl = progressiveSalaryNdfl(dirSalaryYearly);
+    const dirContrib = yearlyContributions(dirSalaryYearly);
+    const dirTax = dirNdfl + dirContrib; // НДФЛ директора (удерживается из его зарплаты) + взносы (расход компании)
     const divPct = (parseFloat(document.getElementById('tsDividends').value) || 80) / 100;
     
     // УСН 6% ООО
     let usn6tax = income * 0.06;
-    const usn6profit = profit - dirSalary - dirTax;
-    const usn6div = Math.max(0, usn6profit - usn6tax) * divPct * 0.13;
-    const usn6net = Math.max(0, usn6profit - usn6tax) * (1 - divPct * 0.13);
+    const usn6profitBeforeDiv = Math.max(0, profit - dirSalaryYearly - dirContrib - usn6tax);
+    const usn6divAmount = usn6profitBeforeDiv * divPct;
+    const usn6divNdfl = dividendNdfl(usn6divAmount);
+    const usn6net = usn6profitBeforeDiv - usn6divNdfl;
     
     // УСН 15% ООО  
-    const usn15base = Math.max(0, income - expense - dirSalary - dirTax);
+    const usn15base = Math.max(0, income - expense - dirSalaryYearly - dirContrib);
     const usn15tax = Math.max(usn15base * usnRate, income * 0.01);
-    const usn15profit = profit - dirSalary - dirTax - usn15tax;
-    const usn15net = Math.max(0, usn15profit) * (1 - divPct * 0.13);
+    const usn15profitBeforeDiv = Math.max(0, profit - dirSalaryYearly - dirContrib - usn15tax);
+    const usn15divAmount = usn15profitBeforeDiv * divPct;
+    const usn15divNdfl = dividendNdfl(usn15divAmount);
+    const usn15net = usn15profitBeforeDiv - usn15divNdfl;
     
-    // ОСНО ООО
+    // ОСНО ООО — налог на прибыль 25% (8% федеральный + 17% региональный)
     const vat = income * 10/110;
     const vatBuy = expense * 10/110;
     const vatNet = Math.max(0, vat - vatBuy);
-    const npBase = Math.max(0, income - expense - vatNet - dirSalary - dirTax);
+    const npBase = Math.max(0, income - expense - vatNet - dirSalaryYearly - dirContrib);
     const np = npBase * 0.25;
-    const osnoProfit = profit - vatNet - np - dirSalary - dirTax;
-    const osnoNet = Math.max(0, osnoProfit) * (1 - divPct * 0.13);
+    const osnoProfitBeforeDiv = Math.max(0, profit - vatNet - np - dirSalaryYearly - dirContrib);
+    const osnoDivAmount = osnoProfitBeforeDiv * divPct;
+    const osnoDivNdfl = dividendNdfl(osnoDivAmount);
+    const osnoNet = osnoProfitBeforeDiv - osnoDivNdfl;
     
     results = [
-      {name:'УСН 6%', tax:usn6tax+dirTax, net:usn6net, desc:`Налог ${fmt(usn6tax)} + зарплата дир. ${fmt(dirSalary)}`},
-      {name:`УСН ${usnRate*100}%`, tax:usn15tax+dirTax, net:usn15net, desc:`Налог ${fmt(usn15tax)} + зарплата дир. ${fmt(dirSalary)}`},
-      {name:'ОСНО (ООО)', tax:vatNet+np+dirTax, net:osnoNet, desc:`НДС ${fmt(vatNet)} + налог на прибыль ${fmt(np)}`},
+      {name:'УСН 6%', tax:usn6tax+dirTax+usn6divNdfl, net:usn6net, desc:`Налог ${fmt(usn6tax)} + зарплата дир. ${fmt(dirSalaryYearly)} + НДФЛ с дивидендов ${fmt(usn6divNdfl)}`},
+      {name:`УСН ${usnRate*100}%`, tax:usn15tax+dirTax+usn15divNdfl, net:usn15net, desc:`Налог ${fmt(usn15tax)} + зарплата дир. ${fmt(dirSalaryYearly)} + НДФЛ с дивидендов ${fmt(usn15divNdfl)}`},
+      {name:'ОСНО (ООО)', tax:vatNet+np+dirTax+osnoDivNdfl, net:osnoNet, desc:`НДС ${fmt(vatNet)} + налог на прибыль 25% ${fmt(np)} + НДФЛ с дивидендов ${fmt(osnoDivNdfl)}`},
     ];
   }
   

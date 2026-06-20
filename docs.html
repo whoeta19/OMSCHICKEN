@@ -118,7 +118,7 @@
     </div>
     <div class="doc-type-btn" id="btn-akt" onclick="selectDoc('akt',this)">
       <div class="doc-type-icon">✅</div>
-      <div class="doc-type-name">Акт КС-2</div>
+      <div class="doc-type-name">Акт об услугах</div>
       <div class="doc-type-desc">Выполненных работ</div>
     </div>
     <div class="doc-type-btn" id="btn-dog" onclick="selectDoc('dog',this)">
@@ -169,6 +169,16 @@
         <input type="date" id="docDate" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 8px;color:var(--text);font-size:12px;outline:none;">
       </div>
     </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="hasAdvance" onchange="document.getElementById('advanceFields').style.display=this.checked?'flex':'none'">
+        Поставка в счёт ранее полученного аванса (для УПД/счёт-фактуры с 2026 — строка 5б)
+      </label>
+    </div>
+    <div id="advanceFields" style="display:none;gap:6px;margin-bottom:10px">
+      <input type="text" id="advanceNum" placeholder="№ авансового счёта-фактуры" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;">
+      <input type="date" id="advanceDate" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;">
+    </div>
     <table class="items-table">
       <thead>
         <tr>
@@ -184,11 +194,11 @@
       </thead>
       <tbody id="itemsBody">
         <tr>
-          <td><input type="text" placeholder="Мясо куриное охл." oninput="calcRow(this)"></td>
+          <td><input type="text" placeholder="Наименование товара/услуги" oninput="calcRow(this)"></td>
           <td><input type="number" value="1" oninput="calcRow(this)"></td>
           <td><input type="text" value="кг" style="width:35px"></td>
           <td><input type="number" value="0" oninput="calcRow(this)"></td>
-          <td><select oninput="calcRow(this)" style="width:55px"><option value="10">10%</option><option value="20">20%</option><option value="0">Без НДС</option></select></td>
+          <td><select oninput="calcRow(this)" style="width:55px"><option value="22">22%</option><option value="10">10%</option><option value="20">20% (старая ставка)</option><option value="0">Без НДС</option></select></td>
           <td class="vat-cell" style="color:#22c55e">0 ₽</td>
           <td class="total-cell" style="font-weight:600">0 ₽</td>
           <td><button onclick="removeRow(this)" style="background:none;border:none;color:#ef4444;cursor:pointer">✕</button></td>
@@ -228,7 +238,7 @@
         <option value="torg12">ТОРГ-12</option>
         <option value="ttn">ТТН</option>
         <option value="sf">Счёт-фактура</option>
-        <option value="akt">Акт КС-2</option>
+        <option value="akt">Акт об услугах</option>
         <option value="dog">Договор</option>
         <option value="dover">Доверенность</option>
         <option value="ko1">ПКО</option>
@@ -367,7 +377,7 @@ function addRow() {
     <td><input type="number" value="1" oninput="calcRow(this)"></td>
     <td><input type="text" value="кг" style="width:35px"></td>
     <td><input type="number" value="0" oninput="calcRow(this)"></td>
-    <td><select oninput="calcRow(this)" style="width:55px"><option value="10">10%</option><option value="20">20%</option><option value="0">Без НДС</option></select></td>
+    <td><select oninput="calcRow(this)" style="width:55px"><option value="22">22%</option><option value="10">10%</option><option value="20">20% (старая ставка)</option><option value="0">Без НДС</option></select></td>
     <td class="vat-cell" style="color:#22c55e">0 ₽</td>
     <td class="total-cell" style="font-weight:600">0 ₽</td>
     <td><button onclick="removeRow(this)" style="background:none;border:none;color:#ef4444;cursor:pointer">✕</button></td>`;
@@ -431,11 +441,15 @@ function getBuyer() {
 }
 
 function getDocInfo() {
+  const hasAdvance = document.getElementById('hasAdvance')?.checked;
   return {
     num: document.getElementById('docNum').value || '1',
     date: document.getElementById('docDate').value ? 
       new Date(document.getElementById('docDate').value).toLocaleDateString('ru-RU') : 
-      new Date().toLocaleDateString('ru-RU')
+      new Date().toLocaleDateString('ru-RU'),
+    advanceNum: hasAdvance ? (document.getElementById('advanceNum')?.value || '') : '',
+    advanceDate: hasAdvance && document.getElementById('advanceDate')?.value ?
+      new Date(document.getElementById('advanceDate').value).toLocaleDateString('ru-RU') : ''
   };
 }
 
@@ -465,9 +479,9 @@ function generateDoc() {
     case 'torg12': html = genTORG12(items, buyer, doc, totalNoVat, totalVat, totalAll); break;
     case 'sf': html = genSF(items, buyer, doc, totalNoVat, totalVat, totalAll); break;
     case 'akt': html = genAKT(items, buyer, doc, totalNoVat, totalVat, totalAll); break;
-    case 'dog': html = genDOG(buyer, doc, totalAll); break;
+    case 'dog': html = genDOG(items, buyer, doc, totalAll); break;
     case 'dover': html = genDOVER(buyer, doc); break;
-    case 'ko1': html = genKO1(buyer, doc, totalAll); break;
+    case 'ko1': html = genKO1(buyer, doc, totalAll, totalVat); break;
     case 'ttn': html = genTTN(items, buyer, doc, totalNoVat, totalVat, totalAll); break;
   }
   
@@ -525,6 +539,7 @@ function genUPD(items, buyer, doc, noVat, vat, total) {
       <tr><td style="width:15%;background:#f0f0f0" class="bold small">Продавец:</td><td>${S.name}, ИНН/КПП ${S.inn}/${S.kpp}</td><td style="width:15%;background:#f0f0f0" class="bold small">Покупатель:</td><td>${buyer.name}, ИНН/КПП ${buyer.inn}</td></tr>
       <tr><td class="bold small">Адрес:</td><td class="small">${S.addr}</td><td class="bold small">Адрес:</td><td class="small">${buyer.addr}</td></tr>
       <tr><td class="bold small">К п/п счёт:</td><td class="small">№ ${doc.num} от ${doc.date}</td><td class="bold small">Грузополучатель:</td><td class="small">${buyer.name}</td></tr>
+      ${doc.advanceNum ? `<tr><td class="bold small">Стр. 5б (аванс):</td><td class="small" colspan="3">Авансовый счёт-фактура № ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
     </table>
     <table>
       <thead>
@@ -608,6 +623,7 @@ function genSF(items, buyer, doc, noVat, vat, total) {
       <tr><td class="bold small" style="background:#f0f0f0">Грузоотправитель и его адрес:</td><td>${S.name}, ${S.addr}</td></tr>
       <tr><td class="bold small" style="background:#f0f0f0">Грузополучатель и его адрес:</td><td>${buyer.name}, ${buyer.addr}</td></tr>
       <tr><td class="bold small" style="background:#f0f0f0">К расчётно-платёжному документу:</td><td>№ ${doc.num} от ${doc.date}</td></tr>
+      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f0f0f0">Стр. 5б (аванс):</td><td>Авансовый счёт-фактура № ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
       <tr><td class="bold small" style="background:#f0f0f0">Покупатель:</td><td>${buyer.name}</td></tr>
       <tr><td class="bold small" style="background:#f0f0f0">Адрес:</td><td class="small">${buyer.addr}</td></tr>
       <tr><td class="bold small" style="background:#f0f0f0">ИНН/КПП покупателя:</td><td>${buyer.inn}</td></tr>
@@ -643,22 +659,15 @@ function genSF(items, buyer, doc, noVat, vat, total) {
     </div>`;
 }
 
-// АКТ КС-2
+// АКТ ОБ УСЛУГАХ / РАБОТАХ
 function genAKT(items, buyer, doc, noVat, vat, total) {
   return `
-    <div style="text-align:right;font-size:9pt;margin-bottom:4px">Унифицированная форма № КС-2<br>Утверждена постановлением Госкомстата России от 11.11.99 № 100</div>
-    <div class="title-center">АКТ<br>О ПРИЁМКЕ ВЫПОЛНЕННЫХ РАБОТ</div>
-    <div style="text-align:center;margin-bottom:8px">№ ${doc.num} от «${doc.date}» г.</div>
-    <table style="margin-bottom:6px">
-      <tr><td class="bold small" style="width:20%;background:#f0f0f0">Инвестор:</td><td>${buyer.name}<br><span class="small">ИНН: ${buyer.inn} | ${buyer.addr}</span></td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Заказчик:</td><td>${buyer.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Подрядчик:</td><td>${S.name}<br><span class="small">ИНН/КПП: ${S.inn}/${S.kpp}</span></td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Договор подряда №:</td><td>${doc.num} от ${doc.date}</td></tr>
-    </table>
+    <div class="title-center">АКТ № ${doc.num}<br>об оказании услуг / выполнении работ</div>
+    <div style="text-align:center;margin-bottom:8px">г. _________________ &nbsp;&nbsp; «${doc.date}» г.</div>
+    <p style="font-size:10pt;margin-bottom:10px"><span class="bold">${S.name}</span>, ИНН ${S.inn}/КПП ${S.kpp}, далее «Исполнитель», и <span class="bold">${buyer.name}</span>, ИНН/КПП ${buyer.inn}, далее «Заказчик», составили настоящий Акт о том, что Исполнитель оказал услуги/выполнил работы на условиях, указанных ниже, а Заказчик принял их без претензий по объёму, качеству и срокам.</p>
     <table>
       <thead>
-        <tr><th style="width:5%">№</th><th>Наименование работ</th><th>Ед.</th><th>Кол-во</th><th>Цена за ед., руб.</th><th>Стоимость, руб.</th></tr>
-        <tr>${['1','2','3','4','5','6'].map(n=>`<th>${n}</th>`).join('')}</tr>
+        <tr><th style="width:5%">№</th><th>Наименование работ/услуг</th><th>Ед.</th><th>Кол-во</th><th>Цена за ед., руб.</th><th>Стоимость, руб.</th></tr>
       </thead>
       <tbody>
         ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="right">${fmtN(i.sum)}</td></tr>`).join('')}
@@ -667,15 +676,16 @@ function genAKT(items, buyer, doc, noVat, vat, total) {
         <tr><td colspan="5" class="right bold">Итого с НДС:</td><td class="right bold">${fmtN(total)}</td></tr>
       </tbody>
     </table>
+    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб. (${sumWords(total)})</strong></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <div style="border:1px solid #000;padding:6px">
-        <div class="bold small">Сдал подрядчик:</div>
+        <div class="bold small">Исполнитель:</div>
         <div style="margin-top:4px">${S.name}</div>
         <div style="margin-top:8px">${signHTML('Директор')} ${S.director}</div>
         <div style="text-align:center;margin-top:4px">${stampHTML()}</div>
       </div>
       <div style="border:1px solid #000;padding:6px">
-        <div class="bold small">Принял заказчик:</div>
+        <div class="bold small">Заказчик:</div>
         <div style="margin-top:4px">${buyer.name}</div>
         <div style="margin-top:8px">_________________ ${buyer.director}</div>
         <div style="margin-top:4px">М.П.</div>
@@ -684,18 +694,35 @@ function genAKT(items, buyer, doc, noVat, vat, total) {
 }
 
 // ДОГОВОР ПОСТАВКИ
-function genDOG(buyer, doc, total) {
+function genDOG(items, buyer, doc, total) {
+  // Извлекаем город продавца из адреса (ищем "г. Город" или "город Город")
+  const cityMatch = (S.addr || '').match(/г\.?\s*([А-ЯЁ][а-яё-]+)/);
+  const city = cityMatch ? cityMatch[1] : '_________________';
+
+  // Предмет договора и преобладающая ставка НДС — из реально введённых товарных позиций
+  const itemNames = (items || []).map(i => i.name).filter(Boolean);
+  let subject = 'товары';
+  if (itemNames.length === 1) subject = itemNames[0];
+  else if (itemNames.length > 1) subject = 'товары (' + itemNames.slice(0, 3).join(', ') + (itemNames.length > 3 ? ' и др.' : '') + ')';
+
+  // Берём ставку НДС первой позиции с непустым vatPct как преобладающую для текста договора
+  const vatRates = (items || []).map(i => i.vatPct).filter(v => v !== undefined && v !== null);
+  const dominantVat = vatRates.length ? vatRates[0] : 0;
+  const vatClause = dominantVat > 0
+    ? `включает НДС ${dominantVat}%`
+    : 'НДС не облагается';
+
   return `
     <div class="title-center">ДОГОВОР ПОСТАВКИ № ${doc.num}</div>
-    <div style="text-align:center;margin-bottom:10px">г. Пенза &nbsp;&nbsp;&nbsp; «${doc.date}» г.</div>
+    <div style="text-align:center;margin-bottom:10px">г. ${city} &nbsp;&nbsp;&nbsp; «${doc.date}» г.</div>
     <p style="margin-bottom:8px;font-size:10pt"><span class="bold">${S.name}</span>, ИНН ${S.inn}/КПП ${S.kpp}, ОГРН ${S.ogrn || '—'}, в лице Генерального директора ${S.director}, действующего на основании Устава, именуемое в дальнейшем «<b>Поставщик</b>», с одной стороны, и <span class="bold">${buyer.name}</span>, ИНН/КПП ${buyer.inn}, в лице _________________, действующего на основании _________________, именуемое «<b>Покупатель</b>», с другой стороны, заключили настоящий Договор:</p>
     
     <p class="bold" style="margin:8px 0 4px">1. ПРЕДМЕТ ДОГОВОРА</p>
-    <p style="font-size:10pt;margin-bottom:4px">1.1. Поставщик обязуется поставить мясо птицы (куриное) охлаждённое/замороженное (Товар) в ассортименте и по ценам согласно Спецификациям, а Покупатель — принять и оплатить Товар.</p>
-    <p style="font-size:10pt;margin-bottom:8px">1.2. Качество Товара должно соответствовать требованиям ГОСТ Р 52702-2006 и действующим санитарным нормам РФ. Сопроводительные документы: ветеринарное свидетельство, декларация соответствия.</p>
+    <p style="font-size:10pt;margin-bottom:4px">1.1. Поставщик обязуется поставить ${subject} (Товар) в ассортименте и по ценам согласно Спецификациям, а Покупатель — принять и оплатить Товар.</p>
+    <p style="font-size:10pt;margin-bottom:8px">1.2. Качество Товара должно соответствовать требованиям действующих стандартов и санитарных норм РФ. Сопроводительные документы предоставляются по требованию Покупателя.</p>
     
     <p class="bold" style="margin:8px 0 4px">2. ЦЕНА И ПОРЯДОК РАСЧЁТОВ</p>
-    <p style="font-size:10pt;margin-bottom:4px">2.1. Цена Товара устанавливается в Спецификации и включает НДС 10%.</p>
+    <p style="font-size:10pt;margin-bottom:4px">2.1. Цена Товара устанавливается в Спецификации и ${vatClause}.</p>
     <p style="font-size:10pt;margin-bottom:4px">2.2. Покупатель производит оплату в течение 5 (пяти) банковских дней с момента поставки путём перечисления на р/с Поставщика.</p>
     <p style="font-size:10pt;margin-bottom:8px">2.3. Датой оплаты считается дата зачисления денежных средств на счёт Поставщика.</p>
     
@@ -709,7 +736,7 @@ function genDOG(buyer, doc, total) {
     <p style="font-size:10pt;margin-bottom:8px">4.2. За просрочку поставки Поставщик уплачивает штраф 0,05% за каждый день.</p>
     
     <p class="bold" style="margin:8px 0 4px">5. СРОК ДЕЙСТВИЯ И ПРОЧИЕ УСЛОВИЯ</p>
-    <p style="font-size:10pt;margin-bottom:8px">5.1. Договор действует до 31.12.${new Date().getFullYear()} с автоматической пролонгацией. Споры разрешаются в Арбитражном суде Пензенской области.</p>
+    <p style="font-size:10pt;margin-bottom:8px">5.1. Договор действует до 31.12.${new Date().getFullYear()} с автоматической пролонгацией. Споры разрешаются в Арбитражном суде ${city !== '_________________' ? `${city}ской области` : 'по месту регистрации Поставщика'}.</p>
     
     <p class="bold" style="margin:8px 0 4px">6. РЕКВИЗИТЫ И ПОДПИСИ СТОРОН</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
@@ -739,10 +766,18 @@ function genDOG(buyer, doc, total) {
 
 // ДОВЕРЕННОСТЬ М-2
 function genDOVER(buyer, doc) {
+  // Срок действия — стандартная практика 15 дней с даты выдачи (законом не ограничен,
+  // но это типичный срок для разовых доверенностей на получение ТМЦ).
+  const rawDate = document.getElementById('docDate')?.value;
+  const issueDate = rawDate ? new Date(rawDate) : new Date();
+  const validUntil = new Date(issueDate);
+  validUntil.setDate(validUntil.getDate() + 15);
+  const validUntilStr = validUntil.toLocaleDateString('ru-RU');
+
   return `
-    <div style="text-align:right;font-size:9pt;margin-bottom:4px">Форма № М-2<br>Утверждена постановлением Госкомстата СССР от 28.12.89 № 241</div>
+    <div style="text-align:right;font-size:9pt;margin-bottom:4px">Форма № М-2<br>Утверждена постановлением Госкомстата России от 30.10.97 № 71а</div>
     <div class="title-center">ДОВЕРЕННОСТЬ № ${doc.num}</div>
-    <div style="text-align:center;margin-bottom:8px">от «${doc.date}» г. &nbsp;&nbsp; Действительна по «____» _____________ ${new Date().getFullYear()} г.</div>
+    <div style="text-align:center;margin-bottom:8px">от «${doc.date}» г. &nbsp;&nbsp; Действительна по «${validUntilStr}» г.</div>
     <table style="margin-bottom:8px">
       <tr><td class="bold small" style="width:25%;background:#f0f0f0">Организация:</td><td>${buyer.name}</td></tr>
       <tr><td class="bold small" style="background:#f0f0f0">Адрес:</td><td class="small">${buyer.addr}</td></tr>
@@ -770,7 +805,8 @@ function genDOVER(buyer, doc) {
 }
 
 // ПКО КО-1
-function genKO1(buyer, doc, total) {
+function genKO1(buyer, doc, total, vat) {
+  const vatLine = vat > 0 ? `${fmtN(vat)}` : 'без налога (НДС)';
   return `
     <div style="text-align:right;font-size:9pt;margin-bottom:4px">Форма № КО-1<br>Утверждена постановлением Госкомстата России от 18.08.98 № 88</div>
     <div class="title-center">ПРИХОДНЫЙ КАССОВЫЙ ОРДЕР</div>
@@ -786,7 +822,7 @@ function genKO1(buyer, doc, total) {
     <p style="font-size:10pt;margin-bottom:4px">Принято от: <span class="bold">${buyer.name}</span></p>
     <p style="font-size:10pt;margin-bottom:4px">Основание: Оплата по счёту № ${doc.num} от ${doc.date}</p>
     <p style="font-size:10pt;margin-bottom:4px">Сумма: <span class="bold">${fmtN(total)}</span> руб. (<span style="font-style:italic">${sumWords(total)}</span>)</p>
-    <p style="font-size:10pt;margin-bottom:12px">В т.ч. НДС: —</p>
+    <p style="font-size:10pt;margin-bottom:12px">В т.ч. НДС: ${vatLine}</p>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <div>
         <p>Главный бухгалтер _________________ ${S.buh}</p>
@@ -807,7 +843,7 @@ function genKO1(buyer, doc, total) {
 
 function genTTN(items, buyer, doc, noVat, vat, total) {
   return `
-    <div style="text-align:right;font-size:9pt;margin-bottom:4px">Форма 1-Т<br>Унифицированная форма утверждена Постановлением Госкомстата РФ от 28.11.1997 № 78</div>
+    <div style="text-align:right;font-size:9pt;margin-bottom:4px">Форма 1-Т<br>Унифицированная форма утверждена Постановлением Госкомстата РФ от 28.11.1997 № 78<br><span style="color:#666">Обязательна при перевозке алкогольной продукции; для прочих товаров — добровольный учётный документ (первичный учёт ведётся по ТОРГ-12/УПД)</span></div>
     <div class="title-center">ТОВАРНО-ТРАНСПОРТНАЯ НАКЛАДНАЯ № ${doc.num}</div>
     <div style="text-align:center;margin-bottom:8px">Дата: «${doc.date}» г.</div>
     <table style="margin-bottom:6px">
@@ -876,7 +912,7 @@ function printDoc() {
 }
 
 function saveHistory() {
-  const docNames = {schet:'Счёт',upd:'УПД',torg12:'ТОРГ-12',sf:'Счёт-фактура',akt:'Акт КС-2',dog:'Договор',dover:'Доверенность М-2',ko1:'ПКО КО-1',ttn:'ТТН'};
+  const docNames = {schet:'Счёт',upd:'УПД',torg12:'ТОРГ-12',sf:'Счёт-фактура',akt:'Акт об услугах',dog:'Договор',dover:'Доверенность М-2',ko1:'ПКО КО-1',ttn:'ТТН'};
   const item = {
     id: Date.now(), type: currentDoc,
     typeName: docNames[currentDoc],

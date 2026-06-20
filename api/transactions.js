@@ -99,9 +99,29 @@ export default async function handler(req, res) {
         return enriched;
       });
 
+      // Дедупликация по хэшу — если транзакция с таким же отпечатком (дата+сумма+описание)
+      // уже сохранена для этой компании/пользователя, не вставляем её повторно.
+      // Это защищает от задвоения при повторной или частично перекрывающейся загрузке выписки.
+      const hashes = payloadWithUser.map(t => t.hash).filter(Boolean);
+      let existingHashes = new Set();
+      if (hashes.length) {
+        const scopeFilter = companyId ? `company_id=eq.${companyId}` : (userId ? `user_id=eq.${userId}` : null);
+        if (scopeFilter) {
+          const hashList = hashes.map(h => `"${h}"`).join(',');
+          const checkR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?${scopeFilter}&hash=in.(${hashList})&select=hash`, {
+            headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+          });
+          const existing = await checkR.json();
+          if (Array.isArray(existing)) existingHashes = new Set(existing.map(e => e.hash));
+        }
+      }
+
+      const toInsert = payloadWithUser.filter(t => !t.hash || !existingHashes.has(t.hash));
+      const skipped = payloadWithUser.length - toInsert.length;
+
       const batchSize = 50;
-      for (let i = 0; i < payloadWithUser.length; i += batchSize) {
-        const batch = payloadWithUser.slice(i, i + batchSize);
+      for (let i = 0; i < toInsert.length; i += batchSize) {
+        const batch = toInsert.slice(i, i + batchSize);
         const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
           method: 'POST',
           headers: adminHeaders,
@@ -112,7 +132,7 @@ export default async function handler(req, res) {
           console.error('POST error:', err);
         }
       }
-      return res.status(200).json({ ok: true, count: payload.length });
+      return res.status(200).json({ ok: true, inserted: toInsert.length, skipped, count: payload.length });
     }
 
     if (req.method === 'PATCH') {

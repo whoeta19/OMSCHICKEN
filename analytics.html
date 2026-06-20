@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Аналитика</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
 // Автообновление токена
 (function() {
   const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
   const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
   async function refresh() {
-    const r = localStorage.getItem('omschicken_refresh') || localStorage.getItem('omsfin_refresh');
+    const r = localStorage.getItem('omsfin_refresh');
     if (!r) return;
     try {
       const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
@@ -22,8 +21,8 @@
       });
       const data = await res.json();
       if (data.access_token) {
-        localStorage.setItem('omschicken_token', data.access_token);
-        localStorage.setItem('omschicken_refresh', data.refresh_token);
+        localStorage.setItem('omsfin_token', data.access_token);
+        localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
     } catch(e) {}
   }
@@ -184,10 +183,7 @@ async function loadData() {
   document.getElementById('loadingMsg').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
-    const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
-    const r = await fetch('/api/transactions', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
+    const r = await fetch('/api/transactions');
     allTx = await r.json();
     filteredTx = allTx;
     renderPeriodFilter();
@@ -230,7 +226,14 @@ function getDayData() {
     if (t.amount > 0) days[d].income += Number(t.amount);
     else days[d].expense += Math.abs(Number(t.amount));
   });
-  return Object.entries(days).sort(([a],[b])=>a.localeCompare(b));
+  // Сортируем хронологически, а не как текст: дата в формате DD.MM.YYYY
+  // нужно сначала разобрать на компоненты, иначе "05.12.2025" окажется
+  // после "15.01.2026" при простом сравнении строк.
+  function parseDMY(str) {
+    const [dd, mm, yyyy] = str.split('.').map(Number);
+    return new Date(yyyy, mm - 1, dd).getTime();
+  }
+  return Object.entries(days).sort(([a],[b]) => parseDMY(a) - parseDMY(b));
 }
 
 function renderDaysChart() {

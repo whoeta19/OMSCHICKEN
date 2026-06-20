@@ -832,7 +832,9 @@ function renderSuggestions() {
   const radarCache = getRadarCache();
   const recentByInn = {};
   allTx.filter(t => t.inn).forEach(t => {
-    if (!recentByInn[t.inn] || t.date > recentByInn[t.inn].date) recentByInn[t.inn] = t;
+    // Сравниваем даты хронологически (формат DD.MM.YYYY), а не как текст —
+    // строковое сравнение даёт неверный результат при пересечении границы месяца/года.
+    if (!recentByInn[t.inn] || parseDMY(t.date) > parseDMY(recentByInn[t.inn].date)) recentByInn[t.inn] = t;
   });
   Object.entries(recentByInn).forEach(([inn, t]) => {
     const info = radarCache[inn];
@@ -1416,23 +1418,29 @@ async function parseAndProcess(text) {
   }
     if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
 
+  // Генерируем хэш для каждой транзакции — отпечаток даты+суммы+описания.
+  // Используется на сервере, чтобы при повторной или частично перекрывающейся
+  // загрузке выписки не создавать дубликаты уже сохранённых операций.
+  txs.forEach(t => { t.hash = makeTxHash(t); });
+
   const wrap = document.getElementById('progressWrap');
   const fill = document.getElementById('progressFill');
   const ptxt = document.getElementById('progressText');
   wrap.classList.add('active');
   fill.style.width = '20%';
-  ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Очищаю месяц...`;
+  ptxt.textContent = `Найдено ${txs.length} операций${monthKey ? ' за ' + monthKey : ''}. Проверяю дубли...`;
 
   try {
-    await apiDelete(monthKey);
     fill.style.width = '50%';
     ptxt.textContent = 'Сохраняю операции...';
-    await apiPost(txs);
+    const postResult = await apiPost(txs);
     fill.style.width = '80%';
     ptxt.textContent = 'Загружаю из базы...';
     allTx = await apiGet();
     fill.style.width = '100%';
     const unknownCount = allTx.filter(t=>t.category==='unknown').length;
+    const insertedCount = postResult?.inserted ?? txs.length;
+    const skippedCount = postResult?.skipped ?? 0;
     ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
     setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
     renderAll();
@@ -1441,12 +1449,13 @@ async function parseAndProcess(text) {
       const bar = document.getElementById('undoUploadBar');
       const barText = document.getElementById('undoUploadText');
       if (bar && barText) {
-        barText.textContent = `Загружено ${txs.length} операций за ${monthKey}`;
+        barText.textContent = `Добавлено ${insertedCount} новых операций за ${monthKey}${skippedCount ? ` (${skippedCount} дублей пропущено)` : ''}`;
         bar.style.display = 'flex';
       }
     }
     if (unknownCount > 0) showToast(`⚠️ ${unknownCount} в "Прочее" — зайди в Разметку`);
-    else showToast(`✅ Загружено ${txs.length} операций за ${monthKey}`);
+    else if (skippedCount > 0) showToast(`✅ Добавлено ${insertedCount} новых, ${skippedCount} уже было загружено`);
+    else showToast(`✅ Загружено ${insertedCount} операций за ${monthKey}`);
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
@@ -1753,6 +1762,28 @@ function exportCSV() {
 }
 
 function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
+
+// Преобразует дату формата DD.MM.YYYY в timestamp для корректного хронологического сравнения
+// (обычное сравнение строк '20.12.2025' > '05.01.2026' даёт неверный результат).
+function parseDMY(str) {
+  if (!str) return 0;
+  const [dd, mm, yyyy] = str.split('.').map(Number);
+  if (!dd || !mm || !yyyy) return 0;
+  return new Date(yyyy, mm - 1, dd).getTime();
+}
+
+// Стабильный отпечаток транзакции — используется сервером, чтобы не вставлять
+// одну и ту же операцию дважды при повторной/частично перекрывающейся загрузке выписки.
+// Не включает категорию/period, потому что они могут поменяться при редактировании,
+// а сама операция в банке остаётся той же.
+function makeTxHash(t) {
+  const raw = [t.date, Number(t.amount).toFixed(2), (t.description || '').trim().toLowerCase()].join('|');
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+  }
+  return 'h' + Math.abs(hash).toString(36);
+}
 function showPage(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.pill').forEach(t=>t.classList.remove('active'));
