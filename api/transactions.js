@@ -22,6 +22,20 @@ async function getUserRole(companyId, userId) {
   return d[0]?.role || null;
 }
 
+// Записывает значимое действие в audit_log — не блокирует основной запрос при ошибке
+async function logAction(companyId, userId, action, details) {
+  if (!companyId || !userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ company_id: companyId, user_id: userId, action, details: details || {} })
+    });
+  } catch (e) {
+    // Журналирование не должно ломать основной запрос — молча игнорируем
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
@@ -146,6 +160,7 @@ export default async function handler(req, res) {
         headers: adminHeaders,
         body: JSON.stringify({ category, is_personal: ['personal','food'].includes(category) })
       });
+      if (companyId) logAction(companyId, userId, 'transaction_category_changed', { transaction_id: id, new_category: category });
       return res.status(200).json({ ok: true });
     }
 
@@ -160,6 +175,7 @@ export default async function handler(req, res) {
           method: 'DELETE',
           headers: adminHeaders
         });
+        logAction(companyId, userId, 'transactions_deleted', { period });
       } else if (period && userId) {
         await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}&user_id=eq.${userId}`, {
           method: 'DELETE',

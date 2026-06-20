@@ -17,6 +17,20 @@ function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// Записывает значимое действие в audit_log — не блокирует основной запрос при ошибке
+async function logAction(companyId, userId, action, details) {
+  if (!companyId || !userId) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/audit_log`, {
+      method: 'POST',
+      headers: adminHeaders,
+      body: JSON.stringify({ company_id: companyId, user_id: userId, action, details: details || {} })
+    });
+  } catch (e) {
+    // Журналирование не должно ломать основной запрос — молча игнорируем
+  }
+}
+
 async function getUserId(token) {
   if (!token) return null;
   try {
@@ -143,6 +157,7 @@ export default async function handler(req, res) {
           body: JSON.stringify({ used_by: userId })
         });
 
+        logAction(invite.company_id, userId, 'member_joined', { role: invite.role });
         return res.status(200).json({ ok: true, company_id: invite.company_id, role: invite.role });
       }
 
@@ -160,6 +175,7 @@ export default async function handler(req, res) {
           body: JSON.stringify({ role: new_role })
         });
 
+        logAction(company_id, userId, 'member_role_changed', { target_user_id, new_role });
         return res.status(200).json({ ok: true });
       }
 
@@ -180,6 +196,7 @@ export default async function handler(req, res) {
         headers: adminHeaders
       });
 
+      logAction(company_id, userId, 'member_removed', { target_user_id });
       return res.status(200).json({ ok: true });
     }
   } catch (e) {
