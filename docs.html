@@ -458,6 +458,60 @@ function stampHTML() {
   return `<div style="width:80px;height:80px;border:2px solid #00008B;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#00008B;text-align:center;transform:rotate(-15deg);padding:6px"><div style="border:1px solid #00008B;border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-weight:bold">М.П.</div></div>`;
 }
 
+// ── Сумма прописью ────────────────────────────────────────────────────────────
+function numToWords(n) {
+  const ones = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять',
+    'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
+    'шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  const tens = ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+  const hunds = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+  const onesF = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять',
+    'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
+    'шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  function chunk(num, fem) {
+    let r = '';
+    const h = Math.floor(num/100); if(h) r += hunds[h]+' ';
+    const t = num%100;
+    if(t<20) { r += (fem?onesF:ones)[t]; if(t) r+=' '; }
+    else { r += tens[Math.floor(t/10)]+' '; const o=t%10; if(o) r+=(fem?onesF:ones)[o]+' '; }
+    return r.trim();
+  }
+  function thousands(num) {
+    const forms = ['тысяча','тысячи','тысяч'];
+    const r = num%100; const o = num%10;
+    if(r>=11&&r<=19) return forms[2];
+    if(o===1) return forms[0];
+    if(o>=2&&o<=4) return forms[1];
+    return forms[2];
+  }
+  function millions(num) {
+    const forms = ['миллион','миллиона','миллионов'];
+    const r = num%100; const o = num%10;
+    if(r>=11&&r<=19) return forms[2];
+    if(o===1) return forms[0];
+    if(o>=2&&o<=4) return forms[1];
+    return forms[2];
+  }
+  if(n===0) return 'ноль';
+  let result = '';
+  const mil = Math.floor(n/1000000);
+  const th = Math.floor((n%1000000)/1000);
+  const rem = n%1000;
+  if(mil) result += chunk(mil,false)+' '+millions(mil)+' ';
+  if(th) result += chunk(th,true)+' '+thousands(th)+' ';
+  if(rem) result += chunk(rem,false);
+  return result.trim();
+}
+function rubles(amount) {
+  const rub = Math.floor(amount);
+  const kop = Math.round((amount - rub)*100);
+  const rubStr = numToWords(rub);
+  const rubForm = (()=>{ const r=rub%100,o=rub%10; if(r>=11&&r<=19) return 'рублей'; if(o===1) return 'рубль'; if(o>=2&&o<=4) return 'рубля'; return 'рублей'; })();
+  const kopStr = kop.toString().padStart(2,'0');
+  const kopForm = (()=>{ const r=kop%100,o=kop%10; if(r>=11&&r<=19) return 'копеек'; if(o===1) return 'копейка'; if(o>=2&&o<=4) return 'копейки'; return 'копеек'; })();
+  return rubStr.charAt(0).toUpperCase()+rubStr.slice(1)+' '+rubForm+' '+kopStr+' '+kopForm;
+}
+
 function signHTML(label) {
   const sig = signImg ? `<img src="${signImg}" style="height:30px;max-width:100px;opacity:0.85;display:block;margin-bottom:2px">` : '_________________';
   return `${label} ${sig}`;
@@ -516,7 +570,10 @@ function genSchet(items, buyer, doc, noVat, vat, total) {
       <thead><tr><th style="width:5%">№</th><th>Наименование товара (работ, услуг)</th><th style="width:8%">Ед.</th><th style="width:8%">Кол-во</th><th style="width:10%">Цена, ₽</th><th style="width:10%">НДС %</th><th style="width:12%">Сумма, ₽</th></tr></thead>
       <tbody>${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}</tbody>
     </table>
-    <table style="margin-top:4px"><tr><td style="border:none;text-align:right" colspan="6"><span class="bold">Итого: ${fmtN(noVat)} руб.</span> &nbsp; <span>НДС: ${fmtN(vat)} руб.</span> &nbsp; <span class="bold">ИТОГО К ОПЛАТЕ: ${fmtN(total)} руб.</span></td></tr></table>
+    <table style="margin-top:4px">
+      <tr><td style="border:none;text-align:right" colspan="7"><span>Итого без НДС: ${fmtN(noVat)} руб.</span> &nbsp; <span>НДС: ${fmtN(vat)} руб.</span> &nbsp; <span class="bold">ИТОГО К ОПЛАТЕ: ${fmtN(total)} руб.</span></td></tr>
+    </table>
+    <div style="margin-top:6px;font-size:10pt;font-style:italic">Итого к оплате: <b>${rubles(total)}</b></div>
     <div style="margin-top:4px;font-size:9pt"><i>Оплата данного счёта означает согласие с условиями поставки. Уведомление об оплате обязательно.</i></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
       <div>
@@ -527,133 +584,341 @@ function genSchet(items, buyer, doc, noVat, vat, total) {
     </div>`;
 }
 
-// УПД
+// УПД (форма по Письму ФНС ММВ-20-3/96@ с изм. 2026)
 function genUPD(items, buyer, doc, noVat, vat, total) {
-  const vatItems = items.filter(i=>i.vatPct>0);
   return `
-    <div style="border:2px solid #000;padding:6px;margin-bottom:6px;text-align:center">
-      <div class="bold" style="font-size:12pt">УНИВЕРСАЛЬНЫЙ ПЕРЕДАТОЧНЫЙ ДОКУМЕНТ</div>
-      <div class="small">Счёт-фактура № ${doc.num} от «${doc.date}» | Статус: 1 (счёт-фактура и передаточный документ)</div>
+    <div style="border:2px solid #000;padding:5px 8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="bold" style="font-size:13pt">УНИВЕРСАЛЬНЫЙ ПЕРЕДАТОЧНЫЙ ДОКУМЕНТ</div>
+        <div class="small">Счёт-фактура № <b>${doc.num}</b> от «${doc.date}»</div>
+      </div>
+      <div style="border:1px solid #000;padding:4px 10px;text-align:center">
+        <div class="small">Статус</div>
+        <div class="bold" style="font-size:16pt">1</div>
+        <div class="small" style="font-size:7pt">счёт-фактура<br>и передаточный<br>документ</div>
+      </div>
     </div>
-    <table style="margin-bottom:6px">
-      <tr><td style="width:15%;background:#f0f0f0" class="bold small">Продавец:</td><td>${S.name}, ИНН/КПП ${S.inn}/${S.kpp}</td><td style="width:15%;background:#f0f0f0" class="bold small">Покупатель:</td><td>${buyer.name}, ИНН/КПП ${buyer.inn}</td></tr>
-      <tr><td class="bold small">Адрес:</td><td class="small">${S.addr}</td><td class="bold small">Адрес:</td><td class="small">${buyer.addr}</td></tr>
-      <tr><td class="bold small">К п/п счёт:</td><td class="small">№ ${doc.num} от ${doc.date}</td><td class="bold small">Грузополучатель:</td><td class="small">${buyer.name}</td></tr>
-      ${doc.advanceNum ? `<tr><td class="bold small">Стр. 5б (аванс):</td><td class="small" colspan="3">Авансовый счёт-фактура № ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
+
+    <table style="margin-bottom:4px;font-size:9pt">
+      <tr>
+        <td style="width:13%;background:#f0f0f0" class="bold small">1. Продавец:</td>
+        <td style="width:37%">${S.name}</td>
+        <td style="width:13%;background:#f0f0f0" class="bold small">Покупатель:</td>
+        <td>${buyer.name}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">ИНН/КПП:</td>
+        <td class="small">${S.inn} / ${S.kpp}</td>
+        <td class="bold small" style="background:#f0f0f0">ИНН/КПП:</td>
+        <td class="small">${buyer.inn}${buyer.kpp ? ' / '+buyer.kpp : ''}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">2. Грузоотправитель:</td>
+        <td class="small">${S.name}, ${S.addr}</td>
+        <td class="bold small" style="background:#f0f0f0">6. Грузополучатель:</td>
+        <td class="small">${buyer.name}, ${buyer.addr}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">3. Адрес продавца:</td>
+        <td class="small">${S.addr}</td>
+        <td class="bold small" style="background:#f0f0f0">Адрес покупателя:</td>
+        <td class="small">${buyer.addr}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">4. К п/п документу:</td>
+        <td class="small">№ ${doc.num} от ${doc.date}</td>
+        <td class="bold small" style="background:#f0f0f0">7. Валюта:</td>
+        <td class="small">Российский рубль, 643</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">5а. Документ об отгрузке:</td>
+        <td class="small">Настоящий УПД</td>
+        <td></td><td></td>
+      </tr>
+      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f9e8d0">5б. Авансовый с/ф:</td><td class="small" colspan="3">№ ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
     </table>
-    <table>
+
+    <table style="font-size:8.5pt">
       <thead>
-        <tr>
-          <th rowspan="2">№</th><th rowspan="2">Наименование<br>товара</th><th rowspan="2">Ед.</th>
-          <th rowspan="2">Кол-во</th><th rowspan="2">Цена<br>без НДС</th>
-          <th colspan="2">НДС</th><th rowspan="2">Стоимость<br>с НДС</th>
+        <tr style="background:#f0f0f0">
+          <th rowspan="2" style="width:4%">№<br><span class="small">1</span></th>
+          <th rowspan="2">Наименование товара (описание выполненных работ, услуг)<br><span class="small">1а — код товара</span></th>
+          <th colspan="2">Единица измерения</th>
+          <th rowspan="2">Кол-во<br><span class="small">4</span></th>
+          <th rowspan="2">Цена за ед.<br>без НДС, руб.<br><span class="small">5</span></th>
+          <th rowspan="2">Стоимость<br>без НДС, руб.<br><span class="small">6</span></th>
+          <th rowspan="2">В т.ч.<br>акциз<br><span class="small">6а</span></th>
+          <th colspan="2">НДС</th>
+          <th rowspan="2">Стоимость<br>с НДС, руб.<br><span class="small">9</span></th>
+          <th rowspan="2">Страна<br>происх.<br><span class="small">10</span></th>
+          <th rowspan="2">Рег. №<br>декл.<br><span class="small">11</span></th>
         </tr>
-        <tr><th>Ставка</th><th>Сумма</th></tr>
+        <tr style="background:#f0f0f0">
+          <th style="font-size:7pt">наим.<br><span>2</span></th>
+          <th style="font-size:7pt">код<br>ОКЕИ<br><span>2а</span></th>
+          <th style="font-size:7pt">Налог.<br>ставка<br><span>7</span></th>
+          <th style="font-size:7pt">Сумма<br>НДС, руб.<br><span>8</span></th>
+        </tr>
       </thead>
       <tbody>
-        ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
-        <tr><td colspan="4" class="bold">Итого</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+        ${items.map(i=>`<tr>
+          <td class="center">${i.num}</td>
+          <td>${i.name}</td>
+          <td class="center">${i.unit}</td>
+          <td class="center">${i.unitCode||'796'}</td>
+          <td class="center">${i.qty}</td>
+          <td class="right">${fmtN(i.price)}</td>
+          <td class="right">${fmtN(i.sum)}</td>
+          <td class="center small">без акциза</td>
+          <td class="center">${i.vatPct}%</td>
+          <td class="right">${fmtN(i.vat)}</td>
+          <td class="right">${fmtN(i.total)}</td>
+          <td class="center small">РФ</td>
+          <td class="center small">—</td>
+        </tr>`).join('')}
+        <tr style="background:#f5f5f5">
+          <td colspan="5" class="right bold">Всего к оплате:</td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td>
+          <td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+          <td></td><td></td>
+        </tr>
       </tbody>
     </table>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <div style="border:1px solid #000;padding:6px">
-        <div class="small bold">Товар (груз) передал / услуги оказал:</div>
-        <div style="margin-top:20px">${signHTML('')} ${S.director}<br><span class="small">(подпись) (ФИО)</span></div>
-        <div style="margin-top:6px;text-align:center">${stampHTML()}</div>
-      </div>
-      <div style="border:1px solid #000;padding:6px">
-        <div class="small bold">Товар (груз) получил / услуги принял:</div>
-        <div style="margin-top:20px">_________________ ${buyer.director}<br><span class="small">(подпись) (ФИО)</span></div>
-        <div style="margin-top:6px">Дата получения: _________________</div>
-      </div>
+
+    <table style="margin-top:6px;font-size:9pt">
+      <tr>
+        <td style="width:50%;background:#f0f0f0" class="bold small">А. Подписи со стороны продавца</td>
+        <td style="background:#f0f0f0" class="bold small">Б. Подписи со стороны покупателя</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 6px">
+          <div class="small bold">8. Основание передачи (сдачи):</div>
+          <div class="small" style="margin-bottom:6px">${doc.base || 'Договор поставки № ' + doc.num + ' от ' + doc.date}</div>
+          <div class="small bold">Руководитель:</div>
+          <div style="margin-top:16px">${signHTML('')} &nbsp; ${S.director}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          <div style="margin-top:8px" class="small bold">Главный бухгалтер:</div>
+          <div style="margin-top:16px">_________________ &nbsp; ${S.buh}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          <div style="margin-top:8px" class="small bold">Товар (груз) передал / услуги оказал:</div>
+          <div style="margin-top:16px">_________________ &nbsp; _________________</div>
+          <div class="small">(должность, подпись, ФИО)</div>
+          <div style="margin-top:6px" class="small">Дата отгрузки: <b>${doc.date}</b></div>
+          <div style="text-align:center;margin-top:6px">${stampHTML()}</div>
+        </td>
+        <td style="padding:4px 6px">
+          <div class="small bold">Товар (груз) получил / услуги принял:</div>
+          <div style="margin-top:16px">_________________ &nbsp; ${buyer.director}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          <div style="margin-top:8px" class="small bold">Ответственный за правильность оформления:</div>
+          <div style="margin-top:16px">_________________ &nbsp; _________________</div>
+          <div class="small">(должность, подпись, ФИО)</div>
+          <div style="margin-top:8px">Дата получения: _________________</div>
+          <div style="margin-top:6px" class="small bold">Иные сведения об отгрузке / получении:</div>
+          <div style="margin-top:4px;min-height:30px;border-bottom:1px solid #ccc" class="small">&nbsp;</div>
+          <div style="text-align:center;margin-top:6px">М.П.</div>
+        </td>
+      </tr>
+    </table>
+    <div style="margin-top:4px;font-size:8pt;color:#555">
+      Сумма к оплате: <b>${rubles(total)}</b>
     </div>`;
 }
 
 // ТОРГ-12
 function genTORG12(items, buyer, doc, noVat, vat, total) {
+  const totalQty = items.reduce((s,i)=>s+i.qty, 0);
   return `
     <div style="text-align:right;font-size:9pt;margin-bottom:4px">Унифицированная форма № ТОРГ-12<br>Утверждена постановлением Госкомстата России от 25.12.98 № 132</div>
     <div class="title-center">ТОВАРНАЯ НАКЛАДНАЯ</div>
     <div style="text-align:center;margin-bottom:8px">№ ${doc.num} от «${doc.date}» г.</div>
-    <table style="margin-bottom:6px">
-      <tr><td class="bold small" style="width:20%;background:#f0f0f0">Организация-грузоотправитель:</td><td>${S.name}<br><span class="small">ИНН/КПП: ${S.inn}/${S.kpp} | ${S.addr}<br>Р/С: ${S.rs} | ${S.bank} | БИК: ${S.bik}</span></td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Организация-грузополучатель:</td><td>${buyer.name}<br><span class="small">ИНН/КПП: ${buyer.inn} | ${buyer.addr}</span></td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Поставщик:</td><td>${S.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Плательщик:</td><td>${buyer.name}</td></tr>
+    <table style="margin-bottom:6px;font-size:9pt">
+      <tr><td class="bold small" style="width:20%;background:#f0f0f0">Организация-грузоотправитель:</td><td colspan="3">${S.name}<br><span class="small">ИНН/КПП: ${S.inn}/${S.kpp} | ${S.addr}</span></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Структурное подразделение:</td><td colspan="3">—</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Организация-грузополучатель:</td><td colspan="3">${buyer.name}<br><span class="small">ИНН/КПП: ${buyer.inn} | ${buyer.addr}</span></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Поставщик:</td><td>${S.name}</td><td class="bold small" style="background:#f0f0f0">По доверенности №:</td><td>—&nbsp;&nbsp;&nbsp; от &nbsp;&nbsp;&nbsp; выд.: </td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Плательщик:</td><td colspan="3">${buyer.name}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Основание:</td><td colspan="3">Договор поставки № ${doc.num} от ${doc.date}</td></tr>
     </table>
-    <table>
+    <table style="font-size:8.5pt">
       <thead>
-        <tr>
-          <th style="width:5%">№</th><th>Наименование товара</th><th>Ед.</th>
-          <th>Кол-во</th><th>Цена без НДС, руб.</th><th>Сумма без НДС, руб.</th>
-          <th>НДС %</th><th>Сумма НДС, руб.</th><th>Сумма с НДС, руб.</th>
+        <tr style="background:#f0f0f0">
+          <th rowspan="2" style="width:4%">№<br><span style="font-weight:normal">1</span></th>
+          <th rowspan="2">Наименование товара<br><span style="font-weight:normal;font-size:7pt">2</span></th>
+          <th rowspan="2">Код товара<br><span style="font-weight:normal;font-size:7pt">3</span></th>
+          <th colspan="2">Единица измерения</th>
+          <th rowspan="2">Вид упаковки<br><span style="font-weight:normal;font-size:7pt">6</span></th>
+          <th colspan="2">Количество</th>
+          <th rowspan="2">Масса брутто, кг<br><span style="font-weight:normal;font-size:7pt">9</span></th>
+          <th rowspan="2">Кол-во мест, штаб<br><span style="font-weight:normal;font-size:7pt">10</span></th>
+          <th rowspan="2">Масса нетто, кг<br><span style="font-weight:normal;font-size:7pt">11</span></th>
+          <th rowspan="2">Цена без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">12</span></th>
+          <th rowspan="2">Сумма без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">13</span></th>
+          <th rowspan="2">НДС %<br><span style="font-weight:normal;font-size:7pt">14</span></th>
+          <th rowspan="2">Сумма НДС, руб.<br><span style="font-weight:normal;font-size:7pt">15</span></th>
+          <th rowspan="2">Сумма с НДС, руб.<br><span style="font-weight:normal;font-size:7pt">16</span></th>
         </tr>
-        <tr>${['1','2','3','4','5','6','7','8','9'].map(n=>`<th>${n}</th>`).join('')}</tr>
+        <tr style="background:#f0f0f0">
+          <th style="font-size:7pt">наим.<br>4</th>
+          <th style="font-size:7pt">код ОКЕИ<br>5</th>
+          <th style="font-size:7pt">в одном месте<br>7</th>
+          <th style="font-size:7pt">мест, штаб<br>8</th>
+        </tr>
       </thead>
       <tbody>
-        ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="right">${fmtN(i.sum)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
-        <tr><td colspan="4" class="bold right">Итого:</td><td></td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+        ${items.map(i=>`<tr>
+          <td class="center">${i.num}</td>
+          <td>${i.name}</td>
+          <td class="center">—</td>
+          <td class="center">${i.unit}</td>
+          <td class="center">796</td>
+          <td class="center">—</td>
+          <td class="center">${i.qty}</td>
+          <td class="center">${i.qty}</td>
+          <td class="center">—</td>
+          <td class="center">${i.qty}</td>
+          <td class="center">—</td>
+          <td class="right">${fmtN(i.price)}</td>
+          <td class="right">${fmtN(i.sum)}</td>
+          <td class="center">${i.vatPct}%</td>
+          <td class="right">${fmtN(i.vat)}</td>
+          <td class="right">${fmtN(i.total)}</td>
+        </tr>`).join('')}
+        <tr style="background:#f5f5f5">
+          <td colspan="7" class="right bold">Итого:</td>
+          <td class="center bold">${totalQty}</td>
+          <td></td><td class="center bold">${totalQty}</td><td></td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+        </tr>
+        <tr>
+          <td colspan="7" class="right bold">Всего по накладной:</td>
+          <td class="center bold">${totalQty}</td>
+          <td></td><td class="center bold">${totalQty}</td><td></td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+        </tr>
       </tbody>
     </table>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <div>
-        <div class="bold small">Отпустил:</div>
-        <div style="margin-top:4px"><span class="small">Директор</span> ${signHTML('')}<br><span class="small">(должность) (подпись) (расшифровка)</span></div>
-        <div style="text-align:center;margin-top:6px">${stampHTML()}</div>
-      </div>
-      <div>
-        <div class="bold small">Груз принял:</div>
-        <div style="margin-top:4px"><span class="small">_____________</span> _________________<br><span class="small">(должность) (подпись) (расшифровка)</span></div>
-        <div style="margin-top:6px">Груз получил грузополучатель:<br>_________________ _________________<br><span class="small">(подпись) (расшифровка)</span><br>М.П.</div>
-      </div>
-    </div>`;
+    <div style="margin-top:4px;font-size:9pt">
+      <div>Товарная накладная имеет приложение на <b>___</b> листах и содержит <b>${items.length}</b> порядковых номеров записей.</div>
+      <div style="margin-top:2px">Всего мест: <b>${totalQty}</b> &nbsp;&nbsp; Масса груза (нетто): <b>—</b> кг &nbsp;&nbsp; Масса груза (брутто): <b>—</b> кг</div>
+      <div style="margin-top:4px">Всего отпущено на сумму: <b>${rubles(total)}</b></div>
+    </div>
+    <table style="margin-top:10px;font-size:9pt">
+      <tr>
+        <td style="width:50%;border:none;padding:4px 0">
+          <div class="bold">Отпуск груза разрешил:</div>
+          <div style="margin-top:4px">Директор &nbsp; ${signHTML('')} &nbsp; ${S.director}</div>
+          <div class="small">(должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
+          <div style="margin-top:8px">Главный бухгалтер &nbsp; _________________ &nbsp; ${S.buh}</div>
+          <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
+          <div style="margin-top:8px">Отпуск груза произвёл:</div>
+          <div style="margin-top:4px">Кладовщик &nbsp; _________________ &nbsp; _________________</div>
+          <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка)</div>
+          <div style="margin-top:8px">${stampHTML()}</div>
+        </td>
+        <td style="width:50%;border:none;padding:4px 0 4px 16px">
+          <div class="bold">Груз принял:</div>
+          <div style="margin-top:4px">_________________ &nbsp; _________________ &nbsp; _________________</div>
+          <div class="small">(должность) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (расшифровка)</div>
+          <div style="margin-top:10px" class="bold">Груз получил грузополучатель:</div>
+          <div style="margin-top:4px">_________________ &nbsp; _________________ &nbsp; ${buyer.director}</div>
+          <div class="small">(должность) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (расшифровка)</div>
+          <div style="margin-top:8px">Дата получения: _________________ г.</div>
+          <div style="margin-top:8px">М.П.</div>
+        </td>
+      </tr>
+    </table>`;
 }
 
-// СЧЁТ-ФАКТУРА
+// СЧЁТ-ФАКТУРА (форма по НК РФ ст.169, Постановление Правительства № 1137)
 function genSF(items, buyer, doc, noVat, vat, total) {
   return `
-    <div style="border:2px solid #000;padding:6px;margin-bottom:6px">
-      <div class="title-center">СЧЁТ-ФАКТУРА № ${doc.num} от «${doc.date}» г.</div>
-      <div class="small right">ИСПРАВЛЕНИЕ № ___ от «___» ____________ _____ г.</div>
+    <div style="border:2px solid #000;padding:6px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="title-center" style="margin:0">СЧЁТ-ФАКТУРА № ${doc.num} от «${doc.date}» г.</div>
+      </div>
+      <div style="font-size:9pt;text-align:right">ИСПРАВЛЕНИЕ № ___ от «___» ________ _____ г.</div>
     </div>
-    <table style="margin-bottom:6px">
-      <tr><td style="background:#f0f0f0;width:25%" class="bold small">Продавец:</td><td>${S.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Адрес:</td><td class="small">${S.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">ИНН/КПП продавца:</td><td>${S.inn} / ${S.kpp}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Грузоотправитель и его адрес:</td><td>${S.name}, ${S.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Грузополучатель и его адрес:</td><td>${buyer.name}, ${buyer.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">К расчётно-платёжному документу:</td><td>№ ${doc.num} от ${doc.date}</td></tr>
-      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f0f0f0">Стр. 5б (аванс):</td><td>Авансовый счёт-фактура № ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
-      <tr><td class="bold small" style="background:#f0f0f0">Покупатель:</td><td>${buyer.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Адрес:</td><td class="small">${buyer.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">ИНН/КПП покупателя:</td><td>${buyer.inn}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Валюта: наименование, код:</td><td>Российский рубль, 643</td></tr>
+    <table style="margin-bottom:4px;font-size:9pt">
+      <tr><td style="background:#f0f0f0;width:30%" class="bold small">1. Продавец:</td><td colspan="3">${S.name}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">1а. Адрес:</td><td colspan="3" class="small">${S.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">1б. ИНН/КПП продавца:</td><td>${S.inn} / ${S.kpp}</td><td class="bold small" style="background:#f0f0f0" style="width:20%">КПП обособл.:</td><td>—</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">2. Грузоотправитель и его адрес:</td><td colspan="3">${S.name}, ${S.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">3. Грузополучатель и его адрес:</td><td colspan="3">${buyer.name}, ${buyer.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">4. К расчётно-платёжному документу:</td><td>№ ${doc.num} от ${doc.date}</td><td class="bold small" style="background:#f0f0f0">5. Идент. номер гос. контракта:</td><td>—</td></tr>
+      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f9e8d0">5б. Авансовый счёт-фактура:</td><td colspan="3">№ ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
+      <tr><td class="bold small" style="background:#f0f0f0">6. Покупатель:</td><td>${buyer.name}</td><td class="bold small" style="background:#f0f0f0">7. Валюта (код):</td><td>Российский рубль, 643</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">6а. Адрес:</td><td colspan="3" class="small">${buyer.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">6б. ИНН/КПП покупателя:</td><td colspan="3">${buyer.inn}</td></tr>
     </table>
-    <table>
+    <table style="font-size:8.5pt">
       <thead>
-        <tr>
-          <th rowspan="2" style="width:5%">№</th>
-          <th rowspan="2">Наименование товара</th>
-          <th rowspan="2">Ед.</th>
-          <th rowspan="2">Кол-во</th>
-          <th rowspan="2">Цена без НДС</th>
-          <th rowspan="2">Стоимость без НДС</th>
-          <th colspan="2">НДС</th>
-          <th rowspan="2">Стоимость с НДС</th>
+        <tr style="background:#f0f0f0">
+          <th rowspan="2" style="width:4%">№<br><span style="font-weight:normal">1</span></th>
+          <th rowspan="2">Наименование товара (описание выполненных работ, услуг)<br><span style="font-weight:normal;font-size:7pt">1а — код вида товара</span></th>
+          <th colspan="2" style="font-size:7pt">Единица измерения</th>
+          <th rowspan="2">Кол-во<br><span style="font-weight:normal;font-size:7pt">4</span></th>
+          <th rowspan="2">Цена без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">5</span></th>
+          <th rowspan="2">Стоимость без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">6</span></th>
+          <th rowspan="2">В т.ч. сумма акциза<br><span style="font-weight:normal;font-size:7pt">6а</span></th>
+          <th colspan="2" style="font-size:7pt">НДС</th>
+          <th rowspan="2">Стоимость с НДС, руб.<br><span style="font-weight:normal;font-size:7pt">9</span></th>
+          <th rowspan="2">Страна происх.<br><span style="font-weight:normal;font-size:7pt">10</span></th>
+          <th rowspan="2">Рег. номер декларации<br><span style="font-weight:normal;font-size:7pt">11</span></th>
         </tr>
-        <tr><th>Ставка</th><th>Сумма</th></tr>
-        <tr>${['1','2','3','4','5','6','7','8','9'].map(n=>`<th>${n}</th>`).join('')}</tr>
+        <tr style="background:#f0f0f0">
+          <th style="font-size:7pt">наим.<br>2</th>
+          <th style="font-size:7pt">код ОКЕИ<br>2а</th>
+          <th style="font-size:7pt">Нал. ставка<br>7</th>
+          <th style="font-size:7pt">Сумма НДС<br>8</th>
+        </tr>
       </thead>
       <tbody>
-        ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="right">${fmtN(i.sum)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
-        <tr><td colspan="5" class="right bold">Всего к оплате</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+        ${items.map(i=>`<tr>
+          <td class="center">${i.num}</td>
+          <td>${i.name}</td>
+          <td class="center">${i.unit}</td>
+          <td class="center">796</td>
+          <td class="center">${i.qty}</td>
+          <td class="right">${fmtN(i.price)}</td>
+          <td class="right">${fmtN(i.sum)}</td>
+          <td class="center small">без акциза</td>
+          <td class="center">${i.vatPct > 0 ? i.vatPct+'%' : 'Без НДС'}</td>
+          <td class="right">${fmtN(i.vat)}</td>
+          <td class="right">${fmtN(i.total)}</td>
+          <td class="center small">РФ</td>
+          <td class="center small">—</td>
+        </tr>`).join('')}
+        <tr style="background:#f5f5f5">
+          <td colspan="5" class="right bold">Всего к оплате:</td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td><td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+          <td></td><td></td>
+        </tr>
       </tbody>
     </table>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;font-size:9pt">
       <div>
-        <div>${signHTML('Руководитель организации')} ${S.director}</div>
-        <div style="margin-top:8px">Гл. бухгалтер _________________ ${S.buh}</div>
-        <div style="margin-top:8px"><span class="small">Индивидуальный предприниматель _________________</span></div>
+        <div>${signHTML('Руководитель организации или иное уполномоченное лицо')} &nbsp; ${S.director}</div>
+        <div style="font-size:8pt;color:#555;margin-bottom:6px">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
+        <div>Главный бухгалтер или иное уполномоченное лицо &nbsp; _________________ &nbsp; ${S.buh}</div>
+        <div style="font-size:8pt;color:#555">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
+        <div style="margin-top:6px" class="small">Индивидуальный предприниматель _________________ (подпись) _________________ (Ф.И.О.) _________________ (реквизиты свидетельства о гос. регистрации)</div>
       </div>
       <div>${stampHTML()}</div>
     </div>`;
@@ -676,7 +941,7 @@ function genAKT(items, buyer, doc, noVat, vat, total) {
         <tr><td colspan="5" class="right bold">Итого с НДС:</td><td class="right bold">${fmtN(total)}</td></tr>
       </tbody>
     </table>
-    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб. (${sumWords(total)})</strong></div>
+    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб. (${rubles(total)})</strong></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <div style="border:1px solid #000;padding:6px">
         <div class="bold small">Исполнитель:</div>
@@ -821,7 +1086,7 @@ function genKO1(buyer, doc, total, vat) {
     </table>
     <p style="font-size:10pt;margin-bottom:4px">Принято от: <span class="bold">${buyer.name}</span></p>
     <p style="font-size:10pt;margin-bottom:4px">Основание: Оплата по счёту № ${doc.num} от ${doc.date}</p>
-    <p style="font-size:10pt;margin-bottom:4px">Сумма: <span class="bold">${fmtN(total)}</span> руб. (<span style="font-style:italic">${sumWords(total)}</span>)</p>
+    <p style="font-size:10pt;margin-bottom:4px">Сумма: <span class="bold">${fmtN(total)}</span> руб. (<span style="font-style:italic">${rubles(total)}</span>)</p>
     <p style="font-size:10pt;margin-bottom:12px">В т.ч. НДС: ${vatLine}</p>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <div>
@@ -832,7 +1097,7 @@ function genKO1(buyer, doc, total, vat) {
     </div>
     <hr style="margin-top:16px">
     <div style="text-align:center;font-size:9pt;margin-top:4px">КВИТАНЦИЯ к приходному кассовому ордеру № ${doc.num} от ${doc.date}</div>
-    <p style="font-size:9pt">Принято от ${buyer.name} сумма ${fmtN(total)} руб. (${sumWords(total)})</p>
+    <p style="font-size:9pt">Принято от ${buyer.name} сумма ${fmtN(total)} руб. (${rubles(total)})</p>
     <p style="font-size:9pt">Основание: оплата по счёту № ${doc.num}</p>
     <div style="display:flex;justify-content:space-between;margin-top:8px">
       <div>Гл. бухгалтер _________________ ${S.buh}</div>
@@ -863,7 +1128,7 @@ function genTTN(items, buyer, doc, noVat, vat, total) {
         <tr><td colspan="6" class="right bold">Итого:</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
       </tbody>
     </table>
-    <div style="margin-top:8px;font-size:9pt">Всего отпущено на сумму: <strong>${fmtN(total)} руб. (${sumWords(total)})</strong></div>
+    <div style="margin-top:8px;font-size:9pt">Всего отпущено на сумму: <strong>${fmtN(total)} руб. (${rubles(total)})</strong></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <div style="border:1px solid #000;padding:8px;font-size:9pt">
         <div class="bold">Сдал:</div>
@@ -887,12 +1152,6 @@ function genTTN(items, buyer, doc, noVat, vat, total) {
     </table>`;
 }
 
-function sumWords(n) {
-  // Упрощённо
-  const num = Math.floor(n);
-  const kop = Math.round((n - num) * 100);
-  return `${num} рублей ${kop.toString().padStart(2,'0')} копеек`;
-}
 
 function printDoc() {
   const content = document.getElementById('docPreview').innerHTML;
