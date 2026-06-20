@@ -458,6 +458,10 @@
     <button class="filter-btn" onclick="filterTx('bank',this)">🏦 Банк</button>
     <button class="filter-btn" onclick="filterTx('unknown',this)">❓ Прочее</button>
   </div>
+  <div style="padding:8px 0 4px">
+    <input id="txSearch" type="text" placeholder="🔍 Поиск по контрагенту, сумме, назначению..." oninput="renderTxList()"
+      style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;">
+  </div>
   <div class="section-title">
     <span id="txCount">Операции</span>
     <button class="btn btn-sm" onclick="exportCSV()">📥 Экспорт</button>
@@ -1734,7 +1738,13 @@ function renderChart() {
 }
 
 function renderTxList() {
-  const filtered = currentFilter==='all' ? allTx : currentFilter==='income' ? allTx.filter(t=>t.amount>0) : allTx.filter(t=>t.category===currentFilter);
+  const q = (document.getElementById('txSearch')?.value || '').toLowerCase().trim();
+  let filtered = currentFilter==='all' ? allTx : currentFilter==='income' ? allTx.filter(t=>t.amount>0) : allTx.filter(t=>t.category===currentFilter);
+  if (q) filtered = filtered.filter(t =>
+    (t.name||'').toLowerCase().includes(q) ||
+    (t.description||'').toLowerCase().includes(q) ||
+    String(Math.abs(t.amount||0)).includes(q)
+  );
   document.getElementById('txCount').textContent = filtered.length+' операций';
   document.getElementById('txList').innerHTML = filtered.length ? filtered.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🔍</div><div>Нет операций</div></div>';
 }
