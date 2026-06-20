@@ -154,10 +154,12 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Недостаточно прав для изменения операций' });
       }
 
-      const { id, category, note } = req.body;
+      const { id, category, note, is_recurring, recurring_label } = req.body;
       const patch = {};
       if (category !== undefined) { patch.category = category; patch.is_personal = ['personal','food'].includes(category); }
       if (note !== undefined) patch.note = note;
+      if (is_recurring !== undefined) patch.is_recurring = is_recurring;
+      if (recurring_label !== undefined) patch.recurring_label = recurring_label;
       await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${id}`, {
         method: 'PATCH',
         headers: adminHeaders,

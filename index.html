@@ -340,6 +340,7 @@
   <div class="pills-inner">
     <button class="pill active" data-role="director,accountant" onclick="showPage('dashboard',this)">📊 Дашборд</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('transactions',this)">📋 Операции</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('recurring',this)">🔁 Регулярные</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('reclassify',this)">🏷️ Разметка</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('add',this)">➕ Добавить</button>
     <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">📄 Документы</button>
@@ -467,6 +468,14 @@
     <button class="btn btn-sm" onclick="exportCSV()">📥 Экспорт</button>
   </div>
   <div id="txList"></div>
+</div>
+
+<div class="page" id="page-recurring">
+  <div class="section-title">🔁 Регулярные платежи</div>
+  <div class="info-box" style="margin-bottom:12px">
+    Пометь операцию как регулярную — аренда, связь, подписки. Они соберутся здесь для контроля.
+  </div>
+  <div id="recurringList"></div>
 </div>
 
 <div class="page" id="page-reclassify">
@@ -1762,8 +1771,61 @@ function txHTML(tx) {
       <input id="note-${tx.id}" type="text" value="${note.replace(/"/g,'&quot;')}" placeholder="Добавить комментарий..."
         style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;outline:none;font-family:'Inter',sans-serif;">
       <button onclick="saveNote(${tx.id})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-size:11px;cursor:pointer;">💾</button>
+      <button onclick="toggleRecurring(${tx.id})" title="${tx.is_recurring ? 'Убрать из регулярных' : 'Пометить как регулярный'}"
+        style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;color:${tx.is_recurring ? 'var(--accent)' : 'var(--muted)'}">🔁</button>
     </div>
   </div>`;
+}
+
+async function toggleRecurring(id) {
+  const tx = allTx.find(t=>t.id==id);
+  if (!tx) return;
+  const is_recurring = !tx.is_recurring;
+  let recurring_label = tx.recurring_label || '';
+  if (is_recurring && !recurring_label) {
+    recurring_label = prompt('Название платежа (например: Аренда склада):', tx.name) || tx.name;
+  }
+  const token = localStorage.getItem('omsfin_token');
+  await fetch('/api/transactions', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({ id, is_recurring, recurring_label, ...(currentCompanyId ? {company_id: currentCompanyId} : {}) })
+  });
+  tx.is_recurring = is_recurring;
+  tx.recurring_label = recurring_label;
+  renderTxList();
+}
+
+function renderRecurring() {
+  const list = document.getElementById('recurringList');
+  if (!list) return;
+  const recurring = allTx.filter(t => t.is_recurring && t.amount < 0);
+  const grouped = {};
+  recurring.forEach(t => {
+    const key = t.recurring_label || t.name;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(t);
+  });
+  const keys = Object.keys(grouped);
+  if (!keys.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🔁</div><div>Нет регулярных платежей.<br>Пометь операцию кнопкой 🔁 в разделе Операции.</div></div>';
+    return;
+  }
+  list.innerHTML = keys.map(key => {
+    const txs = grouped[key];
+    const last = txs[0];
+    const avg = txs.reduce((s,t)=>s+Math.abs(Number(t.amount)),0) / txs.length;
+    return `<div class="tx-row" style="flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div class="tx-name">${key}</div>
+        <div class="tx-date">Последний: ${last.date||'—'} · Всего платежей: ${txs.length}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="tx-amount minus">−${fmt(last.amount)}</div>
+        <div style="font-size:10px;color:var(--muted)">ср. ${fmt(avg)}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function saveNote(id) {
@@ -1835,6 +1897,7 @@ function showPage(name,btn){
   document.getElementById('page-'+name).classList.add('active');
   if(btn)btn.classList.add('active');
   if(name==='reclassify') renderReclassify();
+  if(name==='recurring') renderRecurring();
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
