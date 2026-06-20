@@ -316,6 +316,7 @@
     <select id="companySwitcher" onchange="switchCompany(this.value)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 8px;cursor:pointer;max-width:130px;outline:none;">
       <option value="">Компания...</option>
     </select>
+    <button id="overviewBtn" onclick="window.location.href='/companies-overview'" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 9px;cursor:pointer" title="Сводка по всем компаниям">🏢 Все</button>
     <div style="position:relative">
       <button id="profileBtn" onclick="toggleProfile()" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;font-size:12px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;">М</button>
       <div id="profileMenu" style="display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:180px;z-index:200;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
@@ -687,6 +688,8 @@ async function loadCompanies() {
     if (companies.length === 0) {
       await createDefaultCompany();
     }
+    const overviewBtn = document.getElementById('overviewBtn');
+    if (overviewBtn) overviewBtn.style.display = companies.length > 1 ? 'block' : 'none';
   } catch(e) {}
 }
 
