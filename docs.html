@@ -926,9 +926,11 @@ function genSF(items, buyer, doc, noVat, vat, total) {
 
 // АКТ ОБ УСЛУГАХ / РАБОТАХ
 function genAKT(items, buyer, doc, noVat, vat, total) {
+  const cityMatch = (S.addr || '').match(/г\.?\s*([А-ЯЁ][а-яё\-]+)/);
+  const city = cityMatch ? cityMatch[1] : '_________________';
   return `
     <div class="title-center">АКТ № ${doc.num}<br>об оказании услуг / выполнении работ</div>
-    <div style="text-align:center;margin-bottom:8px">г. _________________ &nbsp;&nbsp; «${doc.date}» г.</div>
+    <div style="text-align:center;margin-bottom:8px">г. ${city} &nbsp;&nbsp;&nbsp; «${doc.date}» г.</div>
     <p style="font-size:10pt;margin-bottom:10px"><span class="bold">${S.name}</span>, ИНН ${S.inn}/КПП ${S.kpp}, далее «Исполнитель», и <span class="bold">${buyer.name}</span>, ИНН/КПП ${buyer.inn}, далее «Заказчик», составили настоящий Акт о том, что Исполнитель оказал услуги/выполнил работы на условиях, указанных ниже, а Заказчик принял их без претензий по объёму, качеству и срокам.</p>
     <table>
       <thead>
@@ -941,7 +943,7 @@ function genAKT(items, buyer, doc, noVat, vat, total) {
         <tr><td colspan="5" class="right bold">Итого с НДС:</td><td class="right bold">${fmtN(total)}</td></tr>
       </tbody>
     </table>
-    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб. (${rubles(total)})</strong></div>
+    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб.</strong> (${rubles(total)})</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <div style="border:1px solid #000;padding:6px">
         <div class="bold small">Исполнитель:</div>
@@ -1052,11 +1054,9 @@ function genDOVER(buyer, doc) {
     <p style="font-size:10pt;margin-bottom:4px">Паспорт: серия _______ № _____________ выдан ___________________________________</p>
     <p style="font-size:10pt;margin-bottom:8px">получить от <span class="bold">${S.name}</span> товарно-материальные ценности согласно счёту № ${doc.num} от ${doc.date}.</p>
     <table>
-      <thead><tr><th>№</th><th>Наименование ценностей</th><th>Ед. изм.</th><th>Количество</th><th>Примечание</th></tr></thead>
+      <thead><tr><th style="width:5%">№</th><th>Наименование ценностей</th><th style="width:8%">Ед. изм.</th><th style="width:12%">Количество (цифрами)</th><th style="width:15%">Количество (прописью)</th><th style="width:12%">Примечание</th></tr></thead>
       <tbody>
-        <tr><td class="center">1</td><td></td><td></td><td></td><td></td></tr>
-        <tr><td class="center">2</td><td></td><td></td><td></td><td></td></tr>
-        <tr><td class="center">3</td><td></td><td></td><td></td><td></td></tr>
+        ${(()=>{const its=getItems();const rows=its.length?its:Array(3).fill(null);return rows.map((i,n)=>`<tr><td class="center">${n+1}</td><td>${i?i.name:''}</td><td class="center">${i?i.unit:''}</td><td class="center">${i?i.qty:''}</td><td>${i?numToWords(i.qty):''}</td><td></td></tr>`).join('');})()}
       </tbody>
     </table>
     <div style="margin-top:12px">
