@@ -154,13 +154,16 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Недостаточно прав для изменения операций' });
       }
 
-      const { id, category } = req.body;
+      const { id, category, note } = req.body;
+      const patch = {};
+      if (category !== undefined) { patch.category = category; patch.is_personal = ['personal','food'].includes(category); }
+      if (note !== undefined) patch.note = note;
       await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${id}`, {
         method: 'PATCH',
         headers: adminHeaders,
-        body: JSON.stringify({ category, is_personal: ['personal','food'].includes(category) })
+        body: JSON.stringify(patch)
       });
-      if (companyId) logAction(companyId, userId, 'transaction_category_changed', { transaction_id: id, new_category: category });
+      if (companyId && category !== undefined) logAction(companyId, userId, 'transaction_category_changed', { transaction_id: id, new_category: category });
       return res.status(200).json({ ok: true });
     }
 

@@ -1751,11 +1751,35 @@ function renderTxList() {
 
 function txHTML(tx) {
   const plus = tx.amount>0;
-  return `<div class="tx-row">
-    <div style="min-width:0"><div class="tx-name">${tx.name}</div><div class="tx-date">${tx.date||''}</div></div>
+  const note = tx.note || '';
+  return `<div class="tx-row" style="flex-wrap:wrap;gap:4px">
+    <div style="min-width:0;flex:1"><div class="tx-name">${tx.name}</div><div class="tx-date">${tx.date||''}</div>
+      ${note ? `<div style="font-size:10px;color:var(--accent);margin-top:2px">💬 ${note}</div>` : ''}
+    </div>
     <div>${getCatBadge(tx.category)}</div>
     <div class="tx-amount ${plus?'plus':'minus'}">${plus?'+':''}${fmt(tx.amount)}</div>
+    <div style="width:100%;display:flex;gap:6px;align-items:center;padding-top:2px">
+      <input id="note-${tx.id}" type="text" value="${note.replace(/"/g,'&quot;')}" placeholder="Добавить комментарий..."
+        style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;outline:none;font-family:'Inter',sans-serif;">
+      <button onclick="saveNote(${tx.id})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-size:11px;cursor:pointer;">💾</button>
+    </div>
   </div>`;
+}
+
+async function saveNote(id) {
+  const input = document.getElementById('note-'+id);
+  if (!input) return;
+  const note = input.value.trim();
+  const token = localStorage.getItem('omsfin_token');
+  const companyId = currentCompanyId;
+  await fetch('/api/transactions', {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+token},
+    body: JSON.stringify({ id, note, ...(companyId ? {company_id: companyId} : {}) })
+  });
+  const tx = allTx.find(t=>t.id==id);
+  if (tx) tx.note = note;
+  renderTxList();
 }
 
 function getCatBadge(cat) {
