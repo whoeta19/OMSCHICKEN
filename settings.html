@@ -246,6 +246,19 @@
       </div>
       <button class="toggle on" id="togReport" onclick="toggleNotif(this,'notif_report')"></button>
     </div>
+    <div class="toggle-row" style="margin-top:12px">
+      <div>
+        <div class="toggle-label">Крупные списания в Telegram</div>
+        <div class="toggle-sub">Уведомление при списании больше порога</div>
+      </div>
+      <button class="toggle" id="togBigTx" onclick="toggleNotif(this,'notif_big_tx')"></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+      <span style="font-size:12px;color:var(--muted)">Порог:</span>
+      <input type="number" id="bigTxThreshold" value="50000" min="1000" step="1000"
+        style="width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;">
+      <span style="font-size:12px;color:var(--muted)">₽</span>
+    </div>
     <button class="btn" onclick="saveNotifications()" style="margin-top:12px">💾 Сохранить уведомления</button>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">* Уведомления показываются при открытии приложения</div>
   </div>
@@ -659,6 +672,7 @@ async function removeMember(targetUserId) {
 const notifSettings = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
 if (notifSettings.vatDays) document.getElementById('vatDays').value = notifSettings.vatDays;
 if (notifSettings.salaryDay) document.getElementById('salaryDay').value = notifSettings.salaryDay;
+if (notifSettings.bigTxThreshold) document.getElementById('bigTxThreshold').value = notifSettings.bigTxThreshold;
 ['vat','salary','report'].forEach(key => {
   const tog = document.getElementById('tog' + key.charAt(0).toUpperCase() + key.slice(1));
   if (notifSettings['notif_' + key] === false) tog.classList.remove('on');
@@ -675,6 +689,7 @@ function saveNotifications() {
   const notif = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
   notif.vatDays = document.getElementById('vatDays').value;
   notif.salaryDay = document.getElementById('salaryDay').value;
+  notif.bigTxThreshold = parseInt(document.getElementById('bigTxThreshold').value) || 50000;
   localStorage.setItem('omsfin_notif', JSON.stringify(notif));
   showToast('✅ Уведомления сохранены');
 }

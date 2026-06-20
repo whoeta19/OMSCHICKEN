@@ -658,9 +658,14 @@ async function apiPost(txs) {
   const payload = currentCompanyId
     ? (Array.isArray(txs) ? txs.map(t => ({...t, company_id: currentCompanyId})) : {...txs, company_id: currentCompanyId})
     : txs;
+  const notif = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
+  const bigTxHeaders = {};
+  if (notif.notif_big_tx !== false && notif.bigTxThreshold) {
+    bigTxHeaders['x-big-tx-threshold'] = String(notif.bigTxThreshold);
+  }
   const r = await fetch('/api/transactions', {
     method: 'POST',
-    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
+    headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token, ...bigTxHeaders},
     body: JSON.stringify(payload)
   });
   if (!r.ok) {

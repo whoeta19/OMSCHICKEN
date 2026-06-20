@@ -1,3 +1,4 @@
+const BOT_TOKEN = '8514433988:AAHvGhmxdIICzzEfXlfe2OIjB_Ynn3gLJao';
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE2NDYzOCwiZXhwIjoyMDk1NzQwNjM4fQ.CjCybI9bSk1uYbjWl8clQDPPzB7exzUa029DUtPQen8';
@@ -20,6 +21,32 @@ async function getUserRole(companyId, userId) {
   });
   const d = await r.json();
   return d[0]?.role || null;
+}
+
+function fmtAmt(n) {
+  return Math.abs(n).toLocaleString('ru-RU', {maximumFractionDigits: 0}) + ' ₽';
+}
+
+async function notifyBigTx(userId, tx) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${userId}&limit=1`, {
+      headers: {...adminHeaders, 'Prefer': 'return=representation'}
+    });
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) return;
+    const chatId = rows[0].telegram_id;
+    const text = `⚠️ <b>Крупное списание</b>\n\n` +
+      `Контрагент: <b>${tx.name || '—'}</b>\n` +
+      `Сумма: <b>${fmtAmt(tx.amount)}</b>\n` +
+      `Дата: <b>${tx.date || '—'}</b>\n` +
+      (tx.description ? `Назначение: ${tx.description}\n` : '') +
+      `\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`;
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chat_id: chatId, text, parse_mode: 'HTML'})
+    });
+  } catch(e) {}
 }
 
 // Записывает значимое действие в audit_log — не блокирует основной запрос при ошибке
@@ -146,6 +173,15 @@ export default async function handler(req, res) {
           console.error('POST error:', err);
         }
       }
+      // Уведомления о крупных списаниях — порог берём из заголовка запроса
+      const threshold = parseInt(req.headers['x-big-tx-threshold'] || '0');
+      if (threshold > 0 && userId) {
+        const bigTxs = toInsert.filter(t => t.amount < 0 && Math.abs(t.amount) >= threshold);
+        for (const tx of bigTxs) {
+          notifyBigTx(userId, tx);
+        }
+      }
+
       return res.status(200).json({ ok: true, inserted: toInsert.length, skipped, count: payload.length });
     }
 
