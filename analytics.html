@@ -91,6 +91,7 @@
     <select id="periodSelect" onchange="onPeriodChange()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;margin-right:4px">
       <option value="all">Все периоды</option>
     </select>
+    <button class="btn-outline" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
   </div>
@@ -177,6 +178,25 @@ function onPeriodChange() {
     if (chart) chart.destroy();
   });
   renderAll();
+}
+
+function exportCSV() {
+  if (!filteredTx.length) { alert('Нет данных для экспорта'); return; }
+  const period = document.getElementById('periodSelect').value;
+  const cols = ['Дата','Сумма','Категория','Контрагент','Назначение','ИНН'];
+  const rows = filteredTx.map(t => [
+    t.date || '',
+    t.amount || '',
+    t.category || '',
+    (t.counterparty || '').replace(/"/g,'""'),
+    (t.description || '').replace(/"/g,'""'),
+    t.inn || ''
+  ].map(v => `"${v}"`).join(','));
+  const csv = '﻿' + [cols.join(','), ...rows].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = `omsfin_${period}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
 }
 
 async function loadData() {
