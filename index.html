@@ -7,17 +7,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FAF9F7;
-    --surface:#FFFFFF;
-    --surface2:#F5F3F0;
-    --border:rgba(40,38,36,0.08);
+    --bg:#080808;
+    --surface:#0f0f0f;
+    --surface2:#161616;
+    --border:rgba(255,255,255,0.07);
     --accent:#ff6b00;
     --accent2:#ffaa44;
-    --green:#1A9B6C;
-    --red:#DC3545;
-    --text:#282624;
-    --muted:#8A8580;
-    --shadow:0 2px 12px rgba(40,38,36,0.05), 0 1px 2px rgba(40,38,36,0.04);
+    --green:#22c55e;
+    --red:#ef4444;
+    --text:#f5f5f5;
+    --muted:#5a5a5a;
+    --shadow:none;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
@@ -36,7 +36,7 @@
   .header-right{display:flex;align-items:center;gap:8px;}
   
   .sync-btn{
-    background:rgba(40,38,36,0.035);
+    background:rgba(255,255,255,0.04);
     border:1px solid var(--border);
     border-radius:8px;color:var(--muted);
     font-size:11px;padding:6px 12px;cursor:pointer;transition:all 0.2s;
@@ -55,7 +55,7 @@
   }
   .pills-inner{
     display:flex;gap:4px;
-    background:rgba(40,38,36,0.035);
+    background:rgba(255,255,255,0.04);
     border:1px solid var(--border);
     border-radius:12px;
     padding:4px;
@@ -78,11 +78,11 @@
     box-shadow:0 2px 10px rgba(255,107,0,0.3);
   }
   .pill:hover:not(.active){
-    background:rgba(40,38,36,0.05);
+    background:rgba(255,255,255,0.06);
     color:var(--text);
   }
   .pill.external:hover:not(.active){
-    background:rgba(40,38,36,0.035);
+    background:rgba(255,255,255,0.04);
     color:rgba(245,245,245,0.6);
   }
   
@@ -97,7 +97,7 @@
     position:relative;overflow:hidden;
     box-shadow:var(--shadow);
   }
-  .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-1px);box-shadow:0 4px 16px rgba(40,38,36,0.08);}
+  .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.1);}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:500;}
   .stat-value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;}
   .stat-value.green{color:var(--green);}
@@ -115,7 +115,7 @@
   .btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(255,107,0,0.4);}
   .btn-sm{padding:6px 12px;font-size:10px;}
   .btn-outline{
-    background:rgba(40,38,36,0.035);
+    background:rgba(255,255,255,0.04);
     border:1px solid var(--border);
     color:var(--text);border-radius:10px;
     padding:7px 14px;font-family:'Inter',sans-serif;
@@ -157,7 +157,7 @@
   .cat-bank{background:rgba(192,132,252,0.1);color:#c084fc;border:1px solid rgba(192,132,252,0.2);}
   
   .upload-zone{
-    border:1px dashed rgba(40,38,36,0.08);
+    border:1px dashed rgba(255,255,255,0.1);
     border-radius:18px;padding:28px;text-align:center;
     cursor:pointer;transition:all 0.25s;
     margin-bottom:16px;background:var(--surface);
@@ -168,7 +168,7 @@
   
   .progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;display:none;}
   .progress-wrap.active{display:block;}
-  .progress-track{background:rgba(40,38,36,0.05);border-radius:6px;height:3px;margin-top:8px;overflow:hidden;}
+  .progress-track{background:rgba(255,255,255,0.06);border-radius:6px;height:3px;margin-top:8px;overflow:hidden;}
   .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;transition:width 0.4s;}
   
   .filter-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
@@ -216,7 +216,7 @@
   
   .chart-row{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
   .chart-item{display:flex;align-items:center;gap:10px;font-size:12px;}
-  .chart-bar-wrap{flex:1;background:rgba(40,38,36,0.05);border-radius:6px;height:5px;overflow:hidden;}
+  .chart-bar-wrap{flex:1;background:rgba(255,255,255,0.06);border-radius:6px;height:5px;overflow:hidden;}
   .chart-bar{height:100%;border-radius:6px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
   .chart-label{width:90px;color:var(--muted);font-size:11px;}
   .chart-val{width:80px;text-align:right;font-family:'Unbounded',sans-serif;font-size:10px;}
@@ -235,7 +235,7 @@
   
   ::-webkit-scrollbar{width:3px;height:3px;}
   ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:rgba(40,38,36,0.08);border-radius:2px;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
 
   /* Мобильная адаптация */
   @media (max-width: 600px) {
@@ -289,7 +289,7 @@
     background:rgba(8,8,8,0.95);
     backdrop-filter:blur(24px);
     -webkit-backdrop-filter:blur(24px);
-    border-top:1px solid rgba(40,38,36,0.06);
+    border-top:1px solid rgba(255,255,255,0.07);
     z-index:200;
     padding:8px 0 env(safe-area-inset-bottom,8px);
   }
@@ -875,9 +875,9 @@ function renderSuggestions() {
     </div>
     <div style="display:flex;flex-direction:column;gap:6px">
       ${suggestions.map(s=>`
-        <div onclick="${s.action}" style="background:var(--surface);border:1px solid rgba(40,38,36,0.05);border-left:3px solid ${s.color};border-radius:12px;padding:12px 14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:12px" 
-          onmouseover="this.style.borderColor='rgba(40,38,36,0.1)'" 
-          onmouseout="this.style.borderColor='rgba(40,38,36,0.05)'">
+        <div onclick="${s.action}" style="background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${s.color};border-radius:12px;padding:12px 14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:12px" 
+          onmouseover="this.style.borderColor='rgba(255,255,255,0.12)'" 
+          onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'">
           <div style="font-size:22px">${s.icon}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:500;margin-bottom:2px">${s.title}</div>
