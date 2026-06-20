@@ -13,6 +13,15 @@ const adminHeaders = {
 // accountant — операции, декларации, НДС, документы; без настроек/удаления компании/приглашений
 // employee   — только создание документов; без доступа к финансовым разделам
 
+// Человекочитаемые описания действий журнала — используются на фронтенде для отображения
+const ACTION_LABELS = {
+  transaction_category_changed: 'Изменена категория операции',
+  transactions_deleted: 'Удалена выписка за период',
+  member_joined: 'Новый участник присоединился',
+  member_role_changed: 'Изменена роль участника',
+  member_removed: 'Участник удалён из компании'
+};
+
 function generateCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
@@ -63,6 +72,46 @@ export default async function handler(req, res) {
   const userToken = authHeader.replace('Bearer ', '').trim();
   const userId = await getUserId(userToken);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+  // ── resource=audit-log: журнал действий компании (только директор) ─────────
+  if (req.query.resource === 'audit-log') {
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+    const companyId = req.query.company_id;
+    if (!companyId) return res.status(400).json({ error: 'company_id required' });
+
+    const role = await getUserRole(companyId, userId);
+    if (role !== 'director') return res.status(403).json({ error: 'Только директор может просматривать журнал действий' });
+
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/audit_log?company_id=eq.${companyId}&order=created_at.desc&limit=200`, {
+        headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+      });
+      const logs = await r.json();
+      const logList = Array.isArray(logs) ? logs : [];
+
+      const userIds = [...new Set(logList.map(l => l.user_id).filter(Boolean))];
+      const emailMap = {};
+      await Promise.all(userIds.map(async (uid) => {
+        try {
+          const ur = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${uid}`, { headers: adminHeaders });
+          const ud = await ur.json();
+          emailMap[uid] = ud.email || null;
+        } catch (e) {
+          emailMap[uid] = null;
+        }
+      }));
+
+      const enriched = logList.map(l => ({
+        ...l,
+        user_email: emailMap[l.user_id] || null,
+        action_label: ACTION_LABELS[l.action] || l.action
+      }));
+
+      return res.status(200).json({ logs: enriched });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
 
   try {
     // ── GET: список участников компании ИЛИ список приглашений ───────────

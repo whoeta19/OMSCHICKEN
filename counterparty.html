@@ -157,7 +157,7 @@ async function checkCompany() {
 
 async function fetchFromEGRUL(inn) {
   try {
-    const r = await fetch(`/api/egrul?inn=${inn}`);
+    const r = await fetch(`/api/lookup?provider=egrul&inn=${inn}`);
     if (r.ok) {
       const d = await r.json();
       if (d.data) return parseEGRUL(d.data, inn);

@@ -541,7 +541,7 @@ async function loadAuditLog(myRole) {
 
   try {
     const token = getAuthToken();
-    const r = await fetch(`/api/audit-log?company_id=${companyId}`, {
+    const r = await fetch(`/api/members?resource=audit-log&company_id=${companyId}`, {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     const data = await r.json();

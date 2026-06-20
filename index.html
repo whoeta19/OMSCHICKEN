@@ -930,7 +930,7 @@ async function scanCounterpartyRadar() {
   // Проверяем по очереди с небольшой задержкой, чтобы не упереться в рейт-лимит ЕГРЮЛ
   for (const inn of toCheck) {
     try {
-      const r = await fetch(`/api/egrul?inn=${inn}`);
+      const r = await fetch(`/api/lookup?provider=egrul&inn=${inn}`);
       if (r.ok) {
         const d = await r.json();
         if (d.data) {
