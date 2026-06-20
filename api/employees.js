@@ -201,12 +201,15 @@ export default async function handler(req, res) {
           const year = period.split('.')[1];
           const runs = [];
           for (const emp of employees) {
-            // Сумма начислений сотруднику с начала года (для расчёта порога взносов)
-            const yearR = await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?employee_id=eq.${emp.id}&period=like.*.${year}`, {
+            // Сумма начислений сотруднику с начала года (для расчёта порога взносов).
+            // Берём все начисления этого сотрудника и фильтруем по году на стороне JS —
+            // надёжнее, чем полагаться на синтаксис like-фильтра PostgREST для строки period.
+            const yearR = await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?employee_id=eq.${emp.id}&select=period,salary_gross`, {
               headers: { ...adminHeaders, 'Prefer': 'return=representation' }
             });
-            const yearRuns = await yearR.json();
-            const yearTotal = (yearRuns || []).reduce((s, r) => s + Number(r.salary_gross), 0);
+            const yearRunsRaw = await yearR.json();
+            const yearRuns = Array.isArray(yearRunsRaw) ? yearRunsRaw.filter(r => (r.period || '').endsWith('.' + year)) : [];
+            const yearTotal = yearRuns.reduce((s, r) => s + Number(r.salary_gross), 0);
 
             const { ndfl, salaryNet, contributions } = calcPayroll(Number(emp.salary), yearTotal);
             runs.push({
