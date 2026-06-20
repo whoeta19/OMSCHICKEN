@@ -54,6 +54,17 @@
   input:focus,select:focus{border-color:rgba(255,107,0,0.5);box-shadow:0 0 0 3px rgba(255,107,0,0.08);}
   .toast{position:fixed;bottom:20px;right:16px;left:16px;background:rgba(15,15,15,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,107,0,0.3);border-radius:14px;padding:13px 18px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.35s;z-index:999;}
   .toast.show{transform:translateY(0);opacity:1;}
+  @media(max-width:600px){
+    header{padding:12px 14px;}
+    main{padding:12px 14px;}
+    .tabs{overflow-x:auto;padding:8px 14px 0;}
+    .tab{font-size:11px;padding:7px 10px;white-space:nowrap;}
+    [style*="grid-template-columns:1fr 1fr"]{display:block!important;}
+    [style*="grid-template-columns:1fr 1fr"] > *{margin-bottom:8px;}
+    [style*="grid-template-columns:1fr 1fr 1fr"]{display:block!important;}
+    [style*="grid-template-columns:1fr 1fr 1fr"] > *{margin-bottom:8px;}
+    input,select{font-size:14px;}
+  }
 </style>
 </head>
 <body>

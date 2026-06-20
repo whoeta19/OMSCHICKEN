@@ -39,6 +39,16 @@
   .summary-label{font-size:10px;color:var(--muted);margin-bottom:6px}
   .summary-value{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:100;display:none}
+  @media(max-width:600px){
+    header{padding:12px 14px;}
+    main{padding:12px 14px;}
+    .summary-grid{grid-template-columns:1fr 1fr!important;}
+    .summary-value{font-size:13px;}
+    input,select,textarea{font-size:14px;}
+    .btn{width:100%;margin-bottom:6px;}
+    table{font-size:11px;}
+    th,td{padding:6px 8px!important;}
+  }
 </style>
 </head>
 <body>

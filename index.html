@@ -279,6 +279,23 @@
     .chart-val{width:60px;font-size:9px;}
     
     .mobile-nav{display:flex!important;}
+
+    /* Дашборд */
+    .quick-actions-grid{grid-template-columns:repeat(2,1fr)!important;}
+    .suggestions-grid{grid-template-columns:1fr!important;}
+
+    /* Операции — показываем категорию, убираем только лишнее */
+    .tx-row{display:flex!important;flex-wrap:wrap;padding:10px 12px;gap:4px;}
+    .tx-row > div:nth-child(2){display:block!important;}
+
+    /* Комментарий и кнопки в операции */
+    #txSearch{font-size:14px!important;} /* чтобы iOS не зумил */
+
+    /* Страница добавления операции */
+    .input-row{grid-template-columns:1fr!important;}
+
+    /* Заголовок секции */
+    .section-title{font-size:10px;margin-bottom:10px;}
   }
   
   /* Нижнее меню */
@@ -369,7 +386,7 @@
   </div>
 
   <!-- Быстрые действия -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px" class="quick-actions-grid">
     <div data-role="director,accountant" onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">📂</div>
       <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
@@ -415,7 +432,7 @@
   </div>
 
   <!-- Уведомления + Аналитика -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" class="suggestions-grid">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Рекомендации</div>
       <div id="suggestionsBlock"></div>
