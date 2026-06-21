@@ -2989,15 +2989,12 @@ async function aiAsk(q) {
     if (data.reply) {
       _aiAddBubble('bot', data.reply);
     } else {
-      const res = aiAnswer(q);
-      _aiAddBubble('bot', res.html, res.actions);
-      if (res.chips) _aiSetChips(res.chips);
+      // Показываем реальную ошибку от сервера для диагностики
+      _aiAddBubble('bot', '⚠️ Ошибка: ' + (data.error || JSON.stringify(data)));
     }
   } catch(e) {
     msgs.removeChild(dots);
-    const res = aiAnswer(q);
-    _aiAddBubble('bot', res.html, res.actions);
-    if (res.chips) _aiSetChips(res.chips);
+    _aiAddBubble('bot', '⚠️ Сетевая ошибка: ' + e.message);
   }
   msgs.scrollTop = msgs.scrollHeight;
 }
