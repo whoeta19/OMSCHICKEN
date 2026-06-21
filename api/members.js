@@ -131,7 +131,7 @@ export default async function handler(req, res) {
             contents: [
               { role: 'user', parts: [{ text: systemPrompt + '\n\nВопрос пользователя: ' + message }] }
             ],
-            generationConfig: { maxOutputTokens: 400, temperature: 0.7 }
+            generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
           })
         }
       );
