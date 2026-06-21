@@ -537,6 +537,34 @@
   </div>
 
 
+  <!-- Скоринг здоровья бизнеса -->
+  <div id="healthScoreCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Здоровье бизнеса</div>
+      <div style="font-size:10px;color:var(--muted)" id="healthUpdated"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+      <div style="position:relative;flex-shrink:0;width:72px;height:72px">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+          <circle id="healthArc" cx="36" cy="36" r="28" fill="none" stroke="#22c55e" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9"
+            transform="rotate(-90 36 36)" style="transition:stroke-dashoffset 1s ease,stroke 0.5s"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div id="healthScoreNum" style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;line-height:1">—</div>
+          <div style="font-size:8px;color:var(--muted)">из 100</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div id="healthGrade" style="font-size:14px;font-weight:700;margin-bottom:2px"></div>
+        <div id="healthSummary" style="font-size:11px;color:var(--muted);line-height:1.4"></div>
+      </div>
+    </div>
+    <div id="healthMetrics" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div id="healthAdvice" style="margin-top:12px;padding:10px 12px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:8px;font-size:11px;line-height:1.5;display:none"></div>
+  </div>
+
   <!-- Закрытие месяца — чек-лист готовности -->
   <div id="monthCloserCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1889,6 +1917,7 @@ function renderAll() {
   try { initHome(); } catch(e) { console.error('initHome:', e); }
   try { scanCounterpartyRadar(); } catch(e) {}
   try { renderCashflowForecast(window._cfDays || 30); } catch(e) { console.error('cfForecast:', e); }
+  try { renderHealthScore(); } catch(e) { console.error('healthScore:', e); }
 }
 
 // ─── Кэшфлоу-прогноз ──────────────────────────────────────────────────────────
@@ -1994,6 +2023,126 @@ function renderCashflowForecast(days) {
   } else {
     gapAlert.style.display = 'none';
   }
+}
+
+// ─── Скоринг здоровья бизнеса ─────────────────────────────────────────────────
+function renderHealthScore() {
+  const card = document.getElementById('healthScoreCard');
+  if (!card || allTx.length < 5) { if (card) card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  const now = Date.now();
+  const msDay = 86400000;
+  function parseDMY(s) { try { const [d,m,y] = s.split('.').map(Number); return new Date(y,m-1,d).getTime(); } catch { return 0; } }
+
+  const last90 = allTx.filter(t => parseDMY(t.date) >= now - 90*msDay);
+  const last30 = allTx.filter(t => parseDMY(t.date) >= now - 30*msDay);
+
+  // 1. ЛИКВИДНОСТЬ (0–25): доходы/расходы за 30 дней
+  const inc30 = last30.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const exp30 = last30.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const liquidRatio = exp30 > 0 ? inc30 / exp30 : 2;
+  const liquidScore = Math.min(25, Math.round(liquidRatio >= 1.5 ? 25 : liquidRatio >= 1.2 ? 20 : liquidRatio >= 1 ? 14 : liquidRatio >= 0.8 ? 7 : 0));
+
+  // 2. СТАБИЛЬНОСТЬ (0–20): равномерность поступлений по неделям за 90 дней
+  const weeks = [0,1,2,3,4,5,6,7,8,9,10,11].map(w => {
+    const start = now - (w+1)*7*msDay, end = now - w*7*msDay;
+    return last90.filter(t=>t.amount>0&&parseDMY(t.date)>=start&&parseDMY(t.date)<end).reduce((s,t)=>s+Number(t.amount),0);
+  }).filter((_,i)=>i<12);
+  const nonZeroWeeks = weeks.filter(w=>w>0);
+  let stabilityScore = 20;
+  if (nonZeroWeeks.length > 2) {
+    const avg = nonZeroWeeks.reduce((a,b)=>a+b,0) / nonZeroWeeks.length;
+    const cv = Math.sqrt(nonZeroWeeks.reduce((s,w)=>s+(w-avg)**2,0)/nonZeroWeeks.length) / (avg||1);
+    stabilityScore = Math.round(Math.max(0, 20 - cv * 15));
+  } else { stabilityScore = nonZeroWeeks.length > 0 ? 10 : 0; }
+
+  // 3. КОНЦЕНТРАЦИЯ (0–20): не зависеть от одного клиента
+  const byClient = {};
+  allTx.filter(t=>t.amount>0).forEach(t => {
+    const k = t.name||'—'; byClient[k] = (byClient[k]||0) + Number(t.amount);
+  });
+  const totalInc = Object.values(byClient).reduce((a,b)=>a+b,0)||1;
+  const top1Share = Math.max(...Object.values(byClient),0) / totalInc;
+  const concentrationScore = Math.round(top1Share < 0.2 ? 20 : top1Share < 0.4 ? 16 : top1Share < 0.6 ? 10 : top1Share < 0.8 ? 5 : 1);
+
+  // 4. НАЛОГОВАЯ НАГРУЗКА (0–20): НДС к уплате / выручка — норма до 18%
+  const vatSales = allTx.filter(t=>t.amount>0&&t.category==='income').reduce((s,t)=>s+Number(t.amount),0)*10/110;
+  const vatBuy = allTx.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0)*10/110;
+  const vatNet = Math.max(0, vatSales - vatBuy);
+  const taxBurden = totalInc > 0 ? vatNet / totalInc : 0;
+  const taxScore = Math.round(taxBurden < 0.05 ? 20 : taxBurden < 0.1 ? 17 : taxBurden < 0.15 ? 13 : taxBurden < 0.2 ? 8 : 3);
+
+  // 5. РОСТ (0–15): тренд выручки: текущий месяц vs предыдущий
+  const thisMonth = new Date().getMonth(), thisYear = new Date().getFullYear();
+  const incThis = allTx.filter(t=>t.amount>0&&parseDMY(t.date)>=new Date(thisYear,thisMonth,1).getTime()).reduce((s,t)=>s+Number(t.amount),0);
+  const incPrev = allTx.filter(t=>t.amount>0&&parseDMY(t.date)>=new Date(thisYear,thisMonth-1,1).getTime()&&parseDMY(t.date)<new Date(thisYear,thisMonth,1).getTime()).reduce((s,t)=>s+Number(t.amount),0);
+  const growthRate = incPrev > 0 ? (incThis - incPrev) / incPrev : 0;
+  const growthScore = Math.round(growthRate > 0.1 ? 15 : growthRate > 0 ? 12 : growthRate > -0.1 ? 8 : growthRate > -0.3 ? 4 : 0);
+
+  const total = liquidScore + stabilityScore + concentrationScore + taxScore + growthScore;
+
+  // Рендер
+  const arc = document.getElementById('healthArc');
+  const circumference = 175.9;
+  const offset = circumference - (total / 100) * circumference;
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = total >= 75 ? '#22c55e' : total >= 50 ? '#f59e0b' : '#ef4444';
+
+  document.getElementById('healthScoreNum').textContent = total;
+  document.getElementById('healthScoreNum').style.color = total >= 75 ? 'var(--green)' : total >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+  const grade = total >= 80 ? '🟢 Отличное' : total >= 65 ? '🟡 Хорошее' : total >= 50 ? '🟠 Среднее' : '🔴 Нужно внимание';
+  const summary = total >= 80 ? 'Бизнес в устойчивом положении' : total >= 65 ? 'Есть точки для улучшения' : total >= 50 ? 'Несколько зон риска — смотри детали' : 'Обрати внимание на проблемные зоны';
+  document.getElementById('healthGrade').textContent = grade;
+  document.getElementById('healthSummary').textContent = summary;
+
+  const metrics = [
+    { label: 'Ликвидность', score: liquidScore, max: 25,
+      hint: liquidScore >= 20 ? 'Доходы уверенно покрывают расходы' : liquidScore >= 14 ? 'Баланс нормальный, небольшой запас' : 'Расходы превышают доходы — риск кассового разрыва' },
+    { label: 'Стабильность доходов', score: stabilityScore, max: 20,
+      hint: stabilityScore >= 16 ? 'Поступления равномерны по неделям' : stabilityScore >= 10 ? 'Небольшие колебания — норма' : 'Сильные скачки в поступлениях — нужна подушка' },
+    { label: 'Диверсификация', score: concentrationScore, max: 20,
+      hint: concentrationScore >= 16 ? 'Клиентская база сбалансирована' : concentrationScore >= 10 ? `Топ-клиент даёт ${Math.round(top1Share*100)}% выручки — умеренный риск` : `Топ-клиент даёт ${Math.round(top1Share*100)}% выручки — высокая зависимость!` },
+    { label: 'Налоговая нагрузка', score: taxScore, max: 20,
+      hint: taxScore >= 16 ? 'НДС-нагрузка в норме' : taxScore >= 10 ? 'Налоговая нагрузка умеренная' : 'Высокая НДС-нагрузка — проверь вычеты' },
+    { label: 'Динамика роста', score: growthScore, max: 15,
+      hint: growthScore >= 12 ? `Рост выручки +${Math.round(growthRate*100)}% к прошлому месяцу` : growthScore >= 8 ? 'Выручка стабильна' : `Снижение выручки ${Math.round(growthRate*100)}% — нужны новые клиенты` },
+  ];
+
+  document.getElementById('healthMetrics').innerHTML = metrics.map(m => {
+    const pct = m.score / m.max * 100;
+    const color = pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:11px;color:var(--muted)">${m.label}</span>
+        <span style="font-size:11px;font-weight:600;color:${color}">${m.score}/${m.max}</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:2px;transition:width 0.8s ease"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${m.hint}</div>
+    </div>`;
+  }).join('');
+
+  // Главный совет — самая слабая зона
+  const weakest = [...metrics].sort((a,b) => (a.score/a.max) - (b.score/b.max))[0];
+  const adviceEl = document.getElementById('healthAdvice');
+  const advices = {
+    'Ликвидность': '💡 Сократи расходы или ускорь получение дебиторки — нужна подушка минимум на 1 месяц расходов.',
+    'Стабильность доходов': '💡 Введи предоплатную модель или абонементы — регулярные платежи снизят волатильность.',
+    'Диверсификация': `💡 Топ-клиент даёт ${Math.round(top1Share*100)}% выручки. Активно привлекай новых — потеря ключевого клиента критична.`,
+    'Налоговая нагрузка': '💡 Проверь все закупочные счета-фактуры — возможно не все вычеты приняты к учёту.',
+    'Динамика роста': '💡 Выручка снижается. Свяжись с топ-5 клиентами и узнай о новых потребностях.',
+  };
+  if (weakest.score / weakest.max < 0.6) {
+    adviceEl.style.display = 'block';
+    adviceEl.textContent = advices[weakest.label] || '';
+  } else {
+    adviceEl.style.display = 'none';
+  }
+
+  document.getElementById('healthUpdated').textContent = 'обновлено только что';
 }
 
 // ─── Закрытие месяца — чек-лист готовности ────────────────────────────────────
