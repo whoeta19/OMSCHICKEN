@@ -458,9 +458,9 @@ function getTxHistoryForCounterparty(name, inn) {
   const income = matches.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = matches.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const last5 = [...matches].sort((a,b)=>{
-    const da = a.date ? a.date.split('.').reverse().join('') : '';
-    const db = b.date ? b.date.split('.').reverse().join('') : '';
-    return db.localeCompare(da);
+    const da = a.date ? parseDMY(a.date) : 0;
+    const db = b.date ? parseDMY(b.date) : 0;
+    return db - da;
   }).slice(0,5);
 
   return {income, expense, count: matches.length, last5};

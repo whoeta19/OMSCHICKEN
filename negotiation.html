@@ -380,7 +380,7 @@ function calc() {
       Бесплатно давать невыгодно. Минимальная надбавка для безубыточности: <b>${fmtPct(parseFloat(breakEvenSurcharge))}</b>. Или настаивай на предоплате от 50%.
     </div>`;
   }
-  document.getElementById('verdict').outerHTML = verdictHtml + `<button class="copy-btn" onclick="copyResult()">📋 Скопировать итоги для переговоров</button>`;
+  document.getElementById('verdict').innerHTML = verdictHtml;
 
   // Сохраняем для копирования
   window._calcResult = { amount, loss, totalLoss, effPct, annualPct, breakEvenSurcharge, lossDesc, days, rate };

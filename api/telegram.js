@@ -81,8 +81,9 @@ export default async function handler(req, res) {
   const callbackData = update.callback_query?.data;
   const photos = update.message?.photo;
   
-  // Проверяем привязку до любых действий (нужен linkedUser для OCR тоже)
-  const linkedUserEarly = await findUserByTelegram(telegramId);
+  // Не запрашиваем linkedUser для /start — там пользователь ещё не привязан
+  const isStartCmd = text.startsWith('/start');
+  const linkedUserEarly = isStartCmd ? null : await findUserByTelegram(telegramId);
 
   try {
     // Фото чека — OCR
@@ -155,7 +156,7 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: adminHeaders,
             body: JSON.stringify({
-              key, user_id: linkedUser?.user_id, telegram_id: String(telegramId),
+              key, user_id: linkedUserEarly.user_id, telegram_id: String(telegramId),
               amount: -amount, name: merchant, date: txDate,
               category: 'other', created_at: new Date().toISOString()
             })
