@@ -451,6 +451,9 @@
   .ai-quick-btns{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);}
   .ai-quick{font-size:10px;padding:4px 9px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all 0.2s;}
   .ai-quick:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
+  @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.4)}}
+  .cf-bar{flex:1;min-width:0;border-radius:4px 4px 0 0;transition:height 0.4s ease;cursor:default;position:relative;}
+  .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
 </style>
 </head>
 <body>
@@ -603,10 +606,29 @@
     </div>
   </div>
 
-  <!-- Последние операции -->
+  <!-- Прогноз кэшфлоу -->
+  <div id="cashflowForecastCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Прогноз кэшфлоу · 90 дней</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="setCfPeriod(30,this)" class="cf-period-btn active" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:rgba(255,107,0,0.15);color:var(--accent);cursor:pointer">30д</button>
+        <button onclick="setCfPeriod(60,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">60д</button>
+        <button onclick="setCfPeriod(90,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">90д</button>
+      </div>
+    </div>
+    <div id="cfGapAlert" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)"></div>
+    <div id="cfBars" style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:8px"></div>
+    <div id="cfLabels" style="display:flex;gap:3px;font-size:9px;color:var(--muted)"></div>
+    <div id="cfSummary" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Финансовый пульс -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Последние операции</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse-dot 2s infinite"></div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Финансовый пульс</div>
+      </div>
       <button class="btn-outline" onclick="showPage('transactions',document.querySelector('.pill[onclick*=\"transactions\"]'))" style="font-size:10px;padding:4px 10px">Все →</button>
     </div>
     <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
@@ -1866,6 +1888,113 @@ function renderAll() {
   try { renderMonthCloser(); } catch(e) { console.error('renderMonthCloser:', e); }
   try { initHome(); } catch(e) { console.error('initHome:', e); }
   try { scanCounterpartyRadar(); } catch(e) {}
+  try { renderCashflowForecast(window._cfDays || 30); } catch(e) { console.error('cfForecast:', e); }
+}
+
+// ─── Кэшфлоу-прогноз ──────────────────────────────────────────────────────────
+function setCfPeriod(days, btn) {
+  window._cfDays = days;
+  document.querySelectorAll('.cf-period-btn').forEach(b => {
+    b.style.background = 'none'; b.style.color = 'var(--muted)';
+  });
+  btn.style.background = 'rgba(255,107,0,0.15)'; btn.style.color = 'var(--accent)';
+  renderCashflowForecast(days);
+}
+
+function renderCashflowForecast(days) {
+  const card = document.getElementById('cashflowForecastCard');
+  const barsEl = document.getElementById('cfBars');
+  const labelsEl = document.getElementById('cfLabels');
+  const summaryEl = document.getElementById('cfSummary');
+  const gapAlert = document.getElementById('cfGapAlert');
+  if (!card || !barsEl) return;
+  if (!allTx.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  const today = Date.now();
+  const msDay = 86400000;
+  const lookback = 90 * msDay;
+
+  function parseDMY(s) { const [d,m,y] = s.split('.').map(Number); return new Date(y,m-1,d).getTime(); }
+
+  // Историческая база за 90 дней
+  const histTx = allTx.filter(t => {
+    try { const ts = parseDMY(t.date); return ts >= today - lookback && ts <= today; } catch{ return false; }
+  });
+
+  // Группируем по неделям (0 = текущая, 1 = следующая и т.д.)
+  const numWeeks = Math.ceil(days / 7);
+  const weeks = Array.from({length: numWeeks}, () => ({income: 0, expense: 0}));
+
+  // Считаем среднее по дням недели из истории
+  const avgByDow = {income: new Array(7).fill(0), expense: new Array(7).fill(0), cnt: new Array(7).fill(0)};
+  histTx.forEach(t => {
+    const dow = new Date(parseDMY(t.date)).getDay();
+    avgByDow.cnt[dow]++;
+    if (t.amount > 0) avgByDow.income[dow] += Number(t.amount);
+    else avgByDow.expense[dow] += Math.abs(Number(t.amount));
+  });
+  // Нормируем на количество появлений этого дня недели в истории
+  const dowCounts = new Array(7).fill(0);
+  for (let i = 0; i < 90; i++) { dowCounts[new Date(today - i * msDay).getDay()]++; }
+  for (let d = 0; d < 7; d++) {
+    if (dowCounts[d]) { avgByDow.income[d] /= dowCounts[d]; avgByDow.expense[d] /= dowCounts[d]; }
+  }
+
+  // Заполняем прогноз
+  for (let i = 0; i < days; i++) {
+    const dow = new Date(today + i * msDay).getDay();
+    const w = Math.floor(i / 7);
+    if (w < numWeeks) {
+      weeks[w].income += avgByDow.income[dow];
+      weeks[w].expense += avgByDow.expense[dow];
+    }
+  }
+
+  // Кумулятивный баланс
+  let runningBalance = 0;
+  const weekLabels = [];
+  let hasGap = false;
+  const weeklyNet = weeks.map((wk, i) => {
+    const net = wk.income - wk.expense;
+    runningBalance += net;
+    const d = new Date(today + i * 7 * msDay);
+    weekLabels.push(`${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}`);
+    if (runningBalance < 0) hasGap = true;
+    return {net, balance: runningBalance, income: wk.income, expense: wk.expense};
+  });
+
+  // Рендер баров
+  const maxAbs = Math.max(...weeklyNet.map(w => Math.max(Math.abs(w.income), Math.abs(w.expense))), 1);
+  const barHeight = 56;
+  barsEl.innerHTML = weeklyNet.map((wk, i) => {
+    const incH = Math.round((wk.income / maxAbs) * barHeight);
+    const expH = Math.round((wk.expense / maxAbs) * barHeight);
+    const netSign = wk.net >= 0;
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:1px">
+      <div class="cf-bar" style="height:${incH}px;background:rgba(34,197,94,0.5)"
+        data-tip="+${fmt(wk.income)}"></div>
+      <div class="cf-bar" style="height:${expH}px;background:rgba(239,68,68,0.5)"
+        data-tip="-${fmt(wk.expense)}"></div>
+    </div>`;
+  }).join('');
+
+  labelsEl.innerHTML = `<div style="display:flex;gap:2px">${weekLabels.map(l =>
+    `<div style="flex:1;text-align:center;font-size:9px;color:var(--muted)">${l}</div>`).join('')}</div>`;
+
+  const totalNet = weeklyNet.reduce((s, w) => s + w.net, 0);
+  summaryEl.innerHTML = `<div style="font-size:11px;color:var(--muted);margin-top:6px">
+    Прогноз за ${days}д: <span style="color:${totalNet>=0?'var(--green)':'var(--red)'};font-weight:600">${totalNet>=0?'+':''}${fmt(totalNet)}</span>
+    &nbsp;·&nbsp; Доходы ~${fmt(weeklyNet.reduce((s,w)=>s+w.income,0))}
+    &nbsp;·&nbsp; Расходы ~${fmt(weeklyNet.reduce((s,w)=>s+w.expense,0))}
+  </div>`;
+
+  if (hasGap) {
+    gapAlert.style.display = 'block';
+    gapAlert.textContent = '⚠️ Прогноз показывает кассовый разрыв в одну из недель — следи за поступлениями';
+  } else {
+    gapAlert.style.display = 'none';
+  }
 }
 
 // ─── Закрытие месяца — чек-лист готовности ────────────────────────────────────

@@ -79,8 +79,137 @@ export default async function handler(req, res) {
   const telegramId = message.from?.id || chatId;
   const text = (update.message?.text || '').trim();
   const callbackData = update.callback_query?.data;
+  const photos = update.message?.photo;
   
   try {
+    // Фото чека — OCR
+    if (photos && photos.length > 0) {
+      const fileId = photos[photos.length - 1].file_id; // наибольшее разрешение
+      await sendMessage(chatId, '🔍 Читаю чек, подожди секунду...');
+
+      try {
+        // Получаем путь к файлу
+        const fileResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+        const fileData = await fileResp.json();
+        const filePath = fileData.result?.file_path;
+        if (!filePath) throw new Error('no file_path');
+
+        const fileUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+
+        // Загружаем изображение как blob
+        const imgResp = await fetch(fileUrl);
+        const imgBuffer = await imgResp.arrayBuffer();
+        const imgBlob = new Blob([imgBuffer]);
+
+        // Отправляем на OCR.space (бесплатный тариф, 500 запросов/месяц)
+        const form = new FormData();
+        form.append('apikey', 'K83953490988957'); // free API key
+        form.append('language', 'rus');
+        form.append('isOverlayRequired', 'false');
+        form.append('file', imgBlob, 'check.jpg');
+
+        const ocrResp = await fetch('https://api.ocr.space/parse/image', {
+          method: 'POST',
+          body: form
+        });
+        const ocrData = await ocrResp.json();
+        const ocrText = ocrData.ParsedResults?.[0]?.ParsedText || '';
+
+        // Ищем сумму в тексте: "ИТОГО", "ИТОГ", "Сумма", "К ОПЛАТЕ" + число
+        const amountMatch = ocrText.match(/(?:итого|итог|к\s*оплате|сумма)[:\s]*([0-9\s]+[,.]?[0-9]*)/i);
+        const amount = amountMatch
+          ? parseFloat(amountMatch[1].replace(/\s/g, '').replace(',', '.'))
+          : null;
+
+        // Ищем дату
+        const dateMatch = ocrText.match(/(\d{2})[.\/\-](\d{2})[.\/\-](\d{2,4})/);
+        let txDate = new Date().toLocaleDateString('ru-RU').replace(/\//g, '.');
+        if (dateMatch) {
+          const y = dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3];
+          txDate = `${dateMatch[1]}.${dateMatch[2]}.${y}`;
+        }
+
+        // Ищем название магазина (первая непустая строка)
+        const lines = ocrText.split('\n').map(l => l.trim()).filter(Boolean);
+        const merchant = lines[0]?.substring(0, 40) || 'Чек';
+
+        if (!amount || isNaN(amount) || amount <= 0) {
+          await sendMessage(chatId,
+            `❓ Не удалось распознать сумму на чеке.\n\nРаспознанный текст:\n<code>${ocrText.substring(0, 300)}</code>\n\nДобавь операцию вручную в приложении.`,
+            {inline_keyboard: [[{text: '➕ Добавить вручную', url: 'https://omschicken-u5dn.vercel.app'}]]}
+          );
+        } else {
+          // Сохраняем в pending — ждём подтверждения
+          const key = `ocr_${telegramId}_${Date.now()}`;
+          await fetch(`${SUPABASE_URL}/rest/v1/telegram_ocr_pending`, {
+            method: 'POST',
+            headers: adminHeaders,
+            body: JSON.stringify({
+              key, user_id: linkedUser?.user_id, telegram_id: String(telegramId),
+              amount: -amount, name: merchant, date: txDate,
+              category: 'other', created_at: new Date().toISOString()
+            })
+          }).catch(() => {}); // таблица может не существовать — не критично
+
+          await sendMessage(chatId,
+            `🧾 <b>Чек распознан!</b>\n\n` +
+            `📅 Дата: ${txDate}\n` +
+            `🏪 Продавец: ${merchant}\n` +
+            `💳 Сумма: <b>-${fmt(amount)}</b>\n\n` +
+            `Добавить эту операцию в OMSFIN?`,
+            {inline_keyboard: [[
+              {text: '✅ Добавить', callback_data: `ocr_confirm:${key}:${linkedUser?.user_id}:${-amount}:${merchant}:${txDate}`},
+              {text: '❌ Отмена', callback_data: 'ocr_cancel'}
+            ]]}
+          );
+        }
+      } catch(ocrErr) {
+        console.error('OCR error:', ocrErr);
+        await sendMessage(chatId, '❌ Не смог прочитать чек. Попробуй сделать более чёткое фото.');
+      }
+      return res.status(200).json({ok: true});
+    }
+
+    // Callback — подтверждение OCR операции
+    if (callbackData?.startsWith('ocr_confirm:')) {
+      const parts = callbackData.split(':');
+      // ocr_confirm:key:userId:amount:merchant:date
+      const [, , confirmUserId, amtStr, ...rest] = parts;
+      const txDate = rest[rest.length - 1];
+      const merchant = rest.slice(0, rest.length - 1).join(':');
+      const amount = parseFloat(amtStr);
+
+      await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: {...adminHeaders, 'Prefer': 'return=minimal'},
+        body: JSON.stringify({
+          user_id: confirmUserId,
+          date: txDate,
+          amount,
+          name: merchant,
+          category: 'other',
+          period: txDate.split('.').slice(1).join('.') // MM.YYYY
+        })
+      });
+
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({callback_query_id: update.callback_query.id, text: '✅ Операция добавлена!'})
+      });
+      await sendMessage(chatId, `✅ Операция добавлена!\n\n${merchant} · -${fmt(Math.abs(amount))}`);
+      return res.status(200).json({ok: true});
+    }
+
+    if (callbackData === 'ocr_cancel') {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({callback_query_id: update.callback_query.id, text: 'Отменено'})
+      });
+      return res.status(200).json({ok: true});
+    }
+
     // Команда /start с кодом привязки
     if (text.startsWith('/start ')) {
       const code = text.split(' ')[1];
