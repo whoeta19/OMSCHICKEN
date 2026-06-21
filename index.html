@@ -1880,7 +1880,7 @@ async function clearLastUpload() {
 }
 
 
-function renderAll() {
+function _origRenderAll() {
   try {
     const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
     const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
@@ -3588,7 +3588,6 @@ function openTxDetail(tx) {
 // ══════════════════════════════════════════════════════════
 // ПОДКЛЮЧЕНИЕ К renderAll
 // ══════════════════════════════════════════════════════════
-const _origRenderAll = renderAll;
 function renderAll() {
   _origRenderAll();
   try { detectAnomalies(); } catch(e) {}
