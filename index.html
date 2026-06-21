@@ -494,7 +494,7 @@
 <div class="page active" id="page-dashboard">
   <!-- Скрытые элементы для совместимости -->
   <input type="file" id="fileInput" accept=".csv,.txt" multiple style="display:none">
-  <div class="progress-wrap" id="progressWrap" style="display:none">
+  <div class="progress-wrap" id="progressWrap">
     <div id="progressText" style="font-size:13px;font-weight:500">Обрабатываю...</div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   </div>
@@ -850,7 +850,9 @@ async function apiPost(txs) {
   });
   if (!r.ok) {
     if (r.status === 403) { const d = await r.json().catch(()=>({})); throw new Error(d.error || 'Недостаточно прав'); }
-    throw new Error('Ошибка сохранения');
+    const errText = await r.text().catch(()=>'');
+    console.error('apiPost error', r.status, errText);
+    throw new Error(`Ошибка сохранения (${r.status})`);
   }
   return r.json();
 }
@@ -1773,33 +1775,41 @@ async function clearLastUpload() {
 
 
 function renderAll() {
-  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-  const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
-  const personal = allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0);
-  document.getElementById('statIncome').textContent = fmt(income);
-  document.getElementById('statExpense').textContent = fmt(expense);
-  document.getElementById('statPersonal').textContent = fmt(personal);
-  const profit = income - expense;
-  const profitEl = document.getElementById('statProfit');
-  const profitSub = document.getElementById('statProfitSub');
-  if (allTx.length) {
-    profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
-    profitEl.className = 'hero-stat-value ' + (profit >= 0 ? 'positive' : 'negative');
-    const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort();
-    profitSub.textContent = periods.length ? `За ${periods.length > 1 ? periods[0] + ' — ' + periods[periods.length-1] : periods[0]}` : 'Все операции';
-  } else {
-    profitEl.textContent = '0 ₽';
-    profitEl.className = 'hero-stat-value';
-    profitSub.textContent = 'Загрузи выписку для расчёта';
-  }
-  renderChart();
-  const recent = allTx.slice(0,6);
-  document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById(\'fileInput\').click()">Загрузить выписку</button></div>';
-  renderTxList();
-  renderSuggestions();
-  renderMonthCloser();
-  initHome();
-  scanCounterpartyRadar(); // фоновая проверка контрагентов, не блокирует рендер
+  try {
+    const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+    const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+    const personal = allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0);
+    document.getElementById('statIncome').textContent = fmt(income);
+    document.getElementById('statExpense').textContent = fmt(expense);
+    document.getElementById('statPersonal').textContent = fmt(personal);
+    const profit = income - expense;
+    const profitEl = document.getElementById('statProfit');
+    const profitSub = document.getElementById('statProfitSub');
+    if (profitEl) {
+      if (allTx.length) {
+        profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
+        profitEl.className = 'hero-stat-value ' + (profit >= 0 ? 'positive' : 'negative');
+        const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort();
+        if (profitSub) profitSub.textContent = periods.length ? `За ${periods.length > 1 ? periods[0] + ' — ' + periods[periods.length-1] : periods[0]}` : 'Все операции';
+      } else {
+        profitEl.textContent = '0 ₽';
+        profitEl.className = 'hero-stat-value';
+        if (profitSub) profitSub.textContent = 'Загрузи выписку для расчёта';
+      }
+    }
+  } catch(e) { console.error('renderAll stats:', e); }
+  try { renderChart(); } catch(e) { console.error('renderChart:', e); }
+  try {
+    const recent = allTx.slice(0,6);
+    document.getElementById('recentList').innerHTML = recent.length
+      ? recent.map(txHTML).join('')
+      : `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`;
+  } catch(e) { console.error('recentList:', e); }
+  try { renderTxList(); } catch(e) { console.error('renderTxList:', e); }
+  try { renderSuggestions(); } catch(e) { console.error('renderSuggestions:', e); }
+  try { renderMonthCloser(); } catch(e) { console.error('renderMonthCloser:', e); }
+  try { initHome(); } catch(e) { console.error('initHome:', e); }
+  try { scanCounterpartyRadar(); } catch(e) {}
 }
 
 // ─── Закрытие месяца — чек-лист готовности ────────────────────────────────────
@@ -2078,7 +2088,7 @@ function showPage(name,btn){
 function toggleMoreMenu(e) {
   e.stopPropagation();
   const menu = document.getElementById('pillMoreMenu');
-  const btn = e.currentTarget;
+  const btn = e.target.closest('button');
   const rect = btn.getBoundingClientRect();
   menu.style.top = (rect.bottom + 6) + 'px';
   menu.style.left = rect.left + 'px';
