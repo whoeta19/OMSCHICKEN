@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Переговорный калькулятор — OMSFIN</title>
+<style>
+  :root {
+    --bg: #080808; --card: #111; --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0; --muted: #888; --accent: #ff6b00;
+    --green: #22c55e; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .back-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+  .back-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .topbar-title { font-size: 15px; font-weight: 600; }
+  .topbar-sub { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .hero { text-align: center; padding: 32px 0 28px; }
+  .hero-icon { font-size: 48px; margin-bottom: 12px; }
+  .hero h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .hero p { font-size: 14px; color: var(--muted); max-width: 440px; margin: 0 auto; line-height: 1.5; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 16px; }
+
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; margin-top: 14px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=number], input[type=range], select {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 14px; outline: none;
+  }
+  input[type=number]:focus { border-color: rgba(255,107,0,0.5); }
+  input[type=range] { padding: 4px 0; border: none; background: none; cursor: pointer; accent-color: var(--accent); }
+
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-val { font-size: 14px; font-weight: 600; color: var(--accent); min-width: 42px; text-align: right; }
+
+  .seg-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg-btn { flex: 1; padding: 7px 0; border: 1px solid var(--border); border-radius: 8px; background: none; color: var(--muted); font-size: 13px; cursor: pointer; min-width: 50px; }
+  .seg-btn.active { background: rgba(255,107,0,0.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  /* Результат */
+  .result-section { margin-top: 20px; }
+  .result-hero { background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04)); border: 1px solid rgba(239,68,68,0.2); border-radius: 14px; padding: 20px; text-align: center; margin-bottom: 16px; }
+  .result-hero.ok { background: linear-gradient(135deg, rgba(34,197,94,0.1), rgba(34,197,94,0.03)); border-color: rgba(34,197,94,0.2); }
+  .result-loss-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .result-loss-val { font-size: 36px; font-weight: 800; color: var(--red); letter-spacing: -1px; }
+  .result-loss-val.ok { color: var(--green); }
+  .result-loss-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (max-width: 500px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
+  .metric { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+  .metric-val { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+  .metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* Сценарии */
+  .scenarios { display: flex; flex-direction: column; gap: 10px; }
+  .scenario { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.2s; }
+  .scenario:hover { border-color: rgba(255,255,255,0.15); }
+  .scenario.best { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+  .scenario.mid { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
+  .scenario.bad { border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.03); }
+  .scenario-icon { font-size: 22px; flex-shrink: 0; }
+  .scenario-body { flex: 1; }
+  .scenario-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .scenario-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .scenario-val { font-size: 14px; font-weight: 700; text-align: right; min-width: 80px; }
+
+  /* Breakdown */
+  .breakdown { margin-top: 16px; }
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+  .breakdown-row:last-child { border-bottom: none; font-weight: 600; }
+  .breakdown-label { color: var(--muted); }
+  .breakdown-val { font-weight: 500; }
+
+  /* Timeline */
+  .timeline { display: flex; gap: 0; margin-top: 16px; border-radius: 10px; overflow: hidden; height: 48px; }
+  .tl-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; transition: flex 0.4s; }
+
+  .verdict { margin-top: 16px; border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.5; }
+  .verdict strong { display: block; font-size: 14px; margin-bottom: 4px; }
+
+  .copy-btn { width: 100%; margin-top: 16px; padding: 11px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,107,0,0.08); color: var(--accent); font-size: 13px; cursor: pointer; font-weight: 500; }
+  .copy-btn:hover { background: rgba(255,107,0,0.15); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← Назад</button>
+  <div class="topbar-title">🤝 Переговорный калькулятор</div>
+  <div class="topbar-sub">Оцени реальную стоимость уступок</div>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-icon">🤝</div>
+    <h1>Сколько стоит твоя уступка?</h1>
+    <p>Введи условия сделки и узнай реальную цену отсрочки, скидки или предоплаты — в рублях и процентах</p>
+  </div>
+
+  <div class="grid2">
+    <!-- Ввод -->
+    <div class="card">
+      <div class="card-title">Параметры сделки</div>
+
+      <label>Сумма сделки, ₽</label>
+      <input type="number" id="inAmount" value="1000000" min="0" step="10000" oninput="calc()">
+
+      <label>Тип уступки</label>
+      <div class="seg-row">
+        <button class="seg-btn active" id="tab-delay" onclick="setTab('delay')">Отсрочка</button>
+        <button class="seg-btn" id="tab-discount" onclick="setTab('discount')">Скидка</button>
+        <button class="seg-btn" id="tab-prepay" onclick="setTab('prepay')">Предоплата</button>
+      </div>
+
+      <div id="panel-delay">
+        <label>Отсрочка платежа, дней</label>
+        <div class="range-row">
+          <input type="range" id="inDays" min="7" max="180" value="60" step="1" oninput="syncDays(this.value)">
+          <span class="range-val" id="daysVal">60д</span>
+        </div>
+        <div class="seg-row" style="margin-top:6px">
+          <button class="seg-btn" onclick="setDays(30)">30д</button>
+          <button class="seg-btn" onclick="setDays(60)">60д</button>
+          <button class="seg-btn" onclick="setDays(90)">90д</button>
+          <button class="seg-btn" onclick="setDays(120)">120д</button>
+        </div>
+      </div>
+
+      <div id="panel-discount" style="display:none">
+        <label>Размер скидки, %</label>
+        <div class="range-row">
+          <input type="range" id="inDiscount" min="0.5" max="30" value="5" step="0.5" oninput="syncDiscount(this.value)">
+          <span class="range-val" id="discountVal">5%</span>
+        </div>
+      </div>
+
+      <div id="panel-prepay" style="display:none">
+        <label>Размер предоплаты, %</label>
+        <div class="range-row">
+          <input type="range" id="inPrepay" min="10" max="100" value="30" step="5" oninput="syncPrepay(this.value)">
+          <span class="range-val" id="prepayVal">30%</span>
+        </div>
+        <label>Остаток — отсрочка, дней</label>
+        <div class="range-row">
+          <input type="range" id="inPrepayDays" min="0" max="120" value="30" step="1" oninput="syncPrepayDays(this.value)">
+          <span class="range-val" id="prepayDaysVal">30д</span>
+        </div>
+      </div>
+
+      <label>Ваша альтернативная доходность (ставка депозита / займа)</label>
+      <div class="range-row">
+        <input type="range" id="inRate" min="5" max="35" value="21" step="0.5" oninput="syncRate(this.value)">
+        <span class="range-val" id="rateVal">21%</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Ключевая ставка ЦБ сейчас ~21% — хороший ориентир</div>
+
+      <label>Себестоимость сделки, ₽ <span style="color:var(--muted)">(необязательно)</span></label>
+      <input type="number" id="inCost" value="" min="0" step="10000" placeholder="Оставь пустым если нет" oninput="calc()">
+
+      <label>Ваш кредитный лимит, ₽ <span style="color:var(--muted)">(для расчёта кассового разрыва)</span></label>
+      <input type="number" id="inCashLimit" value="500000" min="0" step="50000" oninput="calc()">
+    </div>
+
+    <!-- Результат -->
+    <div>
+      <div id="resultHero" class="result-hero">
+        <div class="result-loss-label">Реальные потери от уступки</div>
+        <div id="lossVal" class="result-loss-val">—</div>
+        <div id="lossSub" class="result-loss-sub">Заполни параметры слева</div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-val" id="mEffRate">—</div>
+          <div class="metric-label">Эфф. скидка</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="mAnnual">—</div>
+          <div class="metric-label">Годовых % потерь</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="mCashGap" style="color:var(--green)">—</div>
+          <div class="metric-label">Кассовый разрыв</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Сравнение сценариев</div>
+        <div class="scenarios" id="scenarios"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Точка безубыточности</div>
+        <div class="breakdown" id="breakdown"></div>
+
+        <div id="verdict" class="verdict"></div>
+
+        <button class="copy-btn" onclick="copyResult()">📋 Скопировать итоги для переговоров</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentTab = 'delay';
+
+function setTab(tab) {
+  currentTab = tab;
+  ['delay','discount','prepay'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  calc();
+}
+
+function setDays(d) { document.getElementById('inDays').value = d; syncDays(d); }
+function syncDays(v) { document.getElementById('daysVal').textContent = v + 'д'; calc(); }
+function syncDiscount(v) { document.getElementById('discountVal').textContent = v + '%'; calc(); }
+function syncPrepay(v) { document.getElementById('prepayVal').textContent = v + '%'; calc(); }
+function syncPrepayDays(v) { document.getElementById('prepayDaysVal').textContent = v + 'д'; calc(); }
+function syncRate(v) { document.getElementById('rateVal').textContent = v + '%'; calc(); }
+
+function fmt(n, short) {
+  if (short) {
+    if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + 'М';
+    if (Math.abs(n) >= 1e3) return Math.round(n/1e3) + 'к';
+  }
+  return Math.round(n).toLocaleString('ru-RU') + ' ₽';
+}
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+
+function calc() {
+  const amount = parseFloat(document.getElementById('inAmount').value) || 0;
+  const rate = parseFloat(document.getElementById('inRate').value) / 100;
+  const cost = parseFloat(document.getElementById('inCost').value) || 0;
+  const cashLimit = parseFloat(document.getElementById('inCashLimit').value) || 0;
+
+  let loss = 0, lossDesc = '', effPct = 0, annualPct = 0, days = 0;
+
+  if (currentTab === 'delay') {
+    days = parseInt(document.getElementById('inDays').value) || 60;
+    loss = amount * rate * days / 365;
+    lossDesc = `за ${days} дней отсрочки при ставке ${fmtPct(rate * 100)}`;
+    effPct = loss / amount * 100;
+    annualPct = rate * 100;
+  } else if (currentTab === 'discount') {
+    const pct = parseFloat(document.getElementById('inDiscount').value) || 5;
+    loss = amount * pct / 100;
+    lossDesc = `скидка ${fmtPct(pct)} от суммы сделки`;
+    effPct = pct;
+    annualPct = pct;
+    days = 0;
+  } else {
+    const prepayPct = parseFloat(document.getElementById('inPrepay').value) / 100;
+    const restDays = parseInt(document.getElementById('inPrepayDays').value) || 30;
+    const restAmt = amount * (1 - prepayPct);
+    loss = restAmt * rate * restDays / 365;
+    lossDesc = `${Math.round(prepayPct*100)}% сейчас + остаток через ${restDays}д`;
+    effPct = loss / amount * 100;
+    annualPct = rate * 100 * (1 - prepayPct);
+    days = restDays;
+  }
+
+  // Кассовый разрыв
+  const cashGap = cost > 0 ? Math.max(0, cost - cashLimit) : Math.max(0, amount * 0.6 - cashLimit);
+  const creditCost = cashGap > 0 ? cashGap * rate * (days || 60) / 365 : 0;
+  const totalLoss = loss + creditCost;
+
+  // Рендер hero
+  const heroEl = document.getElementById('resultHero');
+  const isSmall = effPct < 2;
+  heroEl.className = 'result-hero' + (isSmall ? ' ok' : '');
+  document.getElementById('lossVal').className = 'result-loss-val' + (isSmall ? ' ok' : '');
+  document.getElementById('lossVal').textContent = fmt(totalLoss);
+  document.getElementById('lossSub').textContent = lossDesc;
+
+  // Метрики
+  document.getElementById('mEffRate').textContent = fmtPct(effPct);
+  document.getElementById('mEffRate').style.color = effPct > 5 ? 'var(--red)' : effPct > 2 ? 'var(--yellow)' : 'var(--green)';
+  document.getElementById('mAnnual').textContent = fmtPct(annualPct);
+  if (cashGap > 0) {
+    document.getElementById('mCashGap').textContent = fmt(cashGap, true);
+    document.getElementById('mCashGap').style.color = 'var(--red)';
+  } else {
+    document.getElementById('mCashGap').textContent = 'Нет';
+    document.getElementById('mCashGap').style.color = 'var(--green)';
+  }
+
+  // Сценарии
+  const margin = cost > 0 ? amount - cost : amount * 0.25; // дефолт маржа 25%
+  const scenarios30 = amount * rate * 30 / 365;
+  const scenarios60 = amount * rate * 60 / 365;
+  const scenarios90 = amount * rate * 90 / 365;
+  const breakEvenSurcharge = (loss / amount * 100).toFixed(1);
+
+  document.getElementById('scenarios').innerHTML = `
+    <div class="scenario best">
+      <div class="scenario-icon">✅</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Полная предоплата</div>
+        <div class="scenario-desc">Получить деньги сразу и разместить под ${fmtPct(rate*100)}</div>
+      </div>
+      <div class="scenario-val" style="color:var(--green)">+${fmt(amount*rate*60/365, true)}</div>
+    </div>
+    <div class="scenario mid">
+      <div class="scenario-icon">🤝</div>
+      <div class="scenario-body">
+        <div class="scenario-title">50% предоплата + 30 дней</div>
+        <div class="scenario-desc">Компромисс — закрываешь потребность клиента, снижаешь свой риск</div>
+      </div>
+      <div class="scenario-val" style="color:var(--yellow)">-${fmt(amount*0.5*rate*30/365, true)}</div>
+    </div>
+    <div class="scenario ${currentTab === 'delay' ? 'bad' : 'mid'}">
+      <div class="scenario-icon">📅</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Отсрочка с надбавкой ${breakEvenSurcharge}%</div>
+        <div class="scenario-desc">Дать отсрочку, но поднять цену — нулевые потери для тебя</div>
+      </div>
+      <div class="scenario-val" style="color:var(--text)">±0</div>
+    </div>
+    <div class="scenario bad">
+      <div class="scenario-icon">❌</div>
+      <div class="scenario-body">
+        <div class="scenario-title">Бесплатная отсрочка ${days || 60} дней</div>
+        <div class="scenario-desc">Текущие условия — деньги работают у покупателя, а не у тебя</div>
+      </div>
+      <div class="scenario-val" style="color:var(--red)">-${fmt(totalLoss, true)}</div>
+    </div>
+  `;
+
+  // Breakdown
+  const creditRate = rate * 100 + 5; // кредит дороже депозита
+  document.getElementById('breakdown').innerHTML = `
+    <div class="breakdown-row">
+      <span class="breakdown-label">Упущенный доход от размещения</span>
+      <span class="breakdown-val" style="color:var(--red)">-${fmt(loss)}</span>
+    </div>
+    ${creditCost > 0 ? `<div class="breakdown-row">
+      <span class="breakdown-label">Стоимость кредита для закрытия разрыва</span>
+      <span class="breakdown-val" style="color:var(--red)">-${fmt(creditCost)}</span>
+    </div>` : ''}
+    <div class="breakdown-row">
+      <span class="breakdown-label">Надбавка для безубыточности</span>
+      <span class="breakdown-val" style="color:var(--accent)">${fmtPct(parseFloat(breakEvenSurcharge))}</span>
+    </div>
+    <div class="breakdown-row">
+      <span class="breakdown-label">Итого реальные потери</span>
+      <span class="breakdown-val" style="color:var(--red)">-${fmt(totalLoss)}</span>
+    </div>
+  `;
+
+  // Вердикт
+  let verdictHtml = '';
+  if (effPct < 1.5) {
+    verdictHtml = `<div class="verdict" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:var(--green)">
+      <strong>✅ Потери незначительны</strong>
+      Уступка стоит менее 1.5% от сделки. Можно соглашаться без надбавки — ценность отношений с клиентом перекроет.
+    </div>`;
+  } else if (effPct < 4) {
+    const surcharge = parseFloat(breakEvenSurcharge);
+    verdictHtml = `<div class="verdict" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);color:var(--yellow)">
+      <strong>⚠️ Умеренные потери — торгуйся</strong>
+      Предложи компромисс: подними цену на ${fmtPct(surcharge / 2)} или попроси предоплату 30–50%. Это закроет половину потерь.
+    </div>`;
+  } else {
+    verdictHtml = `<div class="verdict" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--red)">
+      <strong>🔴 Существенные потери — нужна надбавка</strong>
+      Бесплатно давать невыгодно. Минимальная надбавка для безубыточности: <b>${fmtPct(parseFloat(breakEvenSurcharge))}</b>. Или настаивай на предоплате от 50%.
+    </div>`;
+  }
+  document.getElementById('verdict').outerHTML = verdictHtml + `<button class="copy-btn" onclick="copyResult()">📋 Скопировать итоги для переговоров</button>`;
+
+  // Сохраняем для копирования
+  window._calcResult = { amount, loss, totalLoss, effPct, annualPct, breakEvenSurcharge, lossDesc, days, rate };
+}
+
+function copyResult() {
+  const r = window._calcResult;
+  if (!r) return;
+  const text = `📊 Анализ условий сделки (OMSFIN)\n\n` +
+    `Сумма: ${fmt(r.amount)}\n` +
+    `Условие: ${r.lossDesc}\n\n` +
+    `Реальные потери: ${fmt(r.totalLoss)}\n` +
+    `Эффективная скидка: ${fmtPct(r.effPct)}\n` +
+    `Надбавка для безубыточности: ${r.breakEvenSurcharge}%\n\n` +
+    `Рекомендация: ${r.effPct < 1.5 ? 'Потери незначительны, можно соглашаться' : r.effPct < 4 ? 'Торгуйся — попроси предоплату 30-50%' : `Требуй надбавку минимум ${r.breakEvenSurcharge}% или предоплату 50%+`}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    if (btn) { btn.textContent = '✅ Скопировано!'; setTimeout(() => btn.textContent = '📋 Скопировать итоги для переговоров', 2000); }
+  });
+}
+
+// Инициализация
+calc();
+</script>
+</body>
+</html>
