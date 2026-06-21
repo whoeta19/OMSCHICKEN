@@ -163,6 +163,8 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 
 /* MOBILE */
 @media(max-width:768px){
+  .tg-grid{grid-template-columns:1fr!important;}
+
   nav{padding:14px 20px;grid-template-columns:1fr auto;}
   .nav-links{display:none;}
   .nav-btn{font-size:10px;padding:8px 14px;}
@@ -224,6 +226,7 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Считаю НДС вручную каждый квартал</div>
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Операции в Excel по 2 часа</div>
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Забываю про дедлайны ФНС</div>
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--muted)">❌ Фотографирую чеки и теряю их</div>
   </div>
 
   <div class="hero-btns fade-up" style="transition-delay:0.3s">
@@ -301,17 +304,22 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
     <div class="feature-card fade-up">
       <div class="feature-icon">🤖</div>
       <div class="feature-title">Умный классификатор</div>
-      <div class="feature-desc">ИИ распределяет расходы по категориям. Обучается на твоих данных — становится точнее.</div>
+      <div class="feature-desc">Запоминает твои правила и применяет их ко всем похожим операциям сразу. Один раз исправил — система всё усвоила.</div>
     </div>
     <div class="feature-card fade-up">
-      <div class="feature-icon">🧾</div>
-      <div class="feature-title">НДС автоматически</div>
-      <div class="feature-desc">Книга продаж, книга покупок, расчёт НДС к уплате. Всё по ставке 10% для мяса птицы.</div>
+      <div class="feature-icon">🏁</div>
+      <div class="feature-title">Закрыть квартал</div>
+      <div class="feature-desc">Одна кнопка — НДС, УСН и страховые взносы посчитаны. Сразу печатаешь платёжки с КБК и суммами.</div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">📷</div>
+      <div class="feature-title">Фото чека в Telegram</div>
+      <div class="feature-desc">Сфоткал чек → отправил боту → операция уже в системе. OCR читает сумму, дату и продавца автоматически.</div>
     </div>
     <div class="feature-card fade-up">
       <div class="feature-icon">📄</div>
       <div class="feature-title">Документы с печатью</div>
-      <div class="feature-desc">Счета, накладные, акты, договоры. Загрузи свою печать и подпись — готово к отправке.</div>
+      <div class="feature-desc">Счета, накладные, акты, договоры, ТТН. Загрузи печать и подпись — готово к отправке за 30 секунд.</div>
     </div>
     <div class="feature-card fade-up">
       <div class="feature-icon">📊</div>
@@ -325,13 +333,13 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
     </div>
     <div class="feature-card fade-up">
       <div class="feature-icon">📥</div>
-      <div class="feature-title">Экспорт в Excel</div>
-      <div class="feature-desc">Три листа: операции, сводка по категориям, НДС. Для бухгалтера или налоговой.</div>
+      <div class="feature-title">Декларации и Excel</div>
+      <div class="feature-desc">НДС, УСН, 6-НДФЛ, налог на прибыль, РСВ — всё с экспортом в Excel для налоговой.</div>
     </div>
     <div class="feature-card fade-up">
-      <div class="feature-icon">🔔</div>
-      <div class="feature-title">Уведомления</div>
-      <div class="feature-desc">Напоминания о НДС, зарплате, ежемесячной выписке. Никогда не пропустишь платёж.</div>
+      <div class="feature-icon">👥</div>
+      <div class="feature-title">Зарплатный модуль</div>
+      <div class="feature-desc">Прогрессивный НДФЛ 2026, страховые взносы, расчётные листки. Поддержка ролей: директор, бухгалтер, сотрудник.</div>
     </div>
     <div class="feature-card fade-up">
       <div class="feature-icon">📱</div>
@@ -456,6 +464,38 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">Д</div>
         <div><div style="font-size:13px;font-weight:500">Дмитрий В.</div><div style="font-size:11px;color:var(--muted)">Группа компаний "Восток"</div></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- TELEGRAM -->
+<section class="section" style="text-align:center">
+  <div class="section-tag">Telegram</div>
+  <div class="section-title fade-up">Бизнес в кармане</div>
+  <div class="section-sub fade-up" style="margin:0 auto 50px">Привяжи аккаунт — и весь OMSFIN у тебя в Telegram без входа в браузер.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:860px;margin:0 auto" class="tg-grid">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;text-align:left">
+      <div style="font-size:28px;margin-bottom:16px">📷</div>
+      <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">Фото чека → операция</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7">Отправь фото кассового чека боту. OCR прочитает сумму, дату и продавца — операция сразу в базе. Одно нажатие «↩️ Отменить» если что-то не так.</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;text-align:left">
+      <div style="font-size:28px;margin-bottom:16px">📊</div>
+      <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">Финансы одной командой</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7">/stats — сводка за все время<br>/nds — НДС квартала и дедлайн<br>/top — топ покупателей<br>/last — последние операции<br>/balance — баланс</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;text-align:left">
+      <div style="font-size:28px;margin-bottom:16px">🔔</div>
+      <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">Уведомления о дедлайнах</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7">Бот напомнит за 5 дней до уплаты НДС, выплаты зарплаты и подачи деклараций. Больше не пропустишь срок.</div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(255,107,0,0.1),rgba(255,107,0,0.03));border:1px solid rgba(255,107,0,0.3);border-radius:20px;padding:32px;text-align:left;display:flex;flex-direction:column;justify-content:space-between">
+      <div>
+        <div style="font-size:28px;margin-bottom:16px">🤖</div>
+        <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px">@omsfin_bot</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px">Привяжи аккаунт в настройках OMSFIN и начни пользоваться прямо сейчас.</div>
+      </div>
+      <a href="https://t.me/omsfin_bot" target="_blank" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#000;border-radius:10px;padding:12px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;text-decoration:none">Открыть бота →</a>
     </div>
   </div>
 </section>
