@@ -148,12 +148,23 @@ export default async function handler(req, res) {
       if (hashes.length) {
         const scopeFilter = companyId ? `company_id=eq.${companyId}` : (userId ? `user_id=eq.${userId}` : null);
         if (scopeFilter) {
-          const hashList = hashes.map(h => `"${h}"`).join(',');
-          const checkR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?${scopeFilter}&hash=in.(${hashList})&select=hash`, {
-            headers: { ...adminHeaders, 'Prefer': 'return=representation' }
-          });
-          const existing = await checkR.json();
-          if (Array.isArray(existing)) existingHashes = new Set(existing.map(e => e.hash));
+          // Разбиваем на чанки по 100 — длинный URL с hash=in.(...) вызывает 400 от Supabase
+          const chunkSize = 100;
+          for (let ci = 0; ci < hashes.length; ci += chunkSize) {
+            const chunk = hashes.slice(ci, ci + chunkSize);
+            const hashList = chunk.map(h => `"${h}"`).join(',');
+            try {
+              const checkR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?${scopeFilter}&hash=in.(${hashList})&select=hash`, {
+                headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+              });
+              if (checkR.ok) {
+                const existing = await checkR.json();
+                if (Array.isArray(existing)) existing.forEach(e => existingHashes.add(e.hash));
+              }
+            } catch (e) {
+              // Если проверка дублей не прошла — пропускаем, вставим как есть
+            }
+          }
         }
       }
 
