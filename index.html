@@ -85,6 +85,20 @@
     background:rgba(255,255,255,0.04);
     color:rgba(245,245,245,0.6);
   }
+  .pill-more{position:relative;}
+  .pill-more-menu{
+    display:none;position:absolute;top:calc(100% + 6px);left:0;
+    background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+    padding:4px;z-index:200;min-width:160px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
+  .pill-more-menu.open{display:block;}
+  .pill-more-item{
+    display:block;width:100%;text-align:left;background:none;border:none;
+    color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
+    padding:8px 12px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all 0.15s;
+  }
+  .pill-more-item:hover{background:rgba(255,107,0,0.12);color:var(--accent);}
   
   main{padding:20px 24px;max-width:900px;margin:0 auto;}
   
@@ -400,16 +414,21 @@
   <div class="pills-inner">
     <button class="pill active" data-role="director,accountant" onclick="showPage('dashboard',this)">📊 Дашборд</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('transactions',this)">📋 Операции</button>
-    <button class="pill" data-role="director,accountant" onclick="showPage('recurring',this)">🔁 Регулярные</button>
-    <button class="pill" data-role="director,accountant" onclick="showPage('reclassify',this)">🏷️ Разметка</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('add',this)">➕ Добавить</button>
-    <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">📄 Документы</button>
-    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/analytics'">📊 Аналитика</button>
+    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/analytics'">📈 Аналитика</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('taxes',this)">🗓️ Налоги</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/vat'">🧾 НДС</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/declarations'">📋 Декларации</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/payroll'">👥 Зарплата</button>
-    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/tools'">⚡ Инструменты</button>
-    <button class="pill" data-role="director,accountant" onclick="showPage('taxes',this)">🗓️ Налоги</button>
+    <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">📄 Документы</button>
+    <div class="pill-more" id="pillMoreWrap">
+      <button class="pill" onclick="toggleMoreMenu(event)">⋯ Ещё</button>
+      <div class="pill-more-menu" id="pillMoreMenu">
+        <button class="pill-more-item" onclick="closeMoreMenu();showPage('recurring',null)">🔁 Регулярные</button>
+        <button class="pill-more-item" onclick="closeMoreMenu();showPage('reclassify',null)">🏷️ Разметка</button>
+        <button class="pill-more-item" onclick="window.location.href='/tools'">⚡ Инструменты</button>
+      </div>
+    </div>
   </div>
 </div>
 <main>
@@ -430,22 +449,22 @@
   </div>
 
   <!-- Быстрые действия -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px" class="quick-actions-grid">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" class="quick-actions-grid">
     <div data-role="director,accountant" onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">📂</div>
       <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
     </div>
+    <div data-role="director,accountant" onclick="showPage('add',document.querySelector('.pill.active'))" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:20px;margin-bottom:6px">➕</div>
+      <div style="font-size:10px;color:var(--muted)">Добавить операцию</div>
+    </div>
     <div data-role="director,accountant,employee" onclick="window.location.href='/docs'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:20px;margin-bottom:6px">📄</div>
-      <div style="font-size:10px;color:var(--muted)">Создать счёт</div>
+      <div style="font-size:10px;color:var(--muted)">Создать документ</div>
     </div>
-    <div data-role="director,accountant" onclick="window.location.href='/vat'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">🧾</div>
-      <div style="font-size:10px;color:var(--muted)">Расчёт НДС</div>
-    </div>
-    <div data-role="director,accountant" onclick="window.location.href='/counterparty'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">🔍</div>
-      <div style="font-size:10px;color:var(--muted)">Контрагент</div>
+    <div data-role="director,accountant" onclick="showPage('taxes',document.querySelector('.pill.active'))" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:20px;margin-bottom:6px">🗓️</div>
+      <div style="font-size:10px;color:var(--muted)">Налоги и сроки</div>
     </div>
   </div>
 
@@ -1976,6 +1995,15 @@ function showPage(name,btn){
   if(name==='taxes') { renderUSN(); renderForecast(); renderTaxCalendar(); }
 }
 
+function toggleMoreMenu(e) {
+  e.stopPropagation();
+  document.getElementById('pillMoreMenu').classList.toggle('open');
+}
+function closeMoreMenu() {
+  document.getElementById('pillMoreMenu').classList.remove('open');
+}
+document.addEventListener('click', () => closeMoreMenu());
+
 // ─── Приветствие по названию компании ─────────────────────────────────────────
 function initHome() {
   const now = new Date();
@@ -2354,8 +2382,8 @@ syncNow();
     <button class="mobile-nav-btn" id="mnav-transactions" onclick="showPage('transactions',this);setMobileActive(this)">
       <span>📋</span>Операции
     </button>
-    <button class="mobile-nav-btn" id="mnav-reclassify" onclick="showPage('reclassify',this);setMobileActive(this)">
-      <span>🏷️</span>Разметка
+    <button class="mobile-nav-btn" id="mnav-taxes" onclick="showPage('taxes',this);setMobileActive(this)">
+      <span>🗓️</span>Налоги
     </button>
     <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)">
       <span>➕</span>Добавить
