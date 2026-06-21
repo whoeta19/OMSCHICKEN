@@ -371,10 +371,12 @@
       <div class="input-group"><label>БИК</label><input type="text" id="sBik"></div>
       <div class="input-group"><label>К/С</label><input type="text" id="sKs"></div>
     </div>
-    <div class="input-row">
-      <div class="input-group"><label>Директор</label><input type="text" id="sDirector"></div>
-      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="sBuh"></div>
-    </div>
+    <div class="input-group"><label>Директор</label><input type="text" id="sDirector"></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:8px 0;cursor:pointer">
+      <input type="checkbox" id="sDirIsBuh" onchange="toggleBuhField()" style="accent-color:var(--accent);width:15px;height:15px">
+      Директор = Главный бухгалтер (одно лицо)
+    </label>
+    <div class="input-group" id="buhFieldWrap"><label>Гл. бухгалтер</label><input type="text" id="sBuh"></div>
     <button class="btn" onclick="saveSettings()" style="margin-top:8px">💾 Сохранить</button>
   </div>
 </div>
@@ -393,15 +395,22 @@ let S = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem
   name:'ООО "ОМСЧИКЕН"', inn:'5800015301', kpp:'580001001', ogrn:'1255800003447',
   addr:'440013, г. Пенза, ул. Чаадаева, 72', phone:'8(9869)47-66-97',
   bank:'АО «ТБанк»', rs:'40702810210001915113', ks:'30101810145250000974', bik:'044525411',
-  director:'Симутин Семен Евгеньевич', buh:'Симутин Семен Евгеньевич'
+  director:'Симутин Семен Евгеньевич', buh:'Симутин Семен Евгеньевич', dirIsBuh:true
 };
 
 // Инициализация настроек
+function toggleBuhField() {
+  const cb = document.getElementById('sDirIsBuh');
+  document.getElementById('buhFieldWrap').style.display = cb.checked ? 'none' : '';
+}
+
 function initSettings() {
   ['Name','Inn','Kpp','Ogrn','Addr','Bank','Rs','Bik','Ks','Director','Buh'].forEach(k=>{
     const el = document.getElementById('s'+k);
     if (el) el.value = S[k.toLowerCase()] || '';
   });
+  const cb = document.getElementById('sDirIsBuh');
+  if (cb) { cb.checked = !!S.dirIsBuh; toggleBuhField(); }
   if (stampImg) document.getElementById('stampPreview').innerHTML = `<img src="${stampImg}" style="max-height:80px;max-width:120px">`;
   if (signImg) document.getElementById('signPreview').innerHTML = `<img src="${signImg}" style="max-height:50px;max-width:150px">`;
 }
@@ -418,7 +427,10 @@ function saveSettings() {
     bik: document.getElementById('sBik').value,
     ks: document.getElementById('sKs').value,
     director: document.getElementById('sDirector').value,
-    buh: document.getElementById('sBuh').value,
+    dirIsBuh: document.getElementById('sDirIsBuh').checked,
+    buh: document.getElementById('sDirIsBuh').checked
+      ? document.getElementById('sDirector').value
+      : document.getElementById('sBuh').value,
   };
   localStorage.setItem('omsfin_seller', JSON.stringify(S));
   showToast('✅ Сохранено');
@@ -772,6 +784,24 @@ function signHTML(label) {
   return `${label} ${sig}`;
 }
 
+// Строка подписи бухгалтера для печатных форм.
+// Если директор = бухгалтер — возвращает пустую строку (не дублируем подпись).
+function buhLine(prefix, suffix) {
+  if (S.dirIsBuh) return '';
+  prefix = prefix || 'Гл. бухгалтер';
+  suffix = suffix || '';
+  return `<div style="margin-top:6px">${prefix} _________________ &nbsp; ${S.buh}${suffix}</div>`;
+}
+
+// Блок подписи бухгалтера для УПД/счёт-фактуры (с подписью и ФИО).
+function buhSignBlock() {
+  if (S.dirIsBuh) return '';
+  return `
+    <div style="margin-top:8px" class="small bold">Главный бухгалтер:</div>
+    <div style="margin-top:16px">_________________ &nbsp; ${S.buh}</div>
+    <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>`;
+}
+
 function generateDoc() {
   const items = getItems();
   if (!items.length) { showToast('Добавь хотя бы один товар'); return; }
@@ -833,7 +863,7 @@ function genSchet(items, buyer, doc, noVat, vat, total) {
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
       <div>
         <div style="margin-bottom:8px">${signHTML('Руководитель')} &nbsp; ${S.director}</div>
-        <div>Гл. бухгалтер _________________ &nbsp; ${S.buh}</div>
+        ${buhLine()}
       </div>
       <div>${stampHTML()}</div>
     </div>`;
@@ -956,9 +986,7 @@ function genUPD(items, buyer, doc, noVat, vat, total) {
           <div class="small bold">Руководитель:</div>
           <div style="margin-top:16px">${signHTML('')} &nbsp; ${S.director}</div>
           <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
-          <div style="margin-top:8px" class="small bold">Главный бухгалтер:</div>
-          <div style="margin-top:16px">_________________ &nbsp; ${S.buh}</div>
-          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          ${buhSignBlock()}
           <div style="margin-top:8px" class="small bold">Товар (груз) передал / услуги оказал:</div>
           <div style="margin-top:16px">_________________ &nbsp; _________________</div>
           <div class="small">(должность, подпись, ФИО)</div>
@@ -1076,8 +1104,7 @@ function genTORG12(items, buyer, doc, noVat, vat, total) {
           <div class="bold">Отпуск груза разрешил:</div>
           <div style="margin-top:4px">Директор &nbsp; ${signHTML('')} &nbsp; ${S.director}</div>
           <div class="small">(должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
-          <div style="margin-top:8px">Главный бухгалтер &nbsp; _________________ &nbsp; ${S.buh}</div>
-          <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
+          ${S.dirIsBuh ? '' : `<div style="margin-top:8px">Главный бухгалтер &nbsp; _________________ &nbsp; ${S.buh}</div><div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>`}
           <div style="margin-top:8px">Отпуск груза произвёл:</div>
           <div style="margin-top:4px">Кладовщик &nbsp; _________________ &nbsp; _________________</div>
           <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка)</div>
@@ -1171,8 +1198,7 @@ function genSF(items, buyer, doc, noVat, vat, total) {
       <div>
         <div>${signHTML('Руководитель организации или иное уполномоченное лицо')} &nbsp; ${S.director}</div>
         <div style="font-size:8pt;color:#555;margin-bottom:6px">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
-        <div>Главный бухгалтер или иное уполномоченное лицо &nbsp; _________________ &nbsp; ${S.buh}</div>
-        <div style="font-size:8pt;color:#555">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
+        ${S.dirIsBuh ? '' : `<div>Главный бухгалтер или иное уполномоченное лицо &nbsp; _________________ &nbsp; ${S.buh}</div><div style="font-size:8pt;color:#555">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>`}
         <div style="margin-top:6px" class="small">Индивидуальный предприниматель _________________ (подпись) _________________ (Ф.И.О.) _________________ (реквизиты свидетельства о гос. регистрации)</div>
       </div>
       <div>${stampHTML()}</div>
@@ -1318,7 +1344,7 @@ function genDOVER(buyer, doc) {
       <p style="font-size:10pt">Образец подписи доверенного лица: _______________________</p>
       <div style="display:flex;justify-content:space-between;margin-top:12px">
         <div>${signHTML('Руководитель')} ${S.director}</div>
-        <div>Гл. бухгалтер _________________ ${S.buh}</div>
+        ${S.dirIsBuh ? '' : `<div>Гл. бухгалтер _________________ ${S.buh}</div>`}
         <div>${stampHTML()}</div>
       </div>
     </div>`;
@@ -1345,7 +1371,7 @@ function genKO1(buyer, doc, total, vat) {
     <p style="font-size:10pt;margin-bottom:12px">В т.ч. НДС: ${vatLine}</p>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <div>
-        <p>Главный бухгалтер _________________ ${S.buh}</p>
+        ${S.dirIsBuh ? `<p>Директор / Гл. бухгалтер _________________ ${S.director}</p>` : `<p>Главный бухгалтер _________________ ${S.buh}</p>`}
         <p style="margin-top:8px">Кассир _________________ _________________</p>
       </div>
       <div>${stampHTML()}</div>
