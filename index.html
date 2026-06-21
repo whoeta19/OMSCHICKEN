@@ -310,9 +310,67 @@
 
     /* Заголовок секции */
     .section-title{font-size:10px;margin-bottom:10px;}
+
+    /* Герой-карточка на мобильном */
+    .hero-stat-value{font-size:18px;}
+
+    /* Три stat-card в строку не влезают — делаем 2+1 */
+    .stats-row{grid-template-columns:1fr 1fr!important;}
+    .stats-row .stat-card:last-child{grid-column:span 2;}
+
+    /* Дропдаун "Ещё" — фиксируем чтобы не уходил за экран */
+    .pill-more-menu{left:auto;right:0;}
+
+    /* Горизонтальный скролл в навигации на iOS */
+    .nav-pills{-webkit-overflow-scrolling:touch;}
+
+    /* Убираем верхний nav-pills на мобильном — пользуемся нижним баром */
+    .nav-pills{display:none;}
   }
   
-  /* Нижнее меню */
+  /* ─── Визуальная иерархия ─────────────────────────────────────────────── */
+  .hero-stat{
+    background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.03));
+    border:1px solid rgba(255,107,0,0.2);
+    border-radius:16px;padding:20px;margin-bottom:12px;
+    position:relative;overflow:hidden;
+  }
+  .hero-stat::before{
+    content:'';position:absolute;top:-40px;right:-40px;
+    width:120px;height:120px;border-radius:50%;
+    background:rgba(255,107,0,0.06);
+  }
+  .hero-stat-label{font-size:10px;color:rgba(255,107,0,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;}
+  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:900;color:var(--text);}
+  .hero-stat-value.positive{color:var(--green);}
+  .hero-stat-value.negative{color:var(--red);}
+  .hero-stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  .section-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;margin-top:4px;
+  }
+  .section-label{
+    font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;
+    text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+  }
+
+  /* ─── Пустые состояния ─────────────────────────────────────────────────── */
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:32px 20px;text-align:center;gap:10px;
+  }
+  .empty-state-icon{font-size:36px;opacity:0.5;}
+  .empty-state-title{font-size:14px;font-weight:600;color:var(--text);}
+  .empty-state-sub{font-size:12px;color:var(--muted);line-height:1.5;max-width:260px;}
+  .empty-state-btn{
+    margin-top:4px;background:var(--accent);color:#fff;border:none;
+    border-radius:10px;padding:8px 20px;font-size:12px;font-weight:600;
+    cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;
+  }
+  .empty-state-btn:hover{opacity:0.85;}
+
+  /* ─── Нижнее меню ──────────────────────────────────────────────────────── */
   .mobile-nav{
     display:none;
     position:fixed;
@@ -487,6 +545,13 @@
     <div id="closerChecklist" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
 
+  <!-- Главная метрика -->
+  <div class="hero-stat" style="margin-bottom:12px">
+    <div class="hero-stat-label">Прибыль за период</div>
+    <div class="hero-stat-value" id="statProfit">0 ₽</div>
+    <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
+  </div>
+
   <!-- Статистика -->
   <div class="stats-row" style="margin-bottom:16px">
     <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
@@ -500,7 +565,7 @@
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Рекомендации</div>
       <div id="suggestionsBlock"></div>
       <div id="homeSuggestions" style="display:flex;flex-direction:column;gap:6px">
-        <div style="font-size:12px;color:var(--muted);padding:8px 0">Загрузи выписку для анализа</div>
+        <div class="empty-state" style="padding:16px 8px"><div class="empty-state-icon">💡</div><div class="empty-state-sub">Появятся после загрузки выписки</div></div>
       </div>
     </div>
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
@@ -515,7 +580,7 @@
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Последние операции</div>
       <button class="btn-outline" onclick="showPage('transactions',document.querySelectorAll('.pill')[1])" style="font-size:10px;padding:4px 10px">Все →</button>
     </div>
-    <div id="recentList"><div class="empty"><div class="empty-icon">📂</div><div>Загрузи выписку чтобы увидеть операции</div></div></div>
+    <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
   </div>
 
   <!-- Кнопка очистки (скрытая внизу) -->
@@ -1714,10 +1779,22 @@ function renderAll() {
   document.getElementById('statIncome').textContent = fmt(income);
   document.getElementById('statExpense').textContent = fmt(expense);
   document.getElementById('statPersonal').textContent = fmt(personal);
-  // headerMeta removed
+  const profit = income - expense;
+  const profitEl = document.getElementById('statProfit');
+  const profitSub = document.getElementById('statProfitSub');
+  if (allTx.length) {
+    profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
+    profitEl.className = 'hero-stat-value ' + (profit >= 0 ? 'positive' : 'negative');
+    const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort();
+    profitSub.textContent = periods.length ? `За ${periods.length > 1 ? periods[0] + ' — ' + periods[periods.length-1] : periods[0]}` : 'Все операции';
+  } else {
+    profitEl.textContent = '0 ₽';
+    profitEl.className = 'hero-stat-value';
+    profitSub.textContent = 'Загрузи выписку для расчёта';
+  }
   renderChart();
   const recent = allTx.slice(0,6);
-  document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🐔</div><div>Загрузи выписку или добавь операцию</div></div>';
+  document.getElementById('recentList').innerHTML = recent.length ? recent.map(txHTML).join('') : '<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById(\'fileInput\').click()">Загрузить выписку</button></div>';
   renderTxList();
   renderSuggestions();
   renderMonthCloser();
@@ -1831,7 +1908,7 @@ function renderChart() {
   const totals = cats.map(c=>({...c, val:allTx.filter(t=>t.category===c.key&&t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0)}));
   const max = Math.max(...totals.map(t=>t.val),1);
   const active = totals.filter(t=>t.val>0);
-  if (!active.length) { document.getElementById('chartArea').innerHTML='<div style="color:var(--muted);font-size:12px;margin-bottom:16px">Загрузи выписку чтобы увидеть аналитику</div>'; return; }
+  if (!active.length) { document.getElementById('chartArea').innerHTML='<div class="empty-state" style="padding:16px 8px"><div class="empty-state-icon">📊</div><div class="empty-state-sub">Появится после загрузки выписки</div></div>'; return; }
   document.getElementById('chartArea').innerHTML = `<div class="chart-row">${active.map(c=>`
     <div class="chart-item">
       <div class="chart-label">${c.label}</div>
@@ -1849,7 +1926,10 @@ function renderTxList() {
     String(Math.abs(t.amount||0)).includes(q)
   );
   document.getElementById('txCount').textContent = filtered.length+' операций';
-  document.getElementById('txList').innerHTML = filtered.length ? filtered.map(txHTML).join('') : '<div class="empty"><div class="empty-icon">🔍</div><div>Нет операций</div></div>';
+  const emptyTx = allTx.length === 0
+    ? `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Операций нет</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`
+    : `<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Ничего не найдено</div><div class="empty-state-sub">Попробуй изменить фильтр или поисковый запрос</div></div>`;
+  document.getElementById('txList').innerHTML = filtered.length ? filtered.map(txHTML).join('') : emptyTx;
 }
 
 function txHTML(tx) {
