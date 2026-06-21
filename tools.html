@@ -45,8 +45,9 @@
   .result-total{display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:10px;margin-top:10px;}
   .result-total-label{font-size:13px;font-weight:600;}
   .result-total-value{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;color:var(--accent);}
-  .kp-output{background:#fff;color:#000;padding:20px;border-radius:10px;margin-top:14px;font-family:'Times New Roman',serif;font-size:11pt;display:none;}
-  .kp-output.show{display:block;}
+  .kp-output-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+  .kp-output-wrap.show{display:block;}
+  .kp-output{background:#fff;color:#000;padding:20px;border-radius:8px;font-family:'Times New Roman',serif;font-size:11pt;}
   .tax-compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;}
   .tax-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
   .tax-card.best{border-color:var(--green);background:rgba(34,197,94,0.05);}
@@ -242,7 +243,7 @@
       <div class="input-group"><label>Особые условия / преимущества</label><textarea id="kpAdvantages" rows="3" placeholder="Собственное производство, ветеринарные документы, доставка по Пензенской области"></textarea></div>
       <button class="btn" onclick="genKP()">📄 Сгенерировать КП</button>
     </div>
-    <div class="kp-output" id="kpOutput"></div>
+    <div class="kp-output-wrap" id="kpOutputWrap"><div class="kp-output" id="kpOutput"></div></div>
     <div id="kpActions" style="display:none;margin-top:10px;display:none">
       <button class="btn" onclick="printKP()">🖨️ Печать / PDF</button>
     </div>
@@ -533,9 +534,9 @@ function genKP() {
     </div>`;
   
   document.getElementById('kpOutput').innerHTML = kp;
-  document.getElementById('kpOutput').classList.add('show');
+  document.getElementById('kpOutputWrap').classList.add('show');
   document.getElementById('kpActions').style.display = 'flex';
-  document.getElementById('kpOutput').scrollIntoView({behavior:'smooth'});
+  document.getElementById('kpOutputWrap').scrollIntoView({behavior:'smooth'});
 }
 
 function printKP() {

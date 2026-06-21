@@ -29,7 +29,7 @@
 
     var inner = document.createElement('div');
     inner.style.cssText =
-      'display:flex;gap:1px;padding:4px 14px;white-space:nowrap;min-width:max-content;';
+      'display:flex;gap:3px;padding:4px 14px;white-space:nowrap;min-width:max-content;';
 
     pages.forEach(function (p) {
       var isActive = p.href === '/'

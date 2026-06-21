@@ -117,11 +117,11 @@
     box-shadow:var(--shadow);
   }
   .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.1);}
-  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:500;}
-  .stat-value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;}
+  .stat-label{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:400;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
   .stat-value.green{color:var(--green);}
   .stat-value.red{color:var(--red);}
-  .stat-value.orange{color:var(--accent);}
+  .stat-value.orange{color:#ffaa44;}
   
   .btn{
     background:linear-gradient(135deg,var(--accent),#e55a00);
@@ -143,21 +143,22 @@
   .btn-outline:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
   
   .section-title{
-    font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;
+    font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;
     margin-bottom:10px;display:flex;align-items:center;
     justify-content:space-between;
-    letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);
+    letter-spacing:0.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);
   }
   
   .tx-row{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:14px;padding:12px 16px;
+    background:transparent;
+    border-bottom:1px solid var(--border);
+    padding:10px 0;
     display:grid;grid-template-columns:1fr auto auto;
-    gap:10px;align-items:center;margin-bottom:6px;
-    transition:all 0.2s;
+    gap:10px;align-items:center;
+    transition:opacity 0.15s;
   }
-  .tx-row:hover{border-color:rgba(255,107,0,0.15);background:rgba(255,107,0,0.02);}
+  .tx-row:last-child{border-bottom:none;}
+  .tx-row:hover{opacity:0.8;}
   .tx-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tx-date{font-size:10px;color:var(--muted);margin-top:2px;}
   .tx-amount{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;}
@@ -319,8 +320,7 @@
     .hero-stat-value{font-size:18px;}
 
     /* Три stat-card в строку не влезают — делаем 2+1 */
-    .stats-row{grid-template-columns:1fr 1fr!important;}
-    .stats-row .stat-card:last-child{grid-column:span 2;}
+    .stats-row{grid-template-columns:1fr 1fr 1fr!important;gap:6px;}
 
     /* Дропдаун "Ещё" — фиксируем чтобы не уходил за экран */
     .pill-more-menu{left:auto;right:0;}
@@ -344,11 +344,11 @@
     width:120px;height:120px;border-radius:50%;
     background:rgba(255,107,0,0.06);
   }
-  .hero-stat-label{font-size:10px;color:rgba(255,107,0,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;}
-  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:900;color:var(--text);}
+  .hero-stat-label{font-size:10px;color:rgba(255,107,0,0.6);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;font-weight:500;}
+  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:900;color:var(--text);}
   .hero-stat-value.positive{color:var(--green);}
   .hero-stat-value.negative{color:var(--red);}
-  .hero-stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+  .hero-stat-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;}
 
   .section-header{
     display:flex;align-items:center;justify-content:space-between;

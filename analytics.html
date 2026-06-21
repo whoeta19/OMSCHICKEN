@@ -41,6 +41,7 @@
   .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:12px;color:var(--accent);}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
   .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+  @media(min-width:601px) and (max-width:900px){.stats-row{grid-template-columns:repeat(2,1fr);}}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
   .stat-value{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;}
