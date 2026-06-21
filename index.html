@@ -710,8 +710,9 @@
     🏷️ Разметка операций
     <button class="btn btn-sm" onclick="saveRules()">💾 Сохранить правила</button>
   </div>
-  <div class="info-box" style="margin-bottom:12px">
-    Нажми на категорию чтобы переназначить. Система запомнит и применит к похожим операциям.
+  <div class="info-box" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <span>Нажми на категорию — система запомнит правило и применит ко <b>всем</b> операциям этого контрагента.</span>
+    <button class="btn btn-sm" onclick="applyAllRules()" style="white-space:nowrap;flex-shrink:0">🤖 Применить ко всем</button>
   </div>
   <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
     <select id="reclassifyFilter" onchange="renderReclassify()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none">
@@ -960,6 +961,23 @@ async function apiUpdateCategory(id, category) {
     body: JSON.stringify({id, category, company_id: currentCompanyId || undefined})
   });
   return r.json();
+}
+
+// Пакетное обновление категорий. Если передан список updates — используем его (разные категории).
+// Если передан одиночный category — применяем ко всем ids одну категорию.
+async function apiBulkUpdateCategory(ids, category, updates) {
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const items = updates || ids.map(id => ({id, category}));
+  // Батчи по 10 чтобы не перегружать serverless
+  for (let i = 0; i < items.length; i += 10) {
+    await Promise.all(items.slice(i, i+10).map(({id, category: cat}) =>
+      fetch('/api/transactions', {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
+        body: JSON.stringify({id, category: cat, company_id: currentCompanyId || undefined})
+      })
+    ));
+  }
 }
 
 // Мультикомпания
@@ -1716,6 +1734,13 @@ async function parseAndProcess(text) {
   }
     if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
 
+  // Считаем сколько операций распознано автоматически через правила
+  const autoClassified = txs.filter(t => t.category !== 'unknown').length;
+  const autoByRule = txs.filter(t => {
+    const text = ((t.name||'') + ' ' + (t.description||'')).toLowerCase();
+    return Object.keys(userRules).some(k => text.includes(k));
+  }).length;
+
   // Генерируем хэш для каждой транзакции — отпечаток даты+суммы+описания.
   // Используется на сервере, чтобы при повторной или частично перекрывающейся
   // загрузке выписки не создавать дубликаты уже сохранённых операций.
@@ -1751,9 +1776,17 @@ async function parseAndProcess(text) {
         bar.style.display = 'flex';
       }
     }
-    if (unknownCount > 0) showToast(`⚠️ ${unknownCount} в "Прочее" — зайди в Разметку`);
-    else if (skippedCount > 0) showToast(`✅ Добавлено ${insertedCount} новых, ${skippedCount} уже было загружено`);
-    else showToast(`✅ Загружено ${insertedCount} операций за ${monthKey}`);
+    // Умный баннер с результатом автокатегоризации
+    if (unknownCount > 0) {
+      const pct = Math.round(autoClassified / txs.length * 100);
+      showToast(`🤖 Авто: ${autoClassified}/${txs.length} (${pct}%) · ⚠️ ${unknownCount} нераспознано → Разметка`);
+    } else if (autoByRule > 0) {
+      showToast(`🤖 ${autoByRule} операций авто-категоризировано по вашим правилам · ✅ Всё распознано!`);
+    } else if (skippedCount > 0) {
+      showToast(`✅ Добавлено ${insertedCount} новых, ${skippedCount} уже было загружено`);
+    } else {
+      showToast(`✅ Загружено ${insertedCount} операций за ${monthKey}`);
+    }
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
@@ -1781,17 +1814,31 @@ function renderReclassify() {
 }
 
 async function reclassifyTx(id, category, name, btn) {
-  const tx = allTx.find(t=>t.id==id);
-  if (tx) { tx.category = category; tx.is_personal = ['personal','food'].includes(category); }
   btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const keyword = name.toLowerCase().substring(0,20);
+  btn.textContent = '⏳';
+
+  // Сохраняем правило по полному имени (до 40 символов)
+  const keyword = name.trim().toLowerCase().substring(0, 40);
   userRules[keyword] = category;
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
-  await apiUpdateCategory(id, category);
+
+  // Находим ВСЕ транзакции от того же контрагента (по совпадению имени)
+  const matches = allTx.filter(t => t.name && t.name.trim().toLowerCase().substring(0,40) === keyword);
+  const ids = matches.map(t => t.id);
+
+  // Обновляем локально
+  matches.forEach(t => { t.category = category; t.is_personal = ['personal','food'].includes(category); });
+
+  // Обновляем на сервере пакетом
+  await apiBulkUpdateCategory(ids, category);
+
   renderAll();
   renderRules();
-  showToast('✅ Категория обновлена');
+  renderReclassify();
+
+  const count = ids.length;
+  showToast(`✅ Категория обновлена · применено к ${count} операци${count===1?'и':count<5?'ям':'ям'} от этого контрагента`);
 }
 
 function renderRules() {
@@ -1816,6 +1863,28 @@ function deleteRule(keyword) {
 function saveRules() {
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
   showToast('✅ Правила сохранены');
+}
+
+async function applyAllRules() {
+  if (!Object.keys(userRules).length) { showToast('⚠️ Нет правил — сначала переназначь несколько операций'); return; }
+  showToast('🤖 Применяю правила...');
+  const toUpdate = [];
+  allTx.forEach(t => {
+    const text = ((t.name||'') + ' ' + (t.description||'')).toLowerCase();
+    for (const [keyword, category] of Object.entries(userRules)) {
+      if (text.includes(keyword) && t.category !== category) {
+        t.category = category;
+        t.is_personal = ['personal','food'].includes(category);
+        toUpdate.push({id: t.id, category});
+        break;
+      }
+    }
+  });
+  if (!toUpdate.length) { showToast('✅ Все операции уже соответствуют правилам'); return; }
+  await apiBulkUpdateCategory(toUpdate.map(x=>x.id), null, toUpdate);
+  renderAll();
+  renderReclassify();
+  showToast(`✅ Обновлено ${toUpdate.length} операций по ${Object.keys(userRules).length} правилам`);
 }
 
 function addManual() {
