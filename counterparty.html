@@ -128,33 +128,73 @@ function parseDMY(str) {
 async function checkCompany() {
   const query = document.getElementById('searchInput').value.trim();
   if (!query) return;
-  
+  hideSuggestions();
+
   const result = document.getElementById('searchResult');
   result.innerHTML = `<div class="loading"><div class="spinner"></div><div>Запрашиваем данные ФНС...</div></div>`;
-  
+
   try {
-    // Используем открытый API ФНС через dadata или egrul
     const isINN = /^\d{10,12}$/.test(query);
-    
     let data = null;
-    
-    // Пробуем API ФНС ЕГРЮЛ
+
     if (isINN) {
       data = await fetchFromEGRUL(query);
+      if (!data) {
+        // ЕГРЮЛ не ответил — пробуем Dadata по ИНН
+        const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party`, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Authorization':'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'},
+          body: JSON.stringify({query, count:1})
+        });
+        const d = await r.json();
+        if (d.suggestions?.length) data = parseDadata(d.suggestions[0]);
+      }
+    } else {
+      // Поиск по названию через Dadata
+      const results = await searchByName(query);
+      if (results && results.length === 1) {
+        data = results[0];
+      } else if (results && results.length > 1) {
+        // Показываем список для выбора
+        result.innerHTML = renderSuggestionList(results);
+        return;
+      }
     }
-    
+
     if (!data) {
-      // Если не нашли — показываем форму ручного ввода
       result.innerHTML = generateManualForm(query);
       return;
     }
-    
+
     renderResult(data);
     saveHistory(data);
-    
   } catch(e) {
     result.innerHTML = generateManualForm(query);
   }
+}
+
+function renderSuggestionList(results) {
+  return `<div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px">Найдено ${results.length} компаний — выбери нужную:</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${results.map((d,i)=>`
+        <div onclick="selectSuggestion(${i})" style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:10px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,107,0,0.07)'" onmouseout="this.style.background='var(--surface2)'">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:500">${d.name}</div>
+            <div style="font-size:11px;color:var(--muted)">ИНН ${d.inn} · ${d.statusText} · ${d.regDate}</div>
+          </div>
+          <span class="status-badge ${d.isActive?'status-active':'status-dead'}" style="font-size:10px">${d.isActive?'●':'✕'} ${d.statusText}</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+let _lastSuggestions = [];
+function selectSuggestion(i) {
+  const d = _lastSuggestions[i];
+  if (!d) return;
+  renderResult(d);
+  saveHistory(d);
 }
 
 async function fetchFromEGRUL(inn) {
@@ -244,17 +284,18 @@ function parseEGRUL(raw, inn) {
   let riskScore = 100;
   let risks = [], positives = [];
   
-  if (!isActive) { riskScore -= 60; risks.push('Компания ликвидирована'); }
-  if (ageYears < 1) { riskScore -= 25; risks.push('Зарегистрирована менее года назад'); }
-  else if (ageYears < 3) { riskScore -= 10; risks.push('Молодая компания (менее 3 лет)'); }
-  if (capital > 0 && capital <= 10000) { riskScore -= 15; risks.push('Минимальный уставный капитал (10 000 ₽)'); }
-  
-  if (isActive) positives.push('Компания действующая');
-  if (ageYears >= 5) positives.push(`Работает ${ageYears} лет (с ${regDate.split('.')[2]} года)`);
-  if (capital > 1000000) positives.push(`Крупный уставный капитал: ${(capital/1000000).toFixed(0)} млн ₽`);
-  else if (capital > 100000) positives.push(`Уставный капитал ${(capital/1000).toFixed(0)} тыс. ₽`);
-  if (ogrn !== '—') positives.push('Данные подтверждены ЕГРЮЛ ФНС');
-  if (director !== '—') positives.push(`Руководитель установлен`);
+  if (!isActive) { riskScore -= 60; risks.push({icon:'🚫', text:'Компания ликвидирована', desc:''}); }
+  if (ageYears < 1) { riskScore -= 25; risks.push({icon:'🕐', text:'Зарегистрирована менее года назад', desc:'Недостаточная история деятельности'}); }
+  else if (ageYears < 3) { riskScore -= 10; risks.push({icon:'🕐', text:`Молодая компания — ${ageYears} ${ageYears===1?'год':'года'}`, desc:'Менее 3 лет на рынке'}); }
+  if (capital > 0 && capital <= 10000) { riskScore -= 15; risks.push({icon:'💰', text:'Минимальный уставный капитал — 10 000 ₽', desc:'Типичный признак фирмы-однодневки'}); }
+  if (!isActive) {}
+  else positives.push({icon:'✅', text:'Компания действующая', desc:''});
+  if (ageYears >= 10) positives.push({icon:'✅', text:`Работает ${ageYears} лет — с ${regDate.split('.')[2]} года`, desc:'Высокая стабильность'});
+  else if (ageYears >= 5) positives.push({icon:'✅', text:`${ageYears} лет на рынке`, desc:''});
+  if (capital > 1000000) positives.push({icon:'✅', text:`Уставный капитал ${(capital/1000000).toFixed(0)} млн ₽`, desc:''});
+  else if (capital > 100000) positives.push({icon:'✅', text:`Уставный капитал ${(capital/1000).toFixed(0)} тыс. ₽`, desc:''});
+  if (ogrn !== '—') positives.push({icon:'🏛️', text:'Данные подтверждены ЕГРЮЛ ФНС', desc:''});
+  if (director !== '—') positives.push({icon:'✅', text:`Руководитель: ${director}`, desc:directorPost});
   
   riskScore = Math.max(0, Math.min(100, riskScore));
   
@@ -273,15 +314,13 @@ async function searchByName(name) {
   try {
     const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Token d1c0b01cf36b05abf50a6bf77e97df50fede4c88'
-      },
-      body: JSON.stringify({query: name, count: 5})
+      headers: {'Content-Type':'application/json','Authorization':'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'},
+      body: JSON.stringify({query: name, count: 7})
     });
     const d = await r.json();
-    if (d.suggestions && d.suggestions.length > 0) {
-      return d.suggestions.map(s => parseDadata(s));
+    if (d.suggestions?.length) {
+      _lastSuggestions = d.suggestions.map(s => parseDadata(s));
+      return _lastSuggestions;
     }
   } catch(e) {}
   return null;
@@ -290,41 +329,78 @@ async function searchByName(name) {
 function parseDadata(s) {
   const d = s.data;
   const isActive = d.state?.status === 'ACTIVE';
+  const isLiquidating = d.state?.status === 'LIQUIDATING';
   const isIP = d.type === 'INDIVIDUAL';
-  
-  const regDate = d.state?.registration_date ? 
+
+  const regDate = d.state?.registration_date ?
     new Date(d.state.registration_date).toLocaleDateString('ru-RU') : '—';
   const liquidDate = d.state?.liquidation_date ?
     new Date(d.state.liquidation_date).toLocaleDateString('ru-RU') : null;
-  
-  // Считаем возраст компании
-  const ageYears = d.state?.registration_date ? 
+
+  const ageYears = d.state?.registration_date ?
     Math.floor((Date.now() - d.state.registration_date) / (365.25*24*60*60*1000)) : 0;
-  
+
+  const capital = d.capital?.value || 0;
+  const employees = d.employee_count || null;
+
   // Риск-скор
   let riskScore = 100;
   let risks = [];
   let positives = [];
-  
-  if (!isActive) { riskScore -= 60; risks.push('Компания не действует'); }
-  if (ageYears < 1) { riskScore -= 20; risks.push('Компания зарегистрирована менее года назад'); }
-  if (ageYears >= 1 && ageYears < 3) { riskScore -= 10; risks.push('Компания молодая (1-3 года)'); }
-  if (d.capital?.value && d.capital.value <= 10000) { riskScore -= 10; risks.push('Минимальный уставный капитал (10 000 ₽)'); }
-  
-  if (isActive) positives.push('Компания действует');
-  if (ageYears >= 5) positives.push(`Работает более ${ageYears} лет`);
-  if (d.capital?.value && d.capital.value > 100000) positives.push(`Уставный капитал ${(d.capital.value/1000).toFixed(0)} тыс. ₽`);
-  
+  let warnings = [];
+
+  // Статус
+  if (!isActive && !isLiquidating) { riskScore -= 60; risks.push({icon:'🚫', text:'Компания ликвидирована', desc: liquidDate ? `Ликвидирована ${liquidDate}` : ''}); }
+  if (isLiquidating) { riskScore -= 40; risks.push({icon:'⚠️', text:'Компания в процессе ликвидации', desc:'Высокий риск — ведётся ликвидация'}); }
+
+  // Возраст
+  if (ageYears < 1) { riskScore -= 25; risks.push({icon:'🕐', text:'Зарегистрирована менее года назад', desc:'Недостаточная история деятельности'}); }
+  else if (ageYears < 3) { riskScore -= 10; warnings.push({icon:'🕐', text:`Молодая компания — ${ageYears} ${ageYears===1?'год':ageYears<5?'года':'лет'}`, desc:'Менее 3 лет на рынке'}); }
+  else if (ageYears >= 10) positives.push({icon:'✅', text:`Работает ${ageYears} лет — с ${regDate.split('.')[2]} года`, desc:'Высокая стабильность'});
+  else if (ageYears >= 5) positives.push({icon:'✅', text:`${ageYears} лет на рынке`, desc:'Устойчивая компания'});
+
+  // Уставный капитал
+  if (!isIP) {
+    if (capital <= 10000) { riskScore -= 15; risks.push({icon:'💰', text:'Минимальный уставный капитал — 10 000 ₽', desc:'Типичный признак фирмы-однодневки'}); }
+    else if (capital >= 1000000) positives.push({icon:'✅', text:`Уставный капитал ${(capital/1000000).toFixed(1)} млн ₽`, desc:'Серьёзный уставный капитал'});
+    else if (capital >= 100000) positives.push({icon:'✅', text:`Уставный капитал ${(capital/1000).toFixed(0)} тыс. ₽`, desc:''});
+  }
+
+  // Руководитель
+  const hasDirector = !!d.management?.name;
+  if (!hasDirector && !isIP) { riskScore -= 10; risks.push({icon:'👤', text:'Руководитель не указан', desc:'Данные о руководстве отсутствуют'}); }
+  else if (hasDirector) positives.push({icon:'✅', text:`Руководитель установлен: ${d.management.name}`, desc:d.management.post||''});
+
+  // Сотрудники
+  if (employees !== null) {
+    if (employees === 0) { riskScore -= 10; warnings.push({icon:'👥', text:'Нет сотрудников по данным ФНС', desc:'Признак фиктивной компании'}); }
+    else if (employees >= 50) positives.push({icon:'✅', text:`${employees} сотрудников`, desc:'Крупная команда'});
+    else if (employees >= 5) positives.push({icon:'✅', text:`${employees} сотрудников`, desc:''});
+  }
+
+  // ОКВЭД — некоторые высокорисковые коды
+  const okved = d.okved || '';
+  const riskyOkveds = ['64.2','64.9','66.1','70.10','82.99'];
+  if (riskyOkveds.some(c => okved.startsWith(c))) {
+    riskScore -= 10;
+    warnings.push({icon:'📋', text:'ОКВЭД в зоне внимания ФНС', desc:'Финансовые посредники и консалтинг часто используются для схем'});
+  }
+
+  // Источник данных
+  positives.push({icon:'🏛️', text:'Данные из реестра Dadata / ФНС', desc:'Актуальная информация ЕГРЮЛ'});
+
   riskScore = Math.max(0, Math.min(100, riskScore));
-  
+
   return {
     name: s.value,
+    fullName: s.value,
     inn: d.inn,
     kpp: d.kpp || '—',
     ogrn: d.ogrn || '—',
     type: isIP ? 'ИП' : 'ЮЛ',
+    opf: isIP ? 'Индивидуальный предприниматель' : 'ООО/АО',
     status: d.state?.status || 'UNKNOWN',
-    statusText: isActive ? 'Действующая' : (d.state?.status === 'LIQUIDATING' ? 'В процессе ликвидации' : 'Ликвидирована'),
+    statusText: isActive ? 'Действующая' : (isLiquidating ? 'В ликвидации' : 'Ликвидирована'),
     isActive,
     regDate,
     liquidDate,
@@ -332,13 +408,15 @@ function parseDadata(s) {
     address: d.address?.unrestricted_value || '—',
     director: d.management?.name || (isIP ? s.value : '—'),
     directorPost: d.management?.post || (isIP ? 'Индивидуальный предприниматель' : '—'),
-    capital: d.capital?.value || 0,
-    okved: d.okved || '—',
+    capital,
+    okved,
     okvedName: d.okved_type || '—',
-    employeeCount: d.employee_count || null,
+    employeeCount: employees,
+    nalog: '—',
     riskScore,
     risks,
     positives,
+    warnings,
   };
 }
 
@@ -397,9 +475,12 @@ function renderResult(d) {
       
       <div class="risk-score ${riskClass}">
         <div class="risk-circle ${riskLevel}">${d.riskScore}</div>
-        <div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:4px">${riskLabel}</div>
-          <div style="font-size:12px;color:var(--muted)">Скоринг на основе открытых данных</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px">${riskLabel}</div>
+          <div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden">
+            <div style="height:100%;border-radius:4px;width:${d.riskScore}%;background:${riskLevel==='low'?'var(--green)':riskLevel==='med'?'var(--accent)':'var(--red)'};transition:width 0.8s ease"></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Скоринг по ${(d.risks||[]).length+(d.warnings||[]).length+(d.positives||[]).length} факторам</div>
         </div>
       </div>
       
@@ -424,8 +505,9 @@ function renderResult(d) {
     <div class="card">
       <div style="font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:12px">Анализ рисков</div>
       <div class="check-list">
-        ${d.positives.map(p=>`<div class="check-item"><span class="check-icon">✅</span><div><div class="check-label">${p}</div></div></div>`).join('')}
-        ${d.risks.map(r=>`<div class="check-item"><span class="check-icon">⚠️</span><div><div class="check-label">${r}</div></div></div>`).join('')}
+        ${(d.risks||[]).map(r=>{const t=typeof r==='string'?{icon:'⚠️',text:r,desc:''}:r;return`<div class="check-item" style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.12)"><span class="check-icon">${t.icon}</span><div><div class="check-label">${t.text}</div>${t.desc?`<div class="check-desc">${t.desc}</div>`:''}</div></div>`}).join('')}
+        ${(d.warnings||[]).map(r=>{const t=typeof r==='string'?{icon:'⚠️',text:r,desc:''}:r;return`<div class="check-item" style="background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.12)"><span class="check-icon">${t.icon}</span><div><div class="check-label">${t.text}</div>${t.desc?`<div class="check-desc">${t.desc}</div>`:''}</div></div>`}).join('')}
+        ${(d.positives||[]).map(p=>{const t=typeof p==='string'?{icon:'✅',text:p,desc:''}:p;return`<div class="check-item"><span class="check-icon">${t.icon}</span><div><div class="check-label">${t.text}</div>${t.desc?`<div class="check-desc">${t.desc}</div>`:''}</div></div>`}).join('')}
       </div>
       <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px">
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Дополнительная проверка:</div>
@@ -546,7 +628,8 @@ async function loadFromTx() {
     txs.forEach(t => {
       const name = t.name || '';
       // Фильтруем только юрлиц и ИП
-      if (name.includes('ООО') || name.includes('ИП') || name.includes('АО') || name.includes('ПАО') || name.includes('ЗАО') || name.includes('ОБЩЕСТВО') || name.includes('ИНДИВИДУАЛЬНЫЙ')) {
+      const nameUp = name.toUpperCase();
+      if (nameUp.includes('ООО') || nameUp.includes('ИП ') || nameUp.includes('АО ') || nameUp.includes('ПАО') || nameUp.includes('ЗАО') || nameUp.includes('ОБЩЕСТВО') || nameUp.includes('ИНДИВИДУАЛЬНЫЙ') || nameUp.includes('ОАО') || nameUp.includes('НКО') || nameUp.includes('АНО') || nameUp.includes('ФОНД') || nameUp.includes('БАНК') || nameUp.includes('СТРАХОВ') || (t.inn && t.inn.length >= 10)) {
         if (!companies[name]) {
           companies[name] = {name, count:0, total:0, lastDate:t.date};
         }
@@ -592,12 +675,58 @@ function showPage(name, btn) {
   if(name==='fromtx') loadFromTx();
 }
 
-// Поиск по названию если не ИНН
+// Автодополнение при вводе названия
+let _acTimer = null;
 document.getElementById('searchInput').addEventListener('input', async function() {
   const q = this.value.trim();
-  if (q.length >= 3 && !/^\d+$/.test(q)) {
-    // Показываем подсказки при вводе названия
+  if (q.length < 3 || /^\d+$/.test(q)) { hideSuggestions(); return; }
+  clearTimeout(_acTimer);
+  _acTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'},
+        body: JSON.stringify({query:q, count:5, status:['ACTIVE']})
+      });
+      const dd = await r.json();
+      if (!dd.suggestions?.length) { hideSuggestions(); return; }
+      _lastSuggestions = dd.suggestions.map(s=>parseDadata(s));
+      showSuggestions(_lastSuggestions);
+    } catch(e) { hideSuggestions(); }
+  }, 300);
+});
+
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key==='Escape') hideSuggestions();
+});
+
+function showSuggestions(list) {
+  let box = document.getElementById('acBox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'acBox';
+    box.style.cssText = 'position:absolute;left:0;right:0;top:calc(100% + 4px);background:#1a1a1a;border:1px solid rgba(255,107,0,0.3);border-radius:10px;z-index:200;overflow:hidden;';
+    document.querySelector('.search-box').style.position = 'relative';
+    document.querySelector('.search-box').appendChild(box);
   }
+  box.innerHTML = list.map((d,i)=>`
+    <div onclick="selectSuggestion(${i})" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s" onmouseover="this.style.background='rgba(255,107,0,0.08)'" onmouseout="this.style.background='transparent'">
+      <span style="font-size:11px;color:${d.isActive?'var(--green)':'var(--red)'}">●</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
+        <div style="font-size:10px;color:var(--muted)">ИНН ${d.inn} · ${d.statusText}</div>
+      </div>
+    </div>`).join('');
+  box.style.display = 'block';
+}
+
+function hideSuggestions() {
+  const b = document.getElementById('acBox');
+  if (b) b.style.display = 'none';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-box')) hideSuggestions();
 });
 
 renderHistory();
