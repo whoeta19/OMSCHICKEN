@@ -73,7 +73,77 @@ export default async function handler(req, res) {
   const userId = await getUserId(userToken);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  // ── resource=audit-log: журнал действий компании (только директор) ─────────
+  // ── resource=ai: чат с Gemini-ассистентом ──────────────────────────────
+  if (req.query.resource === 'ai') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+    const GEMINI_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY не настроен' });
+
+    const { message, context } = req.body;
+    if (!message) return res.status(400).json({ error: 'message required' });
+
+    // Строим системный промпт с финансовым контекстом пользователя
+    const ctx = context || {};
+    const systemPrompt = `Ты — ОМС-Ассистент, умный финансовый советник встроенный в OMSFIN — облачный бухгалтерский сервис для малого бизнеса в России.
+
+ФИНАНСОВЫЕ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (актуальные):
+- Доходы за год: ${ctx.income ? Math.round(ctx.income).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
+- Расходы за год: ${ctx.expense ? Math.round(ctx.expense).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
+- Прибыль: ${ctx.profit !== undefined ? Math.round(ctx.profit).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
+- Количество операций: ${ctx.txCount || 0}
+- Топ категории расходов: ${ctx.topCats || 'нет данных'}
+- Топ клиенты: ${ctx.topClients || 'нет данных'}
+- НДС к уплате (расчётно): ${ctx.vat ? Math.round(ctx.vat).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
+- Текущий период: ${ctx.period || new Date().toLocaleDateString('ru-RU')}
+
+НАЛОГОВЫЕ СТАВКИ 2026 (актуальные, используй только их):
+- НДС: 10% на продовольствие (мясо, птица), 22% базовая (было 20%)
+- НДФЛ прогрессивный: 13% до 2.4 млн, 15% до 5 млн, 18% до 20 млн, 20% до 50 млн, 22% свыше
+- НДФЛ дивиденды: отдельная база — 13% до 2.4 млн, 15% свыше
+- Налог на прибыль: 25% (было 20%)
+- Страховые взносы: 30% до 2 979 000 ₽/год, 15.1% сверх. Льготы МСП отменены с 2026.
+- УСН 6% с доходов, УСН 15% доходы-расходы (минимум 1%)
+
+РАЗДЕЛЫ OMSFIN: Дашборд (/), Аналитика (/analytics), НДС (/vat), Декларации (/declarations), Зарплата (/payroll), Документы (/docs), Инструменты (/tools), Контрагенты (/counterparty)
+
+СТИЛЬ ОТВЕТОВ:
+- Отвечай коротко и по делу, максимум 4-5 предложений
+- Используй конкретные цифры из данных пользователя когда они есть
+- Если данных нет — скажи что нужно загрузить выписку
+- Пиши на русском, без лишних вводных слов
+- Форматируй числа с пробелами (1 000 000 ₽)
+- Можно использовать HTML теги <b> для выделения важного
+- НЕ придумывай данные которых нет`;
+
+    try {
+      const geminiResp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: message }] }],
+            generationConfig: { maxOutputTokens: 400, temperature: 0.7 }
+          })
+        }
+      );
+
+      const geminiData = await geminiResp.json();
+      const reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!reply) {
+        console.error('Gemini error:', JSON.stringify(geminiData));
+        return res.status(500).json({ error: 'Нет ответа от Gemini', details: geminiData });
+      }
+
+      return res.status(200).json({ reply });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   if (req.query.resource === 'audit-log') {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
     const companyId = req.query.company_id;
