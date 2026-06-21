@@ -112,8 +112,18 @@ export default async function handler(req, res) {
 - НЕ придумывай данные которых нет`;
 
     try {
+      // Сначала смотрим какие модели доступны с этим ключом
+      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
+      const listData = await listResp.json();
+      const availableModels = (listData.models || []).filter(m => m.supportedGenerationMethods?.includes('generateContent')).map(m => m.name);
+      if (!availableModels.length) {
+        return res.status(500).json({ error: 'Нет доступных моделей. Ответ API: ' + JSON.stringify(listData).substring(0, 300) });
+      }
+      // Берём первую подходящую flash или pro модель
+      const modelName = availableModels.find(m => m.includes('flash')) || availableModels.find(m => m.includes('pro')) || availableModels[0];
+
       const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
