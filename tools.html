@@ -541,7 +541,7 @@ function genKP() {
 function printKP() {
   const content = document.getElementById('kpOutput').innerHTML;
   const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11pt;padding:20mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}@media print{@page{margin:15mm}}</style><script src="/nav.js"></script>
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11pt;padding:20mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}@media print{@page{margin:15mm}}</style>
 </head><body>${content}</body></html>`);
   win.document.close();
   setTimeout(()=>win.print(),500);

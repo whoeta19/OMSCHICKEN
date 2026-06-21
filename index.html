@@ -2864,9 +2864,15 @@ function _aiAddBubble(type, html, actions) {
 }
 
 function _aiSetChips(list) {
-  document.getElementById('aiChips').innerHTML = list
-    .map(s => `<button class="ai-quick" onclick="aiAsk(${JSON.stringify(s)})">${s}</button>`)
-    .join('');
+  const el = document.getElementById('aiChips');
+  el.innerHTML = '';
+  list.forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.className = 'ai-quick';
+    btn.textContent = s;
+    btn.addEventListener('click', function(){ aiAsk(s); });
+    el.appendChild(btn);
+  });
 }
 
 function aiSend() {
