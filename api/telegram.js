@@ -27,12 +27,20 @@ async function answerCallback(callbackQueryId, text) {
   });
 }
 
-// Загрузка транзакций за период (MM.YYYY) или всех
+// Парсинг DD.MM.YYYY в timestamp для правильной сортировки
+function parseDMY(str) {
+  if (!str) return 0;
+  const [dd, mm, yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm - 1, dd).getTime();
+}
+
+// Загрузка транзакций за период (MM.YYYY) или всех, сортировка в JS (date — строка DD.MM.YYYY)
 async function getTxs(userId, period = null) {
-  let url = `${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}&order=date.desc&limit=2000`;
+  let url = `${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}&limit=2000`;
   if (period) url += `&period=eq.${period}`;
   const r = await fetch(url, { headers: adminHeaders });
-  return await r.json();
+  const data = await r.json();
+  return Array.isArray(data) ? data.sort((a, b) => parseDMY(b.date) - parseDMY(a.date)) : [];
 }
 
 async function findUserByTelegram(telegramId) {
@@ -90,13 +98,12 @@ function calcVat(txs) {
   return { income, expense, profit: income - expense, vatOut, vatIn, vatToPay: Math.max(0, vatOut - vatIn) };
 }
 
-// Кнопка "Открыть приложение" + опционально "Мини-приложение"
+// Кнопка "Открыть приложение"
 function appKeyboard(extra = []) {
   return {
     inline_keyboard: [
       ...extra,
-      [{text: '🌐 Открыть OMSFIN', url: APP_URL},
-       {text: '📱 Мини-приложение', web_app: {url: `${APP_URL}/tg-app.html`}}]
+      [{text: '🌐 Открыть OMSFIN', url: APP_URL}]
     ]
   };
 }
@@ -171,12 +178,18 @@ export default async function handler(req, res) {
             appKeyboard([[{text: '➕ Добавить вручную', url: APP_URL}]])
           );
         } else {
-          const [dd, mm, yyyy] = txDate.split('.');
+          const [, mm, yyyy] = txDate.split('.');
           const period = `${mm}.${yyyy}`;
+          // Берём первую компанию пользователя для company_id
+          const compResp = await fetch(`${SUPABASE_URL}/rest/v1/companies?user_id=eq.${linkedUserEarly.user_id}&limit=1`, { headers: adminHeaders });
+          const compData = await compResp.json();
+          const companyId = compData[0]?.id || null;
+          const txBody = { user_id: linkedUserEarly.user_id, date: txDate, amount: -amount, name: merchant, category: 'unknown', period };
+          if (companyId) txBody.company_id = companyId;
           const txResp = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
             method: 'POST',
             headers: {...adminHeaders, 'Prefer': 'return=representation'},
-            body: JSON.stringify({ user_id: linkedUserEarly.user_id, date: txDate, amount: -amount, name: merchant, category: 'unknown', period })
+            body: JSON.stringify(txBody)
           });
           const txData = await txResp.json();
           const txId = txData[0]?.id;
@@ -264,8 +277,7 @@ export default async function handler(req, res) {
         '🔗 Чтобы начать:\n1. Зайди в OMSFIN → Настройки\n2. Нажми «Привязать Telegram»\n3. Я всё сделаю сам!\n\n' +
         'Или нажми кнопку ниже 👇',
         {inline_keyboard: [
-          [{text: '⚙️ Открыть Настройки', url: `${APP_URL}/settings`}],
-          [{text: '📱 Мини-приложение', web_app: {url: `${APP_URL}/tg-app.html`}}]
+          [{text: '⚙️ Открыть Настройки', url: `${APP_URL}/settings`}]
         ]}
       );
       return res.status(200).json({ok: true});
@@ -296,7 +308,7 @@ export default async function handler(req, res) {
        {text: `📅 ${prevMonth}`, callback_data: `${cmd}:${prevMonth}`}],
       [{text: '📅 За всё время', callback_data: `${cmd}:all`}],
       [{text: '🌐 Открыть OMSFIN', url: APP_URL},
-       {text: '📱 Мини-приложение', web_app: {url: `${APP_URL}/tg-app.html`}}]
+       {text: '🌐 Открыть OMSFIN', url: APP_URL}]
     ]});
 
     // /help
@@ -413,7 +425,7 @@ export default async function handler(req, res) {
       `Не понял команду 🤔\n\nНапиши /help чтобы увидеть все команды.\n\nИли отправь 📷 <b>фото чека</b> — добавлю операцию автоматически!`,
       appKeyboard([[
         {text: '📊 /stats', callback_data: `stats:${period}`},
-        {text: '🧾 /nds', callback_data: `nds:`}
+        {text: '📤 /expenses', callback_data: `expenses:${period}`}
       ]])
     );
 
