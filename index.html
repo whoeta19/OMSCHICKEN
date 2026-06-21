@@ -481,11 +481,6 @@
     <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">📄 Документы</button>
     <div class="pill-more" id="pillMoreWrap">
       <button class="pill" onclick="toggleMoreMenu(event)">⋯ Ещё</button>
-      <div class="pill-more-menu" id="pillMoreMenu">
-        <button class="pill-more-item" onclick="closeMoreMenu();showPage('recurring',null)">🔁 Регулярные</button>
-        <button class="pill-more-item" onclick="closeMoreMenu();showPage('reclassify',null)">🏷️ Разметка</button>
-        <button class="pill-more-item" onclick="window.location.href='/tools'">⚡ Инструменты</button>
-      </div>
     </div>
   </div>
 </div>
@@ -1649,12 +1644,14 @@ async function parseAndProcess(text) {
     ptxt.textContent = 'Загружаю из базы...';
     allTx = await apiGet();
     fill.style.width = '100%';
+    console.log('[upload] allTx after apiGet:', allTx.length, allTx.slice(0,2));
     const unknownCount = allTx.filter(t=>t.category==='unknown').length;
     const insertedCount = postResult?.inserted ?? txs.length;
     const skippedCount = postResult?.skipped ?? 0;
     ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
     setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
     renderAll();
+    console.log('[upload] renderAll done, recentList:', document.getElementById('recentList')?.children?.length);
     if (monthKey) {
       lastUploadedPeriod = monthKey;
       const bar = document.getElementById('undoUploadBar');
@@ -2489,5 +2486,11 @@ syncNow();
   </div>
 </nav>
 
+<!-- Дропдаун "Ещё" — вынесен из nav-pills чтобы не обрезался backdrop-filter/overflow -->
+<div class="pill-more-menu" id="pillMoreMenu">
+  <button class="pill-more-item" onclick="closeMoreMenu();showPage('recurring',null)">🔁 Регулярные</button>
+  <button class="pill-more-item" onclick="closeMoreMenu();showPage('reclassify',null)">🏷️ Разметка</button>
+  <button class="pill-more-item" onclick="window.location.href='/tools'">⚡ Инструменты</button>
+</div>
 </body>
 </html>
