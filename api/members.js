@@ -68,12 +68,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const authHeader = req.headers.authorization || '';
-  const userToken = authHeader.replace('Bearer ', '').trim();
-  const userId = await getUserId(userToken);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
-  // ── resource=ai: чат с Gemini-ассистентом ──────────────────────────────
+  // ── resource=ai: чат с Gemini-ассистентом (без auth — контекст передаётся с фронта) ──
   if (req.query.resource === 'ai') {
     if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
@@ -143,6 +138,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: e.message });
     }
   }
+
+  // Все остальные роуты требуют авторизации
+  const authHeader = req.headers.authorization || '';
+  const userToken = authHeader.replace('Bearer ', '').trim();
+  const userId = await getUserId(userToken);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   if (req.query.resource === 'audit-log') {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
