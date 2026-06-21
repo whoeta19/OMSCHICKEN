@@ -87,10 +87,10 @@
   }
   .pill-more{position:relative;}
   .pill-more-menu{
-    display:none;position:absolute;top:calc(100% + 6px);left:0;
+    display:none;position:fixed;
     background:var(--surface2);border:1px solid var(--border);border-radius:10px;
-    padding:4px;z-index:200;min-width:160px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+    padding:4px;z-index:9999;min-width:160px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.7);
   }
   .pill-more-menu.open{display:block;}
   .pill-more-item{
@@ -2077,7 +2077,12 @@ function showPage(name,btn){
 
 function toggleMoreMenu(e) {
   e.stopPropagation();
-  document.getElementById('pillMoreMenu').classList.toggle('open');
+  const menu = document.getElementById('pillMoreMenu');
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.left = rect.left + 'px';
+  menu.classList.toggle('open');
 }
 function closeMoreMenu() {
   document.getElementById('pillMoreMenu').classList.remove('open');
