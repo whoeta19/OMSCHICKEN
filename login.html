@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Вход</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
@@ -113,6 +114,50 @@
 <script>
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+// Инициализация Telegram WebApp
+const tgApp = window.Telegram?.WebApp;
+if (tgApp) {
+  tgApp.ready();
+  tgApp.expand();
+  // Пробуем автологин через Telegram initData
+  (async () => {
+    const initData = tgApp.initData;
+    if (!initData) return;
+    try {
+      const r = await fetch(`/api/telegram?action=tg-auth&initData=${encodeURIComponent(initData)}`);
+      const data = await r.json();
+      if (data.action_link) {
+        // Magic link — обмениваем на сессию
+        const url = new URL(data.action_link);
+        const tokenHash = url.searchParams.get('token');
+        const type = url.searchParams.get('type') || 'magiclink';
+        if (tokenHash) {
+          const sessResp = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'apikey': SUPABASE_KEY},
+            body: JSON.stringify({ token: tokenHash, type, redirect_to: '/' })
+          });
+          const sessData = await sessResp.json();
+          if (sessData.access_token) {
+            localStorage.setItem('omschicken_token', sessData.access_token);
+            localStorage.setItem('omsfin_refresh', sessData.refresh_token || '');
+            localStorage.setItem('omsfin_onboarded', '1');
+            window.location.href = '/';
+            return;
+          }
+        }
+      }
+      if (data.error === 'not_linked') {
+        // Аккаунт не привязан — показываем подсказку
+        const hint = document.createElement('div');
+        hint.style.cssText = 'background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.25);border-radius:10px;padding:12px 14px;font-size:12px;color:#ff9944;margin-bottom:16px;line-height:1.5';
+        hint.innerHTML = '📱 Ты открыл OMSFIN из Telegram.<br>Войди один раз — в следующий раз будешь авторизован автоматически.';
+        document.querySelector('.card').insertBefore(hint, document.querySelector('.tabs'));
+      }
+    } catch(e) { /* молча игнорируем */ }
+  })();
+}
 
 const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
 if (token) { window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding'; }

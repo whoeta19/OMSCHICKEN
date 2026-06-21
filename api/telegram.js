@@ -1,7 +1,27 @@
+import crypto from 'crypto';
+
 const BOT_TOKEN = '8514433988:AAHvGhmxdIICzzEfXlfe2OIjB_Ynn3gLJao';
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDE2NDYzOCwiZXhwIjoyMDk1NzQwNjM4fQ.CjCybI9bSk1uYbjWl8clQDPPzB7exzUa029DUtPQen8';
 const APP_URL = 'https://omschicken-u5dn.vercel.app';
+
+// Верификация подписи Telegram WebApp initData (HMAC-SHA256)
+function verifyTgInitData(initData) {
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    if (!hash) return null;
+    params.delete('hash');
+    const dataCheckString = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join('\n');
+    const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
+    const expected = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+    if (expected !== hash) return null;
+    return JSON.parse(params.get('user') || 'null');
+  } catch { return null; }
+}
 
 const adminHeaders = {
   'apikey': SERVICE_KEY,
@@ -109,6 +129,44 @@ function appKeyboard(extra = []) {
 }
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // GET /api/telegram?action=tg-auth&initData=... — автологин через Telegram WebApp
+  if (req.method === 'GET' && req.query.action === 'tg-auth') {
+    const initData = req.query.initData || '';
+    const tgUser = verifyTgInitData(initData);
+    if (!tgUser) return res.status(401).json({ error: 'invalid_signature' });
+
+    // Ищем привязанного пользователя
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?telegram_id=eq.${tgUser.id}&limit=1`, {
+      headers: adminHeaders
+    });
+    const rows = await r.json();
+    if (!rows[0]) return res.status(404).json({ error: 'not_linked' });
+
+    const userId = rows[0].user_id;
+    // Получаем email пользователя через admin API
+    const uResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
+    });
+    const uData = await uResp.json();
+    if (!uData.email) return res.status(500).json({ error: 'no_email' });
+
+    // Генерируем magic link
+    const linkResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
+      method: 'POST',
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'magiclink', email: uData.email })
+    });
+    const linkData = await linkResp.json();
+    if (!linkData.action_link) return res.status(500).json({ error: 'link_failed' });
+
+    return res.status(200).json({ action_link: linkData.action_link });
+  }
+
   if (req.method !== 'POST') return res.status(200).json({ok: true});
 
   const update = req.body;
