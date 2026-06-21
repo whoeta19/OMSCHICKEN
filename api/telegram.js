@@ -81,9 +81,19 @@ export default async function handler(req, res) {
   const callbackData = update.callback_query?.data;
   const photos = update.message?.photo;
   
+  // Проверяем привязку до любых действий (нужен linkedUser для OCR тоже)
+  const linkedUserEarly = await findUserByTelegram(telegramId);
+
   try {
     // Фото чека — OCR
     if (photos && photos.length > 0) {
+      if (!linkedUserEarly) {
+        await sendMessage(chatId,
+          '⚠️ Аккаунт не привязан. Перейди в OMSFIN → Настройки → Привязать Telegram',
+          {inline_keyboard: [[{text: '🌐 Привязать аккаунт', url: 'https://omschicken-u5dn.vercel.app/settings'}]]}
+        );
+        return res.status(200).json({ok: true});
+      }
       const fileId = photos[photos.length - 1].file_id; // наибольшее разрешение
       await sendMessage(chatId, '🔍 Читаю чек, подожди секунду...');
 
@@ -151,6 +161,7 @@ export default async function handler(req, res) {
             })
           }).catch(() => {}); // таблица может не существовать — не критично
 
+          // callback_data содержит только safe-поля без произвольных строк
           await sendMessage(chatId,
             `🧾 <b>Чек распознан!</b>\n\n` +
             `📅 Дата: ${txDate}\n` +
@@ -158,7 +169,7 @@ export default async function handler(req, res) {
             `💳 Сумма: <b>-${fmt(amount)}</b>\n\n` +
             `Добавить эту операцию в OMSFIN?`,
             {inline_keyboard: [[
-              {text: '✅ Добавить', callback_data: `ocr_confirm:${key}:${linkedUser?.user_id}:${-amount}:${merchant}:${txDate}`},
+              {text: '✅ Добавить', callback_data: `ocr_confirm:${key}`},
               {text: '❌ Отмена', callback_data: 'ocr_cancel'}
             ]]}
           );
@@ -172,32 +183,48 @@ export default async function handler(req, res) {
 
     // Callback — подтверждение OCR операции
     if (callbackData?.startsWith('ocr_confirm:')) {
-      const parts = callbackData.split(':');
-      // ocr_confirm:key:userId:amount:merchant:date
-      const [, , confirmUserId, amtStr, ...rest] = parts;
-      const txDate = rest[rest.length - 1];
-      const merchant = rest.slice(0, rest.length - 1).join(':');
-      const amount = parseFloat(amtStr);
+      const key = callbackData.slice('ocr_confirm:'.length);
+
+      // Читаем данные из pending-записи (там нет проблем с : в merchant)
+      const pendingResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/telegram_ocr_pending?key=eq.${encodeURIComponent(key)}&limit=1`,
+        {headers: adminHeaders}
+      );
+      const pending = await pendingResp.json();
+      const p = pending[0];
+
+      if (!p) {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({callback_query_id: update.callback_query.id, text: '❌ Запись не найдена'})
+        });
+        return res.status(200).json({ok: true});
+      }
 
       await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
         method: 'POST',
         headers: {...adminHeaders, 'Prefer': 'return=minimal'},
         body: JSON.stringify({
-          user_id: confirmUserId,
-          date: txDate,
-          amount,
-          name: merchant,
-          category: 'other',
-          period: txDate.split('.').slice(1).join('.') // MM.YYYY
+          user_id: p.user_id,
+          date: p.date,
+          amount: p.amount,
+          name: p.name,
+          category: p.category || 'other',
+          period: p.date.split('.').slice(1).join('.')
         })
       });
+
+      // Удаляем pending-запись
+      await fetch(`${SUPABASE_URL}/rest/v1/telegram_ocr_pending?key=eq.${encodeURIComponent(key)}`,
+        {method: 'DELETE', headers: adminHeaders}
+      ).catch(() => {});
 
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({callback_query_id: update.callback_query.id, text: '✅ Операция добавлена!'})
       });
-      await sendMessage(chatId, `✅ Операция добавлена!\n\n${merchant} · -${fmt(Math.abs(amount))}`);
+      await sendMessage(chatId, `✅ Операция добавлена!\n\n${p.name} · -${fmt(Math.abs(p.amount))}`);
       return res.status(200).json({ok: true});
     }
 
@@ -234,8 +261,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ok: true});
     }
     
-    // Проверяем привязан ли аккаунт
-    const linkedUser = await findUserByTelegram(telegramId);
+    // Проверяем привязан ли аккаунт (используем уже загруженный выше)
+    const linkedUser = linkedUserEarly;
     if (!linkedUser) {
       await sendMessage(chatId,
         '⚠️ Аккаунт не привязан.\n\nПерейди в OMSFIN → Настройки → Привязать Telegram',
