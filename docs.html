@@ -141,6 +141,79 @@
       <div class="doc-type-name">ТТН</div>
       <div class="doc-type-desc">Товарно-транспортная</div>
     </div>
+    <div class="doc-type-btn" id="btn-pp" onclick="selectDoc('pp',this)">
+      <div class="doc-type-icon">🏦</div>
+      <div class="doc-type-name">Платёжное поручение</div>
+      <div class="doc-type-desc">Форма 0401060</div>
+    </div>
+  </div>
+
+  <!-- Форма платёжного поручения -->
+  <div id="pp-form" style="display:none">
+    <div class="card">
+      <div class="section-title">Платёжное поручение — Форма 0401060</div>
+      <div class="input-row">
+        <div class="input-group"><label>Номер поручения</label><input type="text" id="ppNum" placeholder="001"></div>
+        <div class="input-group"><label>Дата</label><input type="date" id="ppDate"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Сумма (цифрами)</label><input type="number" id="ppAmount" placeholder="0.00" step="0.01" oninput="ppUpdateAmount()"></div>
+        <div class="input-group"><label>Вид платежа</label>
+          <select id="ppKind"><option value="">Электронно</option><option value="срочно">Срочно</option><option value="почтой">Почтой</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Плательщик</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="ppPayerName" placeholder="ООО Омсчикен"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="ppPayerInn" placeholder="5500000001 / 550101001"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ppPayerAcc" placeholder="40702810000000000001" maxlength="20"></div>
+        <div class="input-group"><label>Банк плательщика</label><input type="text" id="ppPayerBank" placeholder="АО «Тинькофф Банк»"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>БИК</label><input type="text" id="ppPayerBik" placeholder="044525974" maxlength="9"></div>
+        <div class="input-group"><label>Корр. счёт банка плательщика</label><input type="text" id="ppPayerCorr" placeholder="30101810145250000974" maxlength="20"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Получатель</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="ppPayeeName" placeholder="ООО Поставщик"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="ppPayeeInn" placeholder="7700000001 / 770101001"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ppPayeeAcc" placeholder="40702810000000000002" maxlength="20"></div>
+        <div class="input-group"><label>Банк получателя</label><input type="text" id="ppPayeeBank" placeholder="ВТБ (ПАО)"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>БИК</label><input type="text" id="ppPayeeBik" placeholder="044525187" maxlength="9"></div>
+        <div class="input-group"><label>Корр. счёт банка получателя</label><input type="text" id="ppPayeeCorr" placeholder="30101810100000000187" maxlength="20"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Детали платежа</div>
+      <div class="input-row">
+        <div class="input-group"><label>Вид оп.</label><input type="text" id="ppOp" value="01" style="max-width:60px"></div>
+        <div class="input-group"><label>Очерёдность платежа</label>
+          <select id="ppQueue"><option value="3">3 — налоги, сборы</option><option value="4" selected>4 — по исполнит. листу</option><option value="5">5 — прочие</option></select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>КБК (для налогов)</label><input type="text" id="ppKbk" placeholder="18201061201010000510 (ЕНС)" maxlength="20"></div>
+        <div class="input-group"><label>ОКТМО</label><input type="text" id="ppOktmo" placeholder="52701000" maxlength="11"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Основание (НП/ТП/ЗД)</label><input type="text" id="ppBase" placeholder="ТП — текущий период"></div>
+        <div class="input-group"><label>Налоговый период</label><input type="text" id="ppPeriod" placeholder="КВ.02.2026"></div>
+      </div>
+      <div class="input-group"><label>Назначение платежа</label><input type="text" id="ppPurpose" placeholder="Оплата по договору № 1 от 01.01.2026. Без НДС."></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn" onclick="generatePP()">📋 Сформировать</button>
+    </div>
   </div>
 
   <!-- Реквизиты контрагента -->
@@ -368,6 +441,185 @@ function selectDoc(type, el) {
   currentDoc = type;
   document.querySelectorAll('.doc-type-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('pp-form').style.display = type === 'pp' ? 'block' : 'none';
+}
+
+function ppAmountWords(n) {
+  const units = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять'];
+  const teens = ['десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  const tens = ['','десять','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+  const hundreds = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+  const thousands = ['тысяча','тысячи','тысяч'];
+  const millions = ['миллион','миллиона','миллионов'];
+  function plural(n, forms) {
+    const n10 = n % 10, n100 = n % 100;
+    if (n100 >= 11 && n100 <= 19) return forms[2];
+    if (n10 === 1) return forms[0];
+    if (n10 >= 2 && n10 <= 4) return forms[1];
+    return forms[2];
+  }
+  function threeDigits(n, feminine) {
+    let r = '';
+    r += hundreds[Math.floor(n/100)];
+    const t = n % 100;
+    if (t >= 10 && t <= 19) { r += (r?' ':'')+teens[t-10]; }
+    else {
+      r += (tens[Math.floor(t/10)] ? (r?' ':'')+tens[Math.floor(t/10)] : '');
+      const u = t % 10;
+      if (u) {
+        const uWords = feminine ? ['одна','две','три','четыре','пять','шесть','семь','восемь','девять'] : units;
+        r += (r?' ':'')+uWords[u];
+      }
+    }
+    return r;
+  }
+  if (!n || isNaN(n)) return '—';
+  const rub = Math.floor(n), kop = Math.round((n - rub) * 100);
+  let result = '';
+  const mln = Math.floor(rub / 1000000);
+  const ths = Math.floor((rub % 1000000) / 1000);
+  const rem = rub % 1000;
+  if (mln) result += threeDigits(mln, false) + ' ' + plural(mln, millions);
+  if (ths) result += (result?' ':'')+threeDigits(ths, true) + ' ' + plural(ths, thousands);
+  if (rem || !result) result += (result?' ':'')+threeDigits(rem, false)+' рублей';
+  else result += ' рублей';
+  result += ' ' + String(kop).padStart(2,'0') + ' копеек';
+  return result.trim();
+}
+
+function ppUpdateAmount() {
+  const n = parseFloat(document.getElementById('ppAmount').value) || 0;
+  const words = ppAmountWords(n);
+}
+
+function generatePP() {
+  const v = id => document.getElementById(id).value;
+  const amount = parseFloat(v('ppAmount')) || 0;
+  const amountStr = amount.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const words = ppAmountWords(amount);
+  const date = v('ppDate') ? new Date(v('ppDate')).toLocaleDateString('ru-RU') : '__.__.____';
+
+  const html = `<div class="doc-print" style="font-family:'Times New Roman',Times,serif;font-size:9pt;color:#000;background:#fff;padding:10mm">
+<table style="width:100%;border-collapse:collapse;font-size:9pt">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;width:60px;text-align:center;font-weight:bold" rowspan="4">0401060</td>
+    <td style="border:1px solid #000;padding:3px 5px;width:90px;font-size:8pt">Поступ. в банк пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Списано со сч. пл.</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="border:1px solid #000;padding:2px 5px;text-align:center;font-size:10pt;font-weight:bold">ПЛАТЁЖНОЕ ПОРУЧЕНИЕ № ${v('ppNum')}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Дата</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Вид платежа</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-weight:bold">${date}</td>
+    <td style="border:1px solid #000;padding:3px 5px">${v('ppKind')}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt" colspan="3">Сумма прописью</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold;width:70%" colspan="2">${words}</td>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold;white-space:nowrap">Сумма | ${amountStr}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt" colspan="4">Плательщик</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;width:50%" colspan="2">${v('ppPayerName')}<br><span style="font-size:8pt">ИНН/КПП: ${v('ppPayerInn')}</span></td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold">${v('ppPayerAcc')}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;width:40%">${v('ppPayerBank')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">БИК<br>${v('ppPayerBik')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppPayerCorr')}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt" colspan="4">Получатель</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;width:40%">${v('ppPayeeBank')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">БИК<br>${v('ppPayeeBik')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppPayeeCorr')}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px" colspan="2">${v('ppPayeeName')}<br><span style="font-size:8pt">ИНН/КПП: ${v('ppPayeeInn')}</span></td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold">${v('ppPayeeAcc')}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Вид оп.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Срок пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:14%">Наз. пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Очер. пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Код</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Рез. поле</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;text-align:center">${v('ppOp')}</td>
+    <td style="border:1px solid #000;padding:4px 5px"></td>
+    <td style="border:1px solid #000;padding:4px 5px"></td>
+    <td style="border:1px solid #000;padding:4px 5px;text-align:center">${v('ppQueue')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">0</td>
+    <td style="border:1px solid #000;padding:4px 5px"></td>
+  </tr>
+</table>
+
+${v('ppKbk') ? `<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:25%">КБК</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:20%">ОКТМО</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:10%">Основ.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">Нал. период</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">№ докум.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Дата докум.</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppKbk')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppOktmo')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppBase')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppPeriod')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">0</td>
+    <td style="border:1px solid #000;padding:4px 5px">0</td>
+  </tr>
+</table>` : ''}
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr><td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Назначение платежа</td></tr>
+  <tr><td style="border:1px solid #000;padding:6px 5px;min-height:30px">${v('ppPurpose')}</td></tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:8px">
+  <tr>
+    <td style="border:1px solid #000;padding:6px 5px;width:50%">Подписи плательщика<br><br><br>_________________________</td>
+    <td style="border:1px solid #000;padding:6px 5px">Отметки банка<br><br><br></td>
+  </tr>
+</table>
+</div>`;
+
+  const win = window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ПП №${v('ppNum')}</title>
+<style>body{margin:0;background:#fff}@media print{body{margin:0}}</style></head>
+<body onload="window.print()">${html}</body></html>`);
+  win.document.close();
+  showToast('✅ Платёжное поручение сформировано');
 }
 
 function addRow() {
@@ -1258,6 +1510,8 @@ function showPage(name,btn){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
 document.getElementById('docDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('ppDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('ppNum').value = String(history.length+1).padStart(3,'0');
 document.getElementById('docNum').value = String(history.length+1).padStart(3,'0');
 renderHistory();
 initSettings();

@@ -288,15 +288,84 @@ async function loadHistory() {
           <div style="font-weight:500">${empById[run.employee_id] || 'Сотрудник'} · ${run.period}</div>
           <div style="font-size:11px;color:var(--muted)">Начислено ${fmt(run.salary_gross)} · НДФЛ ${fmt(run.ndfl)} · К выплате ${fmt(run.salary_net)}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="run-status ${run.status}">${run.status === 'paid' ? 'Выплачено' : 'Запланировано'}</span>
           ${run.status !== 'paid' ? `<button class="btn-outline" onclick="markPaid('${run.id}')">Отметить выплату</button>` : ''}
+          <button class="btn-outline" onclick='printPayslip(${JSON.stringify(run)}, ${JSON.stringify(empById[run.employee_id] || 'Сотрудник')})'>🖨 Листок</button>
         </div>
       </div>
     `).join('');
   } catch (e) {
     document.getElementById('historyList').innerHTML = '<div class="empty">❌ Ошибка загрузки</div>';
   }
+}
+
+function printPayslip(run, empName) {
+  const companyName = localStorage.getItem('omsfin_company_name') || 'Компания';
+  const gross = Math.round(Number(run.salary_gross));
+  const ndfl = Math.round(Number(run.ndfl));
+  const contrib = Math.round(Number(run.contributions));
+  const net = Math.round(Number(run.salary_net));
+
+  const fmtR = n => n.toLocaleString('ru-RU') + ' ₽';
+
+  const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
+<title>Расчётный листок · ${empName} · ${run.period}</title>
+<style>
+  body{font-family:'Times New Roman',serif;font-size:11pt;color:#000;background:#fff;margin:0;padding:20mm}
+  h2{text-align:center;font-size:13pt;margin-bottom:4px}
+  .sub{text-align:center;font-size:10pt;color:#444;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;margin-bottom:12px}
+  td,th{border:1px solid #000;padding:4px 7px;font-size:10pt}
+  th{background:#f5f5f5;font-weight:bold;text-align:left}
+  .right{text-align:right}
+  .total td{font-weight:bold;font-size:11pt}
+  .footer{font-size:9pt;color:#555;margin-top:16px}
+  .sign-row{display:flex;justify-content:space-between;margin-top:40px;font-size:10pt}
+  @media print{body{padding:10mm}}
+</style></head><body onload="window.print()">
+<h2>РАСЧЁТНЫЙ ЛИСТОК</h2>
+<div class="sub">${companyName} · За период: <b>${run.period}</b></div>
+
+<table>
+  <tr><th colspan="2">Сотрудник</th></tr>
+  <tr><td>ФИО</td><td>${empName}</td></tr>
+  <tr><td>Период</td><td>${run.period}</td></tr>
+  <tr><td>Статус выплаты</td><td>${run.status === 'paid' ? 'Выплачено' : 'Запланировано'}</td></tr>
+</table>
+
+<table>
+  <tr><th>Начисления</th><th class="right">Сумма</th></tr>
+  <tr><td>Оклад (gross)</td><td class="right">${fmtR(gross)}</td></tr>
+</table>
+
+<table>
+  <tr><th>Удержания</th><th class="right">Сумма</th></tr>
+  <tr><td>НДФЛ (удержан работодателем)</td><td class="right">${fmtR(ndfl)}</td></tr>
+</table>
+
+<table>
+  <tr><th>Начисления работодателя</th><th class="right">Сумма</th></tr>
+  <tr><td>Страховые взносы (не удерживаются из зарплаты)</td><td class="right">${fmtR(contrib)}</td></tr>
+</table>
+
+<table>
+  <tr class="total"><td>К выплате на руки</td><td class="right">${fmtR(net)}</td></tr>
+</table>
+
+<div class="sign-row">
+  <div>Подпись работодателя: ________________________</div>
+  <div>Дата выдачи: ___.____.${new Date().getFullYear()}</div>
+</div>
+<div class="footer">
+  НДФЛ рассчитан по прогрессивной шкале 2026 нарастающим итогом с начала года.<br>
+  Страховые взносы уплачиваются работодателем в бюджет ПФР/ФСС и не удерживаются из зарплаты.
+</div>
+</body></html>`;
+
+  const win = window.open('', '_blank', 'width=800,height=600');
+  win.document.write(html);
+  win.document.close();
 }
 
 // Дефолтный период — текущий месяц
