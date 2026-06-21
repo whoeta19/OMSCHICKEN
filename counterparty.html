@@ -139,16 +139,7 @@ async function checkCompany() {
 
     if (isINN) {
       data = await fetchFromEGRUL(query);
-      if (!data) {
-        // ЕГРЮЛ не ответил — пробуем Dadata по ИНН
-        const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party`, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json','Authorization':'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'},
-          body: JSON.stringify({query, count:1})
-        });
-        const d = await r.json();
-        if (d.suggestions?.length) data = parseDadata(d.suggestions[0]);
-      }
+      // fetchFromEGRUL уже включает dadata fallback через сервер
     } else {
       // Поиск по названию через Dadata
       const results = await searchByName(query);
@@ -198,29 +189,24 @@ function selectSuggestion(i) {
 }
 
 async function fetchFromEGRUL(inn) {
+  // Сначала пробуем ЕГРЮЛ
   try {
-    const r = await fetch(`/api/lookup?provider=egrul&inn=${inn}`);
+    const r = await fetch(`/api/lookup?provider=egrul&inn=${encodeURIComponent(inn)}`);
     if (r.ok) {
       const d = await r.json();
       if (d.data) return parseEGRUL(d.data, inn);
     }
   } catch(e) {}
-  
-  // Fallback — пробуем через dadata с другим токеном
+
+  // Fallback — Dadata через серверный прокси (избегаем CORS и проблем с токеном)
   try {
-    const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'
-      },
-      body: JSON.stringify({query: inn, count: 1})
-    });
-    const d = await r.json();
-    if (d.suggestions && d.suggestions.length > 0) {
-      return parseDadata(d.suggestions[0]);
+    const r = await fetch(`/api/lookup?provider=dadata&action=findById&inn=${encodeURIComponent(inn)}`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d.suggestions?.length) return parseDadata(d.suggestions[0]);
     }
   } catch(e) {}
+
   return null;
 }
 
@@ -312,15 +298,13 @@ function parseEGRUL(raw, inn) {
 
 async function searchByName(name) {
   try {
-    const r = await fetch(`https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Authorization':'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'},
-      body: JSON.stringify({query: name, count: 7})
-    });
-    const d = await r.json();
-    if (d.suggestions?.length) {
-      _lastSuggestions = d.suggestions.map(s => parseDadata(s));
-      return _lastSuggestions;
+    const r = await fetch(`/api/lookup?provider=dadata&action=suggest&query=${encodeURIComponent(name)}`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d.suggestions?.length) {
+        _lastSuggestions = d.suggestions.map(s => parseDadata(s));
+        return _lastSuggestions;
+      }
     }
   } catch(e) {}
   return null;
@@ -683,14 +667,11 @@ document.getElementById('searchInput').addEventListener('input', async function(
   clearTimeout(_acTimer);
   _acTimer = setTimeout(async () => {
     try {
-      const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Token 0b6902c1f7dc64b87fa25698a3c5a97c1cfb437e'},
-        body: JSON.stringify({query:q, count:5, status:['ACTIVE']})
-      });
+      const r = await fetch(`/api/lookup?provider=dadata&action=suggest&query=${encodeURIComponent(q)}`);
+      if (!r.ok) { hideSuggestions(); return; }
       const dd = await r.json();
       if (!dd.suggestions?.length) { hideSuggestions(); return; }
-      _lastSuggestions = dd.suggestions.map(s=>parseDadata(s));
+      _lastSuggestions = dd.suggestions.map(s => parseDadata(s));
       showSuggestions(_lastSuggestions);
     } catch(e) { hideSuggestions(); }
   }, 300);
