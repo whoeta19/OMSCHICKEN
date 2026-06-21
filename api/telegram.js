@@ -150,29 +150,32 @@ export default async function handler(req, res) {
             {inline_keyboard: [[{text: '➕ Добавить вручную', url: 'https://omschicken-u5dn.vercel.app'}]]}
           );
         } else {
-          // Сохраняем в pending — ждём подтверждения
-          const key = `ocr_${telegramId}_${Date.now()}`;
-          await fetch(`${SUPABASE_URL}/rest/v1/telegram_ocr_pending`, {
-            method: 'POST',
-            headers: adminHeaders,
-            body: JSON.stringify({
-              key, user_id: linkedUserEarly.user_id, telegram_id: String(telegramId),
-              amount: -amount, name: merchant, date: txDate,
-              category: 'other', created_at: new Date().toISOString()
-            })
-          }).catch(() => {}); // таблица может не существовать — не критично
+          // Сохраняем сразу в transactions, возвращаем ID для отмены
+          const mm = txDate.split('.')[1];
+          const yyyy = txDate.split('.')[2];
+          const period = `${mm}.${yyyy}`;
 
-          // callback_data содержит только safe-поля без произвольных строк
+          const txResp = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+            method: 'POST',
+            headers: {...adminHeaders, 'Prefer': 'return=representation'},
+            body: JSON.stringify({
+              user_id: linkedUserEarly.user_id,
+              date: txDate,
+              amount: -amount,
+              name: merchant,
+              category: 'unknown',
+              period
+            })
+          });
+          const txData = await txResp.json();
+          const txId = txData[0]?.id;
+
           await sendMessage(chatId,
-            `🧾 <b>Чек распознан!</b>\n\n` +
+            `🧾 <b>Чек добавлен!</b>\n\n` +
             `📅 Дата: ${txDate}\n` +
             `🏪 Продавец: ${merchant}\n` +
-            `💳 Сумма: <b>-${fmt(amount)}</b>\n\n` +
-            `Добавить эту операцию в OMSFIN?`,
-            {inline_keyboard: [[
-              {text: '✅ Добавить', callback_data: `ocr_confirm:${key}`},
-              {text: '❌ Отмена', callback_data: 'ocr_cancel'}
-            ]]}
+            `💳 Сумма: <b>-${fmt(amount)}</b>`,
+            txId ? {inline_keyboard: [[{text: '↩️ Отменить', callback_data: `ocr_undo:${txId}`}]]} : null
           );
         }
       } catch(ocrErr) {
@@ -182,59 +185,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ok: true});
     }
 
-    // Callback — подтверждение OCR операции
-    if (callbackData?.startsWith('ocr_confirm:')) {
-      const key = callbackData.slice('ocr_confirm:'.length);
-
-      // Читаем данные из pending-записи (там нет проблем с : в merchant)
-      const pendingResp = await fetch(
-        `${SUPABASE_URL}/rest/v1/telegram_ocr_pending?key=eq.${encodeURIComponent(key)}&limit=1`,
-        {headers: adminHeaders}
-      );
-      const pending = await pendingResp.json();
-      const p = pending[0];
-
-      if (!p) {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({callback_query_id: update.callback_query.id, text: '❌ Запись не найдена'})
-        });
-        return res.status(200).json({ok: true});
-      }
-
-      await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
-        method: 'POST',
-        headers: {...adminHeaders, 'Prefer': 'return=minimal'},
-        body: JSON.stringify({
-          user_id: p.user_id,
-          date: p.date,
-          amount: p.amount,
-          name: p.name,
-          category: p.category || 'other',
-          period: p.date.split('.').slice(1).join('.')
-        })
+    // Callback — отмена OCR-добавленной операции
+    if (callbackData?.startsWith('ocr_undo:')) {
+      const txId = callbackData.slice('ocr_undo:'.length);
+      await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${txId}`, {
+        method: 'DELETE',
+        headers: adminHeaders
       });
-
-      // Удаляем pending-запись
-      await fetch(`${SUPABASE_URL}/rest/v1/telegram_ocr_pending?key=eq.${encodeURIComponent(key)}`,
-        {method: 'DELETE', headers: adminHeaders}
-      ).catch(() => {});
-
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({callback_query_id: update.callback_query.id, text: '✅ Операция добавлена!'})
+        body: JSON.stringify({callback_query_id: update.callback_query.id, text: '↩️ Операция удалена'})
       });
-      await sendMessage(chatId, `✅ Операция добавлена!\n\n${p.name} · -${fmt(Math.abs(p.amount))}`);
-      return res.status(200).json({ok: true});
-    }
-
-    if (callbackData === 'ocr_cancel') {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({callback_query_id: update.callback_query.id, text: 'Отменено'})
-      });
+      await sendMessage(chatId, '↩️ Операция удалена.');
       return res.status(200).json({ok: true});
     }
 
