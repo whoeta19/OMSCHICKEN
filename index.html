@@ -578,7 +578,7 @@
   </div>
 
   <!-- Живой таймер до ближайшего налогового дедлайна -->
-  <div id="deadlineLiveCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+  <div id="deadlineLiveCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between">
     <div>
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px" id="deadlineLiveTitle">Следующий дедлайн</div>
       <div style="font-size:12px;font-weight:500" id="deadlineLiveName">—</div>
@@ -2028,7 +2028,7 @@ function renderCashflowForecast(days) {
 // ─── Скоринг здоровья бизнеса ─────────────────────────────────────────────────
 function renderHealthScore() {
   const card = document.getElementById('healthScoreCard');
-  if (!card || allTx.length < 5) { if (card) card.style.display = 'none'; return; }
+  if (!card || allTx.length < 1) { if (card) card.style.display = 'none'; return; }
   card.style.display = 'block';
 
   const now = Date.now();
@@ -2425,7 +2425,7 @@ function doExportCSV() {
     catNames[t.category]||t.category||'', t.period||'',
     (t.description||'').replace(/;/g,' '), (t.note||'').replace(/;/g,' ')
   ]));
-  const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,''""'')}"`).join(';')).join('\n');
+  const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
   a.download = 'omsfin_операции_' + new Date().toISOString().split('T')[0] + '.csv';
