@@ -1,4 +1,6 @@
 (function () {
+  if (document.getElementById('omsnav')) return;
+
   var pages = [
     { href: '/',             label: 'Дашборд',     icon: '🏠' },
     { href: '/analytics',   label: 'Аналитика',   icon: '📈' },
@@ -11,20 +13,23 @@
   ];
 
   function render() {
+    if (document.getElementById('omsnav')) return;
+
     var cur = window.location.pathname;
     var accent = '#ff6b00';
-    var muted  = 'rgba(255,255,255,0.4)';
-    var border = 'rgba(255,255,255,0.07)';
+    var muted  = 'rgba(255,255,255,0.35)';
+    var border = 'rgba(255,255,255,0.06)';
 
     var nav = document.createElement('nav');
     nav.id  = 'omsnav';
     nav.style.cssText =
-      'background:#080808;border-bottom:1px solid ' + border + ';' +
-      'overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;';
+      'background:#050505;border-bottom:1px solid ' + border + ';' +
+      'overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;' +
+      'position:sticky;top:0;z-index:90;';
 
     var inner = document.createElement('div');
     inner.style.cssText =
-      'display:flex;gap:2px;padding:6px 16px;white-space:nowrap;min-width:max-content;';
+      'display:flex;gap:1px;padding:4px 14px;white-space:nowrap;min-width:max-content;';
 
     pages.forEach(function (p) {
       var isActive = p.href === '/'
@@ -34,17 +39,17 @@
       var a = document.createElement('a');
       a.href = p.href;
       a.style.cssText =
-        'display:inline-flex;align-items:center;gap:5px;' +
-        'padding:6px 11px;border-radius:8px;' +
-        'font-size:12px;font-family:Inter,sans-serif;text-decoration:none;' +
-        'transition:background 0.15s,color 0.15s;' +
+        'display:inline-flex;align-items:center;gap:4px;' +
+        'padding:5px 10px;border-radius:6px;' +
+        'font-size:11.5px;font-family:Inter,sans-serif;text-decoration:none;' +
+        'transition:background 0.15s,color 0.15s;letter-spacing:0.01em;' +
         'color:'      + (isActive ? accent : muted) + ';' +
-        'background:' + (isActive ? 'rgba(255,107,0,0.1)' : 'transparent') + ';' +
+        'background:' + (isActive ? 'rgba(255,107,0,0.09)' : 'transparent') + ';' +
         'font-weight:' + (isActive ? '600' : '400') + ';';
-      a.innerHTML = '<span>' + p.icon + '</span><span>' + p.label + '</span>';
+      a.innerHTML = '<span style="font-size:13px;line-height:1">' + p.icon + '</span><span>' + p.label + '</span>';
 
       a.addEventListener('mouseenter', function () {
-        if (!isActive) { a.style.color = '#fff'; a.style.background = 'rgba(255,255,255,0.05)'; }
+        if (!isActive) { a.style.color = 'rgba(255,255,255,0.8)'; a.style.background = 'rgba(255,255,255,0.04)'; }
       });
       a.addEventListener('mouseleave', function () {
         if (!isActive) { a.style.color = muted; a.style.background = 'transparent'; }
