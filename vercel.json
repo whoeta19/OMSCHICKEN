@@ -1,5 +1,72 @@
 {
-  "rewrites": [{"source": "/api/telegram_link", "destination": "/api/telegram_link.js"},{"source": "/counterparty", "destination": "/counterparty.html"},{"source": "/onboarding", "destination": "/onboarding.html"},{"source": "/tools", "destination": "/tools.html"},{"source": "/declarations", "destination": "/declarations.html"},{"source": "/settings", "destination": "/settings.html"},{"source": "/login", "destination": "/login.html"},{"source": "/landing", "destination": "/landing.html"},{"source": "/landing", "destination": "/landing.html"},{"source": "/", "destination": "/index.html"},{"source": "/vat", "destination": "/vat.html"},{"source": "/analytics", "destination": "/analytics.html"},{"source": "/docs", "destination": "/docs.html"},{"source": "/payroll", "destination": "/payroll.html"},{"source": "/companies-overview", "destination": "/companies-overview.html"},
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+  "rewrites": [
+    {
+      "source": "/negotiation",
+      "destination": "/negotiation.html"
+    },
+    {
+      "source": "/api/telegram_link",
+      "destination": "/api/telegram_link.js"
+    },
+    {
+      "source": "/counterparty",
+      "destination": "/counterparty.html"
+    },
+    {
+      "source": "/onboarding",
+      "destination": "/onboarding.html"
+    },
+    {
+      "source": "/tools",
+      "destination": "/tools.html"
+    },
+    {
+      "source": "/declarations",
+      "destination": "/declarations.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/settings.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/landing",
+      "destination": "/landing.html"
+    },
+    {
+      "source": "/landing",
+      "destination": "/landing.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/vat",
+      "destination": "/vat.html"
+    },
+    {
+      "source": "/analytics",
+      "destination": "/analytics.html"
+    },
+    {
+      "source": "/docs",
+      "destination": "/docs.html"
+    },
+    {
+      "source": "/payroll",
+      "destination": "/payroll.html"
+    },
+    {
+      "source": "/companies-overview",
+      "destination": "/companies-overview.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
   ]
 }
