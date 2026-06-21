@@ -503,155 +503,102 @@
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   </div>
 
-  <!-- Приветствие -->
-  <div style="margin-bottom:18px">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="homeDate">Загрузка...</div>
-    <div style="font-size:20px;font-weight:700" id="homeGreeting">Добро пожаловать</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:3px" id="homeSub">Синхронизировано</div>
-  </div>
-
-  <!-- Быстрые действия -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" class="quick-actions-grid">
-    <div data-role="director,accountant" onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">📂</div>
-      <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
-    </div>
-    <div data-role="director,accountant" onclick="showPage('add',null)" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">➕</div>
-      <div style="font-size:10px;color:var(--muted)">Добавить операцию</div>
-    </div>
-    <div data-role="director,accountant,employee" onclick="window.location.href='/docs'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">📄</div>
-      <div style="font-size:10px;color:var(--muted)">Создать документ</div>
-    </div>
-    <div data-role="director,accountant" onclick="showPage('taxes',null)" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">🗓️</div>
-      <div style="font-size:10px;color:var(--muted)">Налоги и сроки</div>
-    </div>
-  </div>
-
-  <!-- Отмена последней загрузки (появляется после загрузки выписки) -->
-  <div id="undoUploadBar" style="display:none;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:18px;font-size:12px">
-    <span id="undoUploadText" style="color:var(--muted)"></span>
-    <button onclick="clearLastUpload()" style="background:none;border:none;color:#ff6b00;font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px">↺ Отменить загрузку</button>
-  </div>
-
-
-  <!-- Скоринг здоровья бизнеса -->
-  <div id="healthScoreCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Здоровье бизнеса</div>
-      <div style="font-size:10px;color:var(--muted)" id="healthUpdated"></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-      <div style="position:relative;flex-shrink:0;width:72px;height:72px">
-        <svg width="72" height="72" viewBox="0 0 72 72">
-          <circle cx="36" cy="36" r="28" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
-          <circle id="healthArc" cx="36" cy="36" r="28" fill="none" stroke="#22c55e" stroke-width="8"
-            stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="175.9"
-            transform="rotate(-90 36 36)" style="transition:stroke-dashoffset 1s ease,stroke 0.5s"/>
-        </svg>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-          <div id="healthScoreNum" style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;line-height:1">—</div>
-          <div style="font-size:8px;color:var(--muted)">из 100</div>
-        </div>
-      </div>
-      <div style="flex:1">
-        <div id="healthGrade" style="font-size:14px;font-weight:700;margin-bottom:2px"></div>
-        <div id="healthSummary" style="font-size:11px;color:var(--muted);line-height:1.4"></div>
-      </div>
-    </div>
-    <div id="healthMetrics" style="display:flex;flex-direction:column;gap:8px"></div>
-    <div id="healthAdvice" style="margin-top:12px;padding:10px 12px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:8px;font-size:11px;line-height:1.5;display:none"></div>
-  </div>
-
-  <!-- Закрытие месяца — чек-лист готовности -->
-  <div id="monthCloserCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Закрытие месяца — <span id="closerMonthLabel"></span></div>
-      <div id="closerPercent" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700"></div>
-    </div>
-    <div style="background:var(--surface2);border-radius:8px;height:6px;overflow:hidden;margin-bottom:12px">
-      <div id="closerProgressFill" style="height:100%;border-radius:8px;transition:width 0.4s;width:0%"></div>
-    </div>
-    <div id="closerChecklist" style="display:flex;flex-direction:column;gap:6px"></div>
-  </div>
-
-  <!-- Живой таймер до ближайшего налогового дедлайна -->
-  <div id="deadlineLiveCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:12px;align-items:center;justify-content:space-between">
+  <!-- ─── Шапка: приветствие + 2 главных действия ─── -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
     <div>
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px" id="deadlineLiveTitle">Следующий дедлайн</div>
-      <div style="font-size:12px;font-weight:500" id="deadlineLiveName">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:3px" id="homeDate">Загрузка...</div>
+      <div style="font-size:20px;font-weight:700;line-height:1.2" id="homeGreeting">Добро пожаловать</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px" id="homeSub">Синхронизировано</div>
     </div>
-    <div class="deadline-live" id="deadlineLiveTimer"></div>
+    <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
+      <button onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 <span>Выписка</span></button>
+      <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
+    </div>
   </div>
 
-  <!-- Аномалии -->
-  <div id="anomalyBlock" style="margin-bottom:12px"></div>
+  <!-- ─── Отмена последней загрузки ─── -->
+  <div id="undoUploadBar" style="display:none;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:12px">
+    <span id="undoUploadText" style="color:var(--muted)"></span>
+    <button onclick="clearLastUpload()" style="background:none;border:none;color:#ff6b00;font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px">↺ Отменить</button>
+  </div>
 
-  <!-- Главная метрика -->
+  <!-- ─── Аномалии (появляются только когда есть) ─── -->
+  <div id="anomalyBlock" style="margin-bottom:0"></div>
+
+  <!-- ─── Главная метрика ─── -->
   <div class="hero-stat" style="margin-bottom:12px">
     <div class="hero-stat-label">Прибыль за период</div>
     <div class="hero-stat-value" id="statProfit">0 ₽</div>
     <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
   </div>
 
-  <!-- Статистика -->
-  <div class="stats-row" style="margin-bottom:16px">
+  <!-- ─── Три метрики ─── -->
+  <div class="stats-row" style="margin-bottom:14px">
     <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
     <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
     <div class="stat-card"><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
 
-  <!-- Безубыточность + быстрые отчёты -->
-  <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-bottom:16px">
-    <div class="breakeven-card" id="breakevenCard">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Точка безубыточности</div>
-        <div style="font-size:11px;color:var(--muted)" id="breakevenPct">—</div>
+  <!-- ─── Здоровье бизнеса (компактная строка) ─── -->
+  <div id="healthScoreCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <!-- Мини-gauge -->
+      <div style="position:relative;flex-shrink:0;width:48px;height:48px">
+        <svg width="48" height="48" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+          <circle id="healthArc" cx="24" cy="24" r="18" fill="none" stroke="#22c55e" stroke-width="6"
+            stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="113.1"
+            transform="rotate(-90 24 24)" style="transition:stroke-dashoffset 1s ease,stroke 0.5s"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <div id="healthScoreNum" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;line-height:1">—</div>
+        </div>
       </div>
-      <div class="breakeven-bar"><div class="breakeven-fill" id="breakevenFill" style="width:0%;background:var(--green)"></div></div>
-      <div style="font-size:12px" id="breakevenText">Загрузи выписку для расчёта</div>
+      <!-- Текст -->
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Здоровье бизнеса</div>
+          <button onclick="document.getElementById('healthDetails').style.display=document.getElementById('healthDetails').style.display==='none'?'block':'none'" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:0">детали ↕</button>
+        </div>
+        <div id="healthGrade" style="font-size:13px;font-weight:700;margin-top:2px"></div>
+        <div id="healthAdvice" style="font-size:11px;color:var(--accent);margin-top:2px;line-height:1.4;display:none"></div>
+      </div>
+      <!-- Быстрые кнопки отчётов -->
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <button onclick="openPL()" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">📊 P&L</button>
+        <button onclick="openCompare()" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">⚖️ Период</button>
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <button onclick="openPL()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">📊 P&L отчёт</button>
-      <button onclick="openCompare()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">⚖️ Сравнить периоды</button>
+    <!-- Раскрывающиеся детали -->
+    <div id="healthDetails" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div id="healthSummary" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+      <div id="healthMetrics" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="healthUpdated" style="font-size:10px;color:var(--muted);margin-top:8px"></div>
     </div>
   </div>
 
-  <!-- Уведомления + Аналитика -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" class="suggestions-grid">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Рекомендации</div>
-      <div id="suggestionsBlock"></div>
-      <div id="homeSuggestions" style="display:flex;flex-direction:column;gap:6px">
-        <div class="empty-state" style="padding:16px 8px"><div class="empty-state-icon">💡</div><div class="empty-state-sub">Появятся после загрузки выписки</div></div>
+  <!-- ─── Закрытие месяца + дедлайн (в одной карточке) ─── -->
+  <div id="monthCloserCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Закрытие месяца — <span id="closerMonthLabel"></span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="deadlineLiveTimer" class="deadline-live" style="display:none"></div>
+        <div id="closerPercent" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700"></div>
       </div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Расходы по категориям</div>
-      <div id="chartArea"></div>
+    <div style="background:var(--surface2);border-radius:8px;height:5px;overflow:hidden;margin-bottom:10px">
+      <div id="closerProgressFill" style="height:100%;border-radius:8px;transition:width 0.4s;width:0%"></div>
+    </div>
+    <div id="closerChecklist" style="display:flex;flex-direction:column;gap:5px"></div>
+    <!-- Дедлайн-строка (скрытая до появления) -->
+    <div id="deadlineLiveCard" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);align-items:center;justify-content:space-between">
+      <div style="font-size:11px;color:var(--muted)" id="deadlineLiveTitle">Следующий дедлайн</div>
+      <div style="font-size:12px;font-weight:600;margin-top:2px" id="deadlineLiveName">—</div>
     </div>
   </div>
 
-  <!-- Прогноз кэшфлоу -->
-  <div id="cashflowForecastCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Прогноз кэшфлоу · 90 дней</div>
-      <div style="display:flex;gap:6px">
-        <button onclick="setCfPeriod(30,this)" class="cf-period-btn active" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:rgba(255,107,0,0.15);color:var(--accent);cursor:pointer">30д</button>
-        <button onclick="setCfPeriod(60,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">60д</button>
-        <button onclick="setCfPeriod(90,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">90д</button>
-      </div>
-    </div>
-    <div id="cfGapAlert" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)"></div>
-    <div id="cfBars" style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:8px"></div>
-    <div id="cfLabels" style="display:flex;gap:3px;font-size:9px;color:var(--muted)"></div>
-    <div id="cfSummary" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
-  </div>
-
-  <!-- Финансовый пульс -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+  <!-- ─── Финансовый пульс (главный контент) ─── -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse-dot 2s infinite"></div>
@@ -662,12 +609,34 @@
     <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
   </div>
 
-  <!-- Кнопка очистки (скрытая внизу) -->
-  <div style="margin-top:12px;text-align:right">
-    <button onclick="clearAll()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:4px 8px">🗑️ Очистить данные</button>
+  <!-- ─── Прогноз кэшфлоу (скрыт до появления данных) ─── -->
+  <div id="cashflowForecastCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Прогноз кэшфлоу</div>
+      <div style="display:flex;gap:5px">
+        <button onclick="setCfPeriod(30,this)" class="cf-period-btn active" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:rgba(255,107,0,0.15);color:var(--accent);cursor:pointer">30д</button>
+        <button onclick="setCfPeriod(60,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">60д</button>
+        <button onclick="setCfPeriod(90,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">90д</button>
+      </div>
+    </div>
+    <div id="cfGapAlert" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)"></div>
+    <div id="cfBars" style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:6px"></div>
+    <div id="cfLabels" style="display:flex;gap:3px;font-size:9px;color:var(--muted)"></div>
+    <div id="cfSummary" style="margin-top:8px;font-size:11px;color:var(--muted)"></div>
   </div>
 
-  <!-- Зона загрузки (скрытая) -->
+  <!-- ─── Скрытые элементы совместимости (не видны, но нужны для JS) ─── -->
+  <div style="display:none">
+    <div id="chartArea"></div>
+    <div id="suggestionsBlock"></div>
+    <div id="homeSuggestions"></div>
+    <div id="breakevenCard"><div id="breakevenPct"></div><div id="breakevenFill"></div><div id="breakevenText"></div></div>
+  </div>
+
+  <!-- ─── Служебные ─── -->
+  <div style="margin-top:8px;text-align:right">
+    <button onclick="clearAll()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:4px 8px;opacity:0.5">🗑️ Очистить данные</button>
+  </div>
   <div id="uploadZone" style="display:none"></div>
 </div>
 
@@ -2084,7 +2053,7 @@ function renderHealthScore() {
 
   // Рендер
   const arc = document.getElementById('healthArc');
-  const circumference = 175.9;
+  const circumference = 113.1;
   const offset = circumference - (total / 100) * circumference;
   arc.style.strokeDashoffset = offset;
   arc.style.stroke = total >= 75 ? '#22c55e' : total >= 50 ? '#f59e0b' : '#ef4444';
@@ -2125,15 +2094,15 @@ function renderHealthScore() {
     </div>`;
   }).join('');
 
-  // Главный совет — самая слабая зона
+  // Главный совет — самая слабая зона (компактная строка)
   const weakest = [...metrics].sort((a,b) => (a.score/a.max) - (b.score/b.max))[0];
   const adviceEl = document.getElementById('healthAdvice');
   const advices = {
-    'Ликвидность': '💡 Сократи расходы или ускорь получение дебиторки — нужна подушка минимум на 1 месяц расходов.',
-    'Стабильность доходов': '💡 Введи предоплатную модель или абонементы — регулярные платежи снизят волатильность.',
-    'Диверсификация': `💡 Топ-клиент даёт ${Math.round(top1Share*100)}% выручки. Активно привлекай новых — потеря ключевого клиента критична.`,
-    'Налоговая нагрузка': '💡 Проверь все закупочные счета-фактуры — возможно не все вычеты приняты к учёту.',
-    'Динамика роста': '💡 Выручка снижается. Свяжись с топ-5 клиентами и узнай о новых потребностях.',
+    'Ликвидность': '💡 Риск кассового разрыва — нужна подушка минимум на 1 месяц расходов',
+    'Стабильность доходов': '💡 Сильные скачки доходов — рассмотри предоплатную модель',
+    'Диверсификация': `💡 Топ-клиент даёт ${Math.round(top1Share*100)}% выручки — высокая зависимость`,
+    'Налоговая нагрузка': '💡 Высокая НДС-нагрузка — проверь все закупочные вычеты',
+    'Динамика роста': '💡 Выручка снижается — свяжись с ключевыми клиентами',
   };
   if (weakest.score / weakest.max < 0.6) {
     adviceEl.style.display = 'block';
@@ -3431,7 +3400,8 @@ function startDeadlineTimer() {
 
   const next = upcoming[0];
   nameEl.textContent = next.name;
-  card.style.display = 'flex';
+  card.style.display = 'block';
+  timerEl.style.display = 'flex';
 
   function tick() {
     const diff = next.dt - new Date();
