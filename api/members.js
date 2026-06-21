@@ -113,13 +113,14 @@ export default async function handler(req, res) {
 
     try {
       const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: message }] }],
+            contents: [
+              { role: 'user', parts: [{ text: systemPrompt + '\n\nВопрос пользователя: ' + message }] }
+            ],
             generationConfig: { maxOutputTokens: 400, temperature: 0.7 }
           })
         }
