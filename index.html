@@ -573,7 +573,7 @@
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Последние операции</div>
-      <button class="btn-outline" onclick="showPage('transactions',document.querySelectorAll('.pill')[1])" style="font-size:10px;padding:4px 10px">Все →</button>
+      <button class="btn-outline" onclick="showPage('transactions',document.querySelector('.pill[onclick*=\"transactions\"]'))" style="font-size:10px;padding:4px 10px">Все →</button>
     </div>
     <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
   </div>
@@ -1644,14 +1644,12 @@ async function parseAndProcess(text) {
     ptxt.textContent = 'Загружаю из базы...';
     allTx = await apiGet();
     fill.style.width = '100%';
-    console.log('[upload] allTx after apiGet:', allTx.length, allTx.slice(0,2));
     const unknownCount = allTx.filter(t=>t.category==='unknown').length;
     const insertedCount = postResult?.inserted ?? txs.length;
     const skippedCount = postResult?.skipped ?? 0;
     ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
     setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
     renderAll();
-    console.log('[upload] renderAll done, recentList:', document.getElementById('recentList')?.children?.length);
     if (monthKey) {
       lastUploadedPeriod = monthKey;
       const bar = document.getElementById('undoUploadBar');
@@ -1797,7 +1795,7 @@ function renderAll() {
   } catch(e) { console.error('renderAll stats:', e); }
   try { renderChart(); } catch(e) { console.error('renderChart:', e); }
   try {
-    const recent = allTx.slice(0,6);
+    const recent = allTx.slice(0,20);
     document.getElementById('recentList').innerHTML = recent.length
       ? recent.map(txHTML).join('')
       : `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`;
