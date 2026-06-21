@@ -1281,6 +1281,11 @@ async function syncNow() {
     allTx = await apiGet();
     if (dot) dot.className = 'sync-dot';
     if (btn) btn.innerHTML = '<span class="sync-dot"></span>Синхронизировано';
+    // Кешируем для страницы контрагентов
+    try { localStorage.setItem('omsfin_tx_cache', JSON.stringify(allTx.slice(0, 2000))); } catch(e) {}
+    // Применяем фильтр контрагента если пришли со страницы проверки
+    const cpFilter = localStorage.getItem('omsfin_cp_filter');
+    if (cpFilter) { localStorage.removeItem('omsfin_cp_filter'); setTimeout(()=>{ showPage('transactions', null); const el = document.getElementById('txSearch'); if(el){el.value=cpFilter;renderTxList();} }, 300); }
     renderAll();
   } catch(e) {
     if (dot) dot.className = 'sync-dot offline';
@@ -2125,14 +2130,106 @@ function filterTx(cat,btn) {
 }
 
 function exportCSV() {
-  const rows = [['Дата','Контрагент','Сумма','Категория','Назначение']];
-  allTx.forEach(t=>rows.push([t.date,t.name,t.amount,t.category,t.description||'']));
-  const csv = '\ufeff'+rows.map(r=>r.join(';')).join('\n');
+  document.getElementById('exportModal').style.display = 'flex';
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').style.display = 'none';
+}
+
+function doExportCSV() {
+  closeExportModal();
+  const catNames = {chicken:'Закупки',transport:'Транспорт',salary:'Зарплата',office:'Офис',bank:'Банк',personal:'Личное',food:'Еда',unknown:'Прочее'};
+  const rows = [['Дата','Контрагент','Сумма','Тип','Категория','Период','Назначение','Комментарий']];
+  allTx.forEach(t => rows.push([
+    t.date, t.name||'', t.amount, t.amount>0?'Поступление':'Списание',
+    catNames[t.category]||t.category||'', t.period||'',
+    (t.description||'').replace(/;/g,' '), (t.note||'').replace(/;/g,' ')
+  ]));
+  const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,''""'')}"`).join(';')).join('\n');
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'omsfin_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'omsfin_операции_' + new Date().toISOString().split('T')[0] + '.csv';
   a.click();
-  showToast('📥 Файл скачан');
+  showToast('📥 CSV скачан');
+}
+
+function doExportExcel() {
+  closeExportModal();
+  if (!window.XLSX) {
+    showToast('⏳ Загружаем библиотеку...');
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    s.onload = () => buildExcel();
+    document.head.appendChild(s);
+  } else {
+    buildExcel();
+  }
+}
+
+function buildExcel() {
+  const catNames = {chicken:'Закупки',transport:'Транспорт',salary:'Зарплата',office:'Офис',bank:'Банк',personal:'Личное',food:'Еда',unknown:'Прочее'};
+  const wb = XLSX.utils.book_new();
+
+  const txRows = [['Дата','Контрагент','Сумма (₽)','Тип','Категория','Период','Назначение','Комментарий']];
+  allTx.forEach(t => txRows.push([
+    t.date, t.name||'', Number(t.amount), t.amount>0?'Поступление':'Списание',
+    catNames[t.category]||t.category||'', t.period||'', t.description||'', t.note||''
+  ]));
+  const ws1 = XLSX.utils.aoa_to_sheet(txRows);
+  ws1['!cols'] = [{wch:12},{wch:40},{wch:15},{wch:14},{wch:14},{wch:10},{wch:50},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Операции');
+
+  const catMap = {};
+  allTx.forEach(t => {
+    const cat = catNames[t.category]||t.category||'Прочее';
+    if (!catMap[cat]) catMap[cat] = {income:0, expense:0, count:0};
+    if (t.amount > 0) catMap[cat].income += Number(t.amount);
+    else catMap[cat].expense += Math.abs(Number(t.amount));
+    catMap[cat].count++;
+  });
+  const catRows = [['Категория','Поступления (₽)','Расходы (₽)','Кол-во операций']];
+  Object.entries(catMap).sort(([,a],[,b])=>b.expense-a.expense).forEach(([k,v]) =>
+    catRows.push([k, v.income, v.expense, v.count])
+  );
+  const ws2 = XLSX.utils.aoa_to_sheet(catRows);
+  ws2['!cols'] = [{wch:16},{wch:18},{wch:16},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'По категориям');
+
+  const perMap = {};
+  allTx.forEach(t => {
+    const p = t.period||'—';
+    if (!perMap[p]) perMap[p] = {income:0, expense:0, count:0};
+    if (t.amount > 0) perMap[p].income += Number(t.amount);
+    else perMap[p].expense += Math.abs(Number(t.amount));
+    perMap[p].count++;
+  });
+  const perRows = [['Период','Поступления (₽)','Расходы (₽)','Прибыль (₽)','Кол-во операций']];
+  Object.entries(perMap).sort(([a],[b])=>a.localeCompare(b)).forEach(([k,v]) =>
+    perRows.push([k, v.income, v.expense, v.income-v.expense, v.count])
+  );
+  const ws3 = XLSX.utils.aoa_to_sheet(perRows);
+  ws3['!cols'] = [{wch:10},{wch:18},{wch:16},{wch:14},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'По периодам');
+
+  const cpMap = {};
+  allTx.forEach(t => {
+    const n = t.name||'—';
+    if (!cpMap[n]) cpMap[n] = {income:0, expense:0, count:0};
+    if (t.amount > 0) cpMap[n].income += Number(t.amount);
+    else cpMap[n].expense += Math.abs(Number(t.amount));
+    cpMap[n].count++;
+  });
+  const cpRows = [['Контрагент','Поступления (₽)','Расходы (₽)','Операций']];
+  Object.entries(cpMap).sort(([,a],[,b])=>(b.income+b.expense)-(a.income+a.expense)).slice(0,100).forEach(([k,v]) =>
+    cpRows.push([k, v.income, v.expense, v.count])
+  );
+  const ws4 = XLSX.utils.aoa_to_sheet(cpRows);
+  ws4['!cols'] = [{wch:45},{wch:18},{wch:16},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws4, 'Контрагенты');
+
+  XLSX.writeFile(wb, 'OMSFIN_' + new Date().toISOString().split('T')[0] + '.xlsx');
+  showToast('📊 Excel скачан — 4 листа');
 }
 
 function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
@@ -2795,7 +2892,17 @@ function aiAnswer(q) {
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
 document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
-syncNow();
+
+// Редирект на онбординг для новых пользователей (у кого нет данных и не прошли онбординг)
+(function checkOnboarding() {
+  const onboarded = localStorage.getItem('omsfin_onboarded');
+  const hasToken = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token');
+  if (!onboarded && !hasToken) {
+    window.location.href = '/onboarding';
+    return;
+  }
+  syncNow();
+})();
 </script>
 
 <!-- AI Ассистент -->
@@ -3262,6 +3369,23 @@ startDeadlineTimer();
       <button onclick="renderCompare()" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer">Сравнить</button>
     </div>
     <div id="compareContent" style="padding:20px;overflow-y:auto;flex:1"></div>
+  </div>
+</div>
+
+<!-- Модальное окно экспорта -->
+<div id="exportModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center" onclick="closeExportModal()">
+  <div style="background:#0f0f0f;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;width:320px;max-width:90vw" onclick="event.stopPropagation()">
+    <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">Экспорт данных</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">${allTx.length} операций</div>
+    <button onclick="doExportExcel()" style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">📊</span>
+      <div><div>Excel (.xlsx)</div><div style="font-family:'Inter',sans-serif;font-weight:400;font-size:10px;opacity:0.8;margin-top:2px">4 листа: операции, категории, периоды, контрагенты</div></div>
+    </button>
+    <button onclick="doExportCSV()" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--text);border-radius:12px;padding:13px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">📄</span>
+      <div><div>CSV (.csv)</div><div style="font-family:'Inter',sans-serif;font-weight:400;font-size:10px;color:var(--muted);margin-top:2px">Открывается в Excel / Google Sheets</div></div>
+    </button>
+    <button onclick="closeExportModal()" style="width:100%;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:12px 0 0">Отмена</button>
   </div>
 </div>
 
