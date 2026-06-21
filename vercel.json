@@ -5,6 +5,10 @@
       "destination": "/negotiation.html"
     },
     {
+      "source": "/nav.js",
+      "destination": "/nav.js"
+    },
+    {
       "source": "/api/telegram_link",
       "destination": "/api/telegram_link.js"
     },
