@@ -130,11 +130,61 @@ function parse1CXML(xml) {
   return txs;
 }
 
+
+// ─── Импорт из МойСклад API ──────────────────────────────────────────────────
+async function handleMoySklad(req, res, userId, companyId) {
+  const msToken = req.headers['x-moysklad-token'];
+  if (!msToken) return res.status(400).json({ error: 'Заголовок X-MoySklad-Token обязателен' });
+
+  const BASE = 'https://api.moysklad.ru/api/remap/1.2';
+  const headers = { 'Authorization': 'Bearer ' + msToken, 'Accept-Encoding': 'gzip' };
+  const limit = parseInt(req.query.limit || '200');
+
+  function msDate(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+  }
+  function msPeriod(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+  }
+
+  const txs = [];
+
+  for (const [endpoint, sign] of [['/entity/paymentin', 1], ['/entity/paymentout', -1]]) {
+    try {
+      const r = await fetch(`${BASE}${endpoint}?limit=${limit}&order=moment%2Cdesc`, { headers });
+      if (!r.ok) continue;
+      const data = await r.json();
+      for (const row of (data.rows || [])) {
+        const amount = Math.round((row.sum || 0) / 100) * sign;
+        if (!amount) continue;
+        const date = msDate(row.moment);
+        const name = row.agent?.name || '';
+        const desc = row.description || row.name || '';
+        const hash = `ms_${row.id}`;
+        txs.push({ date, amount, name, description: desc, period: msPeriod(row.moment), hash, category: 'unknown', source: 'moysklad',
+          ...(userId ? {user_id: userId} : {}),
+          ...(companyId ? {company_id: companyId} : {})
+        });
+      }
+    } catch(e) {}
+  }
+
+  return res.status(200).json({ ok: true, count: txs.length, transactions: txs });
+}
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Импорт из МойСклад API — возвращает транзакции для предпросмотра/вставки
+  if (req.query.source === 'moysklad' && req.method === 'POST') {
+    return await handleMoySklad(req, res, userId, companyId);
+  }
 
   // Парсинг 1С выписки — возвращает массив транзакций без сохранения
   if (req.query.source === '1c' && req.method === 'POST') {

@@ -304,6 +304,23 @@
     </div>
   </div>
 
+
+  <!-- МойСклад интеграция -->
+  <div class="card">
+    <div class="section-title">🏪 МойСклад</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Импортируй платежи напрямую из МойСклад без выписки банка.</p>
+    <div class="input-group">
+      <label>API токен МойСклад</label>
+      <input type="password" id="msToken" placeholder="Токен из МойСклад → Настройки → Доступ к API"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:monospace">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-outline" onclick="saveMsToken()">💾 Сохранить токен</button>
+      <button class="btn-outline" onclick="testMsToken()" id="msBtnTest">🔗 Проверить соединение</button>
+    </div>
+    <div id="msStatus" style="font-size:12px;margin-top:8px"></div>
+  </div>
+
   <!-- Аккаунт -->
   <div class="card">
     <div class="section-title">👤 Аккаунт</div>

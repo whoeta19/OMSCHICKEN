@@ -503,6 +503,7 @@
     <button class="pill" data-role="director,accountant" onclick="showPage('add',this)">+ Добавить</button>
     <div class="pill-sep" data-role="director,accountant"></div>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/analytics'">Аналитика</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('budget',this)">💰 Бюджет</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('taxes',this)">Налоги</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/vat'">НДС</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/declarations'">Декларации</button>
@@ -535,6 +536,7 @@
       <button onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 <span>Выписка</span></button>
       <button onclick="document.getElementById('file1cInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из 1С (XML)">1С <span>XML</span></button>
       <input type="file" id="file1cInput" accept=".xml,.txt" style="display:none">
+      <button onclick="importMoySklad()" id="btnMoySklad" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из МойСклад">МС <span>API</span></button>
       <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
     </div>
   </div>
@@ -708,6 +710,19 @@
   </div>
 </div>
 
+
+<div class="page" id="page-budget">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="section-title" style="margin-bottom:0">💰 Бюджет месяца</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="budgetPeriodSel" onchange="renderBudget()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;outline:none"></select>
+      <button onclick="addBudgetItem()" style="background:var(--accent);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer">+ Категория</button>
+    </div>
+  </div>
+  <div class="info-box" style="margin-bottom:12px">Задай плановые суммы расходов по категориям — и следи сколько уже потрачено.</div>
+  <div id="budgetSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+  <div id="budgetList"></div>
+</div>
 <div class="page" id="page-recurring">
   <div class="section-title">🔁 Регулярные платежи</div>
   <div class="info-box" style="margin-bottom:12px">
@@ -3754,6 +3769,116 @@ function renderAll() {
 }
 
 // Запуск таймера
+
+// ─── Бюджет на месяц ─────────────────────────────────────────────────────────
+function getBudgets() { return JSON.parse(localStorage.getItem('omsfin_budgets') || '{}'); }
+function saveBudgets(b) { localStorage.setItem('omsfin_budgets', JSON.stringify(b)); }
+
+function initBudgetPeriodSel() {
+  const sel = document.getElementById('budgetPeriodSel');
+  if (!sel) return;
+  const now = new Date();
+  const options = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const p = String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+    options.push(`<option value="${p}" ${i===0?'selected':''}>${p}</option>`);
+  }
+  sel.innerHTML = options.join('');
+}
+
+const BUDGET_CATS = [
+  {k:'chicken',l:'🐔 Курятина'},{k:'salary',l:'👥 Зарплата'},{k:'transport',l:'🚗 Транспорт'},
+  {k:'office',l:'🏢 Офис'},{k:'bank',l:'🏦 Банк'},{k:'food',l:'🍽️ Еда'},
+  {k:'personal',l:'🛍️ Личное'},{k:'unknown',l:'❓ Прочее'}
+];
+
+function addBudgetItem() {
+  const period = document.getElementById('budgetPeriodSel')?.value;
+  if (!period) return;
+  const cats = BUDGET_CATS.map((c,i) => `${i+1}. ${c.l} (${c.k})`).join('\n');
+  const input = prompt('Категория (введи код):\n' + cats);
+  if (!input) return;
+  const cat = BUDGET_CATS.find(c => c.k === input.trim());
+  if (!cat) { showToast('Неизвестная категория'); return; }
+  const amtStr = prompt(`Бюджет на "${cat.l}" в ${period} (₽):`);
+  const amt = parseFloat(amtStr);
+  if (!amt || amt <= 0) return;
+  const budgets = getBudgets();
+  if (!budgets[period]) budgets[period] = {};
+  budgets[period][cat.k] = amt;
+  saveBudgets(budgets);
+  renderBudget();
+}
+
+function renderBudget() {
+  initBudgetPeriodSel();
+  const period = document.getElementById('budgetPeriodSel')?.value;
+  if (!period) return;
+  const budgets = getBudgets();
+  const planMap = budgets[period] || {};
+  const txPeriod = allTx.filter(t => t.period === period && t.amount < 0);
+
+  // Факт по категориям
+  const factMap = {};
+  txPeriod.forEach(t => { factMap[t.category] = (factMap[t.category]||0) + Math.abs(Number(t.amount)); });
+
+  const totalPlan = Object.values(planMap).reduce((s,v)=>s+v, 0);
+  const totalFact = Object.values(factMap).reduce((s,v)=>s+v, 0);
+  const planned = Object.keys(planMap).length;
+
+  const sumEl = document.getElementById('budgetSummary');
+  sumEl.innerHTML = [
+    {label:'Бюджет', val: fmt(totalPlan), cls:'orange'},
+    {label:'Потрачено', val: fmt(totalFact), cls: totalFact > totalPlan ? 'red' : 'green'},
+    {label:'Осталось', val: fmt(Math.max(0, totalPlan - totalFact)), cls: totalFact > totalPlan ? 'red' : 'green'}
+  ].map(s => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">${s.label}</div>
+    <div style="font-family:Unbounded,sans-serif;font-size:13px;font-weight:700;color:var(--${s.cls})">${s.val}</div>
+  </div>`).join('');
+
+  const list = document.getElementById('budgetList');
+  if (!planned) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">Нет плановых статей.<br>Нажми "+ Категория" чтобы добавить.</div>';
+    return;
+  }
+
+  list.innerHTML = Object.entries(planMap).map(([cat, plan]) => {
+    const fact = factMap[cat] || 0;
+    const pct = plan > 0 ? Math.min(100, Math.round(fact / plan * 100)) : 0;
+    const over = fact > plan;
+    const label = BUDGET_CATS.find(c=>c.k===cat)?.l || cat;
+    const barColor = over ? 'var(--red)' : pct > 80 ? '#f59e0b' : 'var(--accent)';
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600">${label}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:12px;color:var(--muted)">${fmt(fact)} / ${fmt(plan)}</div>
+          <button onclick="deleteBudgetItem('${period}','${cat}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px" title="Удалить">×</button>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:${barColor};width:${pct}%;transition:width 0.4s"></div>
+      </div>
+      <div style="font-size:10px;color:${over?'var(--red)':'var(--muted)'};margin-top:4px">${over ? '⚠️ Превышение на ' + fmt(fact-plan) : pct + '% использовано'}</div>
+    </div>`;
+  }).join('');
+}
+
+function deleteBudgetItem(period, cat) {
+  const b = getBudgets();
+  if (b[period]) { delete b[period][cat]; if (!Object.keys(b[period]).length) delete b[period]; }
+  saveBudgets(b);
+  renderBudget();
+}
+
+// Перехватываем showPage для бюджета
+const _origShowPageBudget = showPage;
+function showPage(name, btn) {
+  _origShowPageBudget(name, btn);
+  if (name === 'budget') { initBudgetPeriodSel(); renderBudget(); }
+}
+
 startDeadlineTimer();
 
 // ─── Импорт из 1С XML ────────────────────────────────────────────────────────
