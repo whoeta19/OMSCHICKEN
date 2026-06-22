@@ -202,12 +202,13 @@ export default async function handler(req, res) {
       }
 
       const { id, category, note, is_recurring, recurring_label } = req.body;
+      if (!id) return res.status(400).json({ error: 'id обязателен' });
       const patch = {};
       if (category !== undefined) { patch.category = category; patch.is_personal = ['personal','food'].includes(category); }
       if (note !== undefined) patch.note = note;
       if (is_recurring !== undefined) patch.is_recurring = is_recurring;
       if (recurring_label !== undefined) patch.recurring_label = recurring_label;
-      await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${id}`, {
+      await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: adminHeaders,
         body: JSON.stringify(patch)

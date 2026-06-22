@@ -41,7 +41,7 @@ function nearestDeadline(deadlines, now) {
 
 export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && req.method !== 'GET') {
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({error: 'Unauthorized'});
   }
 
@@ -120,8 +120,12 @@ export default async function handler(req, res) {
     for (const user of users) {
       const {telegram_id, user_id} = user;
 
-      const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${user_id}&limit=5000`, {
-        headers: {...adminHeaders, 'Prefer': 'return=representation'}
+      // Загружаем транзакции только за текущий квартал для НДС
+      const qStart = month - (month % 3); // первый месяц квартала (0-indexed)
+      const qPeriods = [qStart, qStart+1, qStart+2].map(m => `${String(m+1).padStart(2,'0')}.${year}`);
+      const qFilter = `period=in.(${qPeriods.join(',')})`;
+      const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${user_id}&${qFilter}&limit=5000`, {
+        headers: adminHeaders
       });
       const txs = await txR.json();
 
@@ -131,9 +135,9 @@ export default async function handler(req, res) {
       if (vat.days !== null && REMIND_DAYS.includes(vat.days)) {
         let vatToPay = 0;
         if (Array.isArray(txs) && txs.length) {
-          const income    = txs.filter(t => t.amount > 0 && t.category === 'income').reduce((s, t) => s + Number(t.amount), 0);
-          const purchases = txs.filter(t => t.amount < 0 && t.category === 'chicken').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
-          vatToPay = Math.round((income * 10 / 110) - (purchases * 10 / 110));
+          const income    = txs.filter(t => t.amount > 0).reduce((s, t) => s + Number(t.amount), 0);
+          const purchases = txs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+          vatToPay = Math.max(0, Math.round((income * 10 / 110) - (purchases * 10 / 110)));
         }
         if (vatToPay > 0) {
           messages.push(

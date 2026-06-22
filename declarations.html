@@ -588,7 +588,7 @@ function renderNDS() {
   const totalPurchases = purchases.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const vatCharged = totalSales * 10/110;
   const vatDeduct = totalPurchases * 10/110;
-  const vatToPay = vatCharged - vatDeduct;
+  const vatToPay = Math.max(0, vatCharged - vatDeduct);
   
   document.getElementById('ndsSales').textContent = fmt(totalSales);
   document.getElementById('ndsCharged').textContent = fmt(vatCharged);
@@ -921,7 +921,7 @@ function calcProfit() {
   const otherIn = parseFloat(document.getElementById('profit_other_in').value) || 0;
   const otherEx = parseFloat(document.getElementById('profit_other_ex').value) || 0;
   const paid = parseFloat(document.getElementById('profit_paid').value) || 0;
-  const rate = parseFloat(document.getElementById('profit_rate').value) || 20;
+  const rate = parseFloat(document.getElementById('profit_rate').value) || 25;
   const base = Math.max(0, income + otherIn - expense - otherEx);
   const tax = Math.round(base * rate / 100);
   const pay = Math.max(0, tax - paid);
