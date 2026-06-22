@@ -72,6 +72,11 @@
   .upload-area{border:1px dashed rgba(255,255,255,0.1);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;}
   .upload-area:hover{border-color:rgba(255,107,0,0.4);}
   
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
     .doc-types{grid-template-columns:repeat(2,1fr);}
     .input-row{grid-template-columns:1fr;}
@@ -620,7 +625,14 @@ ${v('ppKbk') ? `<table style="width:100%;border-collapse:collapse;font-size:9pt;
   const win = window.open('','_blank','width=900,height=700');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ПП №${v('ppNum')}</title>
 <style>body{margin:0;background:#fff}@media print{body{margin:0}}</style></head>
-<body onload="window.print()">${html}</body></html>`);
+<body onload="window.print()">${html}<nav class="bottom-nav">
+  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html" class="active"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
+</body></html>`);
   win.document.close();
   showToast('✅ Платёжное поручение сформировано');
 }

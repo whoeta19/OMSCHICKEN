@@ -56,6 +56,11 @@
     .stat-value{color:#000!important;}
   }
 
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media (max-width: 600px) {
     header{padding:12px 14px;}
     .logo{font-size:14px;}
@@ -620,5 +625,12 @@ function calcTaxShift() {
 document.getElementById('shiftDate').value = new Date().toISOString().split('T')[0];
 
 </script>
+<nav class="bottom-nav">
+  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
 </body>
 </html>

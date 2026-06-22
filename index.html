@@ -442,6 +442,11 @@
   .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:370px;max-width:calc(100vw - 24px);background:#0d0d0d;border:1px solid rgba(255,107,0,0.25);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.7);z-index:400;overflow:hidden;flex-direction:column;}
   .ai-modal.open{display:flex;}
   @media(min-width:601px){.ai-modal{bottom:88px;}}
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){.ai-modal{bottom:70px;right:8px;left:8px;width:auto;max-width:none;border-radius:16px;}}
   .ai-modal-header{padding:12px 14px;background:linear-gradient(135deg,rgba(255,107,0,0.12),rgba(255,170,68,0.06));border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   .ai-messages{height:320px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;}
@@ -3603,7 +3608,14 @@ function openPL() {
 function closePL() { document.getElementById('plModal').style.display='none'; }
 function printPL() {
   const w = window.open('','_blank');
-  w.document.write(`<html><head><title>P&L отчёт</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:600px;margin:0 auto;}h1{font-size:18px;margin-bottom:4px;}p{color:#666;font-size:12px;margin-bottom:24px;}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}.total{font-weight:700;font-size:15px;border-top:2px solid #000;border-bottom:none;margin-top:8px;padding-top:12px;}.section{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;border-bottom:none;padding-bottom:2px;margin-top:16px;}.green{color:#16a34a}.red{color:#dc2626}</style></head><body>${document.getElementById('plContent').innerHTML.replace(/class="pl-/g,'class="').replace(/style="[^"]*color:var\(--green\)[^"]*"/g,'class="green"').replace(/style="[^"]*color:var\(--red\)[^"]*"/g,'class="red"')}</body></html>`);
+  w.document.write(`<html><head><title>P&L отчёт</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:600px;margin:0 auto;}h1{font-size:18px;margin-bottom:4px;}p{color:#666;font-size:12px;margin-bottom:24px;}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}.total{font-weight:700;font-size:15px;border-top:2px solid #000;border-bottom:none;margin-top:8px;padding-top:12px;}.section{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;border-bottom:none;padding-bottom:2px;margin-top:16px;}.green{color:#16a34a}.red{color:#dc2626}</style></head><body>${document.getElementById('plContent').innerHTML.replace(/class="pl-/g,'class="').replace(/style="[^"]*color:var\(--green\)[^"]*"/g,'class="green"').replace(/style="[^"]*color:var\(--red\)[^"]*"/g,'class="red"')}<nav class="bottom-nav">
+  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
+</body></html>`);
   w.document.close();
   w.print();
 }
