@@ -329,6 +329,23 @@ export default async function handler(req, res) {
     }
 
     if (text === '/start') {
+      // Регистрируем команды в Telegram при первом старте
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setMyCommands`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ commands: [
+          {command: 'stats',    description: 'Финансовая сводка за месяц'},
+          {command: 'quarter',  description: 'Сводка за квартал'},
+          {command: 'nds',      description: 'НДС за текущий квартал'},
+          {command: 'deadline', description: 'Ближайшие налоговые дедлайны'},
+          {command: 'top',      description: 'Топ покупателей'},
+          {command: 'expenses', description: 'Топ расходов'},
+          {command: 'last',     description: 'Последние операции'},
+          {command: 'balance',  description: 'Баланс'},
+          {command: 'help',     description: 'Список команд'},
+        ]})
+      }).catch(() => {});
+
       await sendMessage(chatId,
         '👋 <b>Привет! Я бот OMSFIN</b>\n\n' +
         'Слежу за финансами твоего бизнеса прямо в Telegram.\n\n' +
@@ -365,22 +382,23 @@ export default async function handler(req, res) {
       [{text: `📅 ${period} (текущий)`, callback_data: `${cmd}:${period}`},
        {text: `📅 ${prevMonth}`, callback_data: `${cmd}:${prevMonth}`}],
       [{text: '📅 За всё время', callback_data: `${cmd}:all`}],
-      [{text: '🌐 Открыть OMSFIN', url: APP_URL},
-       {text: '🌐 Открыть OMSFIN', url: APP_URL}]
+      [{text: '🌐 Открыть OMSFIN', url: APP_URL}]
     ]});
 
     // /help
     if (text === '/help') {
       await sendMessage(chatId,
         '📋 <b>Команды OMSFIN:</b>\n\n' +
-        '/stats — Финансовая сводка за месяц\n' +
-        '/nds — Расчёт НДС за квартал\n' +
+        '/stats — Сводка за месяц\n' +
+        '/quarter — Сводка за квартал\n' +
+        '/nds — НДС за квартал\n' +
+        '/deadline — Налоговые дедлайны\n' +
         '/top — Топ покупателей\n' +
         '/expenses — Топ расходов\n' +
-        '/last — Последние 10 операций\n' +
-        '/balance — Баланс\n' +
-        '/help — Это сообщение\n\n' +
-        '📷 Или просто отправь <b>фото чека</b> — добавлю операцию автоматически!',
+        '/last — Последние операции\n' +
+        '/balance — Баланс\n\n' +
+        '📷 Отправь <b>фото чека</b> — добавлю операцию\n' +
+        '✏️ Или напиши: <i>«потратил 3000 на бензин»</i>',
         appKeyboard()
       );
       return res.status(200).json({ok: true});
@@ -424,6 +442,84 @@ export default async function handler(req, res) {
         `Платите тремя частями по ${fmt(qVatToPay/3)}`,
         appKeyboard()
       );
+      return res.status(200).json({ok: true});
+    }
+
+    // /quarter — сводка за квартал
+    if (text === '/quarter' || text.includes('кварт')) {
+      const qPeriods = currentQuarterPeriods();
+      const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p)))).flat();
+      const { income: qIn, expense: qEx, profit: qPr, vatToPay: qVat } = calcVat(allQTxs);
+      const now = new Date();
+      const quarter = Math.floor(now.getMonth() / 3) + 1;
+      const profitEmoji = qPr >= 0 ? '✅' : '❌';
+      await sendMessage(chatId,
+        `📊 <b>Квартал Q${quarter} ${now.getFullYear()}</b> (${qPeriods.join(', ')})\n\n` +
+        `💰 Доход: <b>${fmt(qIn)}</b>\n` +
+        `📤 Расход: <b>${fmt(qEx)}</b>\n` +
+        `${profitEmoji} Прибыль: <b>${fmt(qPr)}</b>\n` +
+        `🧾 НДС к уплате: <b>${fmt(qVat)}</b>\n` +
+        `📈 Операций: ${allQTxs.length}`,
+        appKeyboard()
+      );
+      return res.status(200).json({ok: true});
+    }
+
+    // /deadline — налоговый календарь
+    if (text === '/deadline' || text.includes('дедлайн') || text.includes('срок') || text.includes('календар')) {
+      const now = new Date();
+      const q = Math.floor(now.getMonth() / 3) + 1;
+      const year = now.getFullYear();
+
+      // Дедлайны текущего и следующего квартала
+      const deadlines = [];
+      const addDeadline = (label, date) => {
+        const d = new Date(date);
+        const diff = Math.ceil((d - now) / (1000*60*60*24));
+        if (diff > -30) deadlines.push({ label, date: d, diff });
+      };
+
+      // НДС — 25-е числа: апрель (Q1), июль (Q2), октябрь (Q3), январь+1 (Q4)
+      const vatMonths = [3, 6, 9, 0]; // 0-indexed
+      vatMonths.forEach((m, i) => {
+        const y = m === 0 ? year + 1 : year;
+        addDeadline(`🧾 НДС за Q${i+1} (1-й платёж)`, new Date(y, m, 25));
+      });
+
+      // 6-НДФЛ — 25 апреля, июля, октября, 25 февраля
+      [[year,3,25],[year,6,25],[year,9,25],[year+1,1,25]].forEach(([y,m,d]) => {
+        addDeadline(`📑 6-НДФЛ`, new Date(y, m, d));
+      });
+
+      // РСВ — те же сроки
+      [[year,3,25],[year,6,25],[year,9,25],[year+1,1,25]].forEach(([y,m,d]) => {
+        addDeadline(`📋 РСВ`, new Date(y, m, d));
+      });
+
+      // Взносы — 15-е следующего месяца каждый месяц
+      for (let i = 0; i < 3; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() + i + 1, 15);
+        addDeadline(`💼 Страх. взносы (${d.toLocaleString('ru-RU',{month:'long'})})`, d);
+      }
+
+      // Фильтр: только ближайшие 60 дней, сортировка
+      const upcoming = deadlines
+        .filter(d => d.diff >= 0 && d.diff <= 60)
+        .sort((a, b) => a.diff - b.diff)
+        .slice(0, 8);
+
+      if (!upcoming.length) {
+        await sendMessage(chatId, '✅ В ближайшие 60 дней крупных дедлайнов нет.', appKeyboard());
+      } else {
+        const lines = upcoming.map(d => {
+          const status = d.diff === 0 ? '🔴 СЕГОДНЯ' : d.diff <= 5 ? `🔴 через ${d.diff} дн` : d.diff <= 14 ? `🟡 через ${d.diff} дн` : `🟢 через ${d.diff} дн`;
+          return `${d.label}\n   ${d.date.toLocaleDateString('ru-RU')} · ${status}`;
+        });
+        await sendMessage(chatId,
+          `📅 <b>Ближайшие дедлайны:</b>\n\n${lines.join('\n\n')}`,
+          appKeyboard([[{text: '📑 Открыть декларации', url: `${APP_URL}/declarations`}]])
+        );
+      }
       return res.status(200).json({ok: true});
     }
 
@@ -478,9 +574,59 @@ export default async function handler(req, res) {
       return res.status(200).json({ok: true});
     }
 
+    // ── Натуральный язык: добавление операции ────────────────────────────────
+    // "потратил 3000 на бензин", "получил 50000 от Ромашки", "заплатил 1500"
+    const nlAmount = text.match(/(\d[\d\s]*[\d](?:[.,]\d{1,2})?)\s*(?:р|руб|₽)?/i);
+    const nlIsExpense = /потратил|купил|заплатил|оплатил|списали|расход|трат/i.test(text);
+    const nlIsIncome  = /получил|пришло|поступил|заработал|доход|выручк/i.test(text);
+
+    if (nlAmount && (nlIsExpense || nlIsIncome)) {
+      const amount = parseFloat(nlAmount[1].replace(/\s/g, '').replace(',', '.'));
+      if (amount > 0 && amount < 100_000_000) {
+        // Пытаемся вытащить название: "на X" или "от X"
+        const nameMatch = text.match(/(?:на|от|у|в)\s+([а-яёА-ЯЁa-zA-Z][^,.\n]{2,30})/i);
+        const name = nameMatch ? nameMatch[1].trim() : (nlIsExpense ? 'Расход' : 'Доход');
+
+        const today = new Date().toLocaleDateString('ru-RU').replace(/\//g, '.');
+        const [, mm, yyyy] = today.split('.');
+        const txPeriod = `${mm}.${yyyy}`;
+
+        const compResp = await fetch(`${SUPABASE_URL}/rest/v1/companies?user_id=eq.${userId}&limit=1`, { headers: adminHeaders });
+        const compData = await compResp.json();
+        const companyId = compData[0]?.id || null;
+
+        const txBody = {
+          user_id: userId,
+          date: today,
+          amount: nlIsExpense ? -amount : amount,
+          name: name.substring(0, 60),
+          category: 'unknown',
+          period: txPeriod
+        };
+        if (companyId) txBody.company_id = companyId;
+
+        const txResp = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+          method: 'POST',
+          headers: {...adminHeaders, 'Prefer': 'return=representation'},
+          body: JSON.stringify(txBody)
+        });
+        const txData = await txResp.json();
+        const txId = txData[0]?.id;
+
+        await sendMessage(chatId,
+          `✅ <b>Операция добавлена!</b>\n\n` +
+          `${nlIsExpense ? '📤 Расход' : '📥 Доход'}: <b>${fmt(amount)}</b>\n` +
+          `🏷 Название: ${name.substring(0, 40)}\n` +
+          `📅 Дата: ${today}`,
+          txId ? {inline_keyboard: [[{text: '↩️ Отменить', callback_data: `ocr_undo:${txId}`}], [{text: '🌐 Открыть OMSFIN', url: APP_URL}]]} : appKeyboard()
+        );
+        return res.status(200).json({ok: true});
+      }
+    }
+
     // Любой другой текст
     await sendMessage(chatId,
-      `Не понял команду 🤔\n\nНапиши /help чтобы увидеть все команды.\n\nИли отправь 📷 <b>фото чека</b> — добавлю операцию автоматически!`,
+      `Не понял команду 🤔\n\nНапиши /help чтобы увидеть все команды.\n\nИли попробуй:\n• <i>«потратил 3000 на бензин»</i>\n• <i>«получил 50000 от Ромашки»</i>\n• 📷 Отправь фото чека`,
       appKeyboard([[
         {text: '📊 /stats', callback_data: `stats:${period}`},
         {text: '📤 /expenses', callback_data: `expenses:${period}`}
