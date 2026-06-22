@@ -2792,6 +2792,7 @@ function showPage(name,btn){
   if(name==='reclassify') renderReclassify();
   if(name==='recurring') renderRecurring();
   if(name==='taxes') { renderUSN(); renderForecast(); renderTaxCalendar(); }
+  if(name==='budget') { try { initBudgetPeriodSel(); renderBudget(); } catch(e){} }
 }
 
 function toggleMoreMenu(e) {
@@ -4055,12 +4056,6 @@ document.addEventListener('click', function(e) {
   if (wrap && !wrap.contains(e.target)) closeImportDrop();
 });
 
-// Перехватываем showPage для бюджета
-const _origShowPageBudget = showPage;
-function showPage(name, btn) {
-  _origShowPageBudget(name, btn);
-  if (name === 'budget') { initBudgetPeriodSel(); renderBudget(); }
-}
 
 startDeadlineTimer();
 
