@@ -3297,16 +3297,45 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
 
-// Редирект на онбординг для новых пользователей (у кого нет данных и не прошли онбординг)
-(function checkOnboarding() {
-  const onboarded = localStorage.getItem('omsfin_onboarded');
-  const hasToken = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token');
-  if (!onboarded && !hasToken) {
-    window.location.href = '/onboarding';
-    return;
+// Инициализация: синхронизируем данные, после загрузки проверяем нужен ли онбординг
+(async function init() {
+  await syncNow();
+  // Если транзакций нет и пользователь ещё не прошёл онбординг — показываем welcome-экран
+  if (!localStorage.getItem('omsfin_onboarded') && allTx.length === 0) {
+    showOnboardingOverlay();
+  } else if (allTx.length > 0) {
+    localStorage.setItem('omsfin_onboarded', '1');
   }
-  syncNow();
 })();
+
+function showOnboardingOverlay() {
+  if (document.getElementById('onboardingOverlay')) return;
+  const el = document.createElement('div');
+  el.id = 'onboardingOverlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;max-width:400px;width:100%;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">👋</div>
+    <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900;margin-bottom:8px">Добро пожаловать в OMSFIN</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">Финансовый учёт для бизнеса — загружай банковские выписки, считай налоги, создавай документы.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <span style="font-size:20px;flex-shrink:0">🏦</span>
+        <div style="font-size:12px"><strong style="color:var(--text)">Выписка из банка</strong><br><span style="color:var(--muted)">Т-Банк, Сбер, Альфа, ВТБ — автоматический импорт</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <span style="font-size:20px;flex-shrink:0">🧾</span>
+        <div style="font-size:12px"><strong style="color:var(--text)">Налоги и декларации</strong><br><span style="color:var(--muted)">НДС, НДФЛ, налог на прибыль — всё автоматически</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <span style="font-size:20px;flex-shrink:0">📄</span>
+        <div style="font-size:12px"><strong style="color:var(--text)">Документы</strong><br><span style="color:var(--muted)">Счета, УПД, договоры — готовы за секунды</span></div>
+      </div>
+    </div>
+    <button onclick="window.location.href='/onboarding.html'" style="width:100%;background:linear-gradient(135deg,#ff6b00,#e55a00);color:#fff;border:none;border-radius:12px;padding:13px;font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.3)">Настроить за 2 минуты →</button>
+    <button onclick="document.getElementById('onboardingOverlay').remove();localStorage.setItem('omsfin_onboarded','1')" style="margin-top:8px;width:100%;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:8px">Пропустить, разберусь сам</button>
+  </div>`;
+  document.body.appendChild(el);
+}
 </script>
 
 <!-- AI Ассистент -->
