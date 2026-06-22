@@ -602,6 +602,32 @@
     </div>
   </div>
 
+  <!-- ─── Финансовые цели ─── -->
+  <div id="goalsCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">🎯 Цели месяца</div>
+      <button onclick="openGoalsModal()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:3px 9px;color:var(--muted);font-size:10px;cursor:pointer">✏️ Изменить</button>
+    </div>
+    <div id="goalsList" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <!-- Модалка целей -->
+  <div id="goalsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;width:90%;max-width:380px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px">🎯 Финансовые цели на месяц</div>
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">План выручки, ₽</label>
+      <input id="goalIncome" type="number" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Лимит расходов, ₽</label>
+      <input id="goalExpense" type="number" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Минимальная прибыль, ₽</label>
+      <input id="goalProfit" type="number" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px">
+      <div style="display:flex;gap:8px">
+        <button onclick="saveGoals()" style="flex:1;background:var(--accent);border:none;border-radius:8px;padding:10px;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Сохранить</button>
+        <button onclick="document.getElementById('goalsModal').style.display='none'" style="background:none;border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--muted);font-size:13px;cursor:pointer">Отмена</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Закрытие месяца + дедлайн (в одной карточке) ─── -->
   <div id="monthCloserCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -1999,6 +2025,7 @@ function _origRenderAll() {
   try { scanCounterpartyRadar(); } catch(e) {}
   try { renderCashflowForecast(window._cfDays || 30); } catch(e) { console.error('cfForecast:', e); }
   try { renderHealthScore(); } catch(e) { console.error('healthScore:', e); }
+  try { renderGoals(); } catch(e) { console.error('renderGoals:', e); }
 }
 
 // ─── Кэшфлоу-прогноз ──────────────────────────────────────────────────────────
@@ -3976,6 +4003,73 @@ function showPage(name, btn) {
 }
 
 startDeadlineTimer();
+
+// ─── Финансовые цели ──────────────────────────────────────────────
+function getGoals() {
+  const now = new Date();
+  const period = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
+  return JSON.parse(localStorage.getItem('omsfin_goals') || '{}')[period] || {};
+}
+
+function saveGoals() {
+  const now = new Date();
+  const period = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
+  const all = JSON.parse(localStorage.getItem('omsfin_goals') || '{}');
+  all[period] = {
+    income: Number(document.getElementById('goalIncome').value) || 0,
+    expense: Number(document.getElementById('goalExpense').value) || 0,
+    profit: Number(document.getElementById('goalProfit').value) || 0
+  };
+  localStorage.setItem('omsfin_goals', JSON.stringify(all));
+  document.getElementById('goalsModal').style.display = 'none';
+  renderGoals();
+}
+
+function openGoalsModal() {
+  const g = getGoals();
+  document.getElementById('goalIncome').value = g.income || '';
+  document.getElementById('goalExpense').value = g.expense || '';
+  document.getElementById('goalProfit').value = g.profit || '';
+  document.getElementById('goalsModal').style.display = 'flex';
+}
+
+function renderGoals() {
+  const card = document.getElementById('goalsCard');
+  const list = document.getElementById('goalsList');
+  if (!card || !list) return;
+  const g = getGoals();
+  if (!g.income && !g.expense && !g.profit) { card.style.display = 'none'; return; }
+
+  const now = new Date();
+  const period = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
+  const periodTx = allTx.filter(t => t.period === period || (t.date && t.date.slice(3) === period));
+  const income = periodTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = periodTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const profit = income - expense;
+
+  function goalRow(label, fact, plan, invert) {
+    if (!plan) return '';
+    const pct = Math.min(100, Math.round(fact / plan * 100));
+    const ok = invert ? fact <= plan : fact >= plan;
+    const color = ok ? 'var(--green)' : pct > (invert ? 90 : 60) ? '#f59e0b' : 'var(--red)';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${label}</span>
+        <span style="color:${color};font-weight:600">${fmt(fact)} / ${fmt(plan)} <span style="font-size:10px;color:var(--muted)">(${pct}%)</span></span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:5px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:${color};width:${pct}%;transition:width 0.5s"></div>
+      </div>
+    </div>`;
+  }
+
+  list.innerHTML = [
+    goalRow('💰 Выручка', income, g.income, false),
+    goalRow('📤 Расходы (лимит)', expense, g.expense, true),
+    goalRow('💹 Прибыль', profit, g.profit, false)
+  ].filter(Boolean).join('');
+  card.style.display = '';
+}
 
 // ─── Импорт из 1С XML ────────────────────────────────────────────────────────
 document.getElementById('file1cInput').addEventListener('change', async function(e) {

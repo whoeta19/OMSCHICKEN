@@ -123,6 +123,11 @@
       <div class="tool-name">Конвертер валют</div>
       <div class="tool-desc">Курсы ЦБ РФ, перевод в рубли</div>
     </div>
+    <div class="tool-btn" onclick="showTool('breakeven',this)">
+      <div class="tool-icon">📐</div>
+      <div class="tool-name">Точка безубыточности</div>
+      <div class="tool-desc">Сколько нужно продать, чтобы не уйти в минус</div>
+    </div>
     <div class="tool-btn" onclick="window.location.href='/counterparty'">
       <div class="tool-icon">🔍</div>
       <div class="tool-name">Проверка контрагента</div>
@@ -384,6 +389,30 @@
         <div style="margin-top:14px;padding:12px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:10px;font-size:13px" id="taxRecommend"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Точка безубыточности -->
+  <div class="tool-panel" id="tool-breakeven">
+    <div class="section-title">📐 Точка безубыточности</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Постоянные затраты/мес, ₽<br><span style="font-size:10px">(аренда, зарплата, связь)</span></label>
+        <input type="number" id="beFixed" placeholder="300 000" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Переменные на 1 ед., ₽<br><span style="font-size:10px">(сырьё, транспорт на единицу)</span></label>
+        <input type="number" id="beVar" placeholder="150" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Цена продажи 1 ед., ₽</label>
+        <input type="number" id="bePrice" placeholder="400" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Текущий объём продаж/мес, ед.</label>
+        <input type="number" id="beVolume" placeholder="2000" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
+      </div>
+    </div>
+    <div id="beResult"></div>
   </div>
 
   <!-- Конвертер валют -->
@@ -835,6 +864,60 @@ async function convertCurrency() {
   const rub = amt * cur.rate;
   document.getElementById('currResultVal').textContent = rub.toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽';
   document.getElementById('currRate').textContent = `1 ${code} = ${cur.rate.toLocaleString('ru-RU', {maximumFractionDigits:4})} ₽`;
+}
+
+function calcBreakeven() {
+  const fixed = parseFloat(document.getElementById('beFixed').value) || 0;
+  const varC = parseFloat(document.getElementById('beVar').value) || 0;
+  const price = parseFloat(document.getElementById('bePrice').value) || 0;
+  const volume = parseFloat(document.getElementById('beVolume').value) || 0;
+  const out = document.getElementById('beResult');
+  if (!fixed || !price || price <= varC) {
+    out.innerHTML = price > 0 && price <= varC
+      ? '<div style="color:var(--red);font-size:13px;padding:10px">⚠️ Цена продажи не может быть ≤ переменным затратам на единицу.</div>'
+      : '';
+    return;
+  }
+  const margin = price - varC;
+  const beUnits = Math.ceil(fixed / margin);
+  const beRevenue = beUnits * price;
+  const marginPct = (margin / price * 100).toFixed(1);
+  const currentProfit = volume ? (volume - beUnits) * margin : null;
+  const safetyMargin = volume ? ((volume - beUnits) / volume * 100).toFixed(1) : null;
+
+  out.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">ТБ в единицах</div>
+        <div style="font-family:Unbounded,sans-serif;font-size:20px;font-weight:900;color:var(--accent)">${beUnits.toLocaleString('ru')}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">ед./мес</div>
+      </div>
+      <div style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">ТБ в выручке</div>
+        <div style="font-family:Unbounded,sans-serif;font-size:20px;font-weight:900;color:var(--accent)">${Math.ceil(beRevenue/1000).toLocaleString('ru')}к</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">₽/мес</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:12px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--muted)">Маржинальность единицы</span>
+        <span style="font-weight:600">${margin.toLocaleString('ru')} ₽ (${marginPct}%)</span>
+      </div>
+      ${volume ? `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--muted)">Прибыль при текущем объёме</span>
+        <span style="font-weight:600;color:${currentProfit>=0?'var(--green)':'var(--red)'}">${currentProfit>=0?'+':''}${currentProfit.toLocaleString('ru')} ₽</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0">
+        <span style="color:var(--muted)">Запас прочности</span>
+        <span style="font-weight:600;color:${safetyMargin>=20?'var(--green)':safetyMargin>=10?'#f59e0b':'var(--red)'}">${safetyMargin}%</span>
+      </div>` : ''}
+    </div>
+    ${volume && currentProfit < 0 ? `<div style="background:rgba(239,68,68,0.1);border:1px solid var(--red);border-radius:10px;padding:10px;margin-top:10px;font-size:12px">
+      ⚠️ Текущий объём (${volume.toLocaleString('ru')} ед.) ниже точки безубыточности. Нужно продать ещё <b>${(beUnits-volume).toLocaleString('ru')} ед.</b> чтобы выйти в ноль.
+    </div>` : ''}
+    ${volume && currentProfit >= 0 ? `<div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px;margin-top:10px;font-size:12px">
+      ✅ Бизнес прибылен. Запас прочности ${safetyMargin}% — ${Number(safetyMargin)>=20?'отличный результат':'есть риск при снижении продаж'}.
+    </div>` : ''}`;
 }
 
 // Загружаем при открытии инструмента
