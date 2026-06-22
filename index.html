@@ -572,10 +572,16 @@
       <div style="font-size:11px;color:var(--muted);margin-top:5px" id="homeSub">Синхронизировано</div>
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
-      <button onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 <span>Выписка</span></button>
-      <button onclick="document.getElementById('file1cInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из 1С (XML)">1С <span>XML</span></button>
-      <input type="file" id="file1cInput" accept=".xml,.txt" style="display:none">
-      <button onclick="importMoySklad()" id="btnMoySklad" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из МойСклад">МС <span>API</span></button>
+      <!-- Выписка + dropdown форматов -->
+      <div style="position:relative" id="importDropWrap">
+        <button onclick="toggleImportDrop(event)" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 Выписка <span style="font-size:9px;opacity:0.6">▼</span></button>
+        <div id="importDrop" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:160px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.25)">
+          <div onclick="document.getElementById('fileInput').click();closeImportDrop()" style="padding:8px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;transition:background 0.12s" onmouseover="this.style.background='rgba(128,128,128,0.12)'" onmouseout="this.style.background='none'">🏦 Банковская выписка<br><span style="font-size:10px;font-weight:400;color:var(--muted)">Т-Банк, ВТБ, Альфа CSV</span></div>
+          <div onclick="document.getElementById('file1cInput').click();closeImportDrop()" style="padding:8px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;transition:background 0.12s" onmouseover="this.style.background='rgba(128,128,128,0.12)'" onmouseout="this.style.background='none'">📊 1С XML<br><span style="font-size:10px;font-weight:400;color:var(--muted)">Выгрузка из 1С:Бухгалтерия</span></div>
+          <div onclick="importMoySklad();closeImportDrop()" style="padding:8px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;transition:background 0.12s" onmouseover="this.style.background='rgba(128,128,128,0.12)'" onmouseout="this.style.background='none'">🔗 МойСклад API<br><span style="font-size:10px;font-weight:400;color:var(--muted)">Синхронизация через API</span></div>
+        </div>
+        <input type="file" id="file1cInput" accept=".xml,.txt" style="display:none">
+      </div>
       <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
     </div>
   </div>
@@ -4033,6 +4039,21 @@ function deleteBudgetItem(period, cat) {
   saveBudgets(b);
   renderBudget();
 }
+
+// ── Дропдаун импорта выписки ──
+function toggleImportDrop(e) {
+  e.stopPropagation();
+  var d = document.getElementById('importDrop');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+function closeImportDrop() {
+  var d = document.getElementById('importDrop');
+  if (d) d.style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('importDropWrap');
+  if (wrap && !wrap.contains(e.target)) closeImportDrop();
+});
 
 // Перехватываем showPage для бюджета
 const _origShowPageBudget = showPage;
