@@ -68,12 +68,95 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // ── resource=ai: чат с Gemini-ассистентом (без auth — контекст передаётся с фронта) ──
+  if (req.query.resource === 'ai') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+    const GEMINI_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY не настроен' });
+
+    const { message, context, history } = req.body;
+    if (!message) return res.status(400).json({ error: 'message required' });
+
+    const ctx = context || {};
+    const fmtMoney = (n) => n ? Math.round(n).toLocaleString('ru-RU') + ' ₽' : 'нет данных';
+
+    const systemPrompt = `Ты — ОМС-Ассистент, финансовый советник в сервисе OMSFIN для малого бизнеса России.
+
+ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (${ctx.period || 'текущий год'}):
+Текущий месяц: доход ${fmtMoney(ctx.monthIncome)}, расход ${fmtMoney(ctx.monthExpense)}, прибыль ${fmtMoney(ctx.monthProfit)}
+Год: доход ${fmtMoney(ctx.income)}, расход ${fmtMoney(ctx.expense)}, прибыль ${fmtMoney(ctx.profit)}
+${ctx.monthDelta != null ? `Динамика доходов к прошлому месяцу: ${ctx.monthDelta > 0 ? '+' : ''}${ctx.monthDelta}%` : ''}
+${ctx.monthTrend ? `Тренд (доход по месяцам): ${ctx.monthTrend}` : ''}
+НДС к уплате: ${fmtMoney(ctx.vat)} | Операций: ${ctx.txCount || 0}
+Топ категории расходов: ${ctx.topCats || '—'}
+Топ покупатели: ${ctx.topClients || '—'} | Топ поставщики: ${ctx.topSuppliers || '—'}
+${ctx.recentTxs ? `Последние операции: ${ctx.recentTxs}` : ''}
+
+НАЛОГИ 2026: НДС 10%/22%, НДФЛ 13-22% прогрессия, налог на прибыль 25%, взносы 30%/15.1%.
+РАЗДЕЛЫ: /, /analytics, /vat, /declarations, /payroll, /docs, /tools, /counterparty
+СТИЛЬ: 3-5 предложений, конкретные цифры, русский язык, <b> для важного.`;
+
+    try {
+      // Получаем список доступных моделей — самый надёжный способ
+      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
+      const listData = await listResp.json();
+      if (!listResp.ok) {
+        return res.status(500).json({ error: 'Gemini API: ' + (listData.error?.message || listResp.status) });
+      }
+      const models = (listData.models || [])
+        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+        .map(m => m.name);
+      // Предпочитаем flash-модели как быстрые
+      const modelName = models.find(m => m.includes('flash')) || models.find(m => m.includes('pro')) || models[0];
+      if (!modelName) return res.status(500).json({ error: 'Нет доступных моделей Gemini' });
+
+      // Строим историю разговора для multi-turn
+      const chatHistory = (Array.isArray(history) ? history.slice(-8) : []).map(h => ({
+        role: h.role === 'bot' ? 'model' : 'user',
+        parts: [{ text: h.text }]
+      }));
+
+      // contents: если есть история — multi-turn, иначе single-message
+      let contents;
+      if (chatHistory.length > 0) {
+        contents = [
+          { role: 'user', parts: [{ text: systemPrompt }] },
+          { role: 'model', parts: [{ text: 'Понял контекст.' }] },
+          ...chatHistory,
+          { role: 'user', parts: [{ text: message }] }
+        ];
+      } else {
+        contents = [
+          { role: 'user', parts: [{ text: systemPrompt + '\n\nВопрос: ' + message }] }
+        ];
+      }
+
+      const geminiResp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 800, temperature: 0.7 } })
+        }
+      );
+      const geminiData = await geminiResp.json();
+      const reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!reply) {
+        return res.status(500).json({ error: geminiData.error?.message || 'Пустой ответ от Gemini: ' + JSON.stringify(geminiData).substring(0, 200) });
+      }
+      return res.status(200).json({ reply });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // Все остальные роуты требуют авторизации
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
   const userId = await getUserId(userToken);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  // ── resource=audit-log: журнал действий компании (только директор) ─────────
   if (req.query.resource === 'audit-log') {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
     const companyId = req.query.company_id;

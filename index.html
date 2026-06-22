@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Бухгалтерия</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -117,11 +118,11 @@
     box-shadow:var(--shadow);
   }
   .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.1);}
-  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;font-weight:500;}
-  .stat-value{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700;}
+  .stat-label{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:400;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
   .stat-value.green{color:var(--green);}
   .stat-value.red{color:var(--red);}
-  .stat-value.orange{color:var(--accent);}
+  .stat-value.orange{color:#ffaa44;}
   
   .btn{
     background:linear-gradient(135deg,var(--accent),#e55a00);
@@ -143,21 +144,22 @@
   .btn-outline:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
   
   .section-title{
-    font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;
+    font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;
     margin-bottom:10px;display:flex;align-items:center;
     justify-content:space-between;
-    letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);
+    letter-spacing:0.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);
   }
   
   .tx-row{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:14px;padding:12px 16px;
+    background:transparent;
+    border-bottom:1px solid var(--border);
+    padding:10px 0;
     display:grid;grid-template-columns:1fr auto auto;
-    gap:10px;align-items:center;margin-bottom:6px;
-    transition:all 0.2s;
+    gap:10px;align-items:center;
+    transition:opacity 0.15s;
   }
-  .tx-row:hover{border-color:rgba(255,107,0,0.15);background:rgba(255,107,0,0.02);}
+  .tx-row:last-child{border-bottom:none;}
+  .tx-row:hover{opacity:0.8;}
   .tx-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .tx-date{font-size:10px;color:var(--muted);margin-top:2px;}
   .tx-amount{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;}
@@ -319,8 +321,7 @@
     .hero-stat-value{font-size:18px;}
 
     /* Три stat-card в строку не влезают — делаем 2+1 */
-    .stats-row{grid-template-columns:1fr 1fr!important;}
-    .stats-row .stat-card:last-child{grid-column:span 2;}
+    .stats-row{grid-template-columns:1fr 1fr 1fr!important;gap:6px;}
 
     /* Дропдаун "Ещё" — фиксируем чтобы не уходил за экран */
     .pill-more-menu{left:auto;right:0;}
@@ -344,11 +345,11 @@
     width:120px;height:120px;border-radius:50%;
     background:rgba(255,107,0,0.06);
   }
-  .hero-stat-label{font-size:10px;color:rgba(255,107,0,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600;}
-  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:24px;font-weight:900;color:var(--text);}
+  .hero-stat-label{font-size:10px;color:rgba(255,107,0,0.6);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;font-weight:500;}
+  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:900;color:var(--text);}
   .hero-stat-value.positive{color:var(--green);}
   .hero-stat-value.negative{color:var(--red);}
-  .hero-stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+  .hero-stat-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;}
 
   .section-header{
     display:flex;align-items:center;justify-content:space-between;
@@ -436,21 +437,33 @@
   .ai-fab{position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.45);z-index:300;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
   .ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(255,107,0,0.6);}
   @media(min-width:601px){.ai-fab{bottom:24px;}}
-  .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:340px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid rgba(255,107,0,0.2);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.6);z-index:400;overflow:hidden;flex-direction:column;}
+  .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:370px;max-width:calc(100vw - 24px);background:#0d0d0d;border:1px solid rgba(255,107,0,0.25);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.7);z-index:400;overflow:hidden;flex-direction:column;}
   .ai-modal.open{display:flex;}
   @media(min-width:601px){.ai-modal{bottom:88px;}}
-  .ai-modal-header{padding:14px 16px;background:linear-gradient(135deg,rgba(255,107,0,0.15),rgba(255,170,68,0.08));border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-  .ai-messages{height:280px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
-  .ai-msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.5;}
-  .ai-msg.bot{background:var(--surface2);border-radius:12px 12px 12px 2px;align-self:flex-start;}
-  .ai-msg.user{background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border-radius:12px 12px 2px 12px;align-self:flex-end;}
-  .ai-input-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;}
-  .ai-input-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;}
+  @media(max-width:600px){.ai-modal{bottom:70px;right:8px;left:8px;width:auto;max-width:none;border-radius:16px;}}
+  .ai-modal-header{padding:12px 14px;background:linear-gradient(135deg,rgba(255,107,0,0.12),rgba(255,170,68,0.06));border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .ai-messages{height:320px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;}
+  .ai-bubble-wrap{display:flex;flex-direction:column;}
+  .ai-bubble-wrap.user{align-items:flex-end;}
+  .ai-bubble-wrap.bot{align-items:flex-start;}
+  .ai-msg{max-width:88%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.55;}
+  .ai-msg.bot{background:rgba(255,255,255,0.06);border-radius:12px 12px 12px 2px;}
+  .ai-msg.user{background:linear-gradient(135deg,var(--accent),#d44f00);color:#fff;border-radius:12px 12px 2px 12px;}
+  .ai-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;padding-left:2px;}
+  .ai-act{font-size:10px;padding:4px 10px;border-radius:8px;border:1px solid rgba(255,107,0,0.35);background:rgba(255,107,0,0.08);color:var(--accent);cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.15s;font-family:'Inter',sans-serif;}
+  .ai-act:hover{background:rgba(255,107,0,0.18);border-color:rgba(255,107,0,0.6);}
+  .ai-thinking{display:flex;align-items:center;gap:4px;padding:10px 12px;background:rgba(255,255,255,0.06);border-radius:12px 12px 12px 2px;width:fit-content;}
+  .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:ai-bounce 1.2s infinite;}
+  .ai-dot:nth-child(2){animation-delay:.2s;}
+  .ai-dot:nth-child(3){animation-delay:.4s;}
+  @keyframes ai-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+  .ai-chips{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;min-height:40px;}
+  .ai-quick{font-size:10px;padding:4px 9px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'Inter',sans-serif;}
+  .ai-quick:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);background:rgba(255,107,0,0.06);}
+  .ai-input-row{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;flex-shrink:0;}
+  .ai-input-row input{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;}
   .ai-input-row input:focus{border-color:rgba(255,107,0,0.5);}
-  .ai-send{background:linear-gradient(135deg,var(--accent),#e55a00);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
-  .ai-quick-btns{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);}
-  .ai-quick{font-size:10px;padding:4px 9px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all 0.2s;}
-  .ai-quick:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
+  .ai-send{background:linear-gradient(135deg,var(--accent),#d44f00);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.4)}}
   .cf-bar{flex:1;min-width:0;border-radius:4px 4px 0 0;transition:height 0.4s ease;cursor:default;position:relative;}
   .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
@@ -503,127 +516,102 @@
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   </div>
 
-  <!-- Приветствие -->
-  <div style="margin-bottom:18px">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="homeDate">Загрузка...</div>
-    <div style="font-size:20px;font-weight:700" id="homeGreeting">Добро пожаловать</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:3px" id="homeSub">Синхронизировано</div>
-  </div>
-
-  <!-- Быстрые действия -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px" class="quick-actions-grid">
-    <div data-role="director,accountant" onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">📂</div>
-      <div style="font-size:10px;color:var(--muted)">Загрузить выписку</div>
-    </div>
-    <div data-role="director,accountant" onclick="showPage('add',null)" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">➕</div>
-      <div style="font-size:10px;color:var(--muted)">Добавить операцию</div>
-    </div>
-    <div data-role="director,accountant,employee" onclick="window.location.href='/docs'" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">📄</div>
-      <div style="font-size:10px;color:var(--muted)">Создать документ</div>
-    </div>
-    <div data-role="director,accountant" onclick="showPage('taxes',null)" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:20px;margin-bottom:6px">🗓️</div>
-      <div style="font-size:10px;color:var(--muted)">Налоги и сроки</div>
-    </div>
-  </div>
-
-  <!-- Отмена последней загрузки (появляется после загрузки выписки) -->
-  <div id="undoUploadBar" style="display:none;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:18px;font-size:12px">
-    <span id="undoUploadText" style="color:var(--muted)"></span>
-    <button onclick="clearLastUpload()" style="background:none;border:none;color:#ff6b00;font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px">↺ Отменить загрузку</button>
-  </div>
-
-
-  <!-- Закрытие месяца — чек-лист готовности -->
-  <div id="monthCloserCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Закрытие месяца — <span id="closerMonthLabel"></span></div>
-      <div id="closerPercent" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700"></div>
-    </div>
-    <div style="background:var(--surface2);border-radius:8px;height:6px;overflow:hidden;margin-bottom:12px">
-      <div id="closerProgressFill" style="height:100%;border-radius:8px;transition:width 0.4s;width:0%"></div>
-    </div>
-    <div id="closerChecklist" style="display:flex;flex-direction:column;gap:6px"></div>
-  </div>
-
-  <!-- Живой таймер до ближайшего налогового дедлайна -->
-  <div id="deadlineLiveCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+  <!-- ─── Шапка: приветствие + 2 главных действия ─── -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
     <div>
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px" id="deadlineLiveTitle">Следующий дедлайн</div>
-      <div style="font-size:12px;font-weight:500" id="deadlineLiveName">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:0.03em" id="homeDate">Загрузка...</div>
+      <div style="font-family:'Unbounded',sans-serif;font-size:17px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:-0.2px" id="homeGreeting">Добро пожаловать</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px" id="homeSub">Синхронизировано</div>
     </div>
-    <div class="deadline-live" id="deadlineLiveTimer"></div>
+    <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
+      <button onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 <span>Выписка</span></button>
+      <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
+    </div>
   </div>
 
-  <!-- Аномалии -->
-  <div id="anomalyBlock" style="margin-bottom:12px"></div>
+  <!-- ─── Отмена последней загрузки ─── -->
+  <div id="undoUploadBar" style="display:none;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:12px">
+    <span id="undoUploadText" style="color:var(--muted)"></span>
+    <button onclick="clearLastUpload()" style="background:none;border:none;color:#ff6b00;font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px">↺ Отменить</button>
+  </div>
 
-  <!-- Главная метрика -->
+  <!-- ─── Аномалии (появляются только когда есть) ─── -->
+  <div id="anomalyBlock" style="margin-bottom:0"></div>
+
+  <!-- ─── Главная метрика ─── -->
   <div class="hero-stat" style="margin-bottom:12px">
     <div class="hero-stat-label">Прибыль за период</div>
     <div class="hero-stat-value" id="statProfit">0 ₽</div>
     <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
   </div>
 
-  <!-- Статистика -->
-  <div class="stats-row" style="margin-bottom:16px">
+  <!-- ─── Три метрики ─── -->
+  <div class="stats-row" style="margin-bottom:14px">
     <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
     <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
     <div class="stat-card"><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
 
-  <!-- Безубыточность + быстрые отчёты -->
-  <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-bottom:16px">
-    <div class="breakeven-card" id="breakevenCard">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Точка безубыточности</div>
-        <div style="font-size:11px;color:var(--muted)" id="breakevenPct">—</div>
+  <!-- ─── Здоровье бизнеса (компактная строка) ─── -->
+  <div id="healthScoreCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <!-- Мини-gauge -->
+      <div style="position:relative;flex-shrink:0;width:48px;height:48px">
+        <svg width="48" height="48" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+          <circle id="healthArc" cx="24" cy="24" r="18" fill="none" stroke="#22c55e" stroke-width="6"
+            stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="113.1"
+            transform="rotate(-90 24 24)" style="transition:stroke-dashoffset 1s ease,stroke 0.5s"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+          <div id="healthScoreNum" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;line-height:1">—</div>
+        </div>
       </div>
-      <div class="breakeven-bar"><div class="breakeven-fill" id="breakevenFill" style="width:0%;background:var(--green)"></div></div>
-      <div style="font-size:12px" id="breakevenText">Загрузи выписку для расчёта</div>
+      <!-- Текст -->
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Здоровье бизнеса</div>
+          <button onclick="document.getElementById('healthDetails').style.display=document.getElementById('healthDetails').style.display==='none'?'block':'none'" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;padding:0">детали ↕</button>
+        </div>
+        <div id="healthGrade" style="font-size:13px;font-weight:700;margin-top:2px"></div>
+        <div id="healthAdvice" style="font-size:11px;color:var(--accent);margin-top:2px;line-height:1.4;display:none"></div>
+      </div>
+      <!-- Быстрые кнопки отчётов -->
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <button onclick="openPL()" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">📊 P&L</button>
+        <button onclick="openCompare()" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">⚖️ Период</button>
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <button onclick="openPL()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">📊 P&L отчёт</button>
-      <button onclick="openCompare()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(255,107,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'">⚖️ Сравнить периоды</button>
+    <!-- Раскрывающиеся детали -->
+    <div id="healthDetails" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div id="healthSummary" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+      <div id="healthMetrics" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="healthUpdated" style="font-size:10px;color:var(--muted);margin-top:8px"></div>
     </div>
   </div>
 
-  <!-- Уведомления + Аналитика -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" class="suggestions-grid">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Рекомендации</div>
-      <div id="suggestionsBlock"></div>
-      <div id="homeSuggestions" style="display:flex;flex-direction:column;gap:6px">
-        <div class="empty-state" style="padding:16px 8px"><div class="empty-state-icon">💡</div><div class="empty-state-sub">Появятся после загрузки выписки</div></div>
+  <!-- ─── Закрытие месяца + дедлайн (в одной карточке) ─── -->
+  <div id="monthCloserCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Закрытие месяца — <span id="closerMonthLabel"></span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="deadlineLiveTimer" class="deadline-live" style="display:none"></div>
+        <div id="closerPercent" style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700"></div>
       </div>
     </div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Расходы по категориям</div>
-      <div id="chartArea"></div>
+    <div style="background:var(--surface2);border-radius:8px;height:5px;overflow:hidden;margin-bottom:10px">
+      <div id="closerProgressFill" style="height:100%;border-radius:8px;transition:width 0.4s;width:0%"></div>
+    </div>
+    <div id="closerChecklist" style="display:flex;flex-direction:column;gap:5px"></div>
+    <!-- Дедлайн-строка (скрытая до появления) -->
+    <div id="deadlineLiveCard" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);align-items:center;justify-content:space-between">
+      <div style="font-size:11px;color:var(--muted)" id="deadlineLiveTitle">Следующий дедлайн</div>
+      <div style="font-size:12px;font-weight:600;margin-top:2px" id="deadlineLiveName">—</div>
     </div>
   </div>
 
-  <!-- Прогноз кэшфлоу -->
-  <div id="cashflowForecastCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Прогноз кэшфлоу · 90 дней</div>
-      <div style="display:flex;gap:6px">
-        <button onclick="setCfPeriod(30,this)" class="cf-period-btn active" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:rgba(255,107,0,0.15);color:var(--accent);cursor:pointer">30д</button>
-        <button onclick="setCfPeriod(60,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">60д</button>
-        <button onclick="setCfPeriod(90,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">90д</button>
-      </div>
-    </div>
-    <div id="cfGapAlert" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)"></div>
-    <div id="cfBars" style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:8px"></div>
-    <div id="cfLabels" style="display:flex;gap:3px;font-size:9px;color:var(--muted)"></div>
-    <div id="cfSummary" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
-  </div>
-
-  <!-- Финансовый пульс -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+  <!-- ─── Финансовый пульс (главный контент) ─── -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse-dot 2s infinite"></div>
@@ -634,12 +622,34 @@
     <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
   </div>
 
-  <!-- Кнопка очистки (скрытая внизу) -->
-  <div style="margin-top:12px;text-align:right">
-    <button onclick="clearAll()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:4px 8px">🗑️ Очистить данные</button>
+  <!-- ─── Прогноз кэшфлоу (скрыт до появления данных) ─── -->
+  <div id="cashflowForecastCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Прогноз кэшфлоу</div>
+      <div style="display:flex;gap:5px">
+        <button onclick="setCfPeriod(30,this)" class="cf-period-btn active" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:rgba(255,107,0,0.15);color:var(--accent);cursor:pointer">30д</button>
+        <button onclick="setCfPeriod(60,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">60д</button>
+        <button onclick="setCfPeriod(90,this)" class="cf-period-btn" style="font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--muted);cursor:pointer">90д</button>
+      </div>
+    </div>
+    <div id="cfGapAlert" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--red)"></div>
+    <div id="cfBars" style="display:flex;gap:3px;align-items:flex-end;height:60px;margin-bottom:6px"></div>
+    <div id="cfLabels" style="display:flex;gap:3px;font-size:9px;color:var(--muted)"></div>
+    <div id="cfSummary" style="margin-top:8px;font-size:11px;color:var(--muted)"></div>
   </div>
 
-  <!-- Зона загрузки (скрытая) -->
+  <!-- ─── Скрытые элементы совместимости (не видны, но нужны для JS) ─── -->
+  <div style="display:none">
+    <div id="chartArea"></div>
+    <div id="suggestionsBlock"></div>
+    <div id="homeSuggestions"></div>
+    <div id="breakevenCard"><div id="breakevenPct"></div><div id="breakevenFill"></div><div id="breakevenText"></div></div>
+  </div>
+
+  <!-- ─── Служебные ─── -->
+  <div style="margin-top:8px;text-align:right">
+    <button onclick="clearAll()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:4px 8px;opacity:0.5">🗑️ Очистить данные</button>
+  </div>
   <div id="uploadZone" style="display:none"></div>
 </div>
 
@@ -701,8 +711,9 @@
     🏷️ Разметка операций
     <button class="btn btn-sm" onclick="saveRules()">💾 Сохранить правила</button>
   </div>
-  <div class="info-box" style="margin-bottom:12px">
-    Нажми на категорию чтобы переназначить. Система запомнит и применит к похожим операциям.
+  <div class="info-box" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <span>Нажми на категорию — система запомнит правило и применит ко <b>всем</b> операциям этого контрагента.</span>
+    <button class="btn btn-sm" onclick="applyAllRules()" style="white-space:nowrap;flex-shrink:0">🤖 Применить ко всем</button>
   </div>
   <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
     <select id="reclassifyFilter" onchange="renderReclassify()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none">
@@ -797,6 +808,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// Инициализация Telegram WebApp
+if (window.Telegram?.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+
 let allTx = [];
 let currentFilter = 'all';
 let isUploading = false;
@@ -951,6 +968,23 @@ async function apiUpdateCategory(id, category) {
     body: JSON.stringify({id, category, company_id: currentCompanyId || undefined})
   });
   return r.json();
+}
+
+// Пакетное обновление категорий. Если передан список updates — используем его (разные категории).
+// Если передан одиночный category — применяем ко всем ids одну категорию.
+async function apiBulkUpdateCategory(ids, category, updates) {
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const items = updates || ids.map(id => ({id, category}));
+  // Батчи по 10 чтобы не перегружать serverless
+  for (let i = 0; i < items.length; i += 10) {
+    await Promise.all(items.slice(i, i+10).map(({id, category: cat}) =>
+      fetch('/api/transactions', {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + token},
+        body: JSON.stringify({id, category: cat, company_id: currentCompanyId || undefined})
+      })
+    ));
+  }
 }
 
 // Мультикомпания
@@ -1707,6 +1741,13 @@ async function parseAndProcess(text) {
   }
     if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
 
+  // Считаем сколько операций распознано автоматически через правила
+  const autoClassified = txs.filter(t => t.category !== 'unknown').length;
+  const autoByRule = txs.filter(t => {
+    const text = ((t.name||'') + ' ' + (t.description||'')).toLowerCase();
+    return Object.keys(userRules).some(k => text.includes(k));
+  }).length;
+
   // Генерируем хэш для каждой транзакции — отпечаток даты+суммы+описания.
   // Используется на сервере, чтобы при повторной или частично перекрывающейся
   // загрузке выписки не создавать дубликаты уже сохранённых операций.
@@ -1742,9 +1783,17 @@ async function parseAndProcess(text) {
         bar.style.display = 'flex';
       }
     }
-    if (unknownCount > 0) showToast(`⚠️ ${unknownCount} в "Прочее" — зайди в Разметку`);
-    else if (skippedCount > 0) showToast(`✅ Добавлено ${insertedCount} новых, ${skippedCount} уже было загружено`);
-    else showToast(`✅ Загружено ${insertedCount} операций за ${monthKey}`);
+    // Умный баннер с результатом автокатегоризации
+    if (unknownCount > 0) {
+      const pct = Math.round(autoClassified / txs.length * 100);
+      showToast(`🤖 Авто: ${autoClassified}/${txs.length} (${pct}%) · ⚠️ ${unknownCount} нераспознано → Разметка`);
+    } else if (autoByRule > 0) {
+      showToast(`🤖 ${autoByRule} операций авто-категоризировано по вашим правилам · ✅ Всё распознано!`);
+    } else if (skippedCount > 0) {
+      showToast(`✅ Добавлено ${insertedCount} новых, ${skippedCount} уже было загружено`);
+    } else {
+      showToast(`✅ Загружено ${insertedCount} операций за ${monthKey}`);
+    }
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
@@ -1772,17 +1821,31 @@ function renderReclassify() {
 }
 
 async function reclassifyTx(id, category, name, btn) {
-  const tx = allTx.find(t=>t.id==id);
-  if (tx) { tx.category = category; tx.is_personal = ['personal','food'].includes(category); }
   btn.closest('.cat-btns').querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const keyword = name.toLowerCase().substring(0,20);
+  btn.textContent = '⏳';
+
+  // Сохраняем правило по полному имени (до 40 символов)
+  const keyword = name.trim().toLowerCase().substring(0, 40);
   userRules[keyword] = category;
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
-  await apiUpdateCategory(id, category);
+
+  // Находим ВСЕ транзакции от того же контрагента (по совпадению имени)
+  const matches = allTx.filter(t => t.name && t.name.trim().toLowerCase().substring(0,40) === keyword);
+  const ids = matches.map(t => t.id);
+
+  // Обновляем локально
+  matches.forEach(t => { t.category = category; t.is_personal = ['personal','food'].includes(category); });
+
+  // Обновляем на сервере пакетом
+  await apiBulkUpdateCategory(ids, category);
+
   renderAll();
   renderRules();
-  showToast('✅ Категория обновлена');
+  renderReclassify();
+
+  const count = ids.length;
+  showToast(`✅ Категория обновлена · применено к ${count} операци${count===1?'и':count<5?'ям':'ям'} от этого контрагента`);
 }
 
 function renderRules() {
@@ -1807,6 +1870,28 @@ function deleteRule(keyword) {
 function saveRules() {
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
   showToast('✅ Правила сохранены');
+}
+
+async function applyAllRules() {
+  if (!Object.keys(userRules).length) { showToast('⚠️ Нет правил — сначала переназначь несколько операций'); return; }
+  showToast('🤖 Применяю правила...');
+  const toUpdate = [];
+  allTx.forEach(t => {
+    const text = ((t.name||'') + ' ' + (t.description||'')).toLowerCase();
+    for (const [keyword, category] of Object.entries(userRules)) {
+      if (text.includes(keyword) && t.category !== category) {
+        t.category = category;
+        t.is_personal = ['personal','food'].includes(category);
+        toUpdate.push({id: t.id, category});
+        break;
+      }
+    }
+  });
+  if (!toUpdate.length) { showToast('✅ Все операции уже соответствуют правилам'); return; }
+  await apiBulkUpdateCategory(toUpdate.map(x=>x.id), null, toUpdate);
+  renderAll();
+  renderReclassify();
+  showToast(`✅ Обновлено ${toUpdate.length} операций по ${Object.keys(userRules).length} правилам`);
 }
 
 function addManual() {
@@ -1852,7 +1937,7 @@ async function clearLastUpload() {
 }
 
 
-function renderAll() {
+function _origRenderAll() {
   try {
     const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
     const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
@@ -1889,6 +1974,7 @@ function renderAll() {
   try { initHome(); } catch(e) { console.error('initHome:', e); }
   try { scanCounterpartyRadar(); } catch(e) {}
   try { renderCashflowForecast(window._cfDays || 30); } catch(e) { console.error('cfForecast:', e); }
+  try { renderHealthScore(); } catch(e) { console.error('healthScore:', e); }
 }
 
 // ─── Кэшфлоу-прогноз ──────────────────────────────────────────────────────────
@@ -1970,7 +2056,6 @@ function renderCashflowForecast(days) {
   barsEl.innerHTML = weeklyNet.map((wk, i) => {
     const incH = Math.round((wk.income / maxAbs) * barHeight);
     const expH = Math.round((wk.expense / maxAbs) * barHeight);
-    const netSign = wk.net >= 0;
     return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:1px">
       <div class="cf-bar" style="height:${incH}px;background:rgba(34,197,94,0.5)"
         data-tip="+${fmt(wk.income)}"></div>
@@ -1995,6 +2080,126 @@ function renderCashflowForecast(days) {
   } else {
     gapAlert.style.display = 'none';
   }
+}
+
+// ─── Скоринг здоровья бизнеса ─────────────────────────────────────────────────
+function renderHealthScore() {
+  const card = document.getElementById('healthScoreCard');
+  if (!card || allTx.length < 1) { if (card) card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  const now = Date.now();
+  const msDay = 86400000;
+  function parseDMY(s) { try { const [d,m,y] = s.split('.').map(Number); return new Date(y,m-1,d).getTime(); } catch { return 0; } }
+
+  const last90 = allTx.filter(t => parseDMY(t.date) >= now - 90*msDay);
+  const last30 = allTx.filter(t => parseDMY(t.date) >= now - 30*msDay);
+
+  // 1. ЛИКВИДНОСТЬ (0–25): доходы/расходы за 30 дней
+  const inc30 = last30.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const exp30 = last30.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const liquidRatio = exp30 > 0 ? inc30 / exp30 : 2;
+  const liquidScore = Math.min(25, Math.round(liquidRatio >= 1.5 ? 25 : liquidRatio >= 1.2 ? 20 : liquidRatio >= 1 ? 14 : liquidRatio >= 0.8 ? 7 : 0));
+
+  // 2. СТАБИЛЬНОСТЬ (0–20): равномерность поступлений по неделям за 90 дней
+  const weeks = [0,1,2,3,4,5,6,7,8,9,10,11].map(w => {
+    const start = now - (w+1)*7*msDay, end = now - w*7*msDay;
+    return last90.filter(t=>t.amount>0&&parseDMY(t.date)>=start&&parseDMY(t.date)<end).reduce((s,t)=>s+Number(t.amount),0);
+  }).filter((_,i)=>i<12);
+  const nonZeroWeeks = weeks.filter(w=>w>0);
+  let stabilityScore = 20;
+  if (nonZeroWeeks.length > 2) {
+    const avg = nonZeroWeeks.reduce((a,b)=>a+b,0) / nonZeroWeeks.length;
+    const cv = Math.sqrt(nonZeroWeeks.reduce((s,w)=>s+(w-avg)**2,0)/nonZeroWeeks.length) / (avg||1);
+    stabilityScore = Math.round(Math.max(0, 20 - cv * 15));
+  } else { stabilityScore = nonZeroWeeks.length > 0 ? 10 : 0; }
+
+  // 3. КОНЦЕНТРАЦИЯ (0–20): не зависеть от одного клиента
+  const byClient = {};
+  allTx.filter(t=>t.amount>0).forEach(t => {
+    const k = t.name||'—'; byClient[k] = (byClient[k]||0) + Number(t.amount);
+  });
+  const totalInc = Object.values(byClient).reduce((a,b)=>a+b,0)||1;
+  const top1Share = Math.max(...Object.values(byClient),0) / totalInc;
+  const concentrationScore = Math.round(top1Share < 0.2 ? 20 : top1Share < 0.4 ? 16 : top1Share < 0.6 ? 10 : top1Share < 0.8 ? 5 : 1);
+
+  // 4. НАЛОГОВАЯ НАГРУЗКА (0–20): НДС к уплате / выручка — норма до 18%
+  const vatSales = allTx.filter(t=>t.amount>0&&t.category==='income').reduce((s,t)=>s+Number(t.amount),0)*10/110;
+  const vatBuy = allTx.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0)*10/110;
+  const vatNet = Math.max(0, vatSales - vatBuy);
+  const taxBurden = totalInc > 0 ? vatNet / totalInc : 0;
+  const taxScore = Math.round(taxBurden < 0.05 ? 20 : taxBurden < 0.1 ? 17 : taxBurden < 0.15 ? 13 : taxBurden < 0.2 ? 8 : 3);
+
+  // 5. РОСТ (0–15): тренд выручки: текущий месяц vs предыдущий
+  const thisMonth = new Date().getMonth(), thisYear = new Date().getFullYear();
+  const incThis = allTx.filter(t=>t.amount>0&&parseDMY(t.date)>=new Date(thisYear,thisMonth,1).getTime()).reduce((s,t)=>s+Number(t.amount),0);
+  const incPrev = allTx.filter(t=>t.amount>0&&parseDMY(t.date)>=new Date(thisYear,thisMonth-1,1).getTime()&&parseDMY(t.date)<new Date(thisYear,thisMonth,1).getTime()).reduce((s,t)=>s+Number(t.amount),0);
+  const growthRate = incPrev > 0 ? (incThis - incPrev) / incPrev : 0;
+  const growthScore = Math.round(growthRate > 0.1 ? 15 : growthRate > 0 ? 12 : growthRate > -0.1 ? 8 : growthRate > -0.3 ? 4 : 0);
+
+  const total = liquidScore + stabilityScore + concentrationScore + taxScore + growthScore;
+
+  // Рендер
+  const arc = document.getElementById('healthArc');
+  const circumference = 113.1;
+  const offset = circumference - (total / 100) * circumference;
+  arc.style.strokeDashoffset = offset;
+  arc.style.stroke = total >= 75 ? '#22c55e' : total >= 50 ? '#f59e0b' : '#ef4444';
+
+  document.getElementById('healthScoreNum').textContent = total;
+  document.getElementById('healthScoreNum').style.color = total >= 75 ? 'var(--green)' : total >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+  const grade = total >= 80 ? '🟢 Отличное' : total >= 65 ? '🟡 Хорошее' : total >= 50 ? '🟠 Среднее' : '🔴 Нужно внимание';
+  const summary = total >= 80 ? 'Бизнес в устойчивом положении' : total >= 65 ? 'Есть точки для улучшения' : total >= 50 ? 'Несколько зон риска — смотри детали' : 'Обрати внимание на проблемные зоны';
+  document.getElementById('healthGrade').textContent = grade;
+  document.getElementById('healthSummary').textContent = summary;
+
+  const metrics = [
+    { label: 'Ликвидность', score: liquidScore, max: 25,
+      hint: liquidScore >= 20 ? 'Доходы уверенно покрывают расходы' : liquidScore >= 14 ? 'Баланс нормальный, небольшой запас' : 'Расходы превышают доходы — риск кассового разрыва' },
+    { label: 'Стабильность доходов', score: stabilityScore, max: 20,
+      hint: stabilityScore >= 16 ? 'Поступления равномерны по неделям' : stabilityScore >= 10 ? 'Небольшие колебания — норма' : 'Сильные скачки в поступлениях — нужна подушка' },
+    { label: 'Диверсификация', score: concentrationScore, max: 20,
+      hint: concentrationScore >= 16 ? 'Клиентская база сбалансирована' : concentrationScore >= 10 ? `Топ-клиент даёт ${Math.round(top1Share*100)}% выручки — умеренный риск` : `Топ-клиент даёт ${Math.round(top1Share*100)}% выручки — высокая зависимость!` },
+    { label: 'Налоговая нагрузка', score: taxScore, max: 20,
+      hint: taxScore >= 16 ? 'НДС-нагрузка в норме' : taxScore >= 10 ? 'Налоговая нагрузка умеренная' : 'Высокая НДС-нагрузка — проверь вычеты' },
+    { label: 'Динамика роста', score: growthScore, max: 15,
+      hint: growthScore >= 12 ? `Рост выручки +${Math.round(growthRate*100)}% к прошлому месяцу` : growthScore >= 8 ? 'Выручка стабильна' : `Снижение выручки ${Math.round(growthRate*100)}% — нужны новые клиенты` },
+  ];
+
+  document.getElementById('healthMetrics').innerHTML = metrics.map(m => {
+    const pct = m.score / m.max * 100;
+    const color = pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+    return `<div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:11px;color:var(--muted)">${m.label}</span>
+        <span style="font-size:11px;font-weight:600;color:${color}">${m.score}/${m.max}</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:2px;transition:width 0.8s ease"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${m.hint}</div>
+    </div>`;
+  }).join('');
+
+  // Главный совет — самая слабая зона (компактная строка)
+  const weakest = [...metrics].sort((a,b) => (a.score/a.max) - (b.score/b.max))[0];
+  const adviceEl = document.getElementById('healthAdvice');
+  const advices = {
+    'Ликвидность': '💡 Риск кассового разрыва — нужна подушка минимум на 1 месяц расходов',
+    'Стабильность доходов': '💡 Сильные скачки доходов — рассмотри предоплатную модель',
+    'Диверсификация': `💡 Топ-клиент даёт ${Math.round(top1Share*100)}% выручки — высокая зависимость`,
+    'Налоговая нагрузка': '💡 Высокая НДС-нагрузка — проверь все закупочные вычеты',
+    'Динамика роста': '💡 Выручка снижается — свяжись с ключевыми клиентами',
+  };
+  if (weakest.score / weakest.max < 0.6) {
+    adviceEl.style.display = 'block';
+    adviceEl.textContent = advices[weakest.label] || '';
+  } else {
+    adviceEl.style.display = 'none';
+  }
+
+  document.getElementById('healthUpdated').textContent = 'обновлено только что';
 }
 
 // ─── Закрытие месяца — чек-лист готовности ────────────────────────────────────
@@ -2259,6 +2464,8 @@ function filterTx(cat,btn) {
 }
 
 function exportCSV() {
+  const sub = document.getElementById('exportModalSub');
+  if (sub) sub.textContent = allTx.length + ' операций';
   document.getElementById('exportModal').style.display = 'flex';
 }
 
@@ -2275,7 +2482,7 @@ function doExportCSV() {
     catNames[t.category]||t.category||'', t.period||'',
     (t.description||'').replace(/;/g,' '), (t.note||'').replace(/;/g,' ')
   ]));
-  const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,''""'')}"`).join(';')).join('\n');
+  const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
   a.download = 'omsfin_операции_' + new Date().toISOString().split('T')[0] + '.csv';
@@ -2649,10 +2856,99 @@ function renderTaxCalendar() {
 
 // ─── AI Ассистент ──────────────────────────────────────────────────────────────
 let aiOpen = false;
+let _aiInited = false;
+
 function toggleAI() {
   aiOpen = !aiOpen;
   document.getElementById('aiModal').classList.toggle('open', aiOpen);
-  if (aiOpen) document.getElementById('aiInput').focus();
+  if (aiOpen) {
+    if (!_aiInited) { _aiInited = true; _aiInit(); }
+    setTimeout(() => document.getElementById('aiInput').focus(), 80);
+  }
+}
+
+function clearAIChat() {
+  document.getElementById('aiMessages').innerHTML = '';
+  _aiInited = false;
+  _aiInit();
+}
+
+function _aiInit() {
+  _aiInited = true;
+  const year = new Date().getFullYear();
+  const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
+  const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const profit = income - expense;
+
+  let html, chips;
+
+  if (!allTx.length) {
+    html = `Привет! Я финансовый ассистент OMSFIN.<br><br>Пока данных нет — загрузи банковскую выписку, и я смогу анализировать доходы, расходы, рассчитывать налоги и давать советы.<br><br>Пока что отвечу на любой вопрос по бухгалтерии и налогам 2026 →`;
+    chips = ['Как загрузить выписку?', 'Как платить НДС?', 'НДФЛ прогрессивная шкала', 'Страховые взносы 2026', 'Как выплатить дивиденды?'];
+  } else {
+    const months = new Date().getMonth() + 1;
+    const avgMonth = income / months;
+    const warn = _aiWeakPoint();
+    html = `Привет! Данные за ${year} год:<br>• Доход: <b>${fmt(income)}</b><br>• Расход: <b>${fmt(expense)}</b><br>• Прибыль: <b style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${fmt(profit)}</b><br>• Средний доход в месяц: <b>${fmt(avgMonth)}</b>${warn ? '<br><br>' + warn : ''}<br><br>Спрашивай по данным или задавай вопросы по налогам →`;
+    chips = ['Расходы по категориям', 'Топ клиентов', 'Прогноз на следующий месяц', 'НДС к уплате', 'Ближайшие дедлайны'];
+  }
+
+  _aiAddBubble('bot', html);
+  _aiSetChips(chips);
+}
+
+function _aiWeakPoint() {
+  if (allTx.length < 2) return null;
+  try {
+    const now = Date.now(), msDay = 86400000;
+    function pDMY(s) { const [d,m,y]=s.split('.').map(Number); return new Date(y,m-1,d).getTime(); }
+    const last30 = allTx.filter(t=>pDMY(t.date||'01.01.2000')>=now-30*msDay);
+    const i30 = last30.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+    const e30 = last30.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+    if (e30 > 0 && i30/e30 < 1.1) return '⚠️ <b>Риск:</b> расходы почти равны доходам за последние 30 дней.';
+    const byC = {}; allTx.filter(t=>t.amount>0).forEach(t=>{const k=t.name||'—';byC[k]=(byC[k]||0)+Number(t.amount);});
+    const tot = Object.values(byC).reduce((a,b)=>a+b,0)||1;
+    const top = Math.max(...Object.values(byC),0)/tot;
+    if (top > 0.7) return `⚠️ <b>Концентрация:</b> один клиент даёт более ${Math.round(top*100)}% выручки.`;
+  } catch(e) {}
+  return null;
+}
+
+function _aiAddBubble(type, html, actions) {
+  const msgs = document.getElementById('aiMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-bubble-wrap ' + type;
+  const msg = document.createElement('div');
+  msg.className = 'ai-msg ' + type;
+  msg.innerHTML = html;
+  wrap.appendChild(msg);
+  if (actions && actions.length) {
+    const row = document.createElement('div');
+    row.className = 'ai-actions';
+    actions.forEach(a => {
+      const el = document.createElement('a');
+      el.className = 'ai-act';
+      el.href = a.href;
+      el.textContent = a.label;
+      row.appendChild(el);
+    });
+    wrap.appendChild(row);
+  }
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function _aiSetChips(list) {
+  const el = document.getElementById('aiChips');
+  el.innerHTML = '';
+  list.forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.className = 'ai-quick';
+    btn.textContent = s;
+    btn.addEventListener('click', function(){ aiAsk(s); });
+    el.appendChild(btn);
+  });
 }
 
 function aiSend() {
@@ -2663,360 +2959,331 @@ function aiSend() {
   aiAsk(q);
 }
 
-function aiAsk(q) {
-  if (!aiOpen) { aiOpen=true; document.getElementById('aiModal').classList.add('open'); }
+// История разговора для передачи в Gemini (последние 10 сообщений)
+const _aiHistory = [];
+
+async function aiAsk(q) {
+  if (!aiOpen) { aiOpen=true; document.getElementById('aiModal').classList.add('open'); if(!_aiInited){_aiInited=true;_aiInit();} }
+  _aiAddBubble('user', q);
+  _aiHistory.push({ role: 'user', text: q });
+  document.getElementById('aiChips').innerHTML = '';
   const msgs = document.getElementById('aiMessages');
-  msgs.innerHTML += `<div class="ai-msg user">${q}</div>`;
+  const dots = document.createElement('div');
+  dots.className = 'ai-thinking';
+  dots.innerHTML = '<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+  msgs.appendChild(dots);
   msgs.scrollTop = msgs.scrollHeight;
-  const thinking = document.createElement('div');
-  thinking.className = 'ai-msg bot';
-  thinking.textContent = '...';
-  msgs.appendChild(thinking);
+
+  try {
+    const now = new Date();
+    const year = now.getFullYear();
+    const curMonth = String(now.getMonth()+1).padStart(2,'0');
+    const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0');
+    const prevYear = prevDate.getFullYear();
+
+    function parseDMY(s){try{const[d,m,y]=s.split('.').map(Number);return new Date(y,m-1,d).getTime();}catch{return 0;}}
+
+    const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
+    const monthTx = yearTx.filter(t => (t.date||'').split('.')[1] == curMonth);
+    const prevTx  = allTx.filter(t => (t.date||'').split('.')[1] == prevMonth && (t.date||'').split('.')[2] == prevYear);
+
+    const sum = (arr, fn) => arr.filter(fn).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+
+    const income      = sum(yearTx,  t=>t.amount>0);
+    const expense     = sum(yearTx,  t=>t.amount<0);
+    const monthIncome = sum(monthTx, t=>t.amount>0);
+    const monthExpense= sum(monthTx, t=>t.amount<0);
+    const prevIncome  = sum(prevTx,  t=>t.amount>0);
+    const prevExpense = sum(prevTx,  t=>t.amount<0);
+    const monthDelta  = prevIncome > 0 ? Math.round((monthIncome - prevIncome) / prevIncome * 100) : null;
+
+    const vat = Math.max(0, income*10/110 - sum(yearTx, t=>t.amount<0&&t.category==='chicken')*10/110);
+
+    // Топ категорий расходов
+    const byCat = {}; yearTx.filter(t=>t.amount<0).forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+Math.abs(Number(t.amount));});
+    const topCats = Object.entries(byCat).sort(([,a],[,b])=>b-a).slice(0,4).map(([k,v])=>`${k}: ${Math.round(v/1000)}К`).join(', ');
+
+    // Топ покупателей
+    const byClient = {}; yearTx.filter(t=>t.amount>0).forEach(t=>{const k=t.name||'—';byClient[k]=(byClient[k]||0)+Number(t.amount);});
+    const topClients = Object.entries(byClient).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>`${k.substring(0,20)}: ${Math.round(v/1000)}К`).join(', ');
+
+    // Топ поставщиков (расход)
+    const bySupp = {}; yearTx.filter(t=>t.amount<0).forEach(t=>{const k=t.name||'—';bySupp[k]=(bySupp[k]||0)+Math.abs(Number(t.amount));});
+    const topSuppliers = Object.entries(bySupp).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>`${k.substring(0,20)}: ${Math.round(v/1000)}К`).join(', ');
+
+    // Тренд по месяцам (последние 4 месяца)
+    const byMonth = {}; yearTx.filter(t=>t.amount>0).forEach(t=>{const m=(t.date||'').split('.')[1];if(m)byMonth[m]=(byMonth[m]||0)+Number(t.amount);});
+    const monthTrend = Object.entries(byMonth).sort(([a],[b])=>a.localeCompare(b)).slice(-4).map(([m,v])=>`${m}: ${Math.round(v/1000)}К`).join(' → ');
+
+    // Последние 5 операций
+    const sorted = [...allTx].sort((a,b)=>parseDMY(b.date)-parseDMY(a.date)).slice(0,5);
+    const recentTxs = sorted.map(t=>`${t.date} ${(t.name||'').substring(0,15)} ${t.amount>0?'+':''}${Math.round(Number(t.amount)/1000)}К`).join('; ');
+
+    const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+    const resp = await fetch('/api/members?resource=ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        message: q,
+        history: _aiHistory.slice(-10, -1), // история без текущего вопроса
+        context: {
+          period: `${curMonth}.${year}`,
+          income, expense, profit: income - expense,
+          monthIncome, monthExpense, monthProfit: monthIncome - monthExpense,
+          prevMonthIncome: prevIncome, prevMonthExpense: prevExpense,
+          monthDelta, txCount: yearTx.length,
+          vat, topCats, topClients, topSuppliers, monthTrend, recentTxs
+        }
+      })
+    });
+    const data = await resp.json();
+    msgs.removeChild(dots);
+    if (data.reply) {
+      _aiAddBubble('bot', data.reply);
+      _aiHistory.push({ role: 'bot', text: data.reply });
+    } else if (data.error) {
+      _aiAddBubble('bot', '⚠️ Ошибка ИИ: ' + data.error);
+    } else {
+      _aiAddBubble('bot', '⚠️ ИИ не вернул ответ. Попробуй ещё раз.');
+    }
+  } catch(e) {
+    msgs.removeChild(dots);
+    _aiAddBubble('bot', '⚠️ ИИ временно недоступен: ' + e.message);
+  }
   msgs.scrollTop = msgs.scrollHeight;
-  setTimeout(() => {
-    thinking.innerHTML = aiAnswer(q);
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 400);
 }
 
 function aiAnswer(q) {
   const ql = q.toLowerCase();
   const now = new Date();
   const year = now.getFullYear();
+  function parseDMY(s){try{const[d,m,y]=s.split('.').map(Number);return new Date(y,m-1,d).getTime();}catch{return 0;}}
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',unknown:'❓ Прочее'};
 
   // ── Приветствие ──
-  if (/^(привет|хай|здравствуй|добрый|помоги|что умеешь|что можешь|помощ)/.test(ql)) {
-    return `Привет! Я финансовый ассистент OMSFIN. Умею:<br><br>
-<b>По вашим данным:</b><br>
-• Доходы, расходы, прибыль за год<br>
-• Расчёт НДС и УСН по выписке<br>
-• Прогноз и топ расходов<br><br>
-<b>Общие вопросы по бухгалтерии:</b><br>
-• Как платить НДС / НДФЛ / взносы<br>
-• Ставки налогов 2026<br>
-• Дивиденды, зарплата, прибыль<br>
-• Как работать с сайтом<br><br>
-Спросите что угодно!`;
+  if (/^(привет|хай|здравствуй|добрый|помоги|что умеешь|что можешь|помощ|start)/.test(ql)) {
+    return {html:`Умею отвечать на вопросы по <b>твоим данным</b> и по общим темам. Попробуй спросить:`, chips:['Мои доходы за этот год','Расходы по категориям','Топ клиентов','Как платить НДС?','Ближайшие дедлайны','УСН или ОСНО — что выгоднее?']};
   }
 
-  // ── Данные по доходам ──
-  if (/доход|выруч|заработ/.test(ql) && !/как|что так|почему/.test(ql)) {
-    if (!income) return 'Данных о доходах за этот год пока нет. Загрузи выписку на главной странице.';
-    const m = now.getMonth();
-    return `За ${year} год: <b>${fmt(income)}</b><br>Среднемесячный доход: <b>${fmt(income/(m+1))}</b><br>Данные за ${m+1} из 12 месяцев.`;
+  // ── Доходы ──
+  if (/доход|выруч|заработ/.test(ql) && !/как|что так|почему|налог/.test(ql)) {
+    if (!income) return {html:'Данных о доходах пока нет. Загрузи выписку на главной странице.', actions:[{label:'→ Загрузить выписку',href:'/'}], chips:['Как загрузить выписку?']};
+    const m = now.getMonth()+1;
+    const byMonth = {}; yearTx.filter(t=>t.amount>0).forEach(t=>{const mo=(t.date||'').split('.')[1];if(mo)byMonth[mo]=(byMonth[mo]||0)+Number(t.amount);});
+    const best = Object.entries(byMonth).sort(([,a],[,b])=>b-a)[0];
+    const mn = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return {html:`Доходы за ${year} год: <b>${fmt(income)}</b><br>Среднемесячный: <b>${fmt(income/m)}</b><br>Лучший месяц: <b>${best?mn[Number(best[0])-1]+' — '+fmt(best[1]):'нет данных'}</b><br>Данные за ${m} из 12 мес.`, chips:['Расходы за этот год','Прогноз на следующий месяц','Сколько НДС к уплате?']};
   }
 
-  // ── Данные по расходам ──
-  if (/^(расход|трат|списан|сколько потратил)/.test(ql) || /мои расход/.test(ql)) {
-    if (!expense) return 'Данных о расходах пока нет. Загрузи выписку.';
-    const top = Object.entries(yearTx.filter(t=>t.amount<0).reduce((acc,t)=>{acc[t.category]=(acc[t.category]||0)+Math.abs(t.amount);return acc;},{})).sort(([,a],[,b])=>b-a).slice(0,4);
-    const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Еда',unknown:'❓ Прочее'};
-    return `Всего расходов за ${year}: <b>${fmt(expense)}</b><br><br>Топ категории:<br>${top.map(([k,v])=>`• ${cats[k]||k}: ${fmt(v)}`).join('<br>')}`;
+  // ── Расходы по категориям ──
+  if (/расход|трат|списан|потратил/.test(ql)) {
+    if (!expense) return {html:'Данных о расходах пока нет. Загрузи выписку.', actions:[{label:'→ Главная',href:'/'}]};
+    const byCat = {}; yearTx.filter(t=>t.amount<0).forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+Math.abs(Number(t.amount));});
+    const top = Object.entries(byCat).sort(([,a],[,b])=>b-a).slice(0,5);
+    const share = top.map(([k,v])=>`• ${cats[k]||k}: <b>${fmt(v)}</b> (${Math.round(v/expense*100)}%)`).join('<br>');
+    return {html:`Расходы за ${year}: <b>${fmt(expense)}</b><br><br>По категориям:<br>${share}`, chips:['Топ-5 крупных операций','Зарплатные расходы','Прогноз на следующий месяц']};
   }
 
-  // ── Прибыль из данных ──
-  if (/прибыл|профит|чистый|финрезульт/.test(ql) && !/налог на прибыл|ставк|как счит|что так/.test(ql)) {
-    if (!income && !expense) return 'Нет данных. Загрузи выписку.';
+  // ── Прибыль ──
+  if (/прибыл|профит|чистый|финрезульт/.test(ql) && !/налог на прибыл|ставк|как счит/.test(ql)) {
+    if (!income && !expense) return {html:'Нет данных. Загрузи выписку.', actions:[{label:'→ Главная',href:'/'}]};
     const profit = income-expense;
-    return `Финансовый результат за ${year}:<br>• Доходы: <b>${fmt(income)}</b><br>• Расходы: <b>${fmt(expense)}</b><br>• Прибыль: <b style="color:${profit>=0?'#22c55e':'#ef4444'}">${profit>=0?'+':''}${fmt(profit)}</b><br><br>Это управленческий расчёт по выписке. Для бухгалтерской прибыли учитываются начисления и амортизация.`;
+    const margin = income>0?Math.round(profit/income*100):0;
+    return {html:`Финансовый результат за ${year}:<br>• Доходы: <b>${fmt(income)}</b><br>• Расходы: <b>${fmt(expense)}</b><br>• Прибыль: <b style="color:${profit>=0?'#22c55e':'#ef4444'}">${profit>=0?'+':''}${fmt(profit)}</b><br>• Маржа: <b>${margin}%</b><br><br><i>Управленческий расчёт по выписке (кассовый метод).</i>`, actions:[{label:'📊 P&L отчёт',href:'#'}], chips:['Налог на прибыль 25%','Прогноз на следующий месяц','Расходы по категориям']};
   }
 
-  // ── Топ расходов ──
-  if (/топ|крупн|больш|максимальн/.test(ql) && /расход|операц|трат|платёж|платеж/.test(ql)) {
-    const sorted = [...yearTx].filter(t=>t.amount<0).sort((a,b)=>a.amount-b.amount).slice(0,5);
-    if (!sorted.length) return 'Нет данных о расходах.';
-    return `Топ-5 расходов за ${year}:<br><br>${sorted.map((t,i)=>`${i+1}. ${(t.name||'—').substring(0,32)}: <b>${fmt(t.amount)}</b>`).join('<br>')}`;
+  // ── Топ клиентов ──
+  if (/клиент|контрагент|покупател|кто платит|кто перевод|топ.*доход/.test(ql)) {
+    if (!income) return {html:'Нет данных. Загрузи выписку.', actions:[{label:'→ Главная',href:'/'}]};
+    const byC={}; allTx.filter(t=>t.amount>0).forEach(t=>{const k=t.name||'—';byC[k]=(byC[k]||0)+Number(t.amount);});
+    const top=Object.entries(byC).sort(([,a],[,b])=>b-a).slice(0,5);
+    const tot=Object.values(byC).reduce((a,b)=>a+b,0)||1;
+    const top1pct=Math.round(top[0]?.[1]/tot*100)||0;
+    const warn=top1pct>60?`<br><br>⚠️ Топ-1 клиент даёт <b>${top1pct}%</b> выручки — высокая зависимость.`:'';
+    return {html:`Топ клиентов по выручке:<br><br>${top.map((([k,v],i)=>`${i+1}. ${k.substring(0,30)}: <b>${fmt(v)}</b> (${Math.round(v/tot*100)}%)`)).join('<br>')}${warn}`, actions:[{label:'→ Контрагенты',href:'/counterparty'}], chips:['Проверить контрагента по ИНН','Как снизить зависимость от клиентов?']};
+  }
+
+  // ── Топ расходных операций ──
+  if (/топ|крупн|больш|максимальн/.test(ql) && /расход|операц|трат|платёж/.test(ql)) {
+    const sorted=[...yearTx].filter(t=>t.amount<0).sort((a,b)=>a.amount-b.amount).slice(0,5);
+    if (!sorted.length) return {html:'Нет данных о расходах.'};
+    return {html:`Топ-5 расходов за ${year}:<br><br>${sorted.map((t,i)=>`${i+1}. ${(t.name||'—').substring(0,28)}: <b>${fmt(t.amount)}</b>`).join('<br>')}`, chips:['Расходы по категориям','Прогноз на следующий месяц']};
+  }
+
+  // ── Зарплатные расходы ──
+  if (/зарплат|фот|фзп/.test(ql) && !/как.*(счит|платить)|взнос|ставк/.test(ql)) {
+    const sal=yearTx.filter(t=>t.category==='salary'&&t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+    if (!sal) return {html:'Расходов на зарплату не найдено. Убедись что операции с зарплатой правильно категоризированы.', actions:[{label:'→ Операции',href:'#'}], chips:['Как категоризировать операции?']};
+    const wzn=sal*0.3;
+    return {html:`Зарплатный фонд за ${year}: <b>${fmt(sal)}</b><br>Страховые взносы ~30%: <b>${fmt(wzn)}</b><br>Итого расходы на персонал: <b>${fmt(sal+wzn)}</b>`, actions:[{label:'→ Зарплата',href:'/payroll'}], chips:['Страховые взносы 2026','НДФЛ прогрессивная шкала']};
+  }
+
+  // ── Кассовый разрыв ──
+  if (/кассов.*(разрыв|разрав)|разрыв|кассов.*дефицит/.test(ql)) {
+    if (!allTx.length) return {html:'Нет данных. Загрузи выписку.'};
+    const msDay=86400000, n=Date.now();
+    const last30=allTx.filter(t=>parseDMY(t.date||'01.01.2000')>=n-30*msDay);
+    const i30=last30.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+    const e30=last30.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+    const ratio=e30>0?i30/e30:2;
+    if (ratio<1) return {html:`⚠️ <b>Кассовый разрыв!</b><br><br>За последние 30 дней:<br>• Доход: <b>${fmt(i30)}</b><br>• Расход: <b>${fmt(e30)}</b><br>• Дефицит: <b style="color:#ef4444">${fmt(e30-i30)}</b><br><br>Расходы превышают доходы. Нужно срочно привлечь поступления или сократить платежи.`, chips:['Переговорный калькулятор — запросить предоплату','Как снизить расходы?'], actions:[{label:'🤝 Переговорный калькулятор',href:'/negotiation'}]};
+    if (ratio<1.2) return {html:`⚠️ <b>Риск кассового разрыва</b><br><br>За последние 30 дней доходы покрывают расходы лишь в 1.${Math.round((ratio-1)*10)} раза. Запас минимальный — стоит нарастить подушку.`, chips:['Прогноз на следующий месяц','Как запросить предоплату?']};
+    return {html:`✅ Кассового разрыва нет.<br><br>За 30 дней доходы в <b>${ratio.toFixed(1)}x</b> превышают расходы. Хороший запас ликвидности.`, chips:['Здоровье бизнеса','Прогноз на следующий месяц']};
+  }
+
+  // ── Здоровье бизнеса ──
+  if (/здоровь|скоринг|оценк.*бизнес|бизнес.*оценк/.test(ql)) {
+    const w=_aiWeakPoint();
+    return {html:`Скоринг здоровья бизнеса виден на главном дашборде — кружок с баллом от 0 до 100.${w?'<br><br>'+w:''}<br><br>Оценивает 5 параметров:<br>• Ликвидность (25 б.)<br>• Стабильность доходов (20 б.)<br>• Диверсификация клиентов (20 б.)<br>• Налоговая нагрузка (20 б.)<br>• Динамика роста (15 б.)`, actions:[{label:'→ Дашборд',href:'/'}], chips:['Кассовый разрыв','Топ клиентов','Прогноз на следующий месяц']};
   }
 
   // ── Прогноз ──
-  if (/прогноз|следующ месяц|план на/.test(ql)) {
-    if (!allTx.length) return 'Нет данных для прогноза. Загрузи выписку.';
-    const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].slice(-3);
-    const avgI = periods.reduce((s,p)=>s+allTx.filter(t=>t.period===p&&t.amount>0).reduce((a,t)=>a+Number(t.amount),0),0)/Math.max(1,periods.length);
-    const avgE = periods.reduce((s,p)=>s+allTx.filter(t=>t.period===p&&t.amount<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0),0)/Math.max(1,periods.length);
-    const net = avgI-avgE;
-    return `Прогноз на следующий месяц:<br>• Доход: ~<b>${fmt(avgI)}</b><br>• Расход: ~<b>${fmt(avgE)}</b><br>• Чистый поток: <b style="color:${net>=0?'#22c55e':'#ef4444'}">${net>=0?'+':''}${fmt(net)}</b><br><br>На основе среднего за последние ${periods.length} мес.`;
+  if (/прогноз|следующ.*месяц|план на/.test(ql)) {
+    if (!allTx.length) return {html:'Нет данных для прогноза. Загрузи выписку.', actions:[{label:'→ Главная',href:'/'}]};
+    const periods=[...new Set(allTx.map(t=>t.period).filter(Boolean))].slice(-3);
+    if (!periods.length) return {html:'Недостаточно данных для прогноза — нужна хотя бы одна загруженная выписка.'};
+    const avgI=periods.reduce((s,p)=>s+allTx.filter(t=>t.period===p&&t.amount>0).reduce((a,t)=>a+Number(t.amount),0),0)/periods.length;
+    const avgE=periods.reduce((s,p)=>s+allTx.filter(t=>t.period===p&&t.amount<0).reduce((a,t)=>a+Math.abs(Number(t.amount)),0),0)/periods.length;
+    const net=avgI-avgE;
+    return {html:`Прогноз на следующий месяц:<br>• Доход: ~<b>${fmt(avgI)}</b><br>• Расход: ~<b>${fmt(avgE)}</b><br>• Чистый поток: <b style="color:${net>=0?'#22c55e':'#ef4444'}">${net>=0?'+':''}${fmt(net)}</b><br><br><i>Среднее за последние ${periods.length} мес.</i>`, actions:[{label:'📈 Аналитика',href:'/analytics'}], chips:['Кассовый разрыв','Кэшфлоу-прогноз на 90 дней','Ближайшие дедлайны']};
   }
 
   // ── Дедлайны ──
-  if (/дедлайн|ближайш|следующ|срок|когда плат|когда сдав/.test(ql)) {
-    const upcoming = TAX_DEADLINES_2026.filter(d=>new Date(d.date)>now).slice(0,4);
-    return 'Ближайшие налоговые дедлайны:<br><br>' + upcoming.map(d=>`• ${new Date(d.date).toLocaleDateString('ru-RU')}: <b>${d.title}</b>`).join('<br>') +
-      `<br><br>Подробнее — раздел <b>Налоги</b>.`;
+  if (/дедлайн|ближайш|срок|когда плат|когда сдав/.test(ql)) {
+    const upcoming=(typeof TAX_DEADLINES_2026!=='undefined'?TAX_DEADLINES_2026:[]).filter(d=>new Date(d.date)>now).slice(0,5);
+    if (!upcoming.length) return {html:'Нет предстоящих дедлайнов.'};
+    return {html:'Ближайшие налоговые дедлайны:<br><br>'+upcoming.map(d=>`• <b>${new Date(d.date).toLocaleDateString('ru-RU')}</b> — ${d.title}`).join('<br>'), actions:[{label:'→ Налоговый календарь',href:'#'}], chips:['Как платить НДС?','ЕНС — как работает?','Страховые взносы сроки']};
   }
 
-  // ── НДС — расчёт по данным ──
-  if (/(ндс|nds).*(сколько|расч|сумм|мой|наш|у нас|у меня)|(сколько|расч|сумм|мой).*(ндс|nds)/.test(ql)) {
-    const vat = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0)*10/110;
-    const vatIn = yearTx.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0)*10/110;
-    const next = [new Date(year,3,25),new Date(year,6,25),new Date(year,9,25),new Date(year+1,0,25)].find(d=>d>now);
-    const days = next ? Math.ceil((next-now)/864e5) : 0;
-    return `НДС к уплате (расчётно):<br>• НДС с продаж: <b>${fmt(vat)}</b><br>• Вычет по закупкам: <b>${fmt(vatIn)}</b><br>• К доплате: <b>${fmt(Math.max(0,vat-vatIn))}</b><br><br>Следующий срок: ${next?.toLocaleDateString('ru-RU')} (через ${days} дн.)<br>Точный расчёт — раздел <b>НДС</b>.`;
+  // ── НДС — мои данные ──
+  if (/(ндс|nds).*(сколько|расч|сумм|мой|наш|у нас|у меня|к уплате)|(сколько|к уплате).*(ндс|nds)/.test(ql)) {
+    const vatSales=yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0)*10/110;
+    const vatBuy=yearTx.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0)*10/110;
+    const due=Math.max(0,vatSales-vatBuy);
+    const next=[new Date(year,3,25),new Date(year,6,25),new Date(year,9,25),new Date(year+1,0,25)].find(d=>d>now);
+    const days=next?Math.ceil((next-now)/864e5):0;
+    if (!income) return {html:'Нет данных по доходам. Загрузи выписку.', actions:[{label:'→ Главная',href:'/'}]};
+    return {html:`НДС к уплате (расчётно за ${year}):<br>• НДС с продаж (10%): <b>${fmt(vatSales)}</b><br>• Вычет по закупкам: <b>${fmt(vatBuy)}</b><br>• К доплате: <b style="color:#f59e0b">${fmt(due)}</b><br><br>Следующий срок: <b>${next?.toLocaleDateString('ru-RU')}</b> (через ${days} дн.)`, actions:[{label:'🧾 Раздел НДС',href:'/vat'}], chips:['Как работает вычет НДС?','Перенести НДС на другой квартал','Ближайшие дедлайны']};
   }
 
-  // ── НДС — общий вопрос ──
-  if (/ндс|nds/.test(ql)) {
-    return `<b>НДС (налог на добавленную стоимость) — 2026</b><br><br>
-<b>Ставки:</b><br>
-• 10% — продовольствие (мясо, птица, базовые продукты)<br>
-• 22% — основная ставка (была 20% до 2026 г.)<br>
-• 0% — экспорт<br><br>
-<b>Как платить:</b><br>
-1. Рассчитать НДС с продаж (исходящий)<br>
-2. Вычесть НДС из закупок (входящий)<br>
-3. Разницу уплатить в бюджет<br><br>
-<b>Сроки — ежеквартально до 25-го числа месяца</b> после квартала:<br>
-• I кв. → 25 апреля<br>
-• II кв. → 25 июля<br>
-• III кв. → 25 октября<br>
-• IV кв. → 25 января следующего года<br><br>
-Можно платить тремя частями (по ⅓ каждый месяц квартала).<br>
-Расчёт — раздел <b>НДС</b>.`;
+  // ── НДС — общий ──
+  if (/ндс|nds|налог на добавл/.test(ql)) {
+    return {html:`<b>НДС — 2026</b><br><br><b>Ставки:</b><br>• 10% — продовольствие (мясо, птица, базовые продукты)<br>• 22% — основная ставка (была 20%)<br>• 0% — экспорт<br><br><b>Как платить:</b> НДС с продаж минус вычет по закупкам = к уплате. Ежеквартально, до 25-го числа месяца после квартала (апр / июл / окт / янв).<br><br>Можно платить 3 частями по ⅓ каждого месяца квартала.`, actions:[{label:'🧾 Раздел НДС',href:'/vat'},{label:'📋 Декларация НДС',href:'/declarations'}], chips:['Как работает вычет НДС?','Мой НДС к уплате','Перенос НДС на другой квартал']};
   }
 
-  // ── НДФЛ общий ──
+  // ── НДФЛ дивиденды ──
+  if (/ндфл.*(дивид)|дивид.*(ндфл|налог|сколько)/.test(ql)) {
+    return {html:`<b>НДФЛ с дивидендов — 2026</b><br><br>Отдельная шкала (не складывается с зарплатой):<br>• 13% — до 2 400 000 ₽/год<br>• 15% — свыше 2 400 000 ₽<br><br>Компания удерживает НДФЛ как агент и перечисляет на следующий рабочий день после выплаты.`, chips:['Как выплатить дивиденды?','НДФЛ с зарплаты','Страховые взносы начисляются на дивиденды?']};
+  }
+
+  // ── НДФЛ зарплата ──
   if (/ндфл|налог на доход|подоходн/.test(ql)) {
-    if (/дивид/.test(ql)) {
-      return `<b>НДФЛ с дивидендов — 2026</b><br><br>
-Отдельная шкала (НЕ складывается с зарплатной базой):<br>
-• 13% — до 2 400 000 ₽/год<br>
-• 15% — сверх 2 400 000 ₽/год<br><br>
-<b>Как платить:</b> компания удерживает НДФЛ как налоговый агент при выплате дивидендов и перечисляет в бюджет на следующий рабочий день.<br><br>
-Декларация 3-НДФЛ нужна только если есть другие источники дохода помимо дивидендов от ООО.`;
-    }
-    return `<b>НДФЛ с зарплаты — прогрессивная шкала 2026</b><br><br>
-Считается нарастающим итогом с начала года:<br>
-• 13% — до 2 400 000 ₽/год<br>
-• 15% — от 2 400 001 до 5 000 000 ₽<br>
-• 18% — от 5 000 001 до 20 000 000 ₽<br>
-• 20% — от 20 000 001 до 50 000 000 ₽<br>
-• 22% — свыше 50 000 000 ₽<br><br>
-<b>Работодатель удерживает НДФЛ как агент</b> и перечисляет:<br>
-• С 1 по 22 число → до 28-го того же месяца<br>
-• С 23 по конец месяца → до 5-го следующего<br><br>
-НДФЛ с зарплаты и с дивидендов — разные базы, не суммируются.`;
+    return {html:`<b>НДФЛ с зарплаты — прогрессивная шкала 2026</b><br><br>Нарастающим итогом с начала года:<br>• 13% — до 2 400 000 ₽<br>• 15% — до 5 000 000 ₽<br>• 18% — до 20 000 000 ₽<br>• 20% — до 50 000 000 ₽<br>• 22% — свыше 50 000 000 ₽<br><br>Работодатель удерживает НДФЛ как агент. НДФЛ с зарплаты и дивидендов — разные базы.`, actions:[{label:'→ Зарплата',href:'/payroll'},{label:'📋 6-НДФЛ',href:'/declarations'}], chips:['НДФЛ с дивидендов','Страховые взносы 2026','Как рассчитать зарплату на руки?']};
   }
 
   // ── Страховые взносы ──
-  if (/взнос|страховые|пфр|фсс|есн|30%/.test(ql)) {
-    return `<b>Страховые взносы — 2026</b><br><br>
-<b>Единый тариф (ООО, общий режим):</b><br>
-• 30% — до предельной базы <b>2 979 000 ₽</b>/год на сотрудника<br>
-• 15,1% — сверх предельной базы<br><br>
-⚠️ Льготы МСП (15%) <b>отменены с 2026 года</b>.<br><br>
-<b>IT-компании (аккредитованные):</b><br>
-• 15% до базы / 7,6% сверх<br><br>
-<b>Сроки уплаты:</b> до 28-го числа каждого месяца за предыдущий.<br><br>
-<b>Отчётность:</b> РСВ — ежеквартально до 25-го числа месяца после квартала.<br>
-Расчёт — раздел <b>Зарплата</b>.`;
+  if (/взнос|страховые|пфр|фсс|есн/.test(ql)) {
+    return {html:`<b>Страховые взносы — 2026</b><br><br><b>Единый тариф:</b><br>• 30% — до предельной базы <b>2 979 000 ₽</b>/год на сотрудника<br>• 15,1% — сверх базы<br><br>⚠️ Льготы МСП (15%) <b>отменены с 2026 года</b>.<br><br><b>IT-компании (аккредитованные):</b> 15% / 7,6% сверх базы.<br><br>Уплата — до 28-го числа ежемесячно. РСВ — ежеквартально до 25-го.`, actions:[{label:'→ Зарплата',href:'/payroll'},{label:'📋 РСВ',href:'/declarations'}], chips:['НДФЛ прогрессивная шкала','Как рассчитать зарплату на руки?','ЕНС — как работает?']};
   }
 
   // ── УСН ──
   if (/усн|упрощённ|упрощен/.test(ql)) {
     if (income) {
-      const tax6 = income*0.06;
-      const tax15 = Math.max((income-expense)*0.15, income*0.01);
-      return `<b>УСН расчёт за ${year} по вашим данным:</b><br><br>
-• <b>УСН 6%</b> с доходов: <b>${fmt(tax6)}</b><br>
-• <b>УСН 15%</b> доходы минус расходы: <b>${fmt(Math.max(0,tax15))}</b><br><br>
-<b>Как платить:</b> авансовые платежи ежеквартально до 28-го числа:<br>
-• I кв. → 28 апреля<br>
-• Полугодие → 28 июля<br>
-• 9 месяцев → 28 октября<br>
-• Год → 28 марта следующего года (ООО) / 28 апреля (ИП)<br><br>
-На УСН 6% можно вычесть страховые взносы (до 50% налога для ООО, 100% для ИП без сотрудников).`;
+      const t6=income*0.06, t15=Math.max((income-expense)*0.15,income*0.01);
+      const better=t6<t15?`УСН 6% выгоднее на ${fmt(t15-t6)}`:`УСН 15% выгоднее на ${fmt(t6-t15)}`;
+      return {html:`<b>УСН расчёт за ${year} по вашим данным:</b><br><br>• <b>УСН 6%</b> с доходов: <b>${fmt(t6)}</b><br>• <b>УСН 15%</b> доходы − расходы: <b>${fmt(Math.max(0,t15))}</b><br><br>📌 ${better}. Авансы ежеквартально до 28-го (апр / июл / окт).`, actions:[{label:'→ Налоги',href:'#'},{label:'📋 Декларация УСН',href:'/declarations'}], chips:['Можно ли уменьшить УСН на взносы?','Ближайшие дедлайны','ОСНО или УСН — что выгоднее?']};
     }
-    return `<b>УСН — упрощённая система налогообложения</b><br><br>
-<b>Два варианта:</b><br>
-• <b>УСН 6%</b> — с доходов. Проще, подходит при низких расходах.<br>
-• <b>УСН 15%</b> — доходы минус расходы. Выгоднее при расходах >60% выручки. Минимальный налог 1% от доходов.<br><br>
-<b>Лимиты 2026:</b> доход до 450 млн ₽/год, сотрудники до 130 чел.<br><br>
-<b>Авансы — до 28-го числа</b> после квартала (апрель, июль, октябрь).<br>
-Годовая декларация — до 25 марта (ООО) / 25 апреля (ИП).<br><br>
-Загрузи выписку и спроси снова — рассчитаю конкретную сумму.`;
+    return {html:`<b>УСН — упрощённая система</b><br><br>• <b>УСН 6%</b> — с доходов. Проще, при низких расходах.<br>• <b>УСН 15%</b> — доходы − расходы. Выгоднее при расходах >60% выручки. Минимальный налог 1% от доходов.<br><br><b>Лимиты 2026:</b> доход до 450 млн ₽, до 130 сотрудников.<br>Авансы — до 28-го числа после квартала.`, chips:['Мой расчёт УСН по данным','ОСНО или УСН — что выгоднее?','Ближайшие дедлайны']};
+  }
+
+  // ── ОСНО vs УСН ──
+  if (/осно.*(усн|упрощ)|усн.*(осно)|какой режим|выгоднее.*(осно|усн)|режим налог/.test(ql)) {
+    if (income) {
+      const t6=income*0.06, t25=(income-expense)*0.25;
+      return {html:`Сравнение налоговых режимов за ${year}:<br><br><b>УСН 6%:</b> ${fmt(t6)}<br><b>УСН 15%:</b> ${fmt(Math.max((income-expense)*0.15,income*0.01))}<br><b>ОСНО (25%):</b> ~${fmt(Math.max(0,t25))}<br><br>На ОСНО добавляется НДС 22% — но можно принимать к вычету входящий НДС. Выгодно если работаете с компаниями на ОСНО.`, chips:['Мой НДС на ОСНО','УСН — авансы и сроки','Налог на прибыль 25%']};
+    }
+    return {html:`<b>ОСНО vs УСН:</b><br><br>УСН проще и дешевле для большинства малого бизнеса.<br>ОСНО выгодно если:<br>• Контрагенты на ОСНО и требуют счета с НДС<br>• Большие закупки — вычет НДС существенный<br>• Доход >450 млн ₽/год (принудительный переход)<br><br>Загрузи выписку — рассчитаю конкретные цифры.`, chips:['УСН — что выбрать 6% или 15%?','НДС — как работает вычет?']};
   }
 
   // ── Налог на прибыль ──
   if (/налог на прибыл|налог прибыл|прибыл.*(налог|ставк)|ставк.*прибыл/.test(ql)) {
-    return `<b>Налог на прибыль — 2026</b><br><br>
-<b>Ставка: 25%</b> (с 2026 г., было 20%)<br>
-• 8% — федеральный бюджет<br>
-• 17% — региональный бюджет<br><br>
-<b>Кто платит:</b> организации на ОСНО (ООО, АО и др.)<br><br>
-<b>Авансовые платежи:</b><br>
-• Ежемесячно (если доход >15 млн/кв.) — до 28-го числа<br>
-• Ежеквартально — до 28-го числа месяца после квартала<br><br>
-<b>Декларация:</b><br>
-• Квартальная — до 25-го числа месяца после квартала<br>
-• Годовая — до 25 марта следующего года<br><br>
-<b>Уменьшается на:</b> убытки прошлых лет (до 50% базы), инвестиционный вычет.`;
+    const tp=income&&expense?Math.max(0,(income-expense)*0.25):0;
+    return {html:`<b>Налог на прибыль — 2026</b><br><br><b>Ставка: 25%</b> (с 2026 г., было 20%)<br>• 8% — федеральный бюджет<br>• 17% — региональный<br><br>Кто платит: организации на ОСНО.<br>${tp?`По вашим данным: ~<b>${fmt(tp)}</b><br><br>`:''}Авансы ежеквартально до 28-го числа. Декларация — до 25 марта следующего года.`, actions:[{label:'📋 Декларация по прибыли',href:'/declarations'}], chips:['ОСНО или УСН — что выгоднее?','Как уменьшить налог на прибыль?']};
   }
 
   // ── Дивиденды ──
   if (/дивиденд/.test(ql)) {
-    return `<b>Дивиденды — как выплатить</b><br><br>
-<b>Условия выплаты дивидендов из ООО:</b><br>
-1. Есть чистая прибыль по данным бухучёта<br>
-2. Уставный капитал полностью оплачен<br>
-3. Стоимость чистых активов ≥ уставный капитал<br>
-4. Нет признаков банкротства<br><br>
-<b>Периодичность:</b> ежеквартально, раз в полгода или раз в год — как прописано в Уставе.<br><br>
-<b>НДФЛ с дивидендов (2026):</b><br>
-• 13% — до 2 400 000 ₽/год<br>
-• 15% — свыше<br>
-(отдельная база, не смешивается с зарплатой)<br><br>
-<b>Страховые взносы с дивидендов НЕ начисляются.</b><br><br>
-Компания удерживает НДФЛ и перечисляет на следующий рабочий день после выплаты.`;
+    return {html:`<b>Дивиденды из ООО — 2026</b><br><br><b>Условия:</b><br>• Есть чистая прибыль по бухучёту<br>• Уставный капитал оплачен<br>• Чистые активы ≥ уставный капитал<br><br><b>НДФЛ с дивидендов:</b><br>• 13% — до 2 400 000 ₽/год<br>• 15% — свыше (отдельная база от зарплаты)<br><br>Страховые взносы <b>не начисляются</b>. Компания удерживает НДФЛ как агент — перечислить на следующий рабочий день.`, chips:['НДФЛ с дивидендов vs зарплата','Как оформить решение о выплате?','Налог на прибыль 25%']};
   }
 
-  // ── Зарплата из данных ──
-  if (/зарплат|сотрудник|персонал/.test(ql) && !/как|ставк|взнос/.test(ql)) {
-    const salaryTotal = yearTx.filter(t=>t.category==='salary'&&t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-    if (!salaryTotal) return 'Расходов на зарплату в этом году не найдено. Проверь категоризацию в разделе Разметка.';
-    return `Зарплатные расходы за ${year}: <b>${fmt(salaryTotal)}</b><br><br>Управление сотрудниками и начислениями — раздел <b>Зарплата</b>.`;
+  // ── Счёт-фактура / УПД / документы ──
+  if (/счёт.фактур|счет.фактур|упд|универсальн.*документ|накладн|торг.12|первичн/.test(ql)) {
+    return {html:`<b>Первичные документы — 2026</b><br><br>• <b>ТОРГ-12</b> или <b>УПД</b> — при продаже товаров<br>• <b>Акт / УПД</b> — при услугах<br>• <b>ТТН</b> — при перевозке<br>• <b>Счёт-фактура</b> — обязательна на НДС (срок 5 дней с отгрузки)<br><br>⚡ С 01.04.2026: обязательна строка <b>5б</b> в счёте-фактуре если отгрузка в счёт аванса.`, actions:[{label:'📄 Создать документ',href:'/docs'}], chips:['Когда нужен счёт-фактура?','УПД — чем отличается от ТОРГ-12?']};
   }
 
-  // ── УСН из данных ──
-  if (/усн/.test(ql)) {
-    if (!income) return 'Нет данных для расчёта УСН. Загрузи выписку.';
-    const tax6 = income*0.06;
-    const tax15 = Math.max((income-expense)*0.15, income*0.01);
-    return `УСН расчёт за ${year}:<br>• <b>УСН 6%</b>: <b>${fmt(tax6)}</b><br>• <b>УСН 15%</b>: <b>${fmt(Math.max(0,tax15))}</b><br><br>Раздел <b>Налоги</b> считает авансы по кварталам.`;
+  // ── Как загрузить выписку ──
+  if (/как загруз|загрузить.*выписк|импорт.*выписк|откуда данные/.test(ql)) {
+    return {html:`<b>Загрузить банковскую выписку:</b><br><br>1. Нажми <b>📂 Выписка</b> на главной<br>2. Выбери CSV-файл из банка<br>3. Операции автоматически распознаются<br><br><b>Поддерживаемые банки:</b> Т-Банк, ВТБ, Альфа-Банк<br>Повторная загрузка безопасна — дубли исключаются по хэшу.`, actions:[{label:'→ Загрузить',href:'/'}], chips:['Что делать если банк не поддерживается?','Как добавить операцию вручную?']};
   }
 
-  // ── Счёт-фактура / УПД ──
-  if (/счёт.фактур|счет.фактур|упд|универсальн.*документ/.test(ql)) {
-    return `<b>Счёт-фактура и УПД — 2026</b><br><br>
-<b>Когда нужна счёт-фактура:</b><br>
-• При каждой отгрузке товаров/услуг, если вы на НДС<br>
-• При получении аванса<br><br>
-<b>С 01.04.2026 обязательна строка 5б</b> — реквизиты авансового счёта-фактуры, если отгрузка в счёт предоплаты.<br><br>
-<b>УПД</b> (универсальный передаточный документ) заменяет счёт-фактуру + ТОРГ-12/акт одним документом.<br><br>
-<b>Срок выставления:</b> не позднее 5 календарных дней с даты отгрузки.<br><br>
-Сформировать счёт, УПД, ТОРГ-12, акт — раздел <b>Документы</b>.`;
+  // ── Добавить вручную ──
+  if (/добав.*(вручн|операц|трансакц)|ввести вручн|ручной ввод/.test(ql)) {
+    return {html:`Перейди в раздел <b>+ Добавить</b> и заполни форму:<br>• Дата, сумма (отрицательная = расход)<br>• Контрагент и назначение<br>• Категория<br><br>Или нажми <b>Cmd+K</b> → «Добавить операцию».`, actions:[{label:'→ Добавить',href:'#'}], chips:['Как категоризировать операцию?']};
   }
 
-  // ── Как работать с сайтом ──
-  if (/как загруз|выписк|импорт|загрузить/.test(ql)) {
-    return `<b>Как загрузить банковскую выписку:</b><br><br>
-1. Нажми кнопку <b>Загрузить выписку</b> на главной<br>
-2. Выбери CSV-файл из Т-Банк, ВТБ или Альфа-Банка<br>
-3. Операции автоматически распознаются и категоризируются<br>
-4. Повторная загрузка безопасна — дубли не создаются (проверка по хэшу)<br><br>
-<b>Поддерживаемые форматы:</b> CSV от Т-Банк, ВТБ, Альфа-Банк.<br>
-Для других банков — конвертируй в похожий формат.`;
+  // ── Переговоры / отсрочка ──
+  if (/переговор|отсрочк|скидк|предоплат|переговорн/.test(ql)) {
+    return {html:`В OMSFIN есть <b>Переговорный калькулятор</b>.<br><br>Покажет реальную стоимость:<br>• Отсрочки платежа (потери vs. ставка кредита)<br>• Скидки (влияние на маржу)<br>• Предоплаты (выгода vs. дисконт)<br><br>Помогает принять обоснованное решение на переговорах.`, actions:[{label:'🤝 Переговорный калькулятор',href:'/negotiation'}], chips:['Кассовый разрыв','Прогноз на следующий месяц']};
   }
 
-  if (/как добав|ввести вручн|добавить операц/.test(ql)) {
-    return `<b>Добавить операцию вручную:</b><br><br>
-Перейди в раздел <b>Добавить</b> (или нажми A) и заполни:<br>
-• Дата, сумма (отрицательная = расход)<br>
-• Контрагент, назначение<br>
-• Категория<br><br>
-Или нажми <b>Cmd+K</b> → "Добавить операцию".`;
-  }
-
-  if (/как создать компани|несколько компани|добавить компани/.test(ql)) {
-    return `<b>Несколько компаний:</b><br><br>
-В меню (иконка профиля вверху) можно создать компанию и пригласить коллег.<br><br>
-<b>Роли:</b><br>
-• <b>Директор</b> — полный доступ, настройки, журнал действий<br>
-• <b>Бухгалтер</b> — операции, налоги, документы (без настроек компании)<br>
-• <b>Сотрудник</b> — только документы`;
-  }
-
-  if (/как работ|функц|что делает|что есть|раздел|навига/.test(ql)) {
-    return `<b>Разделы OMSFIN:</b><br><br>
-• <b>Дашборд</b> — сводка, аномалии, дедлайны, прогноз<br>
-• <b>Операции</b> — список транзакций, фильтры, категоризация<br>
-• <b>Аналитика</b> — графики доходов/расходов по периодам<br>
-• <b>Налоги</b> — календарь, расчёт УСН по кварталам<br>
-• <b>НДС</b> — расчёт налога, перенос нагрузки<br>
-• <b>Декларации</b> — НДФЛ, УСН, РСВ, прибыль с Excel-экспортом<br>
-• <b>Зарплата</b> — сотрудники, начисления, прогрессивный НДФЛ<br>
-• <b>Документы</b> — счёт, УПД, ТОРГ-12, акт, договор, ТТН<br><br>
-Быстрый поиск — <b>Cmd+K</b>.`;
-  }
-
-  // ── Кассовый метод / начисление ──
-  if (/кассов|метод начислен|бухгалтерск.*учёт|учёт.*метод/.test(ql)) {
-    return `<b>Кассовый метод vs метод начисления:</b><br><br>
-<b>Кассовый метод</b> — доход/расход признаются в момент реального движения денег.<br>
-• Применяется в УСН (обязательно)<br>
-• В OMSFIN расчёты ведутся по банковской выписке = кассовый метод<br><br>
-<b>Метод начисления</b> — доход/расход признаются когда возникло обязательство, независимо от оплаты.<br>
-• Обязателен на ОСНО для налога на прибыль<br>
-• Требует полноценный бухучёт с проводками<br><br>
-При наличии амортизации, дебиторки или авансов фактическая прибыль по выписке может отличаться от бухгалтерской.`;
-  }
-
-  // ── Первичные документы ──
-  if (/первичн|документ|накладн|торг.12|акт|договор|тов/.test(ql)) {
-    return `<b>Первичные документы — что обязательно</b><br><br>
-<b>При продаже товаров:</b><br>
-• Товарная накладная ТОРГ-12 или УПД<br>
-• Счёт-фактура (если на НДС)<br>
-• Счёт на оплату (необязательно, но удобно)<br><br>
-<b>При оказании услуг:</b><br>
-• Акт выполненных работ или УПД<br>
-• Счёт-фактура (если на НДС)<br><br>
-<b>При перевозке:</b><br>
-• ТТН (товарно-транспортная накладная)<br><br>
-Все эти документы формируются в разделе <b>Документы</b>.`;
-  }
-
-  // ── Самозанятый / ИП ──
-  if (/самозанят|нпд|налог на профессионал/.test(ql)) {
-    return `<b>Самозанятые (НПД) — 2026</b><br><br>
-<b>Ставки:</b><br>
-• 4% — при работе с физлицами<br>
-• 6% — при работе с юрлицами и ИП<br><br>
-<b>Лимит дохода:</b> 2 400 000 ₽/год<br>
-<b>Страховые взносы:</b> добровольные (обязательных нет)<br>
-<b>НДС:</b> не платится<br><br>
-Чек формируется в приложении «Мой налог» и отправляется заказчику.<br><br>
-⚠️ OMSFIN ориентирован на ООО/ИП с наёмными сотрудниками. Для самозанятых основной инструмент — «Мой налог».`;
-  }
-
-  // ── Расчётный счёт / банк ──
-  if (/расчётный счёт|расч.счёт|р\/с|банк.счёт|открыть счёт/.test(ql)) {
-    return `<b>Расчётный счёт для ООО</b><br><br>
-<b>Обязателен ли:</b> юридически нет, но без него невозможны безналичные расчёты и уплата налогов.<br><br>
-<b>Что нужно для открытия (обычно):</b><br>
-• Устав, решение об учреждении<br>
-• Паспорт директора и учредителей<br>
-• ИНН, ОГРН компании<br>
-• Лицензии (если деятельность лицензируемая)<br><br>
-<b>Лучше открывать там, где:</b><br>
-• Удобный интернет-банк с выгрузкой CSV<br>
-• Хорошая поддержка<br>
-• Низкие тарифы для малого бизнеса (Т-Банк, Альфа, ВТБ, Сбер)`;
+  // ── Проверить контрагента ──
+  if (/провер.*контрагент|инн|егрюл|надёжн.*клиент|риск.*поставщик|банкрот/.test(ql)) {
+    return {html:`Проверь контрагента по ИНН в разделе <b>Контрагенты</b>:<br><br>• Данные из ЕГРЮЛ (статус, директор, адрес)<br>• Риск-скоринг по 7 факторам<br>• История платежей по вашей выписке<br>• Флаги: массовый адрес, смена директора, долги`, actions:[{label:'🔍 Контрагенты',href:'/counterparty'}], chips:['Что значит "массовый адрес"?','Как работает риск-скоринг?']};
   }
 
   // ── ЕНС / ЕНП ──
-  if (/енс|енп|единый налог.*счёт|единый платёж/.test(ql)) {
-    return `<b>ЕНС / ЕНП — Единый налоговый счёт</b><br><br>
-С 2023 года все налоги платятся единым платежом на ЕНС, ФНС сама распределяет по обязательствам.<br><br>
-<b>Как платить:</b><br>
-1. Сформировать платёж в банк-клиенте на реквизиты ЕНС (КПП = 0, КБК = 18201061201010000510)<br>
-2. Подать уведомление об исчисленных налогах до 25-го числа (если срок декларации позже срока уплаты)<br><br>
-<b>Срок уплаты большинства налогов — 28-е число</b> (аванс УСН, взносы, НДФЛ и др.)<br><br>
-Если на ЕНС недостаточно средств — сначала списывается недоимка, затем текущие обязательства.`;
+  if (/енс|енп|единый.*счёт|единый.*платёж/.test(ql)) {
+    return {html:`<b>ЕНС — Единый налоговый счёт</b><br><br>С 2023 года все налоги платятся одним платежом. ФНС сама распределяет по обязательствам.<br><br><b>КБК ЕНП:</b> 18201061201010000510<br><b>КПП:</b> 0<br><br><b>Срок уплаты большинства налогов — 28-е числа.</b><br>Уведомление об исчисленных суммах — до 25-го.`, chips:['НДС — когда платить?','Страховые взносы сроки','УСН — авансы']};
   }
 
-  return `Не нашёл точного ответа на: "<i>${q}</i>"<br><br>
-Попробуй спросить иначе или выбери тему:<br>
-• <b>НДС</b> — ставки, как платить, сроки<br>
-• <b>НДФЛ</b> — прогрессивная шкала, зарплата, дивиденды<br>
-• <b>Взносы</b> — страховые взносы 2026<br>
-• <b>УСН</b> — расчёт, авансы<br>
-• <b>Дивиденды</b> — условия выплаты<br>
-• <b>Прибыль</b> — налог на прибыль 25%<br>
-• <b>Доходы / расходы / прогноз</b> — по вашей выписке<br>
-• <b>Как загрузить выписку</b> — инструкция`;
+  // ── Самозанятые ──
+  if (/самозанят|нпд|налог на профессионал/.test(ql)) {
+    return {html:`<b>Самозанятые (НПД) — 2026</b><br><br>• 4% — с дохода от физлиц<br>• 6% — с дохода от юрлиц и ИП<br>• Лимит: 2 400 000 ₽/год<br>• Взносы — добровольно, НДС нет<br><br>Чеки — через приложение «Мой налог».<br><br>⚠️ OMSFIN ориентирован на ООО/ИП с сотрудниками.`, chips:['НДФЛ для ИП на ОСНО','Как платить взносы ИП?']};
+  }
+
+  // ── Кассовый метод ──
+  if (/кассов.*(метод)|метод.*(начислен|кассов)|бухгалтерск.*учёт/.test(ql)) {
+    return {html:`<b>Кассовый метод vs начисление</b><br><br><b>Кассовый</b> — доход/расход в момент движения денег. Применяется в УСН. OMSFIN считает именно так.<br><br><b>Метод начисления</b> — в момент возникновения обязательства. Обязателен на ОСНО. Требует полноценный бухучёт с проводками.<br><br>Из-за авансов и дебиторки прибыль по выписке может отличаться от бухгалтерской.`, chips:['ОСНО vs УСН','Налог на прибыль 25%']};
+  }
+
+  // ── Разделы сайта ──
+  if (/как работ|функц|что делает|что есть|раздел|навига|что умеешь/.test(ql)) {
+    return {html:`<b>Разделы OMSFIN:</b><br><br>• 🏠 <b>Дашборд</b> — сводка, здоровье, прогноз, дедлайны<br>• 📋 <b>Операции</b> — список, фильтры, категоризация<br>• 📈 <b>Аналитика</b> — графики доходов и расходов<br>• 🗓️ <b>Налоги</b> — календарь, расчёт УСН<br>• 🧾 <b>НДС</b> — расчёт, перенос нагрузки<br>• 📋 <b>Декларации</b> — НДФЛ, УСН, РСВ, прибыль<br>• 👥 <b>Зарплата</b> — сотрудники, НДФЛ прогрессивный<br>• 📄 <b>Документы</b> — счёт, УПД, ТОРГ-12, договор<br>• 🤝 <b>Переговоры</b> — калькулятор отсрочки/скидки`, chips:['Как загрузить выписку?','Как добавить сотрудника?','Как создать документ?']};
+  }
+
+  // ── Настройки / интерфейс ──
+  if (/тема|цвет|белый|светл|тёмн|темн|интерфейс|оформлен/.test(ql)) {
+    return {html:`В OMSFIN используется тёмная тема — она удобнее для длительной работы с цифрами. Переключить на светлую в настройках пока нельзя. Если хочешь, мы можем добавить эту возможность.`, chips:['Как снизить налоговую нагрузку?','Что можно настроить в профиле?']};
+  }
+
+  // ── Снижение налогов ──
+  if (/снизить|оптимиз|уменьш|налоговая нагрузк/.test(ql)) {
+    const tips = income > 0
+      ? `При твоих доходах <b>${fmt(income)}</b> за год рассмотри:<br>` +
+        `• Вычеты по НДС: фиксируй все закупки с выделенным НДС — каждый рубль снижает платёж<br>` +
+        `• Расходы на зарплату, аренду, транспорт уменьшают базу налога на прибыль<br>` +
+        `• УСН 6% выгоден при высокой марже; УСН 15% — если расходы более 60% от доходов<br>` +
+        `• Страховые взносы ИП уменьшают налог УСН на 100%`
+      : `Основные способы снижения: вычеты по НДС, учёт всех расходов, выбор правильной системы налогообложения (УСН 6% или 15%), своевременная подача деклараций для избежания штрафов.`;
+    return {html: tips, chips:['НДС к уплате','УСН или ОСНО?','Как учесть расходы?'], actions:[{label:'→ Калькулятор НДС', href:'/vat.html'},{label:'→ Инструменты', href:'/tools.html'}]};
+  }
+
+  // ── Fallback ──
+  return {html:`ИИ-ассистент временно недоступен. Попробуй спросить ещё раз — или воспользуйся быстрыми кнопками ниже:`, chips:['Мои доходы и расходы','НДС к уплате','Ближайшие дедлайны','Страховые взносы 2026','Как снизить налоговую нагрузку?']};
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
@@ -3035,30 +3302,25 @@ document.getElementById('addDate').value = new Date().toISOString().split('T')[0
 </script>
 
 <!-- AI Ассистент -->
-<button class="ai-fab" onclick="toggleAI()" title="Спросить ИИ-ассистента">🤖</button>
+<button class="ai-fab" onclick="toggleAI()" title="ОМС-Ассистент">🤖</button>
 <div class="ai-modal" id="aiModal">
   <div class="ai-modal-header">
-    <div>
-      <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700">ОМС-Ассистент</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">Анализирую ваши данные</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse-dot 2s infinite;flex-shrink:0"></div>
+      <div>
+        <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700">ОМС-Ассистент</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px">Финансовый советник</div>
+      </div>
     </div>
-    <button onclick="toggleAI()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px">✕</button>
+    <div style="display:flex;gap:2px">
+      <button onclick="clearAIChat()" title="Очистить" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:5px 7px;border-radius:7px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">🗑</button>
+      <button onclick="toggleAI()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:17px;padding:5px 7px;border-radius:7px;line-height:1" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✕</button>
+    </div>
   </div>
-  <div class="ai-quick-btns">
-    <button class="ai-quick" onclick="aiAsk('Какой у меня доход за этот год?')">💰 Доход</button>
-    <button class="ai-quick" onclick="aiAsk('Сколько налог УСН?')">📊 УСН</button>
-    <button class="ai-quick" onclick="aiAsk('Как платить НДС?')">🧾 НДС</button>
-    <button class="ai-quick" onclick="aiAsk('Ближайшие дедлайны')">🗓️ Сроки</button>
-    <button class="ai-quick" onclick="aiAsk('Прогноз на следующий месяц?')">🔮 Прогноз</button>
-    <button class="ai-quick" onclick="aiAsk('НДФЛ прогрессивная шкала 2026')">👤 НДФЛ</button>
-    <button class="ai-quick" onclick="aiAsk('Страховые взносы 2026')">🏦 Взносы</button>
-    <button class="ai-quick" onclick="aiAsk('Как выплатить дивиденды?')">💼 Дивиденды</button>
-  </div>
-  <div class="ai-messages" id="aiMessages">
-    <div class="ai-msg bot">Привет! Я финансовый ассистент OMSFIN.<br><br>Отвечаю на вопросы по <b>вашим данным</b> (доходы, расходы, налоги по выписке) и <b>общим темам</b> — НДС, НДФЛ, взносы, дивиденды, УСН, налог на прибыль.<br><br>Спрашивайте!</div>
-  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="ai-chips" id="aiChips"></div>
   <div class="ai-input-row">
-    <input type="text" id="aiInput" placeholder="Задайте вопрос..." onkeydown="if(event.key==='Enter')aiSend()">
+    <input type="text" id="aiInput" placeholder="Спросить..." onkeydown="if(event.key==='Enter')aiSend()">
     <button class="ai-send" onclick="aiSend()">➤</button>
   </div>
 </div>
@@ -3281,7 +3543,8 @@ function startDeadlineTimer() {
 
   const next = upcoming[0];
   nameEl.textContent = next.name;
-  card.style.display = 'flex';
+  card.style.display = 'block';
+  timerEl.style.display = 'flex';
 
   function tick() {
     const diff = next.dt - new Date();
@@ -3438,7 +3701,6 @@ function openTxDetail(tx) {
 // ══════════════════════════════════════════════════════════
 // ПОДКЛЮЧЕНИЕ К renderAll
 // ══════════════════════════════════════════════════════════
-const _origRenderAll = renderAll;
 function renderAll() {
   _origRenderAll();
   try { detectAnomalies(); } catch(e) {}
@@ -3454,6 +3716,7 @@ startDeadlineTimer();
   <button class="pill-more-item" onclick="closeMoreMenu();showPage('recurring',null)">🔁 Регулярные</button>
   <button class="pill-more-item" onclick="closeMoreMenu();showPage('reclassify',null)">🏷️ Разметка</button>
   <button class="pill-more-item" onclick="window.location.href='/tools'">⚡ Инструменты</button>
+  <button class="pill-more-item" onclick="window.location.href='/negotiation'">🤝 Переговоры</button>
 </div>
 
 <!-- ══════════════ COMMAND PALETTE (Cmd+K) ══════════════ -->
@@ -3505,7 +3768,7 @@ startDeadlineTimer();
 <div id="exportModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center" onclick="closeExportModal()">
   <div style="background:#0f0f0f;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;width:320px;max-width:90vw" onclick="event.stopPropagation()">
     <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">Экспорт данных</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">${allTx.length} операций</div>
+    <div id="exportModalSub" style="font-size:12px;color:var(--muted);margin-bottom:20px">операций</div>
     <button onclick="doExportExcel()" style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">📊</span>
       <div><div>Excel (.xlsx)</div><div style="font-family:'Inter',sans-serif;font-weight:400;font-size:10px;opacity:0.8;margin-top:2px">4 листа: операции, категории, периоды, контрагенты</div></div>
