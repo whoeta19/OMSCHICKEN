@@ -725,9 +725,8 @@
 </div>
 <div class="page" id="page-recurring">
   <div class="section-title">🔁 Регулярные платежи</div>
-  <div class="info-box" style="margin-bottom:12px">
-    Пометь операцию как регулярную — аренда, связь, подписки. Они соберутся здесь для контроля.
-  </div>
+  <div id="recurringUpcoming" style="margin-bottom:12px"></div>
+  <div id="recurringStats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
   <div id="recurringList"></div>
 </div>
 
@@ -2427,9 +2426,44 @@ async function toggleRecurring(id) {
   renderTxList();
 }
 
+function parseDMYtoDate(str) {
+  if (!str) return null;
+  const [dd, mm, yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm - 1, dd);
+}
+
+function guessNextDate(txs) {
+  // Определяем день месяца из последних платежей и прибавляем месяц
+  if (!txs.length) return null;
+  const sorted = txs.slice().sort((a,b) => parseDMYtoDate(b.date) - parseDMYtoDate(a.date));
+  const lastDate = parseDMYtoDate(sorted[0].date);
+  if (!lastDate) return null;
+  const day = lastDate.getDate();
+  const now = new Date();
+  let next = new Date(now.getFullYear(), now.getMonth(), day);
+  if (next <= now) next = new Date(now.getFullYear(), now.getMonth() + 1, day);
+  return next;
+}
+
+function fmtNextDate(d) {
+  if (!d) return '—';
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+function daysUntil(d) {
+  if (!d) return null;
+  return Math.ceil((d - new Date()) / 86400000);
+}
+
 function renderRecurring() {
   const list = document.getElementById('recurringList');
+  const statsEl = document.getElementById('recurringStats');
+  const upcomingEl = document.getElementById('recurringUpcoming');
   if (!list) return;
+
   const recurring = allTx.filter(t => t.is_recurring && t.amount < 0);
   const grouped = {};
   recurring.forEach(t => {
@@ -2438,22 +2472,84 @@ function renderRecurring() {
     grouped[key].push(t);
   });
   const keys = Object.keys(grouped);
+
   if (!keys.length) {
+    if (upcomingEl) upcomingEl.innerHTML = '';
+    if (statsEl) statsEl.innerHTML = '';
     list.innerHTML = '<div class="empty"><div class="empty-icon">🔁</div><div>Нет регулярных платежей.<br>Пометь операцию кнопкой 🔁 в разделе Операции.</div></div>';
     return;
   }
-  list.innerHTML = keys.map(key => {
+
+  // Считаем ежемесячный итог и ближайшие платежи
+  let monthlyTotal = 0;
+  const upcoming = [];
+  keys.forEach(key => {
     const txs = grouped[key];
+    const avg = txs.reduce((s,t)=>s+Math.abs(Number(t.amount)),0) / txs.length;
+    monthlyTotal += avg;
+    const next = guessNextDate(txs);
+    if (next) {
+      const days = daysUntil(next);
+      if (days !== null && days <= 14 && days >= 0) {
+        upcoming.push({ key, avg, next, days });
+      }
+    }
+  });
+
+  // Виджет: ближайшие 14 дней
+  if (upcomingEl) {
+    if (upcoming.length) {
+      upcoming.sort((a,b) => a.days - b.days);
+      upcomingEl.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:8px">⚡ Ближайшие 14 дней</div>
+        ${upcoming.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:600">${u.key}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtNextDate(u.next)} · через ${u.days === 0 ? 'сегодня' : u.days + ' дн.'}</div>
+          </div>
+          <div style="color:var(--red);font-weight:700">−${fmt(u.avg)}</div>
+        </div>`).join('')}
+      </div>`;
+    } else {
+      upcomingEl.innerHTML = `<div class="info-box">Ближайших регулярных платежей в 14 дней нет.</div>`;
+    }
+  }
+
+  // Карточки-статистика
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">В месяц (итого)</div>
+        <div style="font-size:16px;font-weight:700;color:var(--red)">−${fmt(monthlyTotal)}</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">В год (прогноз)</div>
+        <div style="font-size:16px;font-weight:700;color:var(--red)">−${fmt(monthlyTotal*12)}</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Платёжных групп</div>
+        <div style="font-size:16px;font-weight:700">${keys.length}</div>
+      </div>`;
+  }
+
+  // Список групп
+  list.innerHTML = `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:8px">Все регулярные платежи</div>` +
+  keys.map(key => {
+    const txs = grouped[key].slice().sort((a,b) => parseDMYtoDate(b.date) - parseDMYtoDate(a.date));
     const last = txs[0];
     const avg = txs.reduce((s,t)=>s+Math.abs(Number(t.amount)),0) / txs.length;
-    return `<div class="tx-row" style="flex-wrap:wrap">
+    const next = guessNextDate(txs);
+    const days = daysUntil(next);
+    const urgency = days !== null && days <= 3 ? 'color:var(--red)' : days !== null && days <= 7 ? 'color:var(--yellow,#f59e0b)' : 'color:var(--muted)';
+    return `<div class="tx-row" style="flex-wrap:wrap;align-items:center">
       <div style="flex:1;min-width:0">
         <div class="tx-name">${key}</div>
-        <div class="tx-date">Последний: ${last.date||'—'} · Всего платежей: ${txs.length}</div>
+        <div class="tx-date">Последний: ${last.date||'—'} · Платежей: ${txs.length}</div>
+        <div style="font-size:11px;${urgency}">→ Следующий: ${fmtNextDate(next)}${days !== null ? (days === 0 ? ' (сегодня!)' : ' (через ' + days + ' дн.)') : ''}</div>
       </div>
       <div style="text-align:right">
         <div class="tx-amount minus">−${fmt(last.amount)}</div>
-        <div style="font-size:10px;color:var(--muted)">ср. ${fmt(avg)}</div>
+        <div style="font-size:10px;color:var(--muted)">ср. −${fmt(avg)}/мес</div>
       </div>
     </div>`;
   }).join('');
