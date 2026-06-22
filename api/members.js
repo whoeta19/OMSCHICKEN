@@ -119,13 +119,11 @@ ${ctx.recentTxs ? 'Последние операции: ' + ctx.recentTxs : ''}
     ];
 
     try {
-      // История разговора: [{role:'user'|'model', text:'...'}]
       const chatHistory = (Array.isArray(history) ? history.slice(-10) : []).map(h => ({
         role: h.role === 'bot' ? 'model' : 'user',
         parts: [{ text: h.text }]
       }));
 
-      // Строим contents: системный промпт как первый user-turn, затем история, затем текущий вопрос
       const contents = [
         { role: 'user', parts: [{ text: systemPrompt }] },
         { role: 'model', parts: [{ text: 'Понял, готов помочь с финансами.' }] },
@@ -133,27 +131,34 @@ ${ctx.recentTxs ? 'Последние операции: ' + ctx.recentTxs : ''}
         { role: 'user', parts: [{ text: message }] }
       ];
 
-      let reply = null;
-      let lastErr = '';
-      for (const modelName of MODELS) {
-        try {
-          const geminiResp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 800, temperature: 0.7 } })
-            }
-          );
-          const geminiData = await geminiResp.json();
-          const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) { reply = text; break; }
-          lastErr = geminiData.error?.message || JSON.stringify(geminiData).substring(0, 150);
-        } catch (e) { lastErr = e.message; }
+      async function tryModel(modelName) {
+        const r = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 800, temperature: 0.7 } }) }
+        );
+        const d = await r.json();
+        return d.candidates?.[0]?.content?.parts?.[0]?.text || null;
       }
 
-      if (!reply) return res.status(500).json({ error: lastErr });
-      return res.status(200).json({ reply });
+      let reply = null;
+      for (const m of MODELS) {
+        try { reply = await tryModel(m); if (reply) break; } catch {}
+      }
+
+      // Если все захардкоженные модели не сработали — спрашиваем ListModels
+      if (!reply) {
+        try {
+          const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
+          const listData = await listResp.json();
+          const found = (listData.models || [])
+            .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+            .map(m => m.name);
+          for (const m of found) {
+            try { reply = await tryModel(m); if (reply) break; } catch {}
+          }
+        } catch {}
+      }
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
