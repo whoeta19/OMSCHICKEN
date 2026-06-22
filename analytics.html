@@ -32,6 +32,8 @@
 </script>
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111111;--muted:#888;}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
@@ -70,6 +72,17 @@
   .stat-delta.down{color:var(--red);}
   .stat-delta.flat{color:var(--muted);}
   .compare-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);display:none;}
+
+  @media print {
+    body{background:#fff!important;color:#000!important;}
+    header .btn-outline{display:none!important;}
+    #loadingMsg{display:none!important;}
+    .chart-card,.stat-card{border:1px solid #ccc!important;background:#fff!important;}
+    .section-title{color:#ff6b00!important;}
+    canvas{max-height:200px;}
+    .charts-grid{grid-template-columns:1fr 1fr;}
+    .compare-bar{background:#f5f5f5!important;border:1px solid #ccc!important;color:#333!important;}
+  }
   @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr);}.charts-grid{grid-template-columns:1fr;}.chart-card.full{grid-column:1;}}
 
   @media (max-width: 600px) {
@@ -91,6 +104,7 @@
 </style>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -98,6 +112,7 @@
       <option value="all">Все периоды</option>
     </select>
     <button class="btn-outline" id="btnCompare" onclick="toggleCompare()" style="display:none">📊 Сравнить</button>
+    <button class="btn-outline" onclick="exportPDF()">📄 PDF</button>
     <button class="btn-outline" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
@@ -523,6 +538,13 @@ function renderBalanceChart() {
       }
     }
   });
+}
+
+function exportPDF() {
+  const period = document.getElementById('periodSelect').value;
+  document.title = 'OMSFIN Аналитика ' + period;
+  window.print();
+  document.title = 'OMSFIN — Аналитика';
 }
 
 loadData();
