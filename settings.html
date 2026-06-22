@@ -8,6 +8,7 @@
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
   body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111;--muted:#888;}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;transition:background 0.3s,color 0.3s;}
   header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
@@ -45,6 +46,11 @@
   .notif-day{display:flex;align-items:center;gap:8px;}
   .notif-day input[type=number]{width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;}
 
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media (max-width: 600px) {
     header{padding:12px 14px;}
     .logo{font-size:14px;}
@@ -65,6 +71,7 @@
 <script src="/nav.js"></script>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -81,6 +88,7 @@
       <div class="theme-btns">
         <div class="theme-btn" id="theme-dark" onclick="setTheme('dark',this)">🌙 Тёмная</div>
         <div class="theme-btn" id="theme-light" onclick="setTheme('light',this)">☀️ Светлая</div>
+        <div class="theme-btn" id="theme-blue" onclick="setTheme('blue',this)">🌊 Синяя</div>
       </div>
     </div>
     <div class="input-group">
@@ -297,6 +305,23 @@
     </div>
   </div>
 
+
+  <!-- МойСклад интеграция -->
+  <div class="card">
+    <div class="section-title">🏪 МойСклад</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Импортируй платежи напрямую из МойСклад без выписки банка.</p>
+    <div class="input-group">
+      <label>API токен МойСклад</label>
+      <input type="password" id="msToken" placeholder="Токен из МойСклад → Настройки → Доступ к API"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:monospace">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-outline" onclick="saveMsToken()">💾 Сохранить токен</button>
+      <button class="btn-outline" onclick="testMsToken()" id="msBtnTest">🔗 Проверить соединение</button>
+    </div>
+    <div id="msStatus" style="font-size:12px;margin-top:8px"></div>
+  </div>
+
   <!-- Аккаунт -->
   <div class="card">
     <div class="section-title">👤 Аккаунт</div>
@@ -325,9 +350,13 @@ if (user.email) document.getElementById('userEmail').textContent = user.email;
 
 // Применяем тему
 function applyTheme(theme) {
-  document.body.classList.toggle('light', theme === 'light');
-  document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
-  document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+  document.body.classList.remove('light', 'blue');
+  if (theme === 'light') document.body.classList.add('light');
+  if (theme === 'blue') document.body.classList.add('blue');
+  ['dark','light','blue'].forEach(t => {
+    const el = document.getElementById('theme-'+t);
+    if (el) el.classList.toggle('active', t === (theme||'dark'));
+  });
 }
 
 function setTheme(theme, el) {
@@ -800,5 +829,12 @@ async function checkTelegramStatus() {
 checkTelegramStatus();
 
 </script>
+<nav class="bottom-nav">
+  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html" class="active"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
 </body>
 </html>

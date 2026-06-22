@@ -20,6 +20,8 @@
     --muted:#5a5a5a;
     --shadow:none;
   }
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111111;--muted:#888;--shadow:0 2px 8px rgba(0,0,0,0.08);}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;--shadow:none;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   
@@ -440,6 +442,11 @@
   .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:370px;max-width:calc(100vw - 24px);background:#0d0d0d;border:1px solid rgba(255,107,0,0.25);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.7);z-index:400;overflow:hidden;flex-direction:column;}
   .ai-modal.open{display:flex;}
   @media(min-width:601px){.ai-modal{bottom:88px;}}
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){.ai-modal{bottom:70px;right:8px;left:8px;width:auto;max-width:none;border-radius:16px;}}
   .ai-modal-header{padding:12px 14px;background:linear-gradient(135deg,rgba(255,107,0,0.12),rgba(255,170,68,0.06));border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   .ai-messages{height:320px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;}
@@ -470,6 +477,7 @@
 </style>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -495,6 +503,7 @@
     <button class="pill" data-role="director,accountant" onclick="showPage('add',this)">+ Добавить</button>
     <div class="pill-sep" data-role="director,accountant"></div>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/analytics'">Аналитика</button>
+    <button class="pill" data-role="director,accountant" onclick="showPage('budget',this)">💰 Бюджет</button>
     <button class="pill" data-role="director,accountant" onclick="showPage('taxes',this)">Налоги</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/vat'">НДС</button>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/declarations'">Декларации</button>
@@ -525,6 +534,9 @@
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
       <button onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 <span>Выписка</span></button>
+      <button onclick="document.getElementById('file1cInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из 1С (XML)">1С <span>XML</span></button>
+      <input type="file" id="file1cInput" accept=".xml,.txt" style="display:none">
+      <button onclick="importMoySklad()" id="btnMoySklad" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из МойСклад">МС <span>API</span></button>
       <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
     </div>
   </div>
@@ -698,11 +710,23 @@
   </div>
 </div>
 
+
+<div class="page" id="page-budget">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="section-title" style="margin-bottom:0">💰 Бюджет месяца</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="budgetPeriodSel" onchange="renderBudget()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;outline:none"></select>
+      <button onclick="addBudgetItem()" style="background:var(--accent);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer">+ Категория</button>
+    </div>
+  </div>
+  <div class="info-box" style="margin-bottom:12px">Задай плановые суммы расходов по категориям — и следи сколько уже потрачено.</div>
+  <div id="budgetSummary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+  <div id="budgetList"></div>
+</div>
 <div class="page" id="page-recurring">
   <div class="section-title">🔁 Регулярные платежи</div>
-  <div class="info-box" style="margin-bottom:12px">
-    Пометь операцию как регулярную — аренда, связь, подписки. Они соберутся здесь для контроля.
-  </div>
+  <div id="recurringUpcoming" style="margin-bottom:12px"></div>
+  <div id="recurringStats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
   <div id="recurringList"></div>
 </div>
 
@@ -2402,9 +2426,44 @@ async function toggleRecurring(id) {
   renderTxList();
 }
 
+function parseDMYtoDate(str) {
+  if (!str) return null;
+  const [dd, mm, yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm - 1, dd);
+}
+
+function guessNextDate(txs) {
+  // Определяем день месяца из последних платежей и прибавляем месяц
+  if (!txs.length) return null;
+  const sorted = txs.slice().sort((a,b) => parseDMYtoDate(b.date) - parseDMYtoDate(a.date));
+  const lastDate = parseDMYtoDate(sorted[0].date);
+  if (!lastDate) return null;
+  const day = lastDate.getDate();
+  const now = new Date();
+  let next = new Date(now.getFullYear(), now.getMonth(), day);
+  if (next <= now) next = new Date(now.getFullYear(), now.getMonth() + 1, day);
+  return next;
+}
+
+function fmtNextDate(d) {
+  if (!d) return '—';
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+function daysUntil(d) {
+  if (!d) return null;
+  return Math.ceil((d - new Date()) / 86400000);
+}
+
 function renderRecurring() {
   const list = document.getElementById('recurringList');
+  const statsEl = document.getElementById('recurringStats');
+  const upcomingEl = document.getElementById('recurringUpcoming');
   if (!list) return;
+
   const recurring = allTx.filter(t => t.is_recurring && t.amount < 0);
   const grouped = {};
   recurring.forEach(t => {
@@ -2413,22 +2472,84 @@ function renderRecurring() {
     grouped[key].push(t);
   });
   const keys = Object.keys(grouped);
+
   if (!keys.length) {
+    if (upcomingEl) upcomingEl.innerHTML = '';
+    if (statsEl) statsEl.innerHTML = '';
     list.innerHTML = '<div class="empty"><div class="empty-icon">🔁</div><div>Нет регулярных платежей.<br>Пометь операцию кнопкой 🔁 в разделе Операции.</div></div>';
     return;
   }
-  list.innerHTML = keys.map(key => {
+
+  // Считаем ежемесячный итог и ближайшие платежи
+  let monthlyTotal = 0;
+  const upcoming = [];
+  keys.forEach(key => {
     const txs = grouped[key];
+    const avg = txs.reduce((s,t)=>s+Math.abs(Number(t.amount)),0) / txs.length;
+    monthlyTotal += avg;
+    const next = guessNextDate(txs);
+    if (next) {
+      const days = daysUntil(next);
+      if (days !== null && days <= 14 && days >= 0) {
+        upcoming.push({ key, avg, next, days });
+      }
+    }
+  });
+
+  // Виджет: ближайшие 14 дней
+  if (upcomingEl) {
+    if (upcoming.length) {
+      upcoming.sort((a,b) => a.days - b.days);
+      upcomingEl.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:8px">⚡ Ближайшие 14 дней</div>
+        ${upcoming.map(u => `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:600">${u.key}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtNextDate(u.next)} · через ${u.days === 0 ? 'сегодня' : u.days + ' дн.'}</div>
+          </div>
+          <div style="color:var(--red);font-weight:700">−${fmt(u.avg)}</div>
+        </div>`).join('')}
+      </div>`;
+    } else {
+      upcomingEl.innerHTML = `<div class="info-box">Ближайших регулярных платежей в 14 дней нет.</div>`;
+    }
+  }
+
+  // Карточки-статистика
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">В месяц (итого)</div>
+        <div style="font-size:16px;font-weight:700;color:var(--red)">−${fmt(monthlyTotal)}</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">В год (прогноз)</div>
+        <div style="font-size:16px;font-weight:700;color:var(--red)">−${fmt(monthlyTotal*12)}</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Платёжных групп</div>
+        <div style="font-size:16px;font-weight:700">${keys.length}</div>
+      </div>`;
+  }
+
+  // Список групп
+  list.innerHTML = `<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:700;margin-bottom:8px">Все регулярные платежи</div>` +
+  keys.map(key => {
+    const txs = grouped[key].slice().sort((a,b) => parseDMYtoDate(b.date) - parseDMYtoDate(a.date));
     const last = txs[0];
     const avg = txs.reduce((s,t)=>s+Math.abs(Number(t.amount)),0) / txs.length;
-    return `<div class="tx-row" style="flex-wrap:wrap">
+    const next = guessNextDate(txs);
+    const days = daysUntil(next);
+    const urgency = days !== null && days <= 3 ? 'color:var(--red)' : days !== null && days <= 7 ? 'color:var(--yellow,#f59e0b)' : 'color:var(--muted)';
+    return `<div class="tx-row" style="flex-wrap:wrap;align-items:center">
       <div style="flex:1;min-width:0">
         <div class="tx-name">${key}</div>
-        <div class="tx-date">Последний: ${last.date||'—'} · Всего платежей: ${txs.length}</div>
+        <div class="tx-date">Последний: ${last.date||'—'} · Платежей: ${txs.length}</div>
+        <div style="font-size:11px;${urgency}">→ Следующий: ${fmtNextDate(next)}${days !== null ? (days === 0 ? ' (сегодня!)' : ' (через ' + days + ' дн.)') : ''}</div>
       </div>
       <div style="text-align:right">
         <div class="tx-amount minus">−${fmt(last.amount)}</div>
-        <div style="font-size:10px;color:var(--muted)">ср. ${fmt(avg)}</div>
+        <div style="font-size:10px;color:var(--muted)">ср. −${fmt(avg)}/мес</div>
       </div>
     </div>`;
   }).join('');
@@ -3042,16 +3163,14 @@ async function aiAsk(q) {
     if (data.reply) {
       _aiAddBubble('bot', data.reply);
       _aiHistory.push({ role: 'bot', text: data.reply });
+    } else if (data.error) {
+      _aiAddBubble('bot', '⚠️ Ошибка ИИ: ' + data.error);
     } else {
-      const res = aiAnswer(q);
-      _aiAddBubble('bot', res.html, res.actions);
-      if (res.chips) _aiSetChips(res.chips);
+      _aiAddBubble('bot', '⚠️ ИИ не вернул ответ. Попробуй ещё раз.');
     }
   } catch(e) {
     msgs.removeChild(dots);
-    const res = aiAnswer(q);
-    _aiAddBubble('bot', res.html, res.actions);
-    if (res.chips) _aiSetChips(res.chips);
+    _aiAddBubble('bot', '⚠️ ИИ временно недоступен: ' + e.message);
   }
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -3291,16 +3410,45 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
 
-// Редирект на онбординг для новых пользователей (у кого нет данных и не прошли онбординг)
-(function checkOnboarding() {
-  const onboarded = localStorage.getItem('omsfin_onboarded');
-  const hasToken = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token');
-  if (!onboarded && !hasToken) {
-    window.location.href = '/onboarding';
-    return;
+// Инициализация: синхронизируем данные, после загрузки проверяем нужен ли онбординг
+(async function init() {
+  await syncNow();
+  // Если транзакций нет и пользователь ещё не прошёл онбординг — показываем welcome-экран
+  if (!localStorage.getItem('omsfin_onboarded') && allTx.length === 0) {
+    showOnboardingOverlay();
+  } else if (allTx.length > 0) {
+    localStorage.setItem('omsfin_onboarded', '1');
   }
-  syncNow();
 })();
+
+function showOnboardingOverlay() {
+  if (document.getElementById('onboardingOverlay')) return;
+  const el = document.createElement('div');
+  el.id = 'onboardingOverlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;max-width:400px;width:100%;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">👋</div>
+    <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900;margin-bottom:8px">Добро пожаловать в OMSFIN</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px">Финансовый учёт для бизнеса — загружай банковские выписки, считай налоги, создавай документы.</div>
+    <div style="display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <span style="font-size:20px;flex-shrink:0">🏦</span>
+        <div style="font-size:12px"><strong style="color:var(--text)">Выписка из банка</strong><br><span style="color:var(--muted)">Т-Банк, Сбер, Альфа, ВТБ — автоматический импорт</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <span style="font-size:20px;flex-shrink:0">🧾</span>
+        <div style="font-size:12px"><strong style="color:var(--text)">Налоги и декларации</strong><br><span style="color:var(--muted)">НДС, НДФЛ, налог на прибыль — всё автоматически</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px">
+        <span style="font-size:20px;flex-shrink:0">📄</span>
+        <div style="font-size:12px"><strong style="color:var(--text)">Документы</strong><br><span style="color:var(--muted)">Счета, УПД, договоры — готовы за секунды</span></div>
+      </div>
+    </div>
+    <button onclick="window.location.href='/onboarding.html'" style="width:100%;background:linear-gradient(135deg,#ff6b00,#e55a00);color:#fff;border:none;border-radius:12px;padding:13px;font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.3)">Настроить за 2 минуты →</button>
+    <button onclick="document.getElementById('onboardingOverlay').remove();localStorage.setItem('omsfin_onboarded','1')" style="margin-top:8px;width:100%;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:8px">Пропустить, разберусь сам</button>
+  </div>`;
+  document.body.appendChild(el);
+}
 </script>
 
 <!-- AI Ассистент -->
@@ -3602,7 +3750,14 @@ function openPL() {
 function closePL() { document.getElementById('plModal').style.display='none'; }
 function printPL() {
   const w = window.open('','_blank');
-  w.document.write(`<html><head><title>P&L отчёт</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:600px;margin:0 auto;}h1{font-size:18px;margin-bottom:4px;}p{color:#666;font-size:12px;margin-bottom:24px;}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}.total{font-weight:700;font-size:15px;border-top:2px solid #000;border-bottom:none;margin-top:8px;padding-top:12px;}.section{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;border-bottom:none;padding-bottom:2px;margin-top:16px;}.green{color:#16a34a}.red{color:#dc2626}</style></head><body>${document.getElementById('plContent').innerHTML.replace(/class="pl-/g,'class="').replace(/style="[^"]*color:var\(--green\)[^"]*"/g,'class="green"').replace(/style="[^"]*color:var\(--red\)[^"]*"/g,'class="red"')}</body></html>`);
+  w.document.write(`<html><head><title>P&L отчёт</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:600px;margin:0 auto;}h1{font-size:18px;margin-bottom:4px;}p{color:#666;font-size:12px;margin-bottom:24px;}.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}.total{font-weight:700;font-size:15px;border-top:2px solid #000;border-bottom:none;margin-top:8px;padding-top:12px;}.section{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;border-bottom:none;padding-bottom:2px;margin-top:16px;}.green{color:#16a34a}.red{color:#dc2626}</style></head><body>${document.getElementById('plContent').innerHTML.replace(/class="pl-/g,'class="').replace(/style="[^"]*color:var\(--green\)[^"]*"/g,'class="green"').replace(/style="[^"]*color:var\(--red\)[^"]*"/g,'class="red"')}<nav class="bottom-nav">
+  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
+</body></html>`);
   w.document.close();
   w.print();
 }
@@ -3710,7 +3865,153 @@ function renderAll() {
 }
 
 // Запуск таймера
+
+// ─── Бюджет на месяц ─────────────────────────────────────────────────────────
+function getBudgets() { return JSON.parse(localStorage.getItem('omsfin_budgets') || '{}'); }
+function saveBudgets(b) { localStorage.setItem('omsfin_budgets', JSON.stringify(b)); }
+
+function initBudgetPeriodSel() {
+  const sel = document.getElementById('budgetPeriodSel');
+  if (!sel) return;
+  const now = new Date();
+  const options = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const p = String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+    options.push(`<option value="${p}" ${i===0?'selected':''}>${p}</option>`);
+  }
+  sel.innerHTML = options.join('');
+}
+
+const BUDGET_CATS = [
+  {k:'chicken',l:'🐔 Курятина'},{k:'salary',l:'👥 Зарплата'},{k:'transport',l:'🚗 Транспорт'},
+  {k:'office',l:'🏢 Офис'},{k:'bank',l:'🏦 Банк'},{k:'food',l:'🍽️ Еда'},
+  {k:'personal',l:'🛍️ Личное'},{k:'unknown',l:'❓ Прочее'}
+];
+
+function addBudgetItem() {
+  const period = document.getElementById('budgetPeriodSel')?.value;
+  if (!period) return;
+  const cats = BUDGET_CATS.map((c,i) => `${i+1}. ${c.l} (${c.k})`).join('\n');
+  const input = prompt('Категория (введи код):\n' + cats);
+  if (!input) return;
+  const cat = BUDGET_CATS.find(c => c.k === input.trim());
+  if (!cat) { showToast('Неизвестная категория'); return; }
+  const amtStr = prompt(`Бюджет на "${cat.l}" в ${period} (₽):`);
+  const amt = parseFloat(amtStr);
+  if (!amt || amt <= 0) return;
+  const budgets = getBudgets();
+  if (!budgets[period]) budgets[period] = {};
+  budgets[period][cat.k] = amt;
+  saveBudgets(budgets);
+  renderBudget();
+}
+
+function renderBudget() {
+  initBudgetPeriodSel();
+  const period = document.getElementById('budgetPeriodSel')?.value;
+  if (!period) return;
+  const budgets = getBudgets();
+  const planMap = budgets[period] || {};
+  const txPeriod = allTx.filter(t => t.period === period && t.amount < 0);
+
+  // Факт по категориям
+  const factMap = {};
+  txPeriod.forEach(t => { factMap[t.category] = (factMap[t.category]||0) + Math.abs(Number(t.amount)); });
+
+  const totalPlan = Object.values(planMap).reduce((s,v)=>s+v, 0);
+  const totalFact = Object.values(factMap).reduce((s,v)=>s+v, 0);
+  const planned = Object.keys(planMap).length;
+
+  const sumEl = document.getElementById('budgetSummary');
+  sumEl.innerHTML = [
+    {label:'Бюджет', val: fmt(totalPlan), cls:'orange'},
+    {label:'Потрачено', val: fmt(totalFact), cls: totalFact > totalPlan ? 'red' : 'green'},
+    {label:'Осталось', val: fmt(Math.max(0, totalPlan - totalFact)), cls: totalFact > totalPlan ? 'red' : 'green'}
+  ].map(s => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">${s.label}</div>
+    <div style="font-family:Unbounded,sans-serif;font-size:13px;font-weight:700;color:var(--${s.cls})">${s.val}</div>
+  </div>`).join('');
+
+  const list = document.getElementById('budgetList');
+  if (!planned) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">Нет плановых статей.<br>Нажми "+ Категория" чтобы добавить.</div>';
+    return;
+  }
+
+  list.innerHTML = Object.entries(planMap).map(([cat, plan]) => {
+    const fact = factMap[cat] || 0;
+    const pct = plan > 0 ? Math.min(100, Math.round(fact / plan * 100)) : 0;
+    const over = fact > plan;
+    const label = BUDGET_CATS.find(c=>c.k===cat)?.l || cat;
+    const barColor = over ? 'var(--red)' : pct > 80 ? '#f59e0b' : 'var(--accent)';
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600">${label}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:12px;color:var(--muted)">${fmt(fact)} / ${fmt(plan)}</div>
+          <button onclick="deleteBudgetItem('${period}','${cat}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 4px" title="Удалить">×</button>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:${barColor};width:${pct}%;transition:width 0.4s"></div>
+      </div>
+      <div style="font-size:10px;color:${over?'var(--red)':'var(--muted)'};margin-top:4px">${over ? '⚠️ Превышение на ' + fmt(fact-plan) : pct + '% использовано'}</div>
+    </div>`;
+  }).join('');
+}
+
+function deleteBudgetItem(period, cat) {
+  const b = getBudgets();
+  if (b[period]) { delete b[period][cat]; if (!Object.keys(b[period]).length) delete b[period]; }
+  saveBudgets(b);
+  renderBudget();
+}
+
+// Перехватываем showPage для бюджета
+const _origShowPageBudget = showPage;
+function showPage(name, btn) {
+  _origShowPageBudget(name, btn);
+  if (name === 'budget') { initBudgetPeriodSel(); renderBudget(); }
+}
+
 startDeadlineTimer();
+
+// ─── Импорт из 1С XML ────────────────────────────────────────────────────────
+document.getElementById('file1cInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const xmlText = await file.text();
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const companyId = currentCompanyId || '';
+  try {
+    showToast('⏳ Разбираю 1С файл...');
+    // Парсим XML на сервере
+    const parseResp = await fetch('/api/transactions?source=1c', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'Authorization': 'Bearer ' + token },
+      body: xmlText
+    });
+    const parseData = await parseResp.json();
+    if (!parseData.ok || !parseData.count) {
+      showToast('❌ Не найдено операций в файле. Формат: КВО XML из 1С.');
+      return;
+    }
+    // Вставляем транзакции
+    const txs = parseData.transactions.map(t => ({...t, company_id: companyId || undefined}));
+    const insertResp = await fetch('/api/transactions' + (companyId ? '?company_id=' + companyId : ''), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(txs)
+    });
+    const insertData = await insertResp.json();
+    showToast(`✅ 1С: загружено ${insertData.inserted || 0} операций, пропущено дублей: ${insertData.skipped || 0}`);
+    await syncNow();
+  } catch(err) {
+    showToast('❌ Ошибка импорта 1С: ' + err.message);
+  }
+  e.target.value = '';
+});
 </script>
 
 <!-- Дропдаун "Ещё" -->

@@ -32,6 +32,8 @@
 </script>
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111111;--muted:#888;}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
@@ -41,7 +43,6 @@
   .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:12px;color:var(--accent);}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
   .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
-  @media(min-width:601px) and (max-width:900px){.stats-row{grid-template-columns:repeat(2,1fr);}}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
   .stat-value{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;}
@@ -52,7 +53,6 @@
   .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
   .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
   .chart-card.full{grid-column:1/-1;}
-  .chart-card.full .chart-wrap{position:relative;height:220px;}
   canvas{max-height:250px;}
   .top-list{list-style:none;}
   .top-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
@@ -65,7 +65,29 @@
   .profit-bar{height:8px;border-radius:4px;margin-top:4px;}
   .btn-outline{background:none;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-family:'Inter',sans-serif;font-size:11px;cursor:pointer;transition:all 0.2s;}
   .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-outline.active{background:var(--accent);border-color:var(--accent);color:#fff;}
   .loading{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+  .stat-delta{font-size:10px;margin-top:3px;font-weight:500;}
+  .stat-delta.up{color:var(--green);}
+  .stat-delta.down{color:var(--red);}
+  .stat-delta.flat{color:var(--muted);}
+  .compare-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);display:none;}
+
+  @media print {
+    body{background:#fff!important;color:#000!important;}
+    header .btn-outline{display:none!important;}
+    #loadingMsg{display:none!important;}
+    .chart-card,.stat-card{border:1px solid #ccc!important;background:#fff!important;}
+    .section-title{color:#ff6b00!important;}
+    canvas{max-height:200px;}
+    .charts-grid{grid-template-columns:1fr 1fr;}
+    .compare-bar{background:#f5f5f5!important;border:1px solid #ccc!important;color:#333!important;}
+  }
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr);}.charts-grid{grid-template-columns:1fr;}.chart-card.full{grid-column:1;}}
 
   @media (max-width: 600px) {
@@ -85,15 +107,17 @@
     th,td{padding:5px 6px;}
   }
 </style>
-<script src="/nav.js"></script>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
     <select id="periodSelect" onchange="onPeriodChange()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;margin-right:4px">
       <option value="all">Все периоды</option>
     </select>
+    <button class="btn-outline" id="btnCompare" onclick="toggleCompare()" style="display:none">📊 Сравнить</button>
+    <button class="btn-outline" onclick="exportPDF()">📄 PDF</button>
     <button class="btn-outline" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn-outline" onclick="loadData()">🔄 Обновить</button>
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
@@ -103,13 +127,16 @@
   <div id="loadingMsg" class="loading">⏳ Загружаю данные...</div>
   <div id="content" style="display:none">
 
+    <!-- Планка сравнения -->
+    <div class="compare-bar" id="compareBar"></div>
+
     <!-- Ключевые показатели -->
     <div class="section-title">📊 Ключевые показатели</div>
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="kpiIncome">—</div></div>
-      <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="kpiExpense">—</div></div>
-      <div class="stat-card"><div class="stat-label">Прибыль</div><div class="stat-value" id="kpiProfit">—</div></div>
-      <div class="stat-card"><div class="stat-label">Рентабельность</div><div class="stat-value blue" id="kpiMargin">—</div></div>
+      <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="kpiIncome">—</div><div class="stat-delta" id="deltaIncome"></div></div>
+      <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="kpiExpense">—</div><div class="stat-delta" id="deltaExpense"></div></div>
+      <div class="stat-card"><div class="stat-label">Прибыль</div><div class="stat-value" id="kpiProfit">—</div><div class="stat-delta" id="deltaProfit"></div></div>
+      <div class="stat-card"><div class="stat-label">Рентабельность</div><div class="stat-value blue" id="kpiMargin">—</div><div class="stat-delta" id="deltaMargin"></div></div>
     </div>
     <div class="stats-row">
       <div class="stat-card"><div class="stat-label">Закупка курятины</div><div class="stat-value orange" id="kpiChicken">—</div></div>
@@ -123,7 +150,7 @@
       <!-- Доходы и расходы по дням -->
       <div class="chart-card full">
         <div class="section-title">📈 Доходы и расходы по дням</div>
-        <div class="chart-wrap"><canvas id="chartDays"></canvas></div>
+        <canvas id="chartDays"></canvas>
       </div>
 
       <!-- Пирог по категориям -->
@@ -157,30 +184,96 @@
       <canvas id="chartBalance"></canvas>
     </div>
 
+    <!-- Прогноз кассового разрыва -->
+    <div class="chart-card full" id="cashflowSection">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+        <div class="section-title" style="margin:0">⚠️ Прогноз кассового разрыва</div>
+        <span style="font-size:11px;color:var(--muted)">На основе регулярных платежей и среднего потока</span>
+      </div>
+      <div id="cashflowAlert" style="margin-bottom:10px"></div>
+      <canvas id="chartCashflow"></canvas>
+    </div>
+
   </div>
 </main>
 
 <script>
 let allTx = [];
 let filteredTx = [];
+let compareTx = [];
 let currentPeriod = 'all';
+let compareMode = false;
+
+function parseDMY(str) {
+  const [dd, mm, yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm - 1, dd).getTime();
+}
+
+function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
+function fmtShort(n){
+  const abs = Math.abs(n);
+  if(abs>=1000000) return (n/1000000).toFixed(1)+'М';
+  if(abs>=1000) return (n/1000).toFixed(0)+'К';
+  return n;
+}
+
+// Уничтожает существующий Chart на canvas перед созданием нового — фикс дублирования
+function destroyChart(id) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+}
+
+// Возвращает предыдущий период в формате MM.YYYY
+function prevPeriod(period) {
+  const [mm, yyyy] = period.split('.').map(Number);
+  if (mm === 1) return `12.${yyyy - 1}`;
+  return `${String(mm - 1).padStart(2, '0')}.${yyyy}`;
+}
 
 function renderPeriodFilter() {
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))];
+  // Сортируем периоды хронологически (MM.YYYY → сортировка по yyyy, потом mm)
+  periods.sort((a, b) => {
+    const [am, ay] = a.split('.').map(Number);
+    const [bm, by] = b.split('.').map(Number);
+    return by !== ay ? by - ay : bm - am;
+  });
   const sel = document.getElementById('periodSelect');
   if (!sel) return;
-  sel.innerHTML = '<option value="all">Все периоды</option>' + 
+  sel.innerHTML = '<option value="all">Все периоды</option>' +
     periods.map(p=>`<option value="${p}" ${p===currentPeriod?'selected':''}>${p}</option>`).join('');
 }
 
 function onPeriodChange() {
   currentPeriod = document.getElementById('periodSelect').value;
   filteredTx = currentPeriod === 'all' ? allTx : allTx.filter(t=>t.period===currentPeriod);
-  document.querySelectorAll('canvas').forEach(c=>{
-    const chart = Chart.getChart(c);
-    if (chart) chart.destroy();
-  });
+
+  const btnCompare = document.getElementById('btnCompare');
+  if (currentPeriod !== 'all') {
+    btnCompare.style.display = '';
+    const prev = prevPeriod(currentPeriod);
+    compareTx = allTx.filter(t=>t.period===prev);
+  } else {
+    btnCompare.style.display = 'none';
+    compareMode = false;
+    btnCompare.classList.remove('active');
+    compareTx = [];
+  }
+  destroyAllCharts();
   renderAll();
+}
+
+function toggleCompare() {
+  compareMode = !compareMode;
+  document.getElementById('btnCompare').classList.toggle('active', compareMode);
+  destroyAllCharts();
+  renderAll();
+}
+
+function destroyAllCharts() {
+  ['chartDays','chartPie','chartProfit','chartBalance'].forEach(destroyChart);
 }
 
 function exportCSV() {
@@ -188,9 +281,7 @@ function exportCSV() {
   const period = document.getElementById('periodSelect').value;
   const cols = ['Дата','Сумма','Категория','Контрагент','Назначение','ИНН'];
   const rows = filteredTx.map(t => [
-    t.date || '',
-    t.amount || '',
-    t.category || '',
+    t.date || '', t.amount || '', t.category || '',
     (t.counterparty || '').replace(/"/g,'""'),
     (t.description || '').replace(/"/g,'""'),
     t.inn || ''
@@ -206,10 +297,15 @@ async function loadData() {
   document.getElementById('loadingMsg').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
-    const r = await fetch('/api/transactions');
+    const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+    const companyId = localStorage.getItem('omsfin_company_id') || '';
+    const url = companyId ? `/api/transactions?company_id=${companyId}` : '/api/transactions';
+    const r = await fetch(url, token ? {headers:{Authorization:'Bearer '+token}} : {});
     allTx = await r.json();
+    if (!Array.isArray(allTx)) allTx = [];
     filteredTx = allTx;
     renderPeriodFilter();
+    destroyAllCharts();
     renderAll();
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('content').style.display = 'block';
@@ -218,66 +314,109 @@ async function loadData() {
   }
 }
 
-function renderAll() {
-  const income = filteredTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-  const expense = filteredTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const profit = income - expense;
-  const margin = income > 0 ? (profit/income*100).toFixed(1) : 0;
+function calcKpi(txs) {
+  const income  = txs.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = txs.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const profit  = income - expense;
+  const margin  = income > 0 ? profit/income*100 : 0;
+  return {income, expense, profit, margin};
+}
 
-  document.getElementById('kpiIncome').textContent = fmt(income);
-  document.getElementById('kpiExpense').textContent = fmt(expense);
-  document.getElementById('kpiProfit').textContent = fmt(profit);
-  document.getElementById('kpiProfit').className = 'stat-value ' + (profit >= 0 ? 'green' : 'red');
-  document.getElementById('kpiMargin').textContent = margin + '%';
+function setDelta(id, cur, prev) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!prev || prev === 0) { el.textContent = ''; return; }
+  const pct = Math.round((cur - prev) / Math.abs(prev) * 100);
+  const sign = pct > 0 ? '+' : '';
+  el.textContent = `${sign}${pct}% к пред. периоду`;
+  el.className = 'stat-delta ' + (pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat');
+}
+
+function renderAll() {
+  const kpi = calcKpi(filteredTx);
+  const prev = compareMode && compareTx.length ? calcKpi(compareTx) : null;
+
+  document.getElementById('kpiIncome').textContent = fmt(kpi.income);
+  document.getElementById('kpiExpense').textContent = fmt(kpi.expense);
+  document.getElementById('kpiProfit').textContent = fmt(kpi.profit);
+  document.getElementById('kpiProfit').className = 'stat-value ' + (kpi.profit >= 0 ? 'green' : 'red');
+  document.getElementById('kpiMargin').textContent = kpi.margin.toFixed(1) + '%';
   document.getElementById('kpiChicken').textContent = fmt(filteredTx.filter(t=>t.category==='chicken').reduce((s,t)=>s+Math.abs(t.amount),0));
   document.getElementById('kpiPersonal').textContent = fmt(filteredTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0));
   document.getElementById('kpiSalary').textContent = fmt(filteredTx.filter(t=>t.category==='salary').reduce((s,t)=>s+Math.abs(t.amount),0));
   document.getElementById('kpiBank').textContent = fmt(filteredTx.filter(t=>t.category==='bank').reduce((s,t)=>s+Math.abs(t.amount),0));
+
+  // Дельты к предыдущему периоду
+  if (prev) {
+    setDelta('deltaIncome',  kpi.income,  prev.income);
+    setDelta('deltaExpense', kpi.expense, prev.expense);
+    setDelta('deltaProfit',  kpi.profit,  prev.profit);
+    setDelta('deltaMargin',  kpi.margin,  prev.margin);
+    const prevPer = prevPeriod(currentPeriod);
+    const bar = document.getElementById('compareBar');
+    bar.style.display = '';
+    bar.innerHTML = `Сравнение: <b>${currentPeriod}</b> vs <b>${prevPer}</b> &nbsp;|&nbsp; `+
+      `Доход: ${fmt(kpi.income)} vs ${fmt(prev.income)} &nbsp;|&nbsp; `+
+      `Расход: ${fmt(kpi.expense)} vs ${fmt(prev.expense)} &nbsp;|&nbsp; `+
+      `Прибыль: ${fmt(kpi.profit)} vs ${fmt(prev.profit)}`;
+  } else {
+    ['deltaIncome','deltaExpense','deltaProfit','deltaMargin'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.textContent = '';
+    });
+    document.getElementById('compareBar').style.display = 'none';
+  }
 
   renderDaysChart();
   renderPieChart();
   renderProfitChart();
   renderTopLists();
   renderBalanceChart();
+  renderCashflow(allTx);
 }
 
-function getDayData() {
+function getDayData(txs) {
   const days = {};
-  filteredTx.filter(t=>t.date).forEach(t => {
+  (txs||filteredTx).filter(t=>t.date).forEach(t => {
     const d = t.date;
     if (!days[d]) days[d] = {income:0, expense:0};
     if (t.amount > 0) days[d].income += Number(t.amount);
     else days[d].expense += Math.abs(Number(t.amount));
   });
-  // Сортируем хронологически, а не как текст: дата в формате DD.MM.YYYY
-  // нужно сначала разобрать на компоненты, иначе "05.12.2025" окажется
-  // после "15.01.2026" при простом сравнении строк.
-  function parseDMY(str) {
-    const [dd, mm, yyyy] = str.split('.').map(Number);
-    return new Date(yyyy, mm - 1, dd).getTime();
-  }
   return Object.entries(days).sort(([a],[b]) => parseDMY(a) - parseDMY(b));
 }
 
 function renderDaysChart() {
+  destroyChart('chartDays');
   const data = getDayData();
   const labels = data.map(([d])=>d.split('.').slice(0,2).join('.'));
-  const incomes = data.map(([,v])=>v.income);
+  const incomes  = data.map(([,v])=>v.income);
   const expenses = data.map(([,v])=>v.expense);
+  const datasets = [
+    {label:'Доход',data:incomes,backgroundColor:'rgba(34,197,94,0.7)',borderColor:'#22c55e',borderWidth:1},
+    {label:'Расход',data:expenses,backgroundColor:'rgba(239,68,68,0.7)',borderColor:'#ef4444',borderWidth:1}
+  ];
+
+  // Линии предыдущего периода при сравнении
+  if (compareMode && compareTx.length) {
+    const prevData = getDayData(compareTx);
+    const prevLabels = prevData.map(([d])=>d.split('.').slice(0,2).join('.'));
+    const prevInc = prevData.map(([,v])=>v.income);
+    const prevExp = prevData.map(([,v])=>v.expense);
+    // Нормализуем длину к текущим меткам (показываем по порядковому дню)
+    datasets.push(
+      {label:'Доход (пред.)', data:prevInc.slice(0,labels.length), borderColor:'rgba(34,197,94,0.4)', backgroundColor:'transparent', type:'line', tension:0.3, pointRadius:2, borderDash:[4,4]},
+      {label:'Расход (пред.)', data:prevExp.slice(0,labels.length), borderColor:'rgba(239,68,68,0.4)', backgroundColor:'transparent', type:'line', tension:0.3, pointRadius:2, borderDash:[4,4]}
+    );
+  }
 
   const ctx = document.getElementById('chartDays').getContext('2d');
   new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {label:'Доход',data:incomes,backgroundColor:'rgba(34,197,94,0.7)',borderColor:'#22c55e',borderWidth:1},
-        {label:'Расход',data:expenses,backgroundColor:'rgba(239,68,68,0.7)',borderColor:'#ef4444',borderWidth:1}
-      ]
-    },
+    data: {labels, datasets},
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#999',font:{size:11}}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}`}}},
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{labels:{color:'#999',font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}},
       scales:{
         x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
         y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
@@ -287,6 +426,7 @@ function renderDaysChart() {
 }
 
 function renderPieChart() {
+  destroyChart('chartPie');
   const cats = [
     {k:'chicken',l:'🐔 Курятина',c:'#4ade80'},
     {k:'transport',l:'🚗 Транспорт',c:'#818cf8'},
@@ -310,15 +450,16 @@ function renderPieChart() {
       responsive:true, maintainAspectRatio:true,
       plugins:{
         legend:{position:'right',labels:{color:'#999',font:{size:10},boxWidth:12}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)}`}}
+        tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}
       }
     }
   });
 }
 
 function renderProfitChart() {
+  destroyChart('chartProfit');
   const data = getDayData();
-  const labels = data.map(([d])=>d.split('.').slice(0,2).join('.'));
+  const labels  = data.map(([d])=>d.split('.').slice(0,2).join('.'));
   const profits = data.map(([,v])=>v.income - v.expense);
 
   const ctx = document.getElementById('chartProfit').getContext('2d');
@@ -336,7 +477,7 @@ function renderProfitChart() {
     },
     options: {
       responsive:true, maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${fmt(ctx.raw)}`}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)}`}}},
       scales:{
         x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
         y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
@@ -346,10 +487,10 @@ function renderProfitChart() {
 }
 
 function renderTopLists() {
-  // Топ покупателей
   const incomeMap = {};
   filteredTx.filter(t=>t.amount>0).forEach(t=>{
-    incomeMap[t.name] = (incomeMap[t.name]||0) + Number(t.amount);
+    const key = t.name || t.counterparty || '—';
+    incomeMap[key] = (incomeMap[key]||0) + Number(t.amount);
   });
   const topInc = Object.entries(incomeMap).sort(([,a],[,b])=>b-a).slice(0,8);
   document.getElementById('topIncome').innerHTML = topInc.map(([name,val],i)=>`
@@ -357,12 +498,12 @@ function renderTopLists() {
       <span class="top-num">${i+1}</span>
       <span class="top-name" title="${name}">${name}</span>
       <span class="top-amount income">+${fmt(val)}</span>
-    </li>`).join('');
+    </li>`).join('') || '<li style="padding:12px;color:var(--muted);font-size:12px">Нет данных</li>';
 
-  // Топ поставщиков
   const expenseMap = {};
   filteredTx.filter(t=>t.amount<0).forEach(t=>{
-    expenseMap[t.name] = (expenseMap[t.name]||0) + Math.abs(Number(t.amount));
+    const key = t.name || t.counterparty || '—';
+    expenseMap[key] = (expenseMap[key]||0) + Math.abs(Number(t.amount));
   });
   const topExp = Object.entries(expenseMap).sort(([,a],[,b])=>b-a).slice(0,8);
   document.getElementById('topExpense').innerHTML = topExp.map(([name,val],i)=>`
@@ -370,37 +511,43 @@ function renderTopLists() {
       <span class="top-num">${i+1}</span>
       <span class="top-name" title="${name}">${name}</span>
       <span class="top-amount expense">-${fmt(val)}</span>
-    </li>`).join('');
+    </li>`).join('') || '<li style="padding:12px;color:var(--muted);font-size:12px">Нет данных</li>';
 }
 
 function renderBalanceChart() {
+  destroyChart('chartBalance');
   const data = getDayData();
   const labels = data.map(([d])=>d.split('.').slice(0,2).join('.'));
   let balance = 0;
-  const balances = data.map(([,v])=>{
-    balance += v.income - v.expense;
-    return balance;
-  });
+  const balances = data.map(([,v])=>{ balance += v.income - v.expense; return balance; });
+  const datasets = [{
+    label:'Баланс',
+    data:balances,
+    borderColor:'#ff6b00',
+    backgroundColor:'rgba(255,107,0,0.1)',
+    fill:true, tension:0.3, pointRadius:3, pointBackgroundColor:'#ff6b00'
+  }];
+
+  if (compareMode && compareTx.length) {
+    const prevData = getDayData(compareTx);
+    let prevBal = 0;
+    const prevBalances = prevData.map(([,v])=>{ prevBal += v.income - v.expense; return prevBal; });
+    datasets.push({
+      label:'Баланс (пред.)',
+      data:prevBalances.slice(0, labels.length),
+      borderColor:'rgba(255,107,0,0.4)',
+      backgroundColor:'transparent',
+      fill:false, tension:0.3, pointRadius:2, borderDash:[4,4]
+    });
+  }
 
   const ctx = document.getElementById('chartBalance').getContext('2d');
   new Chart(ctx, {
     type: 'line',
-    data: {
-      labels,
-      datasets:[{
-        label:'Баланс',
-        data:balances,
-        borderColor:'#ff6b00',
-        backgroundColor:'rgba(255,107,0,0.1)',
-        fill:true,
-        tension:0.3,
-        pointRadius:3,
-        pointBackgroundColor:'#ff6b00'
-      }]
-    },
+    data: {labels, datasets},
     options: {
       responsive:true, maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`Баланс: ${fmt(ctx.raw)}`}}},
+      plugins:{legend:{display: compareMode, labels:{color:'#999',font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}},
       scales:{
         x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
         y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
@@ -409,15 +556,118 @@ function renderBalanceChart() {
   });
 }
 
-function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
-function fmtShort(n){
-  const abs = Math.abs(n);
-  if(abs>=1000000) return (n/1000000).toFixed(1)+'М';
-  if(abs>=1000) return (n/1000).toFixed(0)+'К';
-  return n;
+function parseDMYts(str) {
+  if (!str) return 0;
+  const [dd,mm,yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm-1, dd).getTime();
+}
+
+function renderCashflow(txs) {
+  const section = document.getElementById('cashflowSection');
+  const alertEl = document.getElementById('cashflowAlert');
+  if (!section || !alertEl) return;
+
+  // Считаем среднемесячный поток за последние 3 месяца
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime();
+  const recent = txs.filter(t => parseDMYts(t.date) >= cutoff);
+  if (recent.length < 3) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  const monthlyIncome = recent.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0) / 3;
+  const monthlyExpense = recent.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0) / 3;
+  const recurringMonthly = txs.filter(t=>t.is_recurring && t.amount<0)
+    .reduce((s,t) => { const k=t.recurring_label||t.name; return s; }, 0); // sum handled below
+
+  // Группируем регулярные по контрагенту
+  const recurringGroups = {};
+  txs.filter(t=>t.is_recurring && t.amount<0).forEach(t => {
+    const k = t.recurring_label||t.name;
+    if (!recurringGroups[k]) recurringGroups[k] = [];
+    recurringGroups[k].push(t);
+  });
+  const fixedMonthly = Object.values(recurringGroups).reduce((s,g) => {
+    return s + g.reduce((a,t)=>a+Math.abs(Number(t.amount)),0) / g.length;
+  }, 0);
+
+  // Строим прогноз на 6 месяцев
+  const months = [];
+  let balance = 0; // стартовый баланс — накопленный из текущих txs
+  txs.forEach(t => { balance += Number(t.amount); });
+
+  const labels = [];
+  const balances = [balance];
+  const gapMonths = [];
+
+  for (let i = 1; i <= 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const lbl = d.toLocaleString('ru', {month:'short', year:'2-digit'});
+    labels.push(lbl);
+    balance += monthlyIncome - monthlyExpense;
+    balances.push(balance);
+    if (balance < 0) gapMonths.push(lbl);
+  }
+
+  labels.unshift('Сейчас');
+
+  if (gapMonths.length) {
+    alertEl.innerHTML = `<div style="background:rgba(239,68,68,0.12);border:1px solid var(--red,#ef4444);border-radius:8px;padding:10px 12px;font-size:12px">
+      🚨 <b>Риск кассового разрыва</b> в: ${gapMonths.join(', ')}.<br>
+      Среднемес. расход ${fmtShort(monthlyExpense)} превышает доход ${fmtShort(monthlyIncome)}.
+    </div>`;
+  } else {
+    alertEl.innerHTML = `<div style="background:rgba(34,197,94,0.1);border:1px solid #22c55e;border-radius:8px;padding:10px 12px;font-size:12px">
+      ✅ Кассового разрыва не ожидается в ближайшие 6 месяцев.
+    </div>`;
+  }
+
+  destroyChart('chartCashflow');
+  const canvas = document.getElementById('chartCashflow');
+  const ctx = canvas.getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Прогноз баланса',
+        data: balances,
+        borderColor: balances.some(v=>v<0) ? '#ef4444' : '#22c55e',
+        backgroundColor: balances.some(v=>v<0) ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: balances.map(v => v < 0 ? '#ef4444' : '#22c55e'),
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ' ' + fmtShort(c.raw) + ' ₽' } }
+      },
+      scales: {
+        x: { ticks:{color:'#666',font:{size:10}}, grid:{color:'#1e1e1e'} },
+        y: { ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)}, grid:{color:'#1e1e1e'} }
+      }
+    }
+  });
+}
+
+function exportPDF() {
+  const period = document.getElementById('periodSelect').value;
+  document.title = 'OMSFIN Аналитика ' + period;
+  window.print();
+  document.title = 'OMSFIN — Аналитика';
 }
 
 loadData();
 </script>
+<nav class="bottom-nav">
+  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html" class="active"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
 </body>
 </html>

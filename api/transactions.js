@@ -63,11 +63,135 @@ async function logAction(companyId, userId, action, details) {
   }
 }
 
+// ─── Парсер 1С выписки (XML формат КВО — кассовые и банковские операции) ────
+// Вызывается с ?source=1c, тело запроса — XML-строка (text/xml или text/plain)
+// Возвращает массив транзакций в формате OMSFIN для дальнейшей вставки через POST
+function parse1CXML(xml) {
+  const txs = [];
+  // Извлекаем документы ПоступлениеНаСчет / СписаниеСоСчета
+  const docRe = /<(ПоступлениеНаСчет|СписаниеСоСчета|Документ)([^>]*)>([\s\S]*?)<\/\1>/g;
+  // Также поддерживаем формат обмена платёжками (тег РасчетныйДокумент)
+  const lineRe = /<РасчетныйДокумент([^>]*)>([\s\S]*?)<\/РасчетныйДокумент>/g;
+
+  function extractTag(str, tag) {
+    const m = str.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`));
+    return m ? m[1].trim() : '';
+  }
+
+  function parseDate1C(str) {
+    // 1С дата: YYYYMMDD или DD.MM.YYYY
+    if (!str) return '';
+    if (/^\d{8}$/.test(str)) {
+      return `${str.slice(6,8)}.${str.slice(4,6)}.${str.slice(0,4)}`;
+    }
+    return str; // уже DD.MM.YYYY
+  }
+
+  function parsePeriod(date) {
+    if (!date) return '';
+    const parts = date.split('.');
+    if (parts.length === 3) return `${parts[1]}.${parts[2]}`;
+    return '';
+  }
+
+  // Обрабатываем оба формата
+  let m;
+  while ((m = docRe.exec(xml)) !== null) {
+    const tag = m[1], body = m[3];
+    const isIncome = tag === 'ПоступлениеНаСчет';
+    const sumStr = extractTag(body, 'Сумма') || extractTag(body, 'СуммаДокумента');
+    const sum = parseFloat(sumStr.replace(',', '.')) || 0;
+    if (!sum) continue;
+    const date = parseDate1C(extractTag(body, 'Дата') || extractTag(body, 'ДатаДокумента'));
+    const name = extractTag(body, 'Контрагент') || extractTag(body, 'НаименованиеКонтрагента') || '';
+    const inn = extractTag(body, 'ИНН') || extractTag(body, 'ИННКонтрагента') || '';
+    const desc = extractTag(body, 'НазначениеПлатежа') || extractTag(body, 'Комментарий') || '';
+    const amount = isIncome ? sum : -sum;
+    const hash = `1c_${date}_${amount}_${(name+desc).replace(/\s/g,'').slice(0,20)}`;
+    txs.push({ date, amount, name, inn, description: desc, period: parsePeriod(date), hash, category: 'unknown', source: '1c' });
+  }
+
+  // Формат платёжек
+  while ((m = lineRe.exec(xml)) !== null) {
+    const attrs = m[1], body = m[2];
+    const isIncome = /ВидОперации="Поступление"/.test(attrs) || extractTag(body,'ВидОперации') === 'Поступление';
+    const sumStr = extractTag(body, 'Сумма');
+    const sum = parseFloat(sumStr.replace(',', '.')) || 0;
+    if (!sum) continue;
+    const date = parseDate1C(extractTag(body, 'Дата'));
+    const name = extractTag(body, 'Контрагент');
+    const inn = extractTag(body, 'ИНН');
+    const desc = extractTag(body, 'НазначениеПлатежа');
+    const amount = isIncome ? sum : -sum;
+    const hash = `1c_${date}_${amount}_${(name+desc).replace(/\s/g,'').slice(0,20)}`;
+    txs.push({ date, amount, name, inn, description: desc, period: parsePeriod(date), hash, category: 'unknown', source: '1c' });
+  }
+
+  return txs;
+}
+
+
+// ─── Импорт из МойСклад API ──────────────────────────────────────────────────
+async function handleMoySklad(req, res, userId, companyId) {
+  const msToken = req.headers['x-moysklad-token'];
+  if (!msToken) return res.status(400).json({ error: 'Заголовок X-MoySklad-Token обязателен' });
+
+  const BASE = 'https://api.moysklad.ru/api/remap/1.2';
+  const headers = { 'Authorization': 'Bearer ' + msToken, 'Accept-Encoding': 'gzip' };
+  const limit = parseInt(req.query.limit || '200');
+
+  function msDate(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+  }
+  function msPeriod(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+  }
+
+  const txs = [];
+
+  for (const [endpoint, sign] of [['/entity/paymentin', 1], ['/entity/paymentout', -1]]) {
+    try {
+      const r = await fetch(`${BASE}${endpoint}?limit=${limit}&order=moment%2Cdesc`, { headers });
+      if (!r.ok) continue;
+      const data = await r.json();
+      for (const row of (data.rows || [])) {
+        const amount = Math.round((row.sum || 0) / 100) * sign;
+        if (!amount) continue;
+        const date = msDate(row.moment);
+        const name = row.agent?.name || '';
+        const desc = row.description || row.name || '';
+        const hash = `ms_${row.id}`;
+        txs.push({ date, amount, name, description: desc, period: msPeriod(row.moment), hash, category: 'unknown', source: 'moysklad',
+          ...(userId ? {user_id: userId} : {}),
+          ...(companyId ? {company_id: companyId} : {})
+        });
+      }
+    } catch(e) {}
+  }
+
+  return res.status(200).json({ ok: true, count: txs.length, transactions: txs });
+}
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Импорт из МойСклад API — возвращает транзакции для предпросмотра/вставки
+  if (req.query.source === 'moysklad' && req.method === 'POST') {
+    return await handleMoySklad(req, res, userId, companyId);
+  }
+
+  // Парсинг 1С выписки — возвращает массив транзакций без сохранения
+  if (req.query.source === '1c' && req.method === 'POST') {
+    const xmlBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    const parsed = parse1CXML(xmlBody);
+    return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
+  }
 
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();

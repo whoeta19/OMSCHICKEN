@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111111;--muted:#888;}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:40px;}
   .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
@@ -34,9 +36,16 @@
   .empty{text-align:center;padding:60px 20px;color:var(--muted)}
   .empty-icon{font-size:36px;margin-bottom:12px}
   .loading{text-align:center;padding:60px;color:var(--muted)}
+
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
 </style>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <a href="/" style="color:var(--muted);font-size:12px;text-decoration:none">← На главную</a>
@@ -133,5 +142,12 @@ function openCompany(id) {
 
 loadOverview();
 </script>
+<nav class="bottom-nav">
+  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
 </body>
 </html>

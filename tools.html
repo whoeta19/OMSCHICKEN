@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111111;--muted:#888;}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100;}
@@ -27,8 +29,8 @@
   .section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);padding-bottom:10px;border-bottom:1px solid var(--border);}
   .input-group{margin-bottom:12px;}
   .input-group label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;}
-  .input-group input,.input-group select,.input-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all 0.2s;resize:vertical;}
-  .input-group input:focus,.input-group select:focus,.input-group textarea:focus{border-color:rgba(255,107,0,0.5);}
+  .input-group input,.input-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all 0.2s;}
+  .input-group input:focus,.input-group select:focus{border-color:rgba(255,107,0,0.5);}
   .input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .input-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
   .btn{background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(255,107,0,0.25);}
@@ -45,9 +47,8 @@
   .result-total{display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.2);border-radius:10px;margin-top:10px;}
   .result-total-label{font-size:13px;font-weight:600;}
   .result-total-value{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;color:var(--accent);}
-  .kp-output-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px;display:none;}
-  .kp-output-wrap.show{display:block;}
-  .kp-output{background:#fff;color:#000;padding:20px;border-radius:8px;font-family:'Times New Roman',serif;font-size:11pt;}
+  .kp-output{background:#fff;color:#000;padding:20px;border-radius:10px;margin-top:14px;font-family:'Times New Roman',serif;font-size:11pt;display:none;}
+  .kp-output.show{display:block;}
   .tax-compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;}
   .tax-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
   .tax-card.best{border-color:var(--green);background:rgba(34,197,94,0.05);}
@@ -61,6 +62,11 @@
   .enp-amount{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--accent);}
   .btn-outline{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
   .btn-outline:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
     .tools-grid{grid-template-columns:repeat(2,1fr);}
     .input-row{grid-template-columns:1fr;}
@@ -68,9 +74,9 @@
     .tax-compare{grid-template-columns:1fr;}
   }
 </style>
-<script src="/nav.js"></script>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
@@ -82,11 +88,6 @@
   </div>
 
   <div class="tools-grid">
-    <div class="tool-btn" onclick="window.location.href='/negotiation'">
-      <div class="tool-icon">🤝</div>
-      <div class="tool-name">Переговоры</div>
-      <div class="tool-desc">Стоимость отсрочки и скидки</div>
-    </div>
     <div class="tool-btn active" onclick="showTool('salary',this)">
       <div class="tool-icon">👥</div>
       <div class="tool-name">Зарплата</div>
@@ -116,6 +117,11 @@
       <div class="tool-icon">⚖️</div>
       <div class="tool-name">Выбор системы</div>
       <div class="tool-desc">УСН 6% vs 15% vs ОСНО — что выгоднее</div>
+    </div>
+    <div class="tool-btn" onclick="showTool('currency',this)">
+      <div class="tool-icon">💱</div>
+      <div class="tool-name">Конвертер валют</div>
+      <div class="tool-desc">Курсы ЦБ РФ, перевод в рубли</div>
     </div>
     <div class="tool-btn" onclick="window.location.href='/counterparty'">
       <div class="tool-icon">🔍</div>
@@ -243,7 +249,7 @@
       <div class="input-group"><label>Особые условия / преимущества</label><textarea id="kpAdvantages" rows="3" placeholder="Собственное производство, ветеринарные документы, доставка по Пензенской области"></textarea></div>
       <button class="btn" onclick="genKP()">📄 Сгенерировать КП</button>
     </div>
-    <div class="kp-output-wrap" id="kpOutputWrap"><div class="kp-output" id="kpOutput"></div></div>
+    <div class="kp-output" id="kpOutput"></div>
     <div id="kpActions" style="display:none;margin-top:10px;display:none">
       <button class="btn" onclick="printKP()">🖨️ Печать / PDF</button>
     </div>
@@ -380,6 +386,36 @@
     </div>
   </div>
 
+  <!-- Конвертер валют -->
+  <div class="tool-panel" id="tool-currency">
+    <div class="section-title">💱 Конвертер валют (курс ЦБ РФ)</div>
+    <div id="currencyDate" style="font-size:11px;color:var(--muted);margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма</label>
+        <input type="number" id="currAmt" value="1000" min="0" oninput="convertCurrency()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Валюта</label>
+        <select id="currCode" onchange="convertCurrency()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;outline:none">
+          <option value="USD">🇺🇸 USD — Доллар США</option>
+          <option value="EUR">🇪🇺 EUR — Евро</option>
+          <option value="CNY">🇨🇳 CNY — Юань</option>
+          <option value="GBP">🇬🇧 GBP — Фунт</option>
+          <option value="TRY">🇹🇷 TRY — Лира</option>
+          <option value="KZT">🇰🇿 KZT — Тенге</option>
+          <option value="AED">🇦🇪 AED — Дирхам</option>
+        </select>
+      </div>
+    </div>
+    <div id="currResult" style="background:var(--surface2);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Результат</div>
+      <div id="currResultVal" style="font-family:Unbounded,sans-serif;font-size:22px;font-weight:900;color:var(--accent)">—</div>
+      <div id="currRate" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <div style="section-title;font-size:11px;color:var(--muted);margin-bottom:8px">Все курсы на сегодня</div>
+    <div id="currTable" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+  </div>
 </main>
 <script>
 function showTool(name, btn) {
@@ -534,16 +570,22 @@ function genKP() {
     </div>`;
   
   document.getElementById('kpOutput').innerHTML = kp;
-  document.getElementById('kpOutputWrap').classList.add('show');
+  document.getElementById('kpOutput').classList.add('show');
   document.getElementById('kpActions').style.display = 'flex';
-  document.getElementById('kpOutputWrap').scrollIntoView({behavior:'smooth'});
+  document.getElementById('kpOutput').scrollIntoView({behavior:'smooth'});
 }
 
 function printKP() {
   const content = document.getElementById('kpOutput').innerHTML;
   const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11pt;padding:20mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}@media print{@page{margin:15mm}}</style>
-</head><body>${content}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11pt;padding:20mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}@media print{@page{margin:15mm}}</style></head><body>${content}<nav class="bottom-nav">
+  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
+</body></html>`);
   win.document.close();
   setTimeout(()=>win.print(),500);
 }
@@ -753,6 +795,54 @@ function calcTaxSys() {
 // Инициализация дат для калькулятора пеней
 document.getElementById('penDateFrom').value = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
 document.getElementById('penDateTo').value = new Date().toISOString().split('T')[0];
+let _currencyData = null;
+
+async function loadCurrency() {
+  if (_currencyData) return _currencyData;
+  try {
+    const r = await fetch('/api/lookup?provider=currency');
+    _currencyData = await r.json();
+    return _currencyData;
+  } catch(e) { return null; }
+}
+
+async function initCurrencyTool() {
+  const data = await loadCurrency();
+  if (!data) { document.getElementById('currencyDate').textContent = 'Ошибка загрузки курсов'; return; }
+  const d = new Date(data.date).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('currencyDate').textContent = 'Курс ЦБ РФ на ' + d;
+  const tbl = document.getElementById('currTable');
+  tbl.innerHTML = Object.entries(data.currencies).map(([code, c]) => {
+    const delta = c.rate - c.previous;
+    const sign = delta >= 0 ? '+' : '';
+    const color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<div style="background:var(--surface2);border-radius:8px;padding:10px">
+      <div style="font-size:10px;color:var(--muted)">${code}</div>
+      <div style="font-size:13px;font-weight:700;margin:2px 0">${c.rate.toLocaleString('ru-RU',{maximumFractionDigits:2})} ₽</div>
+      <div style="font-size:10px;color:${color}">${sign}${delta.toLocaleString('ru-RU',{maximumFractionDigits:2})}</div>
+    </div>`;
+  }).join('');
+  convertCurrency();
+}
+
+async function convertCurrency() {
+  const data = await loadCurrency();
+  if (!data) return;
+  const amt = parseFloat(document.getElementById('currAmt').value) || 0;
+  const code = document.getElementById('currCode').value;
+  const cur = data.currencies[code];
+  if (!cur) return;
+  const rub = amt * cur.rate;
+  document.getElementById('currResultVal').textContent = rub.toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽';
+  document.getElementById('currRate').textContent = `1 ${code} = ${cur.rate.toLocaleString('ru-RU', {maximumFractionDigits:4})} ₽`;
+}
+
+// Загружаем при открытии инструмента
+const _origShowTool = showTool;
+function showTool(name, btn) {
+  _origShowTool(name, btn);
+  if (name === 'currency') initCurrencyTool();
+}
 </script>
 </body>
 </html>

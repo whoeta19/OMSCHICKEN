@@ -7,15 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111111;--muted:#888;}
+  body.blue{--bg:#0a0f1e;--surface:#0f1a2e;--surface2:#152035;--border:rgba(99,140,255,0.12);--text:#e2eaff;--muted:#5a7099;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100;}
   .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
   .logo span{color:var(--accent);}
-  .tabs{display:flex;gap:6px;padding:8px 20px;border-bottom:1px solid var(--border);background:#080808;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-  .tab{padding:5px 13px;border:1px solid transparent;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:11.5px;cursor:pointer;border-radius:20px;transition:all 0.18s;white-space:nowrap;font-weight:400;line-height:1.4;}
-  .tab.active{color:#fff;background:rgba(255,107,0,0.15);border-color:rgba(255,107,0,0.4);font-weight:500;}
-  .tab:hover:not(.active){color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08);}
+  .tabs{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);overflow-x:auto;}
+  .tab{padding:12px 16px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;font-weight:500;}
+  .tab.active{color:var(--text);border-bottom-color:var(--accent);}
   main{padding:20px 24px;max-width:900px;margin:0 auto;}
   .page{display:none;}.page.active{display:block;}
   .section-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);}
@@ -71,15 +72,20 @@
   .upload-area{border:1px dashed rgba(255,255,255,0.1);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;}
   .upload-area:hover{border-color:rgba(255,107,0,0.4);}
   
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
     .doc-types{grid-template-columns:repeat(2,1fr);}
     .input-row{grid-template-columns:1fr;}
     .input-row-3{grid-template-columns:1fr;}
   }
 </style>
-<script src="/nav.js"></script>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&t!=="dark")document.body.classList.add(t);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -371,12 +377,10 @@
       <div class="input-group"><label>БИК</label><input type="text" id="sBik"></div>
       <div class="input-group"><label>К/С</label><input type="text" id="sKs"></div>
     </div>
-    <div class="input-group"><label>Директор</label><input type="text" id="sDirector"></div>
-    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:8px 0;cursor:pointer">
-      <input type="checkbox" id="sDirIsBuh" onchange="toggleBuhField()" style="accent-color:var(--accent);width:15px;height:15px">
-      Директор = Главный бухгалтер (одно лицо)
-    </label>
-    <div class="input-group" id="buhFieldWrap"><label>Гл. бухгалтер</label><input type="text" id="sBuh"></div>
+    <div class="input-row">
+      <div class="input-group"><label>Директор</label><input type="text" id="sDirector"></div>
+      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="sBuh"></div>
+    </div>
     <button class="btn" onclick="saveSettings()" style="margin-top:8px">💾 Сохранить</button>
   </div>
 </div>
@@ -395,22 +399,15 @@ let S = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem
   name:'ООО "ОМСЧИКЕН"', inn:'5800015301', kpp:'580001001', ogrn:'1255800003447',
   addr:'440013, г. Пенза, ул. Чаадаева, 72', phone:'8(9869)47-66-97',
   bank:'АО «ТБанк»', rs:'40702810210001915113', ks:'30101810145250000974', bik:'044525411',
-  director:'Симутин Семен Евгеньевич', buh:'Симутин Семен Евгеньевич', dirIsBuh:true
+  director:'Симутин Семен Евгеньевич', buh:'Симутин Семен Евгеньевич'
 };
 
 // Инициализация настроек
-function toggleBuhField() {
-  const cb = document.getElementById('sDirIsBuh');
-  document.getElementById('buhFieldWrap').style.display = cb.checked ? 'none' : '';
-}
-
 function initSettings() {
   ['Name','Inn','Kpp','Ogrn','Addr','Bank','Rs','Bik','Ks','Director','Buh'].forEach(k=>{
     const el = document.getElementById('s'+k);
     if (el) el.value = S[k.toLowerCase()] || '';
   });
-  const cb = document.getElementById('sDirIsBuh');
-  if (cb) { cb.checked = !!S.dirIsBuh; toggleBuhField(); }
   if (stampImg) document.getElementById('stampPreview').innerHTML = `<img src="${stampImg}" style="max-height:80px;max-width:120px">`;
   if (signImg) document.getElementById('signPreview').innerHTML = `<img src="${signImg}" style="max-height:50px;max-width:150px">`;
 }
@@ -427,10 +424,7 @@ function saveSettings() {
     bik: document.getElementById('sBik').value,
     ks: document.getElementById('sKs').value,
     director: document.getElementById('sDirector').value,
-    dirIsBuh: document.getElementById('sDirIsBuh').checked,
-    buh: document.getElementById('sDirIsBuh').checked
-      ? document.getElementById('sDirector').value
-      : document.getElementById('sBuh').value,
+    buh: document.getElementById('sBuh').value,
   };
   localStorage.setItem('omsfin_seller', JSON.stringify(S));
   showToast('✅ Сохранено');
@@ -630,9 +624,15 @@ ${v('ppKbk') ? `<table style="width:100%;border-collapse:collapse;font-size:9pt;
 
   const win = window.open('','_blank','width=900,height=700');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ПП №${v('ppNum')}</title>
-<style>body{margin:0;background:#fff}@media print{body{margin:0}}</style>
-</head>
-<body onload="window.print()">${html}</body></html>`);
+<style>body{margin:0;background:#fff}@media print{body{margin:0}}</style></head>
+<body onload="window.print()">${html}<nav class="bottom-nav">
+  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html" class="active"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
+</body></html>`);
   win.document.close();
   showToast('✅ Платёжное поручение сформировано');
 }
@@ -784,24 +784,6 @@ function signHTML(label) {
   return `${label} ${sig}`;
 }
 
-// Строка подписи бухгалтера для печатных форм.
-// Если директор = бухгалтер — возвращает пустую строку (не дублируем подпись).
-function buhLine(prefix, suffix) {
-  if (S.dirIsBuh) return '';
-  prefix = prefix || 'Гл. бухгалтер';
-  suffix = suffix || '';
-  return `<div style="margin-top:6px">${prefix} _________________ &nbsp; ${S.buh}${suffix}</div>`;
-}
-
-// Блок подписи бухгалтера для УПД/счёт-фактуры (с подписью и ФИО).
-function buhSignBlock() {
-  if (S.dirIsBuh) return '';
-  return `
-    <div style="margin-top:8px" class="small bold">Главный бухгалтер:</div>
-    <div style="margin-top:16px">_________________ &nbsp; ${S.buh}</div>
-    <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>`;
-}
-
 function generateDoc() {
   const items = getItems();
   if (!items.length) { showToast('Добавь хотя бы один товар'); return; }
@@ -863,7 +845,7 @@ function genSchet(items, buyer, doc, noVat, vat, total) {
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
       <div>
         <div style="margin-bottom:8px">${signHTML('Руководитель')} &nbsp; ${S.director}</div>
-        ${buhLine()}
+        <div>Гл. бухгалтер _________________ &nbsp; ${S.buh}</div>
       </div>
       <div>${stampHTML()}</div>
     </div>`;
@@ -986,7 +968,9 @@ function genUPD(items, buyer, doc, noVat, vat, total) {
           <div class="small bold">Руководитель:</div>
           <div style="margin-top:16px">${signHTML('')} &nbsp; ${S.director}</div>
           <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
-          ${buhSignBlock()}
+          <div style="margin-top:8px" class="small bold">Главный бухгалтер:</div>
+          <div style="margin-top:16px">_________________ &nbsp; ${S.buh}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
           <div style="margin-top:8px" class="small bold">Товар (груз) передал / услуги оказал:</div>
           <div style="margin-top:16px">_________________ &nbsp; _________________</div>
           <div class="small">(должность, подпись, ФИО)</div>
@@ -1104,7 +1088,8 @@ function genTORG12(items, buyer, doc, noVat, vat, total) {
           <div class="bold">Отпуск груза разрешил:</div>
           <div style="margin-top:4px">Директор &nbsp; ${signHTML('')} &nbsp; ${S.director}</div>
           <div class="small">(должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
-          ${S.dirIsBuh ? '' : `<div style="margin-top:8px">Главный бухгалтер &nbsp; _________________ &nbsp; ${S.buh}</div><div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>`}
+          <div style="margin-top:8px">Главный бухгалтер &nbsp; _________________ &nbsp; ${S.buh}</div>
+          <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
           <div style="margin-top:8px">Отпуск груза произвёл:</div>
           <div style="margin-top:4px">Кладовщик &nbsp; _________________ &nbsp; _________________</div>
           <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка)</div>
@@ -1198,7 +1183,8 @@ function genSF(items, buyer, doc, noVat, vat, total) {
       <div>
         <div>${signHTML('Руководитель организации или иное уполномоченное лицо')} &nbsp; ${S.director}</div>
         <div style="font-size:8pt;color:#555;margin-bottom:6px">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
-        ${S.dirIsBuh ? '' : `<div>Главный бухгалтер или иное уполномоченное лицо &nbsp; _________________ &nbsp; ${S.buh}</div><div style="font-size:8pt;color:#555">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>`}
+        <div>Главный бухгалтер или иное уполномоченное лицо &nbsp; _________________ &nbsp; ${S.buh}</div>
+        <div style="font-size:8pt;color:#555">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
         <div style="margin-top:6px" class="small">Индивидуальный предприниматель _________________ (подпись) _________________ (Ф.И.О.) _________________ (реквизиты свидетельства о гос. регистрации)</div>
       </div>
       <div>${stampHTML()}</div>
@@ -1344,7 +1330,7 @@ function genDOVER(buyer, doc) {
       <p style="font-size:10pt">Образец подписи доверенного лица: _______________________</p>
       <div style="display:flex;justify-content:space-between;margin-top:12px">
         <div>${signHTML('Руководитель')} ${S.director}</div>
-        ${S.dirIsBuh ? '' : `<div>Гл. бухгалтер _________________ ${S.buh}</div>`}
+        <div>Гл. бухгалтер _________________ ${S.buh}</div>
         <div>${stampHTML()}</div>
       </div>
     </div>`;
@@ -1371,7 +1357,7 @@ function genKO1(buyer, doc, total, vat) {
     <p style="font-size:10pt;margin-bottom:12px">В т.ч. НДС: ${vatLine}</p>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <div>
-        ${S.dirIsBuh ? `<p>Директор / Гл. бухгалтер _________________ ${S.director}</p>` : `<p>Главный бухгалтер _________________ ${S.buh}</p>`}
+        <p>Главный бухгалтер _________________ ${S.buh}</p>
         <p style="margin-top:8px">Кассир _________________ _________________</p>
       </div>
       <div>${stampHTML()}</div>
@@ -1446,8 +1432,7 @@ function printDoc() {
     .right{text-align:right}.center{text-align:center}.bold{font-weight:bold}.small{font-size:9pt}
     img{max-width:100%;height:auto}
     @media print{@page{margin:15mm}}
-  </style>
-</head><body>${content}</body></html>`);
+  </style></head><body>${content}</body></html>`);
   win.document.close();
   setTimeout(()=>win.print(), 500);
 }
@@ -1516,8 +1501,7 @@ function printFromHistory(id) {
   const item = history.find(d=>d.id===id);
   if (!item) return;
   const win = window.open('','_blank');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Times New Roman',Times,serif;font-size:11pt;padding:15mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}td,th{border:1px solid #000;padding:3px 5px;font-size:10pt;vertical-align:top}th{background:#f0f0f0;font-weight:bold;text-align:center}.title-center{text-align:center;font-weight:bold;font-size:12pt;margin:8px 0}.right{text-align:right}.center{text-align:center}.bold{font-weight:bold}.small{font-size:9pt}img{max-width:100%;height:auto}</style>
-</head><body>${item.html}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:'Times New Roman',Times,serif;font-size:11pt;padding:15mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}td,th{border:1px solid #000;padding:3px 5px;font-size:10pt;vertical-align:top}th{background:#f0f0f0;font-weight:bold;text-align:center}.title-center{text-align:center;font-weight:bold;font-size:12pt;margin:8px 0}.right{text-align:right}.center{text-align:center}.bold{font-weight:bold}.small{font-size:9pt}img{max-width:100%;height:auto}</style></head><body>${item.html}</body></html>`);
   win.document.close();
   setTimeout(()=>win.print(), 500);
 }
