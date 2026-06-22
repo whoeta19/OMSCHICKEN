@@ -2959,9 +2959,13 @@ function aiSend() {
   aiAsk(q);
 }
 
+// История разговора для передачи в Gemini (последние 10 сообщений)
+const _aiHistory = [];
+
 async function aiAsk(q) {
   if (!aiOpen) { aiOpen=true; document.getElementById('aiModal').classList.add('open'); if(!_aiInited){_aiInited=true;_aiInit();} }
   _aiAddBubble('user', q);
+  _aiHistory.push({ role: 'user', text: q });
   document.getElementById('aiChips').innerHTML = '';
   const msgs = document.getElementById('aiMessages');
   const dots = document.createElement('div');
@@ -2973,14 +2977,48 @@ async function aiAsk(q) {
   try {
     const now = new Date();
     const year = now.getFullYear();
+    const curMonth = String(now.getMonth()+1).padStart(2,'0');
+    const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0');
+    const prevYear = prevDate.getFullYear();
+
+    function parseDMY(s){try{const[d,m,y]=s.split('.').map(Number);return new Date(y,m-1,d).getTime();}catch{return 0;}}
+
     const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
-    const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-    const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-    const vat = income*10/110 - yearTx.filter(t=>t.amount<0&&t.category==='chicken').reduce((s,t)=>s+Math.abs(Number(t.amount)),0)*10/110;
+    const monthTx = yearTx.filter(t => (t.date||'').split('.')[1] == curMonth);
+    const prevTx  = allTx.filter(t => (t.date||'').split('.')[1] == prevMonth && (t.date||'').split('.')[2] == prevYear);
+
+    const sum = (arr, fn) => arr.filter(fn).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+
+    const income      = sum(yearTx,  t=>t.amount>0);
+    const expense     = sum(yearTx,  t=>t.amount<0);
+    const monthIncome = sum(monthTx, t=>t.amount>0);
+    const monthExpense= sum(monthTx, t=>t.amount<0);
+    const prevIncome  = sum(prevTx,  t=>t.amount>0);
+    const prevExpense = sum(prevTx,  t=>t.amount<0);
+    const monthDelta  = prevIncome > 0 ? Math.round((monthIncome - prevIncome) / prevIncome * 100) : null;
+
+    const vat = Math.max(0, income*10/110 - sum(yearTx, t=>t.amount<0&&t.category==='chicken')*10/110);
+
+    // Топ категорий расходов
     const byCat = {}; yearTx.filter(t=>t.amount<0).forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+Math.abs(Number(t.amount));});
-    const topCats = Object.entries(byCat).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>`${k}: ${Math.round(v).toLocaleString('ru-RU')} ₽`).join(', ');
+    const topCats = Object.entries(byCat).sort(([,a],[,b])=>b-a).slice(0,4).map(([k,v])=>`${k}: ${Math.round(v/1000)}К`).join(', ');
+
+    // Топ покупателей
     const byClient = {}; yearTx.filter(t=>t.amount>0).forEach(t=>{const k=t.name||'—';byClient[k]=(byClient[k]||0)+Number(t.amount);});
-    const topClients = Object.entries(byClient).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>`${k.substring(0,25)}: ${Math.round(v).toLocaleString('ru-RU')} ₽`).join(', ');
+    const topClients = Object.entries(byClient).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>`${k.substring(0,20)}: ${Math.round(v/1000)}К`).join(', ');
+
+    // Топ поставщиков (расход)
+    const bySupp = {}; yearTx.filter(t=>t.amount<0).forEach(t=>{const k=t.name||'—';bySupp[k]=(bySupp[k]||0)+Math.abs(Number(t.amount));});
+    const topSuppliers = Object.entries(bySupp).sort(([,a],[,b])=>b-a).slice(0,3).map(([k,v])=>`${k.substring(0,20)}: ${Math.round(v/1000)}К`).join(', ');
+
+    // Тренд по месяцам (последние 4 месяца)
+    const byMonth = {}; yearTx.filter(t=>t.amount>0).forEach(t=>{const m=(t.date||'').split('.')[1];if(m)byMonth[m]=(byMonth[m]||0)+Number(t.amount);});
+    const monthTrend = Object.entries(byMonth).sort(([a],[b])=>a.localeCompare(b)).slice(-4).map(([m,v])=>`${m}: ${Math.round(v/1000)}К`).join(' → ');
+
+    // Последние 5 операций
+    const sorted = [...allTx].sort((a,b)=>parseDMY(b.date)-parseDMY(a.date)).slice(0,5);
+    const recentTxs = sorted.map(t=>`${t.date} ${(t.name||'').substring(0,15)} ${t.amount>0?'+':''}${Math.round(Number(t.amount)/1000)}К`).join('; ');
 
     const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
     const resp = await fetch('/api/members?resource=ai', {
@@ -2988,13 +3026,22 @@ async function aiAsk(q) {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
         message: q,
-        context: { income, expense, profit: income-expense, txCount: yearTx.length, topCats, topClients, vat: Math.max(0,vat), period: `${now.getDate()}.${now.getMonth()+1}.${year}` }
+        history: _aiHistory.slice(-10, -1), // история без текущего вопроса
+        context: {
+          period: `${curMonth}.${year}`,
+          income, expense, profit: income - expense,
+          monthIncome, monthExpense, monthProfit: monthIncome - monthExpense,
+          prevMonthIncome: prevIncome, prevMonthExpense: prevExpense,
+          monthDelta, txCount: yearTx.length,
+          vat, topCats, topClients, topSuppliers, monthTrend, recentTxs
+        }
       })
     });
     const data = await resp.json();
     msgs.removeChild(dots);
     if (data.reply) {
       _aiAddBubble('bot', data.reply);
+      _aiHistory.push({ role: 'bot', text: data.reply });
     } else {
       const res = aiAnswer(q);
       _aiAddBubble('bot', res.html, res.actions);

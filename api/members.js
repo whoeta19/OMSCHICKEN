@@ -75,75 +75,84 @@ export default async function handler(req, res) {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY не настроен' });
 
-    const { message, context } = req.body;
+    const { message, context, history } = req.body;
     if (!message) return res.status(400).json({ error: 'message required' });
 
-    // Строим системный промпт с финансовым контекстом пользователя
     const ctx = context || {};
+    const r = (n) => n ? Math.round(n).toLocaleString('ru-RU') + ' ₽' : 'нет данных';
+
+    // Строим богатый системный промпт
     const systemPrompt = `Ты — ОМС-Ассистент, умный финансовый советник встроенный в OMSFIN — облачный бухгалтерский сервис для малого бизнеса в России.
 
-ФИНАНСОВЫЕ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (актуальные):
-- Доходы за год: ${ctx.income ? Math.round(ctx.income).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
-- Расходы за год: ${ctx.expense ? Math.round(ctx.expense).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
-- Прибыль: ${ctx.profit !== undefined ? Math.round(ctx.profit).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
-- Количество операций: ${ctx.txCount || 0}
-- Топ категории расходов: ${ctx.topCats || 'нет данных'}
-- Топ клиенты: ${ctx.topClients || 'нет данных'}
-- НДС к уплате (расчётно): ${ctx.vat ? Math.round(ctx.vat).toLocaleString('ru-RU') + ' ₽' : 'нет данных'}
-- Текущий период: ${ctx.period || new Date().toLocaleDateString('ru-RU')}
+ФИНАНСЫ ПОЛЬЗОВАТЕЛЯ (${ctx.period || 'текущий год'}):
+Текущий месяц: доход ${r(ctx.monthIncome)}, расход ${r(ctx.monthExpense)}, прибыль ${r(ctx.monthProfit)}
+Год в целом: доход ${r(ctx.income)}, расход ${r(ctx.expense)}, прибыль ${r(ctx.profit)}
+${ctx.prevMonthIncome !== undefined ? `Прошлый месяц: доход ${r(ctx.prevMonthIncome)}, расход ${r(ctx.prevMonthExpense)}` : ''}
+${ctx.monthDelta !== undefined ? `Динамика к прошлому месяцу: доход ${ctx.monthDelta > 0 ? '+' : ''}${ctx.monthDelta}%` : ''}
+Операций за год: ${ctx.txCount || 0}
+НДС к уплате (расчётно): ${r(ctx.vat)}
+Топ расходных категорий: ${ctx.topCats || 'нет данных'}
+Топ покупатели (доход): ${ctx.topClients || 'нет данных'}
+Топ поставщики (расход): ${ctx.topSuppliers || 'нет данных'}
+${ctx.monthTrend ? 'Тренд по месяцам (доход): ' + ctx.monthTrend : ''}
+${ctx.recentTxs ? 'Последние операции: ' + ctx.recentTxs : ''}
 
-НАЛОГОВЫЕ СТАВКИ 2026 (актуальные, используй только их):
-- НДС: 10% на продовольствие (мясо, птица), 22% базовая (было 20%)
-- НДФЛ прогрессивный: 13% до 2.4 млн, 15% до 5 млн, 18% до 20 млн, 20% до 50 млн, 22% свыше
+НАЛОГОВЫЕ СТАВКИ 2026:
+- НДС: 10% продовольствие (мясо, птица), 22% базовая
+- НДФЛ: 13% до 2.4 млн, 15% до 5 млн, 18% до 20 млн, 20% до 50 млн, 22% свыше
 - НДФЛ дивиденды: отдельная база — 13% до 2.4 млн, 15% свыше
-- Налог на прибыль: 25% (было 20%)
-- Страховые взносы: 30% до 2 979 000 ₽/год, 15.1% сверх. Льготы МСП отменены с 2026.
-- УСН 6% с доходов, УСН 15% доходы-расходы (минимум 1%)
+- Налог на прибыль: 25%
+- Страховые взносы: 30% до 2 979 000 ₽/год, 15.1% сверх
+- УСН 6% с доходов, УСН 15% доходы-расходы
 
 РАЗДЕЛЫ OMSFIN: Дашборд (/), Аналитика (/analytics), НДС (/vat), Декларации (/declarations), Зарплата (/payroll), Документы (/docs), Инструменты (/tools), Контрагенты (/counterparty)
 
-СТИЛЬ ОТВЕТОВ:
-- Отвечай коротко и по делу, максимум 4-5 предложений
-- Используй конкретные цифры из данных пользователя когда они есть
-- Если данных нет — скажи что нужно загрузить выписку
-- Пиши на русском, без лишних вводных слов
-- Форматируй числа с пробелами (1 000 000 ₽)
-- Можно использовать HTML теги <b> для выделения важного
-- НЕ придумывай данные которых нет`;
+СТИЛЬ: коротко и конкретно (3-5 предложений), используй цифры пользователя, пиши на русском, <b> для важного, не придумывай данных которых нет.`;
+
+    // Модели пробуем по приоритету без лишнего запроса к ListModels
+    const MODELS = [
+      'models/gemini-2.0-flash',
+      'models/gemini-2.0-flash-lite',
+      'models/gemini-1.5-flash',
+      'models/gemini-1.5-flash-latest',
+      'models/gemini-1.5-pro',
+    ];
 
     try {
-      // Сначала смотрим какие модели доступны с этим ключом
-      const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
-      const listData = await listResp.json();
-      const availableModels = (listData.models || []).filter(m => m.supportedGenerationMethods?.includes('generateContent')).map(m => m.name);
-      if (!availableModels.length) {
-        return res.status(500).json({ error: 'Нет доступных моделей. Ответ API: ' + JSON.stringify(listData).substring(0, 300) });
+      // История разговора: [{role:'user'|'model', text:'...'}]
+      const chatHistory = (Array.isArray(history) ? history.slice(-10) : []).map(h => ({
+        role: h.role === 'bot' ? 'model' : 'user',
+        parts: [{ text: h.text }]
+      }));
+
+      // Строим contents: системный промпт как первый user-turn, затем история, затем текущий вопрос
+      const contents = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'Понял, готов помочь с финансами.' }] },
+        ...chatHistory,
+        { role: 'user', parts: [{ text: message }] }
+      ];
+
+      let reply = null;
+      let lastErr = '';
+      for (const modelName of MODELS) {
+        try {
+          const geminiResp = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 800, temperature: 0.7 } })
+            }
+          );
+          const geminiData = await geminiResp.json();
+          const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) { reply = text; break; }
+          lastErr = geminiData.error?.message || JSON.stringify(geminiData).substring(0, 150);
+        } catch (e) { lastErr = e.message; }
       }
-      // Берём первую подходящую flash или pro модель
-      const modelName = availableModels.find(m => m.includes('flash')) || availableModels.find(m => m.includes('pro')) || availableModels[0];
 
-      const geminiResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              { role: 'user', parts: [{ text: systemPrompt + '\n\nВопрос пользователя: ' + message }] }
-            ],
-            generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
-          })
-        }
-      );
-
-      const geminiData = await geminiResp.json();
-      const reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!reply) {
-        const errMsg = geminiData.error?.message || geminiData.error?.status || JSON.stringify(geminiData).substring(0, 200);
-        return res.status(500).json({ error: errMsg });
-      }
-
+      if (!reply) return res.status(500).json({ error: lastErr });
       return res.status(200).json({ reply });
     } catch (e) {
       return res.status(500).json({ error: e.message });
