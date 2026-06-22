@@ -533,6 +533,8 @@
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
       <button onclick="document.getElementById('fileInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 <span>Выписка</span></button>
+      <button onclick="document.getElementById('file1cInput').click()" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'" title="Импорт из 1С (XML)">1С <span>XML</span></button>
+      <input type="file" id="file1cInput" accept=".xml,.txt" style="display:none">
       <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
     </div>
   </div>
@@ -3753,6 +3755,42 @@ function renderAll() {
 
 // Запуск таймера
 startDeadlineTimer();
+
+// ─── Импорт из 1С XML ────────────────────────────────────────────────────────
+document.getElementById('file1cInput').addEventListener('change', async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const xmlText = await file.text();
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const companyId = currentCompanyId || '';
+  try {
+    showToast('⏳ Разбираю 1С файл...');
+    // Парсим XML на сервере
+    const parseResp = await fetch('/api/transactions?source=1c', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain', 'Authorization': 'Bearer ' + token },
+      body: xmlText
+    });
+    const parseData = await parseResp.json();
+    if (!parseData.ok || !parseData.count) {
+      showToast('❌ Не найдено операций в файле. Формат: КВО XML из 1С.');
+      return;
+    }
+    // Вставляем транзакции
+    const txs = parseData.transactions.map(t => ({...t, company_id: companyId || undefined}));
+    const insertResp = await fetch('/api/transactions' + (companyId ? '?company_id=' + companyId : ''), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(txs)
+    });
+    const insertData = await insertResp.json();
+    showToast(`✅ 1С: загружено ${insertData.inserted || 0} операций, пропущено дублей: ${insertData.skipped || 0}`);
+    await syncNow();
+  } catch(err) {
+    showToast('❌ Ошибка импорта 1С: ' + err.message);
+  }
+  e.target.value = '';
+});
 </script>
 
 <!-- Дропдаун "Ещё" -->

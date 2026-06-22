@@ -118,6 +118,11 @@
       <div class="tool-name">Выбор системы</div>
       <div class="tool-desc">УСН 6% vs 15% vs ОСНО — что выгоднее</div>
     </div>
+    <div class="tool-btn" onclick="showTool('currency',this)">
+      <div class="tool-icon">💱</div>
+      <div class="tool-name">Конвертер валют</div>
+      <div class="tool-desc">Курсы ЦБ РФ, перевод в рубли</div>
+    </div>
     <div class="tool-btn" onclick="window.location.href='/counterparty'">
       <div class="tool-icon">🔍</div>
       <div class="tool-name">Проверка контрагента</div>
@@ -381,6 +386,36 @@
     </div>
   </div>
 
+  <!-- Конвертер валют -->
+  <div class="tool-panel" id="tool-currency">
+    <div class="section-title">💱 Конвертер валют (курс ЦБ РФ)</div>
+    <div id="currencyDate" style="font-size:11px;color:var(--muted);margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма</label>
+        <input type="number" id="currAmt" value="1000" min="0" oninput="convertCurrency()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Валюта</label>
+        <select id="currCode" onchange="convertCurrency()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;outline:none">
+          <option value="USD">🇺🇸 USD — Доллар США</option>
+          <option value="EUR">🇪🇺 EUR — Евро</option>
+          <option value="CNY">🇨🇳 CNY — Юань</option>
+          <option value="GBP">🇬🇧 GBP — Фунт</option>
+          <option value="TRY">🇹🇷 TRY — Лира</option>
+          <option value="KZT">🇰🇿 KZT — Тенге</option>
+          <option value="AED">🇦🇪 AED — Дирхам</option>
+        </select>
+      </div>
+    </div>
+    <div id="currResult" style="background:var(--surface2);border-radius:12px;padding:16px;text-align:center;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Результат</div>
+      <div id="currResultVal" style="font-family:Unbounded,sans-serif;font-size:22px;font-weight:900;color:var(--accent)">—</div>
+      <div id="currRate" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+    </div>
+    <div style="section-title;font-size:11px;color:var(--muted);margin-bottom:8px">Все курсы на сегодня</div>
+    <div id="currTable" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+  </div>
 </main>
 <script>
 function showTool(name, btn) {
@@ -760,6 +795,54 @@ function calcTaxSys() {
 // Инициализация дат для калькулятора пеней
 document.getElementById('penDateFrom').value = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
 document.getElementById('penDateTo').value = new Date().toISOString().split('T')[0];
+let _currencyData = null;
+
+async function loadCurrency() {
+  if (_currencyData) return _currencyData;
+  try {
+    const r = await fetch('/api/lookup?provider=currency');
+    _currencyData = await r.json();
+    return _currencyData;
+  } catch(e) { return null; }
+}
+
+async function initCurrencyTool() {
+  const data = await loadCurrency();
+  if (!data) { document.getElementById('currencyDate').textContent = 'Ошибка загрузки курсов'; return; }
+  const d = new Date(data.date).toLocaleDateString('ru-RU', {day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('currencyDate').textContent = 'Курс ЦБ РФ на ' + d;
+  const tbl = document.getElementById('currTable');
+  tbl.innerHTML = Object.entries(data.currencies).map(([code, c]) => {
+    const delta = c.rate - c.previous;
+    const sign = delta >= 0 ? '+' : '';
+    const color = delta >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<div style="background:var(--surface2);border-radius:8px;padding:10px">
+      <div style="font-size:10px;color:var(--muted)">${code}</div>
+      <div style="font-size:13px;font-weight:700;margin:2px 0">${c.rate.toLocaleString('ru-RU',{maximumFractionDigits:2})} ₽</div>
+      <div style="font-size:10px;color:${color}">${sign}${delta.toLocaleString('ru-RU',{maximumFractionDigits:2})}</div>
+    </div>`;
+  }).join('');
+  convertCurrency();
+}
+
+async function convertCurrency() {
+  const data = await loadCurrency();
+  if (!data) return;
+  const amt = parseFloat(document.getElementById('currAmt').value) || 0;
+  const code = document.getElementById('currCode').value;
+  const cur = data.currencies[code];
+  if (!cur) return;
+  const rub = amt * cur.rate;
+  document.getElementById('currResultVal').textContent = rub.toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽';
+  document.getElementById('currRate').textContent = `1 ${code} = ${cur.rate.toLocaleString('ru-RU', {maximumFractionDigits:4})} ₽`;
+}
+
+// Загружаем при открытии инструмента
+const _origShowTool = showTool;
+function showTool(name, btn) {
+  _origShowTool(name, btn);
+  if (name === 'currency') initCurrencyTool();
+}
 </script>
 </body>
 </html>

@@ -100,8 +100,34 @@ export default async function handler(req, res) {
   try {
     if (provider === 'egrul') return await handleEgrul(req, res);
     if (provider === 'dadata') return await handleDadata(req, res);
-    return res.status(400).json({ error: 'Unknown provider. Use provider=egrul or provider=dadata' });
+    if (provider === 'currency') return await handleCurrency(req, res);
+    return res.status(400).json({ error: 'Unknown provider. Use provider=egrul|dadata|currency' });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
+}
+
+async function handleCurrency(req, res) {
+  const r = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', {
+    headers: { 'User-Agent': 'OMSFIN/1.0' }
+  });
+  if (!r.ok) return res.status(502).json({ error: 'ЦБ API недоступен' });
+  const data = await r.json();
+  // Возвращаем только нужные валюты + дату
+  const currencies = {};
+  const want = ['USD', 'EUR', 'CNY', 'GBP', 'TRY', 'KZT', 'BYR', 'AED'];
+  for (const code of want) {
+    const cur = data.Valute?.[code];
+    if (cur) currencies[code] = {
+      name: cur.Name,
+      rate: cur.Value / cur.Nominal,
+      nominal: cur.Nominal,
+      previous: cur.Previous / cur.Nominal
+    };
+  }
+  return res.status(200).json({
+    date: data.Date,
+    currencies,
+    source: 'cbr.ru'
+  });
 }

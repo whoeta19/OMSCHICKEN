@@ -63,11 +63,85 @@ async function logAction(companyId, userId, action, details) {
   }
 }
 
+// ─── Парсер 1С выписки (XML формат КВО — кассовые и банковские операции) ────
+// Вызывается с ?source=1c, тело запроса — XML-строка (text/xml или text/plain)
+// Возвращает массив транзакций в формате OMSFIN для дальнейшей вставки через POST
+function parse1CXML(xml) {
+  const txs = [];
+  // Извлекаем документы ПоступлениеНаСчет / СписаниеСоСчета
+  const docRe = /<(ПоступлениеНаСчет|СписаниеСоСчета|Документ)([^>]*)>([\s\S]*?)<\/\1>/g;
+  // Также поддерживаем формат обмена платёжками (тег РасчетныйДокумент)
+  const lineRe = /<РасчетныйДокумент([^>]*)>([\s\S]*?)<\/РасчетныйДокумент>/g;
+
+  function extractTag(str, tag) {
+    const m = str.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`));
+    return m ? m[1].trim() : '';
+  }
+
+  function parseDate1C(str) {
+    // 1С дата: YYYYMMDD или DD.MM.YYYY
+    if (!str) return '';
+    if (/^\d{8}$/.test(str)) {
+      return `${str.slice(6,8)}.${str.slice(4,6)}.${str.slice(0,4)}`;
+    }
+    return str; // уже DD.MM.YYYY
+  }
+
+  function parsePeriod(date) {
+    if (!date) return '';
+    const parts = date.split('.');
+    if (parts.length === 3) return `${parts[1]}.${parts[2]}`;
+    return '';
+  }
+
+  // Обрабатываем оба формата
+  let m;
+  while ((m = docRe.exec(xml)) !== null) {
+    const tag = m[1], body = m[3];
+    const isIncome = tag === 'ПоступлениеНаСчет';
+    const sumStr = extractTag(body, 'Сумма') || extractTag(body, 'СуммаДокумента');
+    const sum = parseFloat(sumStr.replace(',', '.')) || 0;
+    if (!sum) continue;
+    const date = parseDate1C(extractTag(body, 'Дата') || extractTag(body, 'ДатаДокумента'));
+    const name = extractTag(body, 'Контрагент') || extractTag(body, 'НаименованиеКонтрагента') || '';
+    const inn = extractTag(body, 'ИНН') || extractTag(body, 'ИННКонтрагента') || '';
+    const desc = extractTag(body, 'НазначениеПлатежа') || extractTag(body, 'Комментарий') || '';
+    const amount = isIncome ? sum : -sum;
+    const hash = `1c_${date}_${amount}_${(name+desc).replace(/\s/g,'').slice(0,20)}`;
+    txs.push({ date, amount, name, inn, description: desc, period: parsePeriod(date), hash, category: 'unknown', source: '1c' });
+  }
+
+  // Формат платёжек
+  while ((m = lineRe.exec(xml)) !== null) {
+    const attrs = m[1], body = m[2];
+    const isIncome = /ВидОперации="Поступление"/.test(attrs) || extractTag(body,'ВидОперации') === 'Поступление';
+    const sumStr = extractTag(body, 'Сумма');
+    const sum = parseFloat(sumStr.replace(',', '.')) || 0;
+    if (!sum) continue;
+    const date = parseDate1C(extractTag(body, 'Дата'));
+    const name = extractTag(body, 'Контрагент');
+    const inn = extractTag(body, 'ИНН');
+    const desc = extractTag(body, 'НазначениеПлатежа');
+    const amount = isIncome ? sum : -sum;
+    const hash = `1c_${date}_${amount}_${(name+desc).replace(/\s/g,'').slice(0,20)}`;
+    txs.push({ date, amount, name, inn, description: desc, period: parsePeriod(date), hash, category: 'unknown', source: '1c' });
+  }
+
+  return txs;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Парсинг 1С выписки — возвращает массив транзакций без сохранения
+  if (req.query.source === '1c' && req.method === 'POST') {
+    const xmlBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    const parsed = parse1CXML(xmlBody);
+    return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
+  }
 
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
