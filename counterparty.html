@@ -10,8 +10,8 @@
   /* Плавный переход между темами */
   body,body *{transition:background-color 0.25s ease,border-color 0.25s ease,color 0.2s ease,box-shadow 0.25s ease;}
   body .chart-card canvas,body canvas{transition:none;}
-  body.light{--bg:#f2f0eb;--surface:#ffffff;--surface2:#f7f6f2;--border:rgba(0,0,0,0.09);--accent:#e55000;--accent2:#ff7722;--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#7a7060;--shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);}
-  body.blue{--bg:#060d1f;--surface:#0c1830;--surface2:#112040;--border:rgba(96,165,250,0.13);--accent:#3b82f6;--accent2:#60a5fa;--green:#34d399;--red:#f87171;--text:#e8f0fe;--muted:#4a6fa5;--shadow:0 4px 24px rgba(0,0,0,0.4);}
+  body.light{--bg:#f2f0eb;--surface:#ffffff;--surface2:#f7f6f2;--border:rgba(0,0,0,0.09);--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#7a7060;--shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);}
+  body.blue{--bg:#060d1f;--surface:#0c1830;--surface2:#112040;--border:rgba(96,165,250,0.13);--green:#34d399;--red:#f87171;--text:#e8f0fe;--muted:#4a6fa5;--shadow:0 4px 24px rgba(0,0,0,0.4);}
   body.light{font-family:'Nunito',sans-serif!important;}
   body.light .logo,.body.light .stat-value,.body.light .section-title,.body.light .hero-stat-value{font-family:'Nunito',sans-serif!important;}
   /* ── Светлая тема: фикс хардкоженных rgba(255,255,255,...) ── */
@@ -45,7 +45,7 @@
   body.aurora .stat-card:hover{border-color:rgba(167,139,250,0.3)!important;box-shadow:0 4px 16px rgba(167,139,250,0.15)!important;}
   body.aurora .section-title{color:#a78bfa;}
   body.aurora .logo span{color:#a78bfa;}
-  body.aurora{--bg:#0e0b1a;--surface:#150f2a;--surface2:#1d1535;--border:rgba(167,139,250,0.14);--accent:#a78bfa;--accent2:#c4b5fd;--green:#34d399;--red:#f87171;--text:#f0eaff;--muted:#8b7db5;--shadow:0 4px 24px rgba(139,92,246,0.15);}
+  body.aurora{--bg:#0e0b1a;--surface:#150f2a;--surface2:#1d1535;--border:rgba(167,139,250,0.14);--green:#34d399;--red:#f87171;--text:#f0eaff;--muted:#8b7db5;--shadow:0 4px 24px rgba(139,92,246,0.15);}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100;}
@@ -105,7 +105,7 @@
 <script src="/nav.js"></script>
 </head>
 <body>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
