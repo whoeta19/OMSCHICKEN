@@ -175,11 +175,130 @@ async function handleMoySklad(req, res, userId, companyId) {
 
   return res.status(200).json({ ok: true, count: txs.length, transactions: txs });
 }
+// ─── Вебхук: обработка входящего уведомления от банка ────────────────────────
+// Формат Т-Банк Business (https://business.tinkoff.ru/openapi/docs/#tag/Webhooks):
+// POST /api/transactions?action=webhook&secret=USER_SECRET&account=Т-Банк
+// Body: { operationId, type, accountNumber, operationTime, totalAmount, payment: { purpose, counterpartyName, counterpartyInn } }
+//
+// Также принимаем упрощённый формат от других банков / ручных интеграций:
+// Body: { amount, date, name, description, account_name }
+async function handleBankWebhook(req, res) {
+  const secret = req.query.secret || '';
+  const accountName = req.query.account || 'Вебхук';
+
+  if (!secret) return res.status(400).json({ error: 'secret обязателен' });
+
+  // Ищем пользователя по webhook_secret в company_settings
+  const settingsR = await fetch(
+    `${SUPABASE_URL}/rest/v1/company_settings?webhook_secret=eq.${encodeURIComponent(secret)}&limit=1`,
+    { headers: adminHeaders }
+  );
+  const settings = await settingsR.json();
+  if (!Array.isArray(settings) || !settings.length) {
+    return res.status(401).json({ error: 'Неверный секрет вебхука' });
+  }
+  const userId = settings[0].user_id;
+  const companyId = settings[0].company_id || null;
+
+  const body = req.body || {};
+  let tx = null;
+
+  // Формат Т-Банк Business API
+  if (body.operationId || body.operationTime) {
+    const isDebit = (body.type || '').toLowerCase().includes('debit') ||
+                    (body.operationType || '').toLowerCase().includes('debit') ||
+                    (body.type === 'Списание');
+    const amount = parseFloat(body.totalAmount || body.amount || 0);
+    if (!amount) return res.status(200).json({ ok: true, skipped: 'zero amount' });
+    const finalAmount = isDebit ? -amount : amount;
+
+    const dateRaw = body.operationTime || body.date || new Date().toISOString();
+    const d = new Date(dateRaw);
+    const date = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+    const period = `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+
+    const payment = body.payment || {};
+    const name = payment.counterpartyName || body.counterpartyName || body.name || '—';
+    const description = payment.purpose || body.purpose || body.description || '';
+    const inn = payment.counterpartyInn || body.counterpartyInn || body.inn || '';
+
+    tx = { name, amount: finalAmount, date, description, period, inn,
+           category: 'unknown', account_name: accountName,
+           hash: `wh_${body.operationId || (date + '_' + amount)}` };
+  }
+  // Упрощённый / универсальный формат
+  else if (body.amount !== undefined) {
+    const amount = parseFloat(body.amount);
+    if (!amount) return res.status(200).json({ ok: true, skipped: 'zero amount' });
+    const dateRaw = body.date || new Date().toISOString().slice(0, 10);
+    const parts = dateRaw.includes('-')
+      ? dateRaw.split('-')
+      : dateRaw.split('.').reverse();
+    const [yyyy, mm, dd] = parts;
+    const date   = `${String(dd).padStart(2,'0')}.${String(mm).padStart(2,'0')}.${yyyy}`;
+    const period = `${String(mm).padStart(2,'0')}.${yyyy}`;
+    tx = { name: body.name || '—', amount, date, description: body.description || '',
+           period, inn: body.inn || '', category: 'unknown',
+           account_name: body.account_name || accountName,
+           hash: `wh_${body.hash || (date + '_' + amount + '_' + (body.name||''))}` };
+  }
+  else {
+    return res.status(400).json({ error: 'Неизвестный формат вебхука' });
+  }
+
+  // Проверяем дубль по хэшу
+  const dupR = await fetch(
+    `${SUPABASE_URL}/rest/v1/transactions?hash=eq.${encodeURIComponent(tx.hash)}&user_id=eq.${userId}&limit=1`,
+    { headers: adminHeaders }
+  );
+  const dup = await dupR.json();
+  if (Array.isArray(dup) && dup.length) {
+    return res.status(200).json({ ok: true, skipped: 'duplicate', hash: tx.hash });
+  }
+
+  // Сохраняем транзакцию
+  const payload = { ...tx, user_id: userId, ...(companyId ? { company_id: companyId } : {}) };
+  const insertR = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+    method: 'POST',
+    headers: { ...adminHeaders, 'Prefer': 'return=representation' },
+    body: JSON.stringify(payload)
+  });
+  if (!insertR.ok) {
+    const err = await insertR.text();
+    return res.status(500).json({ error: 'Ошибка сохранения', detail: err });
+  }
+
+  // Уведомляем в Telegram о новой операции
+  try {
+    const sign = tx.amount > 0 ? '💰 Поступление' : '📤 Списание';
+    const fmtA = n => Math.abs(n).toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽';
+    const msg = `${sign}\n\n<b>${tx.name}</b>\n<b>${tx.amount > 0 ? '+' : '−'}${fmtA(tx.amount)}</b>\n${tx.date}${tx.description ? '\n' + tx.description.substring(0,80) : ''}\n\n<i>Автоимпорт · ${accountName}</i>`;
+    const tgR = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${userId}&limit=1`, { headers: adminHeaders });
+    const tgRows = await tgR.json();
+    if (Array.isArray(tgRows) && tgRows[0]) {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: tgRows[0].telegram_id, text: msg, parse_mode: 'HTML' })
+      });
+    }
+  } catch(e) {}
+
+  return res.status(200).json({ ok: true, inserted: 1, hash: tx.hash });
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // ─── Вебхук от банка (?action=webhook&secret=XXX&user_id=YYY) ──────────────
+  // Банк (Т-Банк, ВТБ и др.) шлёт POST без Bearer токена.
+  // Аутентификация — через секрет в query, который пользователь скопировал из настроек.
+  if (req.query.action === 'webhook' && req.method === 'POST') {
+    return await handleBankWebhook(req, res);
+  }
 
   // Импорт из МойСклад API — возвращает транзакции для предпросмотра/вставки
   if (req.query.source === 'moysklad' && req.method === 'POST') {
