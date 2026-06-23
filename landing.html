@@ -157,6 +157,14 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
 /* Градиентный текст */
 .gradient-text{background:linear-gradient(135deg,#ff6b00,#ffaa44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 
+/* FAQ */
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item[open] summary span{transform:rotate(45deg);}
+.faq-item{transition:border-color 0.2s;}
+.faq-item[open]{border-color:rgba(255,107,0,0.3);}
+.faq-item summary:hover{color:var(--text);}
+.faq-item summary span{display:inline-block;}
+
 /* Glow эффект на кнопках */
 .btn-primary{box-shadow:0 0 0 0 rgba(255,107,0,0);}
 .btn-primary:hover{box-shadow:0 8px 30px rgba(255,107,0,0.4);}
@@ -392,6 +400,35 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
   </div>
 </section>
 
+<!-- СРАВНЕНИЕ -->
+<section class="section" style="text-align:center">
+  <div class="section-tag">Сравнение</div>
+  <div class="section-title fade-up">OMSFIN vs конкуренты</div>
+  <div class="section-sub fade-up" style="margin:0 auto 50px">Те же функции — вдвое дешевле. И бесплатный тариф, которого нет у других.</div>
+  <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+  <table style="width:100%;border-collapse:collapse;text-align:left;min-width:560px">
+    <thead>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.1)">
+        <th style="padding:12px 16px;font-size:12px;color:var(--muted);font-weight:500">Функция</th>
+        <th style="padding:12px 16px;font-size:13px;color:var(--accent);font-family:'Unbounded',sans-serif;font-weight:700">OMSFIN</th>
+        <th style="padding:12px 16px;font-size:13px;color:var(--muted);font-weight:500">Эльба</th>
+        <th style="padding:12px 16px;font-size:13px;color:var(--muted);font-weight:500">Моё Дело</th>
+        <th style="padding:12px 16px;font-size:13px;color:var(--muted);font-weight:500">СБИС</th>
+      </tr>
+    </thead>
+    <tbody id="compareTable">
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:11px 16px;font-size:13px">Бесплатный тариф</td><td style="padding:11px 16px;color:#22c55e;font-weight:700">✓ Навсегда</td><td style="padding:11px 16px;color:#ef4444">✗</td><td style="padding:11px 16px;color:#ef4444">✗</td><td style="padding:11px 16px;color:#ef4444">✗</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)"><td style="padding:11px 16px;font-size:13px">Загрузка выписок</td><td style="padding:11px 16px;color:#22c55e;font-weight:700">✓</td><td style="padding:11px 16px;color:#22c55e">✓</td><td style="padding:11px 16px;color:#22c55e">✓</td><td style="padding:11px 16px;color:#22c55e">✓</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:11px 16px;font-size:13px">Ставки НДС/НДФЛ 2026</td><td style="padding:11px 16px;color:#22c55e;font-weight:700">✓ Актуальные</td><td style="padding:11px 16px;color:#ffaa44">~ Обновляют</td><td style="padding:11px 16px;color:#ffaa44">~ Обновляют</td><td style="padding:11px 16px;color:#22c55e">✓</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)"><td style="padding:11px 16px;font-size:13px">Telegram-бот</td><td style="padding:11px 16px;color:#22c55e;font-weight:700">✓</td><td style="padding:11px 16px;color:#ef4444">✗</td><td style="padding:11px 16px;color:#ef4444">✗</td><td style="padding:11px 16px;color:#ef4444">✗</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:11px 16px;font-size:13px">Финансовый радар (ЕГРЮЛ)</td><td style="padding:11px 16px;color:#22c55e;font-weight:700">✓</td><td style="padding:11px 16px;color:#ef4444">✗</td><td style="padding:11px 16px;color:#ef4444">✗</td><td style="padding:11px 16px;color:#ffaa44">~</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)"><td style="padding:11px 16px;font-size:13px">Документы (счёт, УПД, ТТН...)</td><td style="padding:11px 16px;color:#22c55e;font-weight:700">✓ 11 видов</td><td style="padding:11px 16px;color:#22c55e">✓</td><td style="padding:11px 16px;color:#22c55e">✓</td><td style="padding:11px 16px;color:#22c55e">✓</td></tr>
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.05)"><td style="padding:11px 16px;font-size:13px">Цена Pro (в месяц)</td><td style="padding:11px 16px;color:var(--accent);font-weight:700;font-family:'Unbounded',sans-serif">990 ₽</td><td style="padding:11px 16px;color:var(--muted)">1 900 ₽</td><td style="padding:11px 16px;color:var(--muted)">1 550 ₽</td><td style="padding:11px 16px;color:var(--muted)">от 2 900 ₽</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
 <!-- PRICING -->
 <section class="section" id="pricing" style="text-align:center">
   <div class="section-tag">Тарифы</div>
@@ -535,6 +572,38 @@ footer{padding:40px;border-top:1px solid var(--border);display:flex;align-items:
     </div>
     <button class="btn-primary" onclick="sendContact()" style="width:100%;padding:12px">Отправить →</button>
     <div id="contactResult" style="margin-top:10px;font-size:13px;text-align:center"></div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" style="max-width:720px;text-align:left">
+  <div class="section-tag" style="text-align:center">FAQ</div>
+  <div class="section-title fade-up" style="text-align:center">Частые вопросы</div>
+  <div style="margin-top:40px;display:flex;flex-direction:column;gap:8px" id="faqList">
+    <details class="faq-item" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer">
+      <summary style="font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">Подходит ли OMSFIN для ИП? <span style="color:var(--accent);font-size:18px;transition:transform 0.2s">+</span></summary>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px">Да, полностью. ИП на УСН 6%, УСН 15% или ОСНО — все режимы поддерживаются. Загружай выписку из банка, считай НДС и взносы, создавай документы.</div>
+    </details>
+    <details class="faq-item" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer">
+      <summary style="font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">Нужно ли устанавливать приложение? <span style="color:var(--accent);font-size:18px;transition:transform 0.2s">+</span></summary>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px">Нет. OMSFIN работает прямо в браузере — на телефоне и компьютере. Никаких установок. Открыл вкладку — всё готово.</div>
+    </details>
+    <details class="faq-item" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer">
+      <summary style="font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">Какие банки поддерживаются? <span style="color:var(--accent);font-size:18px;transition:transform 0.2s">+</span></summary>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px">Т-Банк, ВТБ, Альфа-Банк в формате CSV. Сбербанк — через выгрузку XML. Другие банки, как правило, тоже работают — большинство выгружают стандартный CSV.</div>
+    </details>
+    <details class="faq-item" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer">
+      <summary style="font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">Насколько безопасны мои данные? <span style="color:var(--accent);font-size:18px;transition:transform 0.2s">+</span></summary>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px">Все данные хранятся в защищённой базе Supabase (PostgreSQL) с шифрованием TLS. Доступ возможен только с твоим токеном авторизации. Мы не имеем доступа к твоим транзакциям.</div>
+    </details>
+    <details class="faq-item" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer">
+      <summary style="font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">У меня уже есть 1С. Зачем мне OMSFIN? <span style="color:var(--accent);font-size:18px;transition:transform 0.2s">+</span></summary>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px">1С — мощно, но сложно и дорого. OMSFIN — это быстрый оперативный контроль: загрузил выписку → видишь финансы → создал документ → отправил. Работает как дополнение к 1С или полная замена для малого бизнеса. Поддерживаем импорт XML из 1С:Бухгалтерия.</div>
+    </details>
+    <details class="faq-item" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;cursor:pointer">
+      <summary style="font-size:14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center">Как отменить подписку? <span style="color:var(--accent);font-size:18px;transition:transform 0.2s">+</span></summary>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-top:12px">В любой момент в разделе Настройки → Аккаунт. Без звонков и объяснений. Данные сохраняются — можно вернуться в любое время.</div>
+    </details>
   </div>
 </section>
 

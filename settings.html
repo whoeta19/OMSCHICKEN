@@ -378,6 +378,19 @@
     <div id="msStatus" style="font-size:12px;margin-top:8px"></div>
   </div>
 
+  <!-- Реферальная программа -->
+  <div class="card">
+    <div class="section-title">🎁 Реферальная программа</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      Приглашай друзей — получай бесплатные месяцы Pro. За каждого зарегистрировавшегося по твоей ссылке — <strong style="color:var(--text)">+1 месяц Pro</strong> тебе и другу.
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="flex:1;font-size:12px;color:var(--text);font-family:monospace;word-break:break-all" id="refLink">—</div>
+      <button onclick="copyRefLink()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 14px;font-family:Unbounded,sans-serif;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0" id="refCopyBtn">Копировать</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted)" id="refStats">Загрузка...</div>
+  </div>
+
   <!-- Аккаунт -->
   <div class="card">
     <div class="section-title">👤 Аккаунт</div>
@@ -924,6 +937,47 @@ async function checkTelegramStatus() {
   } catch(e) { if(st) st.textContent='Ошибка'; }
 }
 checkTelegramStatus();
+
+// ── Реферальная программа ─────────────────────────────────────────────
+(function initReferral() {
+  try {
+    const user = JSON.parse(localStorage.getItem('omsfin_user') || '{}');
+    const uid = user.id || '';
+    if (!uid) { document.getElementById('refStats').textContent = 'Войдите чтобы получить ссылку'; return; }
+    // Код — первые 8 символов UUID без дефисов
+    const code = uid.replace(/-/g,'').substring(0, 8).toUpperCase();
+    const origin = window.location.origin;
+    const link = `${origin}/login?ref=${code}`;
+    document.getElementById('refLink').textContent = link;
+    // Считаем сколько пользователей зарегистрировались по этой ссылке (localStorage)
+    const refs = JSON.parse(localStorage.getItem('omsfin_referrals') || '[]');
+    const count = refs.filter(r => r.by === code).length;
+    document.getElementById('refStats').textContent = count > 0
+      ? `🎉 По твоей ссылке зарегистрировались: ${count} чел. · Бонус: +${count} мес. Pro`
+      : 'Пока никто не зарегистрировался. Поделись ссылкой!';
+  } catch(e) {}
+})();
+
+function copyRefLink() {
+  const link = document.getElementById('refLink').textContent;
+  if (!link || link === '—') return;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('refCopyBtn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  }).catch(() => {
+    // Fallback для старых браузеров
+    const el = document.createElement('textarea');
+    el.value = link;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    const btn = document.getElementById('refCopyBtn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  });
+}
 
 </script>
 <nav class="bottom-nav">

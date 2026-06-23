@@ -263,6 +263,15 @@ async function register() {
         localStorage.setItem('omschicken_token', data.access_token);
         localStorage.setItem('omschicken_refresh', data.refresh_token);
         localStorage.setItem('omsfin_user', JSON.stringify(data.user));
+        // Сохраняем реферальный код если пришли по ссылке
+        const refCode = new URLSearchParams(window.location.search).get('ref');
+        if (refCode && data.user?.id) {
+          const refs = JSON.parse(localStorage.getItem('omsfin_referrals') || '[]');
+          if (!refs.find(r => r.uid === data.user.id)) {
+            refs.push({ uid: data.user.id, by: refCode, at: Date.now() });
+            localStorage.setItem('omsfin_referrals', JSON.stringify(refs));
+          }
+        }
         window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding';
       } else {
         success.textContent = '✅ Аккаунт создан! Проверь почту для подтверждения.';
