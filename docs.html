@@ -619,6 +619,9 @@ function ppUpdateAmount() {
 
 function generatePP() {
   const v = id => document.getElementById(id).value;
+  if (!v('ppPayerName').trim()) { _docFieldErr('ppPayerName', 'Укажи наименование плательщика'); return; }
+  if (!v('ppPayeeName').trim()) { _docFieldErr('ppPayeeName', 'Укажи наименование получателя'); return; }
+  if (!parseFloat(v('ppAmount'))) { _docFieldErr('ppAmount', 'Укажи сумму платежа'); return; }
   const amount = parseFloat(v('ppAmount')) || 0;
   const amountStr = amount.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
   const words = ppAmountWords(amount);
@@ -901,9 +904,38 @@ function signHTML(label) {
   return `${label} ${sig}`;
 }
 
+function _docFieldErr(id, msg) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.borderColor = '#ef4444';
+    el.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.2)';
+    el.addEventListener('input', function c() { el.style.borderColor=''; el.style.boxShadow=''; el.removeEventListener('input',c); }, {once:true});
+    el.focus();
+  }
+  showToast('⚠️ ' + msg);
+}
+
 function generateDoc() {
   const items = getItems();
-  if (!items.length) { showToast('Добавь хотя бы один товар'); return; }
+  // Документы без позиций (доверенность, ПКО, договор без позиций)
+  const noItemsDocs = ['dover', 'ko1'];
+  if (!noItemsDocs.includes(currentDoc) && !items.length) {
+    showToast('⚠️ Добавь хотя бы один товар с ненулевой ценой');
+    return;
+  }
+  // Проверяем позиции — цена или количество 0
+  const zeroItems = items.filter(i => i.price === 0 || i.qty === 0);
+  if (zeroItems.length) {
+    showToast(`⚠️ В позиции "${zeroItems[0].name}" цена или количество равно 0`);
+    return;
+  }
+  // Покупатель обязателен для большинства документов
+  const needBuyer = !['dover'].includes(currentDoc);
+  const buyerName = document.getElementById('buyerName')?.value.trim();
+  if (needBuyer && !buyerName) {
+    _docFieldErr('buyerName', 'Укажи наименование покупателя');
+    return;
+  }
   const buyer = getBuyer();
   const doc = getDocInfo();
   const totalNoVat = items.reduce((s,i)=>s+i.sum,0);
@@ -1672,6 +1704,13 @@ function addSvRow() {
 }
 
 function generateSverka() {
+  const ourName = document.getElementById('svOurName')?.value.trim();
+  const cpName = document.getElementById('svCpName')?.value.trim();
+  if (!ourName) { _docFieldErr('svOurName', 'Укажи наименование нашей организации'); return; }
+  if (!cpName) { _docFieldErr('svCpName', 'Укажи наименование контрагента'); return; }
+  // Проверяем что есть хоть одна строка с данными
+  const dates = document.querySelectorAll('#svRowsWrap input.sv-date');
+  if (!dates.length) { showToast('⚠️ Добавь хотя бы одну строку операций'); return; }
   const v = id => document.getElementById(id).value;
   const dateFrom = v('svDateFrom') ? new Date(v('svDateFrom')).toLocaleDateString('ru-RU') : '__.__.____';
   const dateTo = v('svDateTo') ? new Date(v('svDateTo')).toLocaleDateString('ru-RU') : '__.__.____';

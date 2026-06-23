@@ -2066,13 +2066,28 @@ function setAddType(type) {
   }
 }
 
+function _fieldErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.borderColor = 'var(--red)';
+  el.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.2)';
+  el.addEventListener('input', function clear() {
+    el.style.borderColor = '';
+    el.style.boxShadow = '';
+    el.removeEventListener('input', clear);
+  }, {once: true});
+  showToast('⚠️ ' + msg);
+}
+
 function addManual() {
   const name = document.getElementById('addName').value.trim();
   let amount = parseFloat(document.getElementById('addAmount').value);
   const date = document.getElementById('addDate').value || new Date().toISOString().split('T')[0];
   const desc = document.getElementById('addDesc').value.trim();
   const manualCat = document.getElementById('addCat').value;
-  if (!name||isNaN(amount)) { showToast('Заполни название и сумму'); return; }
+  if (!name) { _fieldErr('addName', 'Укажи контрагента'); return; }
+  if (isNaN(amount) || document.getElementById('addAmount').value.trim() === '') { _fieldErr('addAmount', 'Укажи сумму'); return; }
+  if (amount === 0) { _fieldErr('addAmount', 'Сумма не может быть 0'); return; }
   // Применяем знак из кнопки Расход/Доход — берём абсолютное значение и умножаем
   amount = Math.abs(amount) * _addTypeSign;
   const cat = manualCat || classify(name, desc, amount);
