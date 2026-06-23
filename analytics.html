@@ -204,7 +204,7 @@
     </div>
 
     <!-- Топ-10 категорий расходов -->
-    <div class="chart-card full" id="topCatsCard" style="display:none">
+    <div class="chart-card" id="topCatsCard" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="section-title" style="margin:0">📊 Топ категорий расходов</div>
         <span style="font-size:10px;color:var(--muted)" id="topCatsPeriodLabel"></span>
@@ -723,7 +723,8 @@ function renderTopCategories() {
   const curPeriod = periods[periods.length - 1];
   const prevPeriod = periods[periods.length - 2];
 
-  const curTx  = filteredTx.filter(t => t.amount < 0);
+  const srcTx = filteredTx.length ? filteredTx : allTx;
+  const curTx  = srcTx.filter(t => t.amount < 0);
   const prevTx = allTx.filter(t => t.amount < 0 && t.period === prevPeriod);
 
   // Группируем по категориям

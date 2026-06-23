@@ -1568,6 +1568,7 @@ function showPage(name,btn){
   if(btn)btn.classList.add('active');
   if(name==='history')renderHistory();
   if(name==='settings')initSettings();
+  if(name==='templates')renderTemplates();
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
@@ -1664,12 +1665,6 @@ function renderTemplates() {
     </div>`).join('');
 }
 
-// Рендер при переходе на вкладку
-const _origShowPageDocs = showPage;
-function showPage(name, btn) {
-  _origShowPageDocs(name, btn);
-  if (name === 'templates') renderTemplates();
-}
 </script>
 </body>
 </html>

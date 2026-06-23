@@ -135,15 +135,15 @@
       </div>
     </div>
     <div class="input-group" style="margin-top:10px">
-      <label style="display:flex;align-items:center;justify-content:space-between">
-        <span>Авто-тема по времени суток</span>
-        <span style="font-size:10px;color:var(--muted)" id="autoThemeStatus"></span>
-      </label>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
-        <label class="toggle-wrap">
-          <input type="checkbox" id="autoThemeToggle" onchange="toggleAutoTheme(this.checked)">
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Авто-тема по времени суток</span>
+        <span style="font-size:10px;color:var(--accent)" id="autoThemeStatus"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div onclick="document.getElementById('autoThemeToggle').click()" style="width:44px;height:24px;border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s" id="toggleTrack">
+          <div id="toggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.35)"></div>
+          <input type="checkbox" id="autoThemeToggle" onchange="toggleAutoTheme(this.checked)" style="display:none">
+        </div>
         <span style="font-size:11px;color:var(--muted)">День 07:00–21:00 → светлая, ночь → тёмная</span>
       </div>
     </div>
@@ -445,13 +445,19 @@ function toggleAutoTheme(on) {
 
 function updateAutoThemeStatus() {
   const el = document.getElementById('autoThemeStatus');
-  if (!el) return;
-  if (settings.autoTheme) {
-    const h = new Date().getHours();
-    el.textContent = (h >= 7 && h < 21) ? '☀️ Сейчас день — светлая' : '🌙 Сейчас ночь — тёмная';
-  } else {
-    el.textContent = '';
+  if (el) {
+    if (settings.autoTheme) {
+      const h = new Date().getHours();
+      el.textContent = (h >= 7 && h < 21) ? '☀️ сейчас светлая' : '🌙 сейчас тёмная';
+    } else {
+      el.textContent = '';
+    }
   }
+  // Обновить визуал тоггла
+  const track = document.getElementById('toggleTrack');
+  const thumb = document.getElementById('toggleThumb');
+  if (track) track.style.background = settings.autoTheme ? 'var(--accent)' : 'rgba(128,128,128,0.3)';
+  if (thumb) thumb.style.left = settings.autoTheme ? '23px' : '3px';
 }
 
 // Акцентный цвет
