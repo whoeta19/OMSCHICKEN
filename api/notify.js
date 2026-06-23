@@ -85,7 +85,9 @@ export default async function handler(req, res) {
     const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + token }
     });
+    if (!userR.ok) return res.status(401).json({ error: 'Неверный токен' });
     const user = await userR.json();
+    if (!user.email) return res.status(400).json({ error: 'Email не найден' });
     const result = await sendEmail(user.email, 'OMSFIN — тест уведомлений',
       `<div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
         <div style="font-size:20px;font-weight:700;margin-bottom:8px">OMS<span style="color:#ff6b00">FIN</span></div>
@@ -281,10 +283,9 @@ export default async function handler(req, res) {
 
       // Email-дублирование (раз в неделю — только если день ≤3 до дедлайна)
       if (RESEND_API_KEY && messages.length) {
-        const urgentMessages = messages.filter((_, i) => {
-          const days = [vat.days, ndfl.days, rsv.days, efs1.days, profit.days].filter(d => d !== null && REMIND_DAYS.includes(d) && d <= 3);
-          return days.length > 0;
-        });
+        const hasUrgentDeadline = [vat.days, ndfl.days, rsv.days, efs1.days, profit.days]
+          .some(d => d !== null && REMIND_DAYS.includes(d) && d <= 3);
+        const urgentMessages = hasUrgentDeadline ? messages : [];
         if (urgentMessages.length) {
           try {
             const emailR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {

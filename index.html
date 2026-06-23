@@ -4738,10 +4738,6 @@ function parse1CClientBank(text) {
   // Формат 1CClientBankExchange: секции разделены КонецДокумента
   const txs = [];
   const sections = text.split(/КонецДокумента/i);
-  let myInn = '';
-  const header = sections[0] || '';
-  const innMatch = header.match(/РасчСчет=(\S+)/i);
-  if (innMatch) myInn = innMatch[1];
 
   function field(block, name) {
     const m = block.match(new RegExp(name + '=([^\r\n]+)', 'i'));
