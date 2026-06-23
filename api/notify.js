@@ -310,6 +310,85 @@ export default async function handler(req, res) {
       }
     }
 
+    // ─── Email onboarding-цепочка ─────────────────────────────────────────────
+    // Для каждого пользователя: проверяем company_settings.onboarding_emails_sent
+    // Шаг 0 (день 1): приветствие — при первом запуске крона после регистрации
+    // Шаг 1 (день 3): советы по работе с выписками и категориями
+    // Шаг 2 (день 7): налоговые возможности и напоминание об НДС
+    if (RESEND_API_KEY) {
+      try {
+        const allSettingsR = await fetch(`${SUPABASE_URL}/rest/v1/company_settings?select=user_id,onboarding_emails_sent,created_at&limit=1000`, {
+          headers: adminHeaders
+        });
+        const allSettings = await allSettingsR.json();
+        if (Array.isArray(allSettings)) {
+          for (const s of allSettings) {
+            const sent = s.onboarding_emails_sent || 0;
+            if (sent >= 3) continue;
+            const createdAt = new Date(s.created_at);
+            const daysSince = Math.floor((now - createdAt) / 86400000);
+            let emailStep = -1;
+            if (sent === 0 && daysSince >= 0) emailStep = 0;
+            else if (sent === 1 && daysSince >= 3) emailStep = 1;
+            else if (sent === 2 && daysSince >= 7) emailStep = 2;
+            if (emailStep < 0) continue;
+
+            const uR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${s.user_id}`, {
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
+            });
+            const uData = await uR.json();
+            if (!uData.email) continue;
+
+            const emailTemplates = [
+              {
+                subject: '👋 Добро пожаловать в OMSFIN',
+                html: `<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#f5f5f5;background:#0f0f0f;border-radius:14px">
+                  <div style="font-size:22px;font-weight:900;margin-bottom:16px;font-family:sans-serif">OMS<span style="color:#ff6b00">FIN</span></div>
+                  <p style="font-size:16px;font-weight:600;margin-bottom:8px">Кабинет готов — начни за 2 минуты</p>
+                  <p style="color:#999;font-size:13px;line-height:1.7;margin-bottom:20px">Загрузи CSV-выписку из банка — и получишь полную картину финансов: доходы, расходы, НДС, прогноз.</p>
+                  <div style="background:#1a1a1a;border-radius:10px;padding:16px;margin-bottom:20px">
+                    <p style="font-size:13px;font-weight:600;margin-bottom:8px">🏦 Поддерживаемые банки:</p>
+                    <p style="color:#888;font-size:12px">Т-Банк, Сбер Бизнес, Альфа-Банк, ВТБ, 1С (XML и КлиентБанк), Excel</p>
+                  </div>
+                  <a href="${BASE_URL}" style="display:inline-block;background:#ff6b00;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Открыть OMSFIN →</a>
+                </div>`
+              },
+              {
+                subject: '💡 3 функции OMSFIN, о которых ты мог не знать',
+                html: `<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#f5f5f5;background:#0f0f0f;border-radius:14px">
+                  <div style="font-size:22px;font-weight:900;margin-bottom:20px;font-family:sans-serif">OMS<span style="color:#ff6b00">FIN</span></div>
+                  <div style="margin-bottom:16px;padding:14px;background:#1a1a1a;border-radius:10px"><p style="font-weight:600;margin-bottom:4px">🤖 Автоматические правила</p><p style="color:#888;font-size:12px;line-height:1.6">Задай правило: если в названии "Яндекс" → категория "Реклама". Экономит часы ручной разметки.</p></div>
+                  <div style="margin-bottom:16px;padding:14px;background:#1a1a1a;border-radius:10px"><p style="font-weight:600;margin-bottom:4px">📱 Telegram-бот</p><p style="color:#888;font-size:12px;line-height:1.6">Команды /stats /nds /top /last прямо в мессенджере. Привяжи в Настройках → Telegram.</p></div>
+                  <div style="margin-bottom:20px;padding:14px;background:#1a1a1a;border-radius:10px"><p style="font-weight:600;margin-bottom:4px">🏦 Автоимпорт из банка</p><p style="color:#888;font-size:12px;line-height:1.6">Настрой вебхук в Т-Банк Бизнес — операции будут появляться автоматически без загрузки файлов.</p></div>
+                  <a href="${BASE_URL}/settings" style="display:inline-block;background:#ff6b00;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Настроить →</a>
+                </div>`
+              },
+              {
+                subject: '🧾 Не забудь про НДС — OMSFIN считает за тебя',
+                html: `<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#f5f5f5;background:#0f0f0f;border-radius:14px">
+                  <div style="font-size:22px;font-weight:900;margin-bottom:20px;font-family:sans-serif">OMS<span style="color:#ff6b00">FIN</span></div>
+                  <p style="font-size:15px;font-weight:600;margin-bottom:12px">Налоговый календарь 2026 уже встроен</p>
+                  <p style="color:#999;font-size:13px;line-height:1.7;margin-bottom:20px">OMSFIN автоматически напоминает о сроках: НДС 25-го, 6-НДФЛ, РСВ, страховые взносы. Все дедлайны с учётом актуального законодательства 2026 года.</p>
+                  <div style="background:#1a1a1a;border-radius:10px;padding:16px;margin-bottom:20px">
+                    <p style="font-size:12px;color:#888;line-height:1.8">✅ НДС 10%/22% с расчётом к уплате<br>✅ УСН 6% и 15% с авансовыми платежами<br>✅ Прогрессивный НДФЛ 2026<br>✅ Страховые взносы 30% (без льготы МСП)</p>
+                  </div>
+                  <a href="${BASE_URL}/calendar" style="display:inline-block;background:#ff6b00;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Открыть налоговый календарь →</a>
+                </div>`
+              }
+            ];
+
+            await sendEmail(uData.email, emailTemplates[emailStep].subject, emailTemplates[emailStep].html);
+            // Обновляем счётчик
+            await fetch(`${SUPABASE_URL}/rest/v1/company_settings?user_id=eq.${s.user_id}`, {
+              method: 'PATCH',
+              headers: { ...adminHeaders, 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ onboarding_emails_sent: sent + 1 })
+            });
+          }
+        }
+      } catch(e) {}
+    }
+
     return res.status(200).json({
       ok: true,
       users: users.length,

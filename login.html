@@ -81,7 +81,11 @@
       <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn" id="loginBtn" onclick="login()">Войти</button>
-      <button onclick="showForgot()" style="background:none;border:none;color:#666;font-size:12px;cursor:pointer;margin-top:8px;width:100%;text-align:center">Забыл пароль?</button>
+    <button onclick="showForgot()" style="background:none;border:none;color:#666;font-size:12px;cursor:pointer;margin-top:8px;width:100%;text-align:center">Забыл пароль?</button>
+    <div style="display:flex;align-items:center;gap:10px;margin:14px 0"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:#444">или</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+    <button onclick="enterDemo()" style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.3);color:var(--accent);border-radius:8px;padding:11px 18px;font-size:13px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='rgba(255,107,0,0.15)'" onmouseout="this.style.background='rgba(255,107,0,0.08)'">
+      👁 Посмотреть демо (без регистрации)
+    </button>
     <div class="error" id="loginError"></div>
   </div>
 
@@ -317,6 +321,44 @@ async function sendReset() {
     result.style.color = '#ef4444';
     result.textContent = '❌ Ошибка отправки';
   }
+}
+
+function enterDemo() {
+  // Генерируем реалистичные демо-транзакции для ООО "Пример"
+  const today = new Date();
+  function dmy(d) { return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
+  function ago(days) { const d = new Date(today); d.setDate(d.getDate()-days); return d; }
+  function per(d) { return `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
+
+  const demoTx = [
+    {id:'d1',date:dmy(ago(1)),amount:1250000,name:'ООО ТД Птицепром',description:'Оплата по договору поставки №45 от 01.06.2026',category:'income',period:per(ago(1))},
+    {id:'d2',date:dmy(ago(2)),amount:-680000,name:'ООО Агрохолдинг Юг',description:'Закупка куриного филе 12 000 кг',category:'chicken',period:per(ago(2))},
+    {id:'d3',date:dmy(ago(3)),amount:890000,name:'ИП Сидоров А.В.',description:'Реализация мяса птицы опт',category:'income',period:per(ago(3))},
+    {id:'d4',date:dmy(ago(4)),amount:-245000,name:'ИФНС России',description:'НДС за 2 квартал 2026',category:'taxes',period:per(ago(4))},
+    {id:'d5',date:dmy(ago(5)),amount:-380000,name:'ООО Транслогистик',description:'Транспортные услуги май 2026',category:'logistics',period:per(ago(5))},
+    {id:'d6',date:dmy(ago(6)),amount:2100000,name:'АО Магнит',description:'Отгрузка куриной грудки 40 000 кг',category:'income',period:per(ago(6))},
+    {id:'d7',date:dmy(ago(8)),amount:-850000,name:'КФХ Степное',description:'Закупка тушки куриной ГОСТ',category:'chicken',period:per(ago(8))},
+    {id:'d8',date:dmy(ago(10)),amount:-412000,name:'АО Т-Банк',description:'Погашение кредита + %',category:'bank',period:per(ago(10))},
+    {id:'d9',date:dmy(ago(12)),amount:1650000,name:'ООО Метро C&C',description:'Договор поставки №67',category:'income',period:per(ago(12))},
+    {id:'d10',date:dmy(ago(14)),amount:-180000,name:'ООО Охрана-Про',description:'Услуги охраны склада июнь',category:'other',period:per(ago(14))},
+    {id:'d11',date:dmy(ago(15)),amount:-520000,name:'Выплата зарплат',description:'Зарплата сотрудников за май 2026',category:'salary',period:per(ago(15))},
+    {id:'d12',date:dmy(ago(16)),amount:980000,name:'ООО Лента',description:'Реализация мяса птицы — накладная 89',category:'income',period:per(ago(16))},
+    {id:'d13',date:dmy(ago(18)),amount:-95000,name:'ПАО МТС',description:'Корпоративная связь + интернет',category:'other',period:per(ago(18))},
+    {id:'d14',date:dmy(ago(20)),amount:3200000,name:'ООО Ашан Ритейл',description:'Поставка по контракту №12-К',category:'income',period:per(ago(20))},
+    {id:'d15',date:dmy(ago(22)),amount:-1200000,name:'ООО Птицефабрика Сибирь',description:'Закупка куриных окорочков 25 т',category:'chicken',period:per(ago(22))},
+  ];
+
+  localStorage.setItem('omsfin_demo', '1');
+  localStorage.setItem('omsfin_demo_tx', JSON.stringify(demoTx));
+  localStorage.setItem('omschicken_seller', JSON.stringify({
+    name: 'ООО "ПРИМЕР"', inn: '7701234567', kpp: '770101001',
+    addr: 'г. Москва, ул. Примерная, д. 1',
+    director: 'Иванов Иван Иванович',
+    bank: 'АО «Т-Банк»', rs: '40702810000000001234',
+    ks: '30101810145250000974', bik: '044525974'
+  }));
+  localStorage.setItem('omsfin_onboarded', '1');
+  window.location.href = '/';
 }
 
 </script>

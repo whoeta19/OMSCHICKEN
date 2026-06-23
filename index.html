@@ -149,6 +149,14 @@
   
   main{padding:20px 24px;max-width:900px;margin:0 auto;}
   
+  /* ─── Skeleton loading ──────────────────────────────────────────────────── */
+  @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+  .skeleton{background:linear-gradient(90deg,var(--surface) 25%,rgba(255,255,255,0.05) 50%,var(--surface) 75%);background-size:800px 100%;animation:shimmer 1.4s infinite;border-radius:6px;}
+  .skeleton-text{height:14px;margin-bottom:6px;}
+  .skeleton-val{height:28px;width:70%;margin-bottom:4px;}
+  .skeleton-card{padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;}
+  .skeleton-row{height:56px;margin-bottom:6px;border-radius:10px;}
+
   .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
   .stat-card{
     background:var(--surface);
@@ -1066,8 +1074,29 @@ const REFRESH_KEY = 'omschicken_refresh';
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
+// ─── Демо-режим ──────────────────────────────────────────────────────────────
+const IS_DEMO = !!localStorage.getItem('omsfin_demo');
+
 // Проверка авторизации
-if (!localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(REFRESH_KEY)) {
+if (!IS_DEMO && !localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(REFRESH_KEY)) {
+  window.location.href = '/login';
+}
+
+if (IS_DEMO) {
+  // Показываем демо-баннер
+  document.addEventListener('DOMContentLoaded', () => {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(255,107,0,0.95);color:#000;font-family:Inter,sans-serif;font-size:13px;font-weight:600;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px';
+    banner.innerHTML = '<span>👁 Демо-режим — данные ненастоящие. <a href="/login" style="color:#000;text-decoration:underline">Войти или зарегистрироваться</a></span><button onclick="exitDemo()" style="background:#000;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer">Выйти из демо</button>';
+    document.body.prepend(banner);
+    // Смещаем body чтобы баннер не перекрывал контент
+    document.body.style.paddingTop = '36px';
+  });
+}
+
+function exitDemo() {
+  localStorage.removeItem('omsfin_demo');
+  localStorage.removeItem('omsfin_demo_tx');
   window.location.href = '/login';
 }
 
@@ -1709,14 +1738,32 @@ function cancelAccountModal() {
   isUploading = false;
 }
 
+function showSkeletons() {
+  ['statIncome','statExpense'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = '<div class="skeleton skeleton-val" style="height:22px;width:80%"></div>'; }
+  });
+  const txList = document.getElementById('txList');
+  if (txList) {
+    txList.innerHTML = [1,2,3,4,5].map(() =>
+      '<div class="skeleton skeleton-row" style="margin-bottom:6px;height:56px;border-radius:10px"></div>'
+    ).join('');
+  }
+}
+
 async function syncNow() {
   loadCompanies();
   applyRoleAccess();
+  showSkeletons();
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
   if (btn) btn.innerHTML = '⏳ Синхронизация...';
   try {
-    allTx = await apiGet();
+    if (IS_DEMO) {
+      allTx = JSON.parse(localStorage.getItem('omsfin_demo_tx') || '[]');
+    } else {
+      allTx = await apiGet();
+    }
     syncUserSettings(); // загружаем правила и цели с сервера (без await — фон)
     if (dot) dot.className = 'sync-dot';
     if (btn) btn.innerHTML = '<span class="sync-dot"></span>Синхронизировано';

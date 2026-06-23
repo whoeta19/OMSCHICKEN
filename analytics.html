@@ -253,6 +253,31 @@
       <canvas id="chartCashflow"></canvas>
     </div>
 
+    <!-- Бюджетирование -->
+    <div class="chart-card full" id="budgetSection">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+        <div class="section-title" style="margin:0">🎯 Бюджет — план vs факт</div>
+        <button onclick="openBudgetEdit()" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--muted);font-size:11px;cursor:pointer">✏️ Изменить лимиты</button>
+      </div>
+      <div id="budgetList"></div>
+    </div>
+
+    <!-- Дебиторка / Кредиторка -->
+    <div class="charts-grid">
+      <div class="chart-card" id="debtorCard">
+        <div class="section-title">📥 Дебиторская задолженность</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Контрагенты, которые нам должны (поступлений ждём)</div>
+        <div id="debtorList"><div style="color:var(--muted);font-size:12px">Нет данных — нужно отметить транзакции как «ожидаемые»</div></div>
+        <div id="debtorTotal" style="margin-top:12px;font-size:13px;font-weight:600;color:#22c55e"></div>
+      </div>
+      <div class="chart-card" id="creditorCard">
+        <div class="section-title">📤 Кредиторская задолженность</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Кому мы должны (не оплаченные расходы)</div>
+        <div id="creditorList"><div style="color:var(--muted);font-size:12px">Нет данных — нужно отметить транзакции как «к оплате»</div></div>
+        <div id="creditorTotal" style="margin-top:12px;font-size:13px;font-weight:600;color:#ef4444"></div>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -427,6 +452,8 @@ function renderAll() {
   renderBalanceChart();
   renderCashflow(allTx);
   renderTopCategories();
+  renderBudget(filteredTx);
+  renderDebtCards(filteredTx);
 }
 
 function getDayData(txs) {
@@ -768,6 +795,121 @@ function renderTopCategories() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ─── Бюджетирование (план vs факт) ───────────────────────────────────────────
+const BUDGET_KEY = 'omsfin_budgets';
+const DEFAULT_BUDGETS = {
+  chicken: { label: '🐔 Закупка птицы', limit: 1500000 },
+  salary:  { label: '👥 Зарплата', limit: 600000 },
+  logistics:{ label: '🚚 Логистика', limit: 400000 },
+  taxes:   { label: '📋 Налоги', limit: 300000 },
+  other:   { label: '🔧 Прочие расходы', limit: 200000 },
+};
+
+function getBudgets() {
+  try { return JSON.parse(localStorage.getItem(BUDGET_KEY)) || DEFAULT_BUDGETS; } catch(e) { return DEFAULT_BUDGETS; }
+}
+
+function renderBudget(txs) {
+  const list = document.getElementById('budgetList');
+  if (!list) return;
+  const budgets = getBudgets();
+  const periods = [...new Set(txs.map(t=>t.period).filter(Boolean))].sort();
+  const curPeriod = periods[periods.length - 1] || '';
+  const curTx = txs.filter(t => t.period === curPeriod && t.amount < 0);
+
+  const actuals = {};
+  curTx.forEach(t => { const k = t.category||'unknown'; actuals[k] = (actuals[k]||0) + Math.abs(Number(t.amount)); });
+
+  list.innerHTML = Object.entries(budgets).map(([k, b]) => {
+    const actual = actuals[k] || 0;
+    const pct = b.limit > 0 ? Math.min(100, Math.round(actual / b.limit * 100)) : 0;
+    const over = actual > b.limit;
+    const barColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="font-size:12px;font-weight:600">${b.label}</div>
+        <div style="font-size:12px;color:${over?'#ef4444':'var(--text)'}">
+          ${fmt(actual)} <span style="color:var(--muted);font-weight:400">/ ${fmt(b.limit)}</span>
+          ${over?'<span style="color:#ef4444;font-size:10px;margin-left:4px">⚠️ перерасход</span>':''}
+        </div>
+      </div>
+      <div style="height:7px;background:var(--surface2);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width 0.5s"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">${pct}% использовано${curPeriod?' · '+curPeriod:''}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:12px">Нет данных за текущий период</div>';
+}
+
+function openBudgetEdit() {
+  const budgets = getBudgets();
+  const rows = Object.entries(budgets).map(([k, b]) =>
+    `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="font-size:12px;flex:1">${b.label}</div>
+      <input type="number" value="${b.limit}" data-key="${k}" style="width:130px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:var(--text);font-size:12px;text-align:right" placeholder="Лимит ₽">
+    </div>`
+  ).join('');
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">
+    <div style="font-size:14px;font-weight:700;margin-bottom:16px">🎯 Лимиты бюджета (в месяц)</div>
+    ${rows}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="saveBudgetEdit(this.closest('[style*=fixed]'))" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px;font-weight:600;cursor:pointer">Сохранить</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;background:transparent;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--muted);cursor:pointer">Отмена</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveBudgetEdit(modal) {
+  const budgets = getBudgets();
+  modal.querySelectorAll('input[data-key]').forEach(inp => {
+    const k = inp.dataset.key;
+    if (budgets[k]) budgets[k].limit = parseInt(inp.value) || 0;
+  });
+  localStorage.setItem(BUDGET_KEY, JSON.stringify(budgets));
+  modal.remove();
+  renderBudget(filteredTx.length ? filteredTx : allTx);
+}
+
+// ─── Дебиторка / Кредиторка (на основе категорий и тегов) ────────────────────
+function renderDebtCards(txs) {
+  // Используем поле tx.status = 'pending_income' | 'pending_expense' если есть
+  // Иначе — показываем крупнейших контрагентов без обратного платежа (упрощённо)
+  const debtorList = document.getElementById('debtorList');
+  const creditorList = document.getElementById('creditorList');
+  const debtorTotal = document.getElementById('debtorTotal');
+  const creditorTotal = document.getElementById('creditorTotal');
+  if (!debtorList) return;
+
+  const debtors = txs.filter(t => t.status === 'pending_income');
+  const creditors = txs.filter(t => t.status === 'pending_expense');
+
+  if (debtors.length) {
+    const total = debtors.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
+    debtorList.innerHTML = debtors.map(t =>
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div><div style="font-weight:600">${t.name}</div><div style="color:var(--muted);font-size:10px">${t.date}</div></div>
+        <div style="color:#22c55e;font-weight:700">${fmt(Math.abs(t.amount))}</div>
+      </div>`
+    ).join('');
+    debtorTotal.textContent = 'Итого: ' + fmt(total);
+  }
+
+  if (creditors.length) {
+    const total = creditors.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
+    creditorList.innerHTML = creditors.map(t =>
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div><div style="font-weight:600">${t.name}</div><div style="color:var(--muted);font-size:10px">${t.date}</div></div>
+        <div style="color:#ef4444;font-weight:700">${fmt(Math.abs(t.amount))}</div>
+      </div>`
+    ).join('');
+    creditorTotal.textContent = 'Итого: ' + fmt(total);
+  }
 }
 
 loadData();

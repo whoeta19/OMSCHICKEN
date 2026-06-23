@@ -63,7 +63,35 @@ async function logAction(companyId, userId, action, details) {
   }
 }
 
-// ─── Парсер 1С выписки (XML формат КВО — кассовые и банковские операции) ────
+// ─── Rate limiting (in-memory, per IP, 120 req/min) ──────────────────────────
+const _rl = new Map();
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const entry = _rl.get(ip) || { count: 0, reset: now + 60000 };
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + 60000; }
+  entry.count++;
+  _rl.set(ip, entry);
+  if (_rl.size > 10000) { // не копим бесконечно
+    const old = now - 120000;
+    for (const [k, v] of _rl) { if (v.reset < old) _rl.delete(k); }
+  }
+  return entry.count <= 120;
+}
+
+// ─── Серверная валидация транзакции ──────────────────────────────────────────
+function validateTx(t) {
+  if (typeof t.amount !== 'number' || isNaN(t.amount) || !isFinite(t.amount))
+    return 'amount должен быть числом';
+  if (Math.abs(t.amount) > 1e12) return 'amount слишком большой';
+  if (t.date && !/^\d{2}\.\d{2}\.\d{4}$/.test(t.date)) return 'date должен быть DD.MM.YYYY';
+  if (t.period && !/^\d{2}\.\d{4}$/.test(t.period)) return 'period должен быть MM.YYYY';
+  if (t.name && String(t.name).length > 500) return 'name слишком длинное';
+  if (t.description && String(t.description).length > 2000) return 'description слишком длинное';
+  if (t.inn && !/^\d{0,12}$/.test(String(t.inn))) return 'inn должен быть цифрами до 12 знаков';
+  return null;
+}
+
+
 // Вызывается с ?source=1c, тело запроса — XML-строка (text/xml или text/plain)
 // Возвращает массив транзакций в формате OMSFIN для дальнейшей вставки через POST
 function parse1CXML(xml) {
@@ -343,6 +371,14 @@ async function handleBankWebhook(req, res) {
 }
 
 export default async function handler(req, res) {
+  // Rate limiting — все запросы кроме вебхуков
+  if (req.query.action !== 'webhook') {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return res.status(429).json({ error: 'Слишком много запросов, подождите минуту' });
+    }
+  }
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -430,6 +466,11 @@ export default async function handler(req, res) {
       }
 
       const payload = Array.isArray(req.body) ? req.body : [req.body];
+      // Серверная валидация каждой транзакции
+      for (const t of payload) {
+        const err = validateTx(t);
+        if (err) return res.status(400).json({ error: `Ошибка валидации: ${err}` });
+      }
       const payloadWithUser = payload.map(t => {
         const enriched = { ...t };
         delete enriched.company_id; // company_id не должен попадать дважды через spread ниже
