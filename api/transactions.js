@@ -226,6 +226,61 @@ async function handleBankWebhook(req, res) {
            category: 'unknown', account_name: accountName,
            hash: `wh_${body.operationId || (date + '_' + amount)}` };
   }
+  // Формат Альфа-Банк Business (webhook notification)
+  // Поля: documentNumber, amount, currency, paymentDate, purpose, payerName, payerInn, beneficiaryName, beneficiaryInn, direction
+  else if (body.documentNumber !== undefined || body.payerInn !== undefined || body.beneficiaryInn !== undefined) {
+    const isDebit = (body.direction || '').toLowerCase() === 'out' ||
+                    (body.direction || '').toLowerCase() === 'debit' ||
+                    body.debet === true;
+    const amount = parseFloat(body.amount || body.sum || 0);
+    if (!amount) return res.status(200).json({ ok: true, skipped: 'zero amount' });
+    const finalAmount = isDebit ? -amount : amount;
+
+    const dateRaw = body.paymentDate || body.operationDate || body.date || new Date().toISOString();
+    const d = new Date(dateRaw);
+    const date = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+    const period = `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+
+    const name = isDebit
+      ? (body.beneficiaryName || body.recipientName || body.payerName || '—')
+      : (body.payerName || body.senderName || '—');
+    const inn = isDebit
+      ? (body.beneficiaryInn || body.recipientInn || '')
+      : (body.payerInn || body.senderInn || '');
+
+    tx = { name, amount: finalAmount, date,
+           description: body.purpose || body.paymentPurpose || '',
+           period, inn, category: 'unknown', account_name: accountName,
+           hash: `wh_alfa_${body.documentNumber || (date + '_' + amount + '_' + name)}` };
+  }
+  // Формат Сбер Бизнес Online (webhook / push-уведомление)
+  // Поля: externalId, amount, operationDate, payerName, payerInn, receiverName, receiverInn, paymentPurpose, operationType
+  else if (body.externalId !== undefined || body.paymentPurpose !== undefined) {
+    const isDebit = (body.operationType || '').toLowerCase().includes('дебет') ||
+                    (body.operationType || '').toLowerCase().includes('debit') ||
+                    (body.operationType || '').toLowerCase() === 'списание' ||
+                    (body.creditDebitIndicator || '').toLowerCase() === 'debit';
+    const amount = parseFloat(body.amount || body.transactionAmount || 0);
+    if (!amount) return res.status(200).json({ ok: true, skipped: 'zero amount' });
+    const finalAmount = isDebit ? -amount : amount;
+
+    const dateRaw = body.operationDate || body.valueDate || body.date || new Date().toISOString();
+    const d = new Date(dateRaw);
+    const date = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+    const period = `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+
+    const name = isDebit
+      ? (body.receiverName || body.beneficiaryName || body.payerName || '—')
+      : (body.payerName || body.senderName || '—');
+    const inn = isDebit
+      ? (body.receiverInn || body.beneficiaryInn || '')
+      : (body.payerInn || body.senderInn || '');
+
+    tx = { name, amount: finalAmount, date,
+           description: body.paymentPurpose || body.purpose || '',
+           period, inn, category: 'unknown', account_name: accountName,
+           hash: `wh_sber_${body.externalId || (date + '_' + amount + '_' + name)}` };
+  }
   // Упрощённый / универсальный формат
   else if (body.amount !== undefined) {
     const amount = parseFloat(body.amount);
