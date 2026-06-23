@@ -92,10 +92,18 @@ body.light .filter-btn.active{background:var(--accent);color:#fff;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 @media(max-width:600px){
-  .stats-row{grid-template-columns:repeat(3,1fr);gap:8px;}
-  .stat-num{font-size:18px;}
-  .event-card{padding:12px;}
-  .main{padding:16px 12px 80px;}
+  header{padding:10px 14px;}
+  .logo{font-size:14px;}
+  .main{padding:12px 12px 80px;}
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .stat-num{font-size:16px;}
+  .stat-label{font-size:9px;}
+  .event-card{padding:12px 10px;}
+  .filter-bar{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap!important;padding-bottom:4px;}
+  .filter-btn{flex-shrink:0;font-size:11px;padding:6px 10px;min-height:36px;}
+  .event-title{font-size:13px;}
+  .event-date{font-size:11px;}
+  .month-title{font-size:14px;}
 }
 </style>
 <script src="/utils.js"></script>

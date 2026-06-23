@@ -105,6 +105,9 @@
   .bottom-nav .bn-icon{font-size:20px;line-height:1;}
   @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
+    header{padding:10px 14px;}
+    .logo{font-size:14px;}
+    main{padding:12px 14px;padding-bottom:80px;}
     .tools-grid{grid-template-columns:repeat(2,1fr);}
     .input-row{grid-template-columns:1fr;}
     .input-row-3{grid-template-columns:1fr;}
@@ -112,6 +115,13 @@
     input,select,textarea{font-size:16px!important;}
     .btn{min-height:44px;}
     .btn-outline{min-height:44px;}
+    .card{padding:14px;}
+    .section-title{font-size:10px;}
+    /* Таблицы — горизонтальный скролл */
+    table{font-size:11px;}
+    .card > div[style*="overflow-x"]{-webkit-overflow-scrolling:touch;}
+    /* Результат расчёта */
+    [style*="font-size:28px"],[style*="font-size:24px"]{font-size:20px!important;}
   }
 </style>
 <script src="/utils.js"></script>

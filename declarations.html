@@ -101,14 +101,22 @@
   @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
     header{padding:12px 14px;}
-    main{padding:12px 14px;}
-    .tabs{padding:6px 12px;}
-    .tab{font-size:11px;padding:4px 10px;}
+    .logo{font-size:14px;}
+    main{padding:12px 14px;padding-bottom:80px;}
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 12px;white-space:nowrap;}
+    .tab{font-size:11px;padding:8px 12px;min-height:40px;flex-shrink:0;}
     [style*="grid-template-columns:1fr 1fr"]{display:block!important;}
     [style*="grid-template-columns:1fr 1fr"] > *{margin-bottom:8px;}
     [style*="grid-template-columns:1fr 1fr 1fr"]{display:block!important;}
     [style*="grid-template-columns:1fr 1fr 1fr"] > *{margin-bottom:8px;}
-    input,select{font-size:14px;}
+    input,select,textarea{font-size:16px!important;}
+    .btn{min-height:44px;}
+    .card{padding:14px;}
+    /* УСН переключатель режима */
+    .usn-mode-btns{flex-wrap:wrap!important;gap:6px!important;}
+    /* Таблицы */
+    table{font-size:10px;}
+    th,td{padding:5px 6px!important;}
   }
   .cq-quarter-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;text-align:left;transition:all 0.18s;}
   .cq-quarter-btn:hover,.cq-quarter-btn.active{border-color:rgba(255,107,0,0.5);background:rgba(255,107,0,0.08);}
