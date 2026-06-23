@@ -980,6 +980,43 @@ let isUploading = false;
 let lastUploadedPeriod = null;
 let userRules = JSON.parse(localStorage.getItem('omsfin_rules') || '{}');
 
+// ─── Синхронизация настроек пользователя (правила, цели) ──────────
+async function syncUserSettings() {
+  try {
+    const token = localStorage.getItem(TOKEN_KEY) || '';
+    if (!token) return;
+    const r = await fetch('/api/company_settings', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data.rules && typeof data.rules === 'object') {
+      // Мёрджим: серверные правила дополняют локальные, но локальные приоритетнее
+      userRules = { ...data.rules, ...userRules };
+      localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
+    }
+    if (data.goals && typeof data.goals === 'object') {
+      // Мёрджим цели: серверные дополняют локальные
+      const localGoals = JSON.parse(localStorage.getItem('omsfin_goals') || '{}');
+      const merged = { ...data.goals, ...localGoals };
+      localStorage.setItem('omsfin_goals', JSON.stringify(merged));
+    }
+  } catch(e) {}
+}
+
+async function saveUserSettings() {
+  try {
+    const token = localStorage.getItem(TOKEN_KEY) || '';
+    if (!token) return;
+    const goals = JSON.parse(localStorage.getItem('omsfin_goals') || '{}');
+    await fetch('/api/company_settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ rules: userRules, goals })
+    });
+  } catch(e) {}
+}
+
 // Ключи хранилища
 const TOKEN_KEY = 'omschicken_token';
 const REFRESH_KEY = 'omschicken_refresh';
@@ -1495,6 +1532,7 @@ async function syncNow() {
   if (btn) btn.innerHTML = '⏳ Синхронизация...';
   try {
     allTx = await apiGet();
+    syncUserSettings(); // загружаем правила и цели с сервера (без await — фон)
     if (dot) dot.className = 'sync-dot';
     if (btn) btn.innerHTML = '<span class="sync-dot"></span>Синхронизировано';
     // Кешируем для страницы контрагентов
@@ -1998,6 +2036,7 @@ async function reclassifyTx(id, category, name, btn) {
   const keyword = name.trim().toLowerCase().substring(0, 40);
   userRules[keyword] = category;
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
+  saveUserSettings();
 
   // Находим ВСЕ транзакции от того же контрагента (по совпадению имени)
   const matches = allTx.filter(t => t.name && t.name.trim().toLowerCase().substring(0,40) === keyword);
@@ -2033,11 +2072,13 @@ function renderRules() {
 function deleteRule(keyword) {
   delete userRules[keyword];
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
+  saveUserSettings();
   renderRules();
 }
 
 function saveRules() {
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
+  saveUserSettings();
   showToast('✅ Правила сохранены');
 }
 
@@ -4455,6 +4496,7 @@ function saveGoals() {
     profit: Number(document.getElementById('goalProfit').value) || 0
   };
   localStorage.setItem('omsfin_goals', JSON.stringify(all));
+  saveUserSettings();
   document.getElementById('goalsModal').style.display = 'none';
   renderGoals();
 }
