@@ -516,7 +516,7 @@
 </style>
 </head>
 <body>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -524,11 +524,25 @@
       <option value="">Компания...</option>
     </select>
     <button id="overviewBtn" onclick="window.location.href='/companies-overview'" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 9px;cursor:pointer" title="Сводка по всем компаниям">🏢 Все</button>
+    <!-- Колокольчик уведомлений -->
+    <div style="position:relative" id="notifWrap">
+      <button onclick="toggleNotifPanel(event)" id="notifBtn" style="position:relative;width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted)">🔔
+        <span id="notifBadge" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg)"></span>
+      </button>
+      <div id="notifPanel" style="display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;width:300px;z-index:300;box-shadow:0 20px 40px rgba(0,0,0,0.4);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:700">Уведомления</div>
+          <button onclick="clearNotifs()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer">Очистить</button>
+        </div>
+        <div id="notifList" style="max-height:320px;overflow-y:auto"></div>
+      </div>
+    </div>
     <div style="position:relative">
       <button id="profileBtn" onclick="toggleProfile()" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;font-size:12px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;">М</button>
       <div id="profileMenu" style="display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:180px;z-index:200;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
         <div id="profileEmail" style="padding:8px 10px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px"></div>
         <button onclick="window.location.href='/settings';document.getElementById('profileMenu').style.display='none'" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">⚙️ Настройки</button>
+        <button onclick="document.getElementById('profileMenu').style.display='none';startTour()" style="width:100%;text-align:left;background:none;border:none;color:var(--text);font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='none'">🗺️ Тур по системе</button>
         <div style="height:1px;background:var(--border);margin:4px 0"></div>
         <button onclick="logout()" style="width:100%;text-align:left;background:none;border:none;color:#ef4444;font-size:12px;padding:8px 10px;cursor:pointer;border-radius:8px" onmouseover="this.style.background='rgba(239,68,68,0.08)'" onmouseout="this.style.background='none'">← Выйти</button>
       </div>
@@ -4366,6 +4380,256 @@ document.getElementById('file1cInput').addEventListener('change', async function
   }
   e.target.value = '';
 });
+
+// ─── Система уведомлений ──────────────────────────────────────────────────────
+var NOTIF_KEY = 'omsfin_notifs';
+
+function getNotifs() { return JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]'); }
+function saveNotifs(n) { localStorage.setItem(NOTIF_KEY, JSON.stringify(n)); }
+
+function pushNotif(icon, title, body, type, actionUrl) {
+  var notifs = getNotifs();
+  // Не дублировать одинаковые за сутки
+  var today = new Date().toDateString();
+  if (notifs.some(function(n){ return n.title === title && n.day === today; })) return;
+  notifs.unshift({ id: Date.now(), icon: icon, title: title, body: body, type: type || 'info', actionUrl: actionUrl || null, day: today, read: false });
+  saveNotifs(notifs.slice(0, 50));
+  renderNotifBadge();
+}
+
+function renderNotifBadge() {
+  var notifs = getNotifs();
+  var unread = notifs.filter(function(n){ return !n.read; }).length;
+  var badge = document.getElementById('notifBadge');
+  if (badge) badge.style.display = unread > 0 ? 'block' : 'none';
+}
+
+function toggleNotifPanel(e) {
+  e.stopPropagation();
+  var panel = document.getElementById('notifPanel');
+  var open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (!open) {
+    renderNotifList();
+    // пометить все прочитанными
+    var notifs = getNotifs().map(function(n){ n.read = true; return n; });
+    saveNotifs(notifs);
+    renderNotifBadge();
+  }
+}
+
+function renderNotifList() {
+  var notifs = getNotifs();
+  var list = document.getElementById('notifList');
+  if (!list) return;
+  if (!notifs.length) {
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">Уведомлений нет</div>';
+    return;
+  }
+  var colors = { danger: '#ef4444', warn: '#fb923c', good: '#22c55e', info: '#60a5fa' };
+  list.innerHTML = notifs.map(function(n) {
+    return '<div style="display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer' + (n.actionUrl ? ';cursor:pointer' : '') + '"' +
+      (n.actionUrl ? ' onclick="window.location.href=\'' + n.actionUrl + '\'"' : '') + '>' +
+      '<span style="font-size:18px;flex-shrink:0">' + n.icon + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;font-weight:600;color:var(--text)">' + n.title + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">' + n.body + '</div>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function clearNotifs() {
+  saveNotifs([]);
+  renderNotifList();
+  renderNotifBadge();
+}
+
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('notifWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var panel = document.getElementById('notifPanel');
+    if (panel) panel.style.display = 'none';
+  }
+});
+
+// ─── Налоговые напоминания ────────────────────────────────────────────────────
+function checkTaxReminders() {
+  var now = new Date();
+  var day = now.getDate();
+  var month = now.getMonth() + 1;
+
+  // Дедлайны по кварталам: НДС — 25е числа января, апреля, июля, октября
+  var vatMonths = [1, 4, 7, 10];
+  // УСН — 28 марта (ООО), НДФЛ — 28 апреля, взносы — 28е каждого месяца
+  var deadlines = [
+    { month: -1, day: 28, icon: '💰', title: 'Страховые взносы', body: 'До 28 числа — уплата страховых взносов за сотрудников', url: '/declarations' },
+    { month: 1,  day: 25, icon: '🧾', title: 'НДС за 4 квартал', body: 'До 25 января — декларация и уплата НДС', url: '/vat' },
+    { month: 3,  day: 28, icon: '📊', title: 'Налог на прибыль за год', body: 'До 28 марта — декларация и уплата налога на прибыль', url: '/declarations' },
+    { month: 4,  day: 25, icon: '🧾', title: 'НДС за 1 квартал', body: 'До 25 апреля — декларация и уплата НДС', url: '/vat' },
+    { month: 4,  day: 28, icon: '👤', title: '6-НДФЛ за 1 квартал', body: 'До 28 апреля — отчётность по НДФЛ сотрудников', url: '/declarations' },
+    { month: 7,  day: 25, icon: '🧾', title: 'НДС за 2 квартал', body: 'До 25 июля — декларация и уплата НДС', url: '/vat' },
+    { month: 7,  day: 28, icon: '👤', title: '6-НДФЛ за полугодие', body: 'До 28 июля — отчётность по НДФЛ сотрудников', url: '/declarations' },
+    { month: 10, day: 25, icon: '🧾', title: 'НДС за 3 квартал', body: 'До 25 октября — декларация и уплата НДС', url: '/vat' },
+    { month: 10, day: 28, icon: '👤', title: '6-НДФЛ за 9 месяцев', body: 'До 28 октября — отчётность по НДФЛ сотрудников', url: '/declarations' },
+  ];
+
+  deadlines.forEach(function(d) {
+    var targetMonth = d.month === -1 ? month : d.month; // -1 = каждый месяц
+    if (d.month !== -1 && d.month !== month) return;
+    var daysLeft = d.day - day;
+    if (daysLeft < 0 || daysLeft > 10) return;
+    var urgency = daysLeft <= 2 ? 'danger' : daysLeft <= 5 ? 'warn' : 'info';
+    var prefix = daysLeft === 0 ? '🚨 Сегодня: ' : daysLeft === 1 ? '⚠️ Завтра: ' : ('⏰ Через ' + daysLeft + ' дн.: ');
+    pushNotif(d.icon, d.title, prefix + d.body, urgency, d.url);
+  });
+
+  renderNotifBadge();
+}
+
+// Запуск при загрузке
+setTimeout(checkTaxReminders, 2000);
+
+// ─── Онбординг-тур ───────────────────────────────────────────────────────────
+var tourSteps = [
+  {
+    target: '.hero-stat',
+    title: '👋 Добро пожаловать в OMSFIN!',
+    text: 'Это ваш финансовый дашборд. Здесь всегда видна главная цифра — прибыль за период. Давайте за 1 минуту покажем ключевые возможности.',
+    position: 'bottom'
+  },
+  {
+    target: '#importDropWrap',
+    title: '📂 Загрузка выписки',
+    text: 'Нажмите «Выписка» чтобы загрузить банковскую выписку. Поддерживаем Т-Банк, ВТБ, Альфа, Сбер. Или просто перетащите файл на страницу.',
+    position: 'bottom'
+  },
+  {
+    target: '#insightsFeed',
+    title: '💡 Умные инсайты',
+    text: 'После загрузки выписки здесь появятся автоматические наблюдения: кассовый разрыв, рост расходов, риски — без лишних кнопок.',
+    position: 'bottom'
+  },
+  {
+    target: '#healthScoreCard',
+    title: '❤️ Здоровье бизнеса',
+    text: 'Интегральная оценка от 0 до 100. Учитывает прибыльность, динамику, своевременность отчётности. Кнопки P&L и «Период» — для углублённого анализа.',
+    position: 'bottom'
+  },
+  {
+    target: '#monthCloserCard',
+    title: '✅ Закрытие месяца',
+    text: 'Чек-лист готовности: выписка загружена, НДС рассчитан, декларации сданы. Прогресс-бар покажет сколько ещё осталось.',
+    position: 'top'
+  },
+  {
+    target: '#notifWrap',
+    title: '🔔 Уведомления',
+    text: 'Здесь будут появляться напоминания о налоговых дедлайнах — за 10, 5 и 2 дня до срока. Ничего не пропустите.',
+    position: 'bottom'
+  },
+  {
+    target: 'header .logo',
+    title: '🚀 Готово!',
+    text: 'Вы знаете главное. Загрузите первую выписку — и OMSFIN сразу покажет что происходит с вашим бизнесом. Удачи!',
+    position: 'bottom'
+  }
+];
+
+var tourCurrent = 0;
+var tourOverlay = null;
+var tourHighlight = null;
+var tourBox = null;
+
+function startTour() {
+  if (document.getElementById('tourOverlay')) return;
+  tourCurrent = 0;
+
+  tourOverlay = document.createElement('div');
+  tourOverlay.id = 'tourOverlay';
+  tourOverlay.style.cssText = 'position:fixed;inset:0;z-index:8000;pointer-events:none';
+  // Тёмный фон с вырезом — рисуем через SVG
+  tourOverlay.innerHTML = '<svg id="tourSvg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:all" xmlns="http://www.w3.org/2000/svg"><defs><mask id="tourMask"><rect width="100%" height="100%" fill="white"/><rect id="tourCutout" rx="10" fill="black"/></mask></defs><rect width="100%" height="100%" fill="rgba(0,0,0,0.65)" mask="url(#tourMask)"/></svg>';
+
+  tourBox = document.createElement('div');
+  tourBox.id = 'tourBox';
+  tourBox.style.cssText = 'position:fixed;z-index:8100;background:var(--surface);border:1px solid var(--accent);border-radius:16px;padding:18px;max-width:300px;box-shadow:0 8px 40px rgba(0,0,0,0.5)';
+
+  document.body.appendChild(tourOverlay);
+  document.body.appendChild(tourBox);
+
+  showTourStep(0);
+}
+
+function showTourStep(idx) {
+  var step = tourSteps[idx];
+  var target = document.querySelector(step.target);
+
+  // Если элемент скрыт — скипаем
+  if (!target || target.offsetParent === null || target.style.display === 'none') {
+    if (idx < tourSteps.length - 1) { showTourStep(idx + 1); return; }
+    else { endTour(); return; }
+  }
+
+  var rect = target.getBoundingClientRect();
+  var pad = 8;
+
+  // Подсветка вырезом
+  var cutout = document.getElementById('tourCutout');
+  if (cutout) {
+    cutout.setAttribute('x', rect.left - pad);
+    cutout.setAttribute('y', rect.top - pad);
+    cutout.setAttribute('width', rect.width + pad * 2);
+    cutout.setAttribute('height', rect.height + pad * 2);
+  }
+
+  // Позиция подсказки
+  var boxW = 300, boxH = 160;
+  var left = Math.min(rect.left, window.innerWidth - boxW - 16);
+  left = Math.max(left, 16);
+  var top;
+  if (step.position === 'bottom') {
+    top = rect.bottom + pad + 12;
+    if (top + boxH > window.innerHeight - 20) top = rect.top - boxH - pad - 12;
+  } else {
+    top = rect.top - boxH - pad - 12;
+    if (top < 20) top = rect.bottom + pad + 12;
+  }
+
+  tourBox.style.left = left + 'px';
+  tourBox.style.top = top + 'px';
+  tourBox.innerHTML =
+    '<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text)">' + step.title + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px">' + step.text + '</div>' +
+    '<div style="display:flex;align-items:center;justify-content:space-between">' +
+      '<div style="font-size:11px;color:var(--muted)">' + (idx + 1) + ' / ' + tourSteps.length + '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="endTour()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--muted);font-size:11px;cursor:pointer">Пропустить</button>' +
+        (idx < tourSteps.length - 1
+          ? '<button onclick="showTourStep(' + (idx+1) + ')" style="background:var(--accent);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer">Далее →</button>'
+          : '<button onclick="endTour()" style="background:var(--accent);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-size:11px;font-weight:700;cursor:pointer">Готово ✓</button>') +
+      '</div>' +
+    '</div>';
+
+  // Скролл к элементу
+  target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Точки прогресса
+  tourCurrent = idx;
+}
+
+function endTour() {
+  if (document.getElementById('tourOverlay')) document.getElementById('tourOverlay').remove();
+  if (document.getElementById('tourBox')) document.getElementById('tourBox').remove();
+  localStorage.setItem('omsfin_tour_done', '1');
+}
+
+// Показать тур новым пользователям (у кого нет данных и тур не проходили)
+setTimeout(function() {
+  if (!localStorage.getItem('omsfin_tour_done') && allTx.length === 0) {
+    startTour();
+  }
+}, 1500);
 </script>
 
 <!-- Дропдаун "Ещё" -->
