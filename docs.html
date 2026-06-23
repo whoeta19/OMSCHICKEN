@@ -139,7 +139,7 @@
 </style>
 </head>
 <body>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -1758,12 +1758,9 @@ function generateSverka() {
 </table>
 </div>`;
 
-  document.getElementById('preview').innerHTML = html;
-  showPage('preview', null);
-  document.getElementById('printBtn').style.display='inline-flex';
-  document.getElementById('pdfBtn').style.display='inline-flex';
-  document.getElementById('saveBtn').style.display='inline-flex';
-  document.getElementById('templateBtn').style.display='inline-flex';
+  document.getElementById('docPreview').innerHTML = html;
+  document.getElementById('previewWrap').classList.add('active');
+  document.getElementById('previewWrap').scrollIntoView({behavior:'smooth'});
 }
 
 // ─── Шаблоны документов ───────────────────────────────────────────────────────
