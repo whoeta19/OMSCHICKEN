@@ -95,26 +95,25 @@
   .bottom-nav .bn-icon{font-size:20px;line-height:1;}
   @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media (max-width: 600px) {
-    header{padding:12px 14px;}
+    header{padding:10px 14px;}
     .logo{font-size:14px;}
-    main{padding:12px 14px;}
+    main{padding:12px 14px;padding-bottom:80px;}
     .input-row{grid-template-columns:1fr;}
-    .btn{padding:9px 14px;font-size:10px;}
-    .tabs{overflow-x:auto;padding:8px 14px 0;}
-    .tab{font-size:11px;padding:7px 10px;white-space:nowrap;}
-    .stats-row{grid-template-columns:1fr 1fr;gap:6px;}
-    .stat-value{font-size:12px;}
-    .charts-grid{grid-template-columns:1fr;}
-    .chart-card.full{grid-column:1;}
-    .doc-types{grid-template-columns:1fr 1fr;}
-    table{font-size:11px;}
-    th,td{padding:5px 6px;}
+    .btn{padding:9px 14px;font-size:11px;}
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 14px 0;white-space:nowrap;}
+    .tab{font-size:11px;padding:7px 10px;}
+    .card{padding:14px;}
+    .section-title{font-size:10px;}
+    /* Цвета акцента — уменьшить кружки */
+    #accentColors{gap:6px;}
+    /* Тема — 2 колонки */
+    .theme-grid{grid-template-columns:1fr 1fr!important;}
   }
 </style>
 <script src="/nav.js"></script>
 </head>
 <body>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -150,13 +149,13 @@
     </div>
     <div class="input-group">
       <label>Акцентный цвет</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-        <div onclick="setAccent('#ff6b00',this)" style="width:32px;height:32px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent" class="accent-dot active-accent"></div>
-        <div onclick="setAccent('#22c55e',this)" style="width:32px;height:32px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#818cf8',this)" style="width:32px;height:32px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#f43f5e',this)" style="width:32px;height:32px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#0ea5e9',this)" style="width:32px;height:32px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#a855f7',this)" style="width:32px;height:32px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <div onclick="setAccent('#ff6b00',this)" style="width:20px;height:20px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#22c55e',this)" style="width:20px;height:20px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#818cf8',this)" style="width:20px;height:20px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#f43f5e',this)" style="width:20px;height:20px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#0ea5e9',this)" style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#a855f7',this)" style="width:20px;height:20px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
       </div>
     </div>
   </div>
@@ -477,7 +476,8 @@ updateAutoThemeStatus();
 if (settings.accent) {
   document.body.style.setProperty('--accent', settings.accent);
   document.querySelectorAll('.accent-dot').forEach(d => {
-    if (d.style.background === settings.accent) d.style.border = '2px solid var(--text,#fff)';
+    const m = (d.getAttribute('onclick') || '').match(/'(#[0-9a-fA-F]+)'/);
+    if (m && m[1] === settings.accent) d.style.border = '2px solid var(--text,#fff)';
   });
 }
 
