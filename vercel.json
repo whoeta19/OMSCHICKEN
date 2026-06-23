@@ -84,5 +84,32 @@
       "source": "/api/(.*)",
       "destination": "/api/$1"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.sheetjs.com https://telegram.org https://mc.yandex.ru; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://mc.yandex.ru; connect-src 'self' https://sqyppamdxahvvkoxovpu.supabase.co https://api.telegram.org https://mc.yandex.ru https://generativelanguage.googleapis.com https://egrul.itsoft.ru https://api.sber.ru https://www.rusprofile.ru https://fonts.googleapis.com https://fonts.gstatic.com; frame-src 'self' https://mc.yandex.ru https://telegram.org https://oauth.telegram.org; frame-ancestors 'self' https://web.telegram.org https://*.telegram.org; object-src 'none'; base-uri 'self'; form-action 'self'"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+      ]
+    }
   ]
 }
