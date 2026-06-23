@@ -607,6 +607,7 @@
   </div>
 
   <!-- ─── Аномалии (появляются только когда есть) ─── -->
+  <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
   <div id="anomalyBlock" style="margin-bottom:0"></div>
 
   <!-- ─── Главная метрика ─── -->
@@ -1906,6 +1907,8 @@ async function parseAndProcess(text) {
     } else {
       showToast(`✅ Загружено ${insertedCount} операций за ${monthKey}`);
     }
+    // Показать баннер дублей если их много
+    if (skippedCount > 0) showDuplicatesBanner(insertedCount, skippedCount, monthKey);
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
@@ -3997,6 +4000,31 @@ function openTxDetail(tx) {
 // ══════════════════════════════════════════════════════════
 // ПОДКЛЮЧЕНИЕ К renderAll
 // ══════════════════════════════════════════════════════════
+// ─── Дублирующиеся операции ──────────────────────────────────────────────────
+function showDuplicatesBanner(inserted, skipped, period) {
+  var el = document.getElementById('duplicatesBanner');
+  if (!el) return;
+  if (inserted === 0 && skipped > 0) {
+    // Все операции уже были — ничего нового
+    el.innerHTML = '<div style="background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.25);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px">' +
+      '<span style="font-size:18px">⚠️</span>' +
+      '<div style="flex:1"><b style="color:var(--text)">Все ' + skipped + ' операций уже загружены</b>' +
+      '<div style="color:var(--muted);margin-top:2px">Выписка за ' + (period||'этот период') + ' уже была загружена ранее. Новых операций не добавлено.</div></div>' +
+      '<button onclick="document.getElementById(\'duplicatesBanner\').style.display=\'none\'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px">✕</button>' +
+      '</div>';
+  } else if (skipped > 0) {
+    // Часть дублей
+    el.innerHTML = '<div style="background:rgba(96,165,250,0.07);border:1px solid rgba(96,165,250,0.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px">' +
+      '<span style="font-size:18px">ℹ️</span>' +
+      '<div style="flex:1"><b style="color:var(--text)">Добавлено ' + inserted + ' новых, ' + skipped + ' уже были</b>' +
+      '<div style="color:var(--muted);margin-top:2px">Повторные операции пропущены автоматически — данные не задвоены.</div></div>' +
+      '<button onclick="document.getElementById(\'duplicatesBanner\').style.display=\'none\'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px">✕</button>' +
+      '</div>';
+  }
+  el.style.display = 'block';
+  setTimeout(function() { if (el) el.style.display = 'none'; }, 8000);
+}
+
 // ─── Умная лента инсайтов ────────────────────────────────────────────────────
 function renderInsights() {
   const feed = document.getElementById('insightsFeed');

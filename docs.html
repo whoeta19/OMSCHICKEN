@@ -115,9 +115,26 @@
   .bottom-nav .bn-icon{font-size:20px;line-height:1;}
   @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
-    .doc-types{grid-template-columns:repeat(2,1fr);}
+    header{padding:10px 14px;}
+    .logo{font-size:14px;}
+    main{padding:12px 14px;padding-bottom:80px;}
+    .doc-types{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .doc-type-btn{padding:12px 8px;}
+    .doc-type-icon{font-size:20px;}
+    .doc-type-name{font-size:11px;}
+    .doc-type-desc{font-size:9px;}
     .input-row{grid-template-columns:1fr;}
     .input-row-3{grid-template-columns:1fr;}
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 14px 0;white-space:nowrap;}
+    .tab{font-size:11px;padding:7px 10px;}
+    .btn{padding:9px 14px;font-size:11px;}
+    .card{padding:14px;}
+    .section-title{font-size:10px;}
+    table{font-size:10px;}
+    th,td{padding:4px 5px;}
+    /* Акт сверки на мобильном */
+    #svRowsWrap div[style*="grid"]{grid-template-columns:1fr 1fr!important;}
+    #svRowsWrap input.sv-debit, #svRowsWrap input.sv-credit{width:100%;}
   }
 </style>
 </head>
@@ -187,10 +204,61 @@
       <div class="doc-type-name">ТТН</div>
       <div class="doc-type-desc">Товарно-транспортная</div>
     </div>
+    <div class="doc-type-btn" id="btn-sverka" onclick="selectDoc('sverka',this)">
+      <div class="doc-type-icon">⚖️</div>
+      <div class="doc-type-name">Акт сверки</div>
+      <div class="doc-type-desc">Взаиморасчёты</div>
+    </div>
     <div class="doc-type-btn" id="btn-pp" onclick="selectDoc('pp',this)">
       <div class="doc-type-icon">🏦</div>
       <div class="doc-type-name">Платёжное поручение</div>
       <div class="doc-type-desc">Форма 0401060</div>
+    </div>
+  </div>
+
+  <!-- Форма акта сверки -->
+  <div id="sverka-form" style="display:none">
+    <div class="card">
+      <div class="section-title">Акт сверки взаимных расчётов</div>
+      <div class="input-row">
+        <div class="input-group"><label>Номер акта</label><input type="text" id="svNum" placeholder="1"></div>
+        <div class="input-group"><label>Период (от)</label><input type="date" id="svDateFrom"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Период (до)</label><input type="date" id="svDateTo"></div>
+        <div class="input-group"><label>Дата составления</label><input type="date" id="svDate"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Наша организация</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="svOurName" placeholder="ООО Омсчикен"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="svOurInn" placeholder="5500000001 / 550101001"></div>
+      </div>
+      <div class="input-group"><label>Лицо, подписывающее акт</label><input type="text" id="svOurSigner" placeholder="Директор Иванов И.И."></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Контрагент</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="svCpName" placeholder="ООО Поставщик"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="svCpInn" placeholder="7700000001 / 770101001"></div>
+      </div>
+      <div class="input-group"><label>Лицо со стороны контрагента</label><input type="text" id="svCpSigner" placeholder="Директор Петров П.П."></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Операции по нашей стороне</div>
+      <div id="svRowsWrap">
+        <div class="sv-row" style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:6px;margin-bottom:6px">
+          <div style="opacity:.5;font-size:12px">Дата</div>
+          <div style="opacity:.5;font-size:12px">Основание</div>
+          <div style="opacity:.5;font-size:12px">Дебет (нам должны)</div>
+          <div style="opacity:.5;font-size:12px">Кредит (мы должны)</div>
+        </div>
+      </div>
+      <button class="btn" style="background:var(--surface);color:var(--text);margin-top:4px" onclick="addSvRow()">+ Добавить строку</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn" onclick="generateSverka()">📋 Сформировать акт</button>
     </div>
   </div>
 
@@ -497,6 +565,8 @@ function selectDoc(type, el) {
   document.querySelectorAll('.doc-type-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('pp-form').style.display = type === 'pp' ? 'block' : 'none';
+  document.getElementById('sverka-form').style.display = type === 'sverka' ? 'block' : 'none';
+  if (type === 'sverka' && !document.querySelector('#svRowsWrap input.sv-date')) addSvRow();
 }
 
 function ppAmountWords(n) {
@@ -1587,6 +1657,113 @@ if (prefill) {
     if (d.buyer) document.getElementById('buyerName').value = d.buyer;
     localStorage.removeItem('omsfin_doc_prefill');
   } catch(e){}
+}
+
+// ─── Акт сверки ───────────────────────────────────────────────────────────────
+function addSvRow() {
+  const wrap = document.getElementById('svRowsWrap');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:6px;margin-bottom:4px;align-items:center';
+  row.innerHTML = `<input type="date" class="sv-date" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">
+    <input type="text" class="sv-doc" placeholder="Документ/основание" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">
+    <input type="number" class="sv-debit" placeholder="0.00" step="0.01" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">
+    <input type="number" class="sv-credit" placeholder="0.00" step="0.01" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">`;
+  wrap.appendChild(row);
+}
+
+function generateSverka() {
+  const v = id => document.getElementById(id).value;
+  const dateFrom = v('svDateFrom') ? new Date(v('svDateFrom')).toLocaleDateString('ru-RU') : '__.__.____';
+  const dateTo = v('svDateTo') ? new Date(v('svDateTo')).toLocaleDateString('ru-RU') : '__.__.____';
+  const dateDoc = v('svDate') ? new Date(v('svDate')).toLocaleDateString('ru-RU') : '__.__.____';
+
+  const rows = document.querySelectorAll('#svRowsWrap .sv-row:not(:first-child), #svRowsWrap div[style*="grid"]');
+  let tableRows = '';
+  let totalDebit = 0, totalCredit = 0;
+  let rowNum = 0;
+  document.querySelectorAll('#svRowsWrap input.sv-date').forEach((_, i) => {
+    const date = document.querySelectorAll('#svRowsWrap input.sv-date')[i].value;
+    const doc = document.querySelectorAll('#svRowsWrap input.sv-doc')[i].value || '—';
+    const debit = parseFloat(document.querySelectorAll('#svRowsWrap input.sv-debit')[i].value) || 0;
+    const credit = parseFloat(document.querySelectorAll('#svRowsWrap input.sv-credit')[i].value) || 0;
+    totalDebit += debit;
+    totalCredit += credit;
+    rowNum++;
+    const dateStr = date ? new Date(date).toLocaleDateString('ru-RU') : '';
+    tableRows += `<tr>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:center">${rowNum}</td>
+      <td style="border:1px solid #999;padding:4px 6px">${dateStr}</td>
+      <td style="border:1px solid #999;padding:4px 6px">${doc}</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${debit ? debit.toLocaleString('ru-RU',{minimumFractionDigits:2}) : ''}</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${credit ? credit.toLocaleString('ru-RU',{minimumFractionDigits:2}) : ''}</td>
+    </tr>`;
+  });
+
+  const balance = totalDebit - totalCredit;
+  const balanceStr = Math.abs(balance).toLocaleString('ru-RU',{minimumFractionDigits:2});
+  const balanceDesc = balance > 0 ? `Задолженность ${v('svCpName') || 'контрагента'}: ${balanceStr} руб.`
+                    : balance < 0 ? `Задолженность ${v('svOurName') || 'нашей организации'}: ${balanceStr} руб.`
+                    : 'Задолженности нет, расчёты совпадают';
+
+  const html = `<div class="doc-print" style="font-family:'Times New Roman',Times,serif;font-size:10pt;color:#000;background:#fff;padding:15mm">
+<h2 style="text-align:center;margin:0 0 4px;font-size:13pt">АКТ СВЕРКИ ВЗАИМНЫХ РАСЧЁТОВ № ${v('svNum')}</h2>
+<p style="text-align:center;margin:0 0 12px;font-size:10pt">за период с ${dateFrom} по ${dateTo}</p>
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:12px">
+  <tr>
+    <td style="width:50%;padding:4px;vertical-align:top"><b>${v('svOurName') || '________________________'}</b><br>ИНН/КПП: ${v('svOurInn') || '____________'}</td>
+    <td style="width:50%;padding:4px;vertical-align:top"><b>${v('svCpName') || '________________________'}</b><br>ИНН/КПП: ${v('svCpInn') || '____________'}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;font-size:9pt">
+  <thead>
+    <tr style="background:#f0f0f0">
+      <th style="border:1px solid #999;padding:5px;width:40px">№</th>
+      <th style="border:1px solid #999;padding:5px">Дата</th>
+      <th style="border:1px solid #999;padding:5px">Документ / основание</th>
+      <th style="border:1px solid #999;padding:5px;width:120px">Дебет (нам должны), руб.</th>
+      <th style="border:1px solid #999;padding:5px;width:120px">Кредит (мы должны), руб.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border:1px solid #999;padding:4px 6px" colspan="3"><b>Сальдо начальное</b></td>
+      <td style="border:1px solid #999;padding:4px 6px"></td>
+      <td style="border:1px solid #999;padding:4px 6px"></td>
+    </tr>
+    ${tableRows}
+    <tr style="font-weight:bold">
+      <td style="border:1px solid #999;padding:4px 6px" colspan="3">Обороты за период</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${totalDebit.toLocaleString('ru-RU',{minimumFractionDigits:2})}</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${totalCredit.toLocaleString('ru-RU',{minimumFractionDigits:2})}</td>
+    </tr>
+    <tr style="font-weight:bold">
+      <td style="border:1px solid #999;padding:4px 6px" colspan="5">${balanceDesc}</td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin:16px 0 4px;font-size:10pt">По данным учёта обеих сторон задолженность подтверждается. Акт составлен ${dateDoc}.</p>
+<table style="width:100%;margin-top:20px;font-size:10pt">
+  <tr>
+    <td style="width:50%;padding:4px;vertical-align:bottom">
+      <p style="margin:0 0 20px">${v('svOurName') || '________________________'}</p>
+      <p style="margin:0">${v('svOurSigner') || '________________________'} _______________</p>
+      <p style="margin:0;font-size:9pt;color:#555">М.П.</p>
+    </td>
+    <td style="width:50%;padding:4px;vertical-align:bottom">
+      <p style="margin:0 0 20px">${v('svCpName') || '________________________'}</p>
+      <p style="margin:0">${v('svCpSigner') || '________________________'} _______________</p>
+      <p style="margin:0;font-size:9pt;color:#555">М.П.</p>
+    </td>
+  </tr>
+</table>
+</div>`;
+
+  document.getElementById('preview').innerHTML = html;
+  showPage('preview', null);
+  document.getElementById('printBtn').style.display='inline-flex';
+  document.getElementById('pdfBtn').style.display='inline-flex';
+  document.getElementById('saveBtn').style.display='inline-flex';
+  document.getElementById('templateBtn').style.display='inline-flex';
 }
 
 // ─── Шаблоны документов ───────────────────────────────────────────────────────
