@@ -359,8 +359,14 @@
     .quick-actions-grid{grid-template-columns:repeat(2,1fr)!important;}
     .suggestions-grid{grid-template-columns:1fr!important;}
 
-    /* Комментарий и кнопки в операции */
-    #txSearch{font-size:14px!important;} /* чтобы iOS не зумил */
+    /* iOS — запрет зума на всех оставшихся инпутах */
+    #txSearch{font-size:16px!important;}
+
+    /* Уведомления — не вылезать за экран */
+    #notifPanel{width:calc(100vw - 28px)!important;right:-8px!important;}
+
+    /* Профиль-меню — не вылезать */
+    #profileMenu{right:0!important;width:200px!important;}
 
     /* Страница добавления операции */
     .input-row{grid-template-columns:1fr!important;}
