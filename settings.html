@@ -105,8 +105,7 @@
     .card{padding:14px;}
     .section-title{font-size:10px;}
     /* Цвета акцента — уменьшить кружки */
-    #accentColors{gap:8px;}
-    #accentColors div{width:28px!important;height:28px!important;}
+    #accentColors{gap:6px;}
     /* Тема — 2 колонки */
     .theme-grid{grid-template-columns:1fr 1fr!important;}
   }
@@ -149,13 +148,13 @@
     </div>
     <div class="input-group">
       <label>Акцентный цвет</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-        <div onclick="setAccent('#ff6b00',this)" style="width:32px;height:32px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent" class="accent-dot active-accent"></div>
-        <div onclick="setAccent('#22c55e',this)" style="width:32px;height:32px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#818cf8',this)" style="width:32px;height:32px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#f43f5e',this)" style="width:32px;height:32px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#0ea5e9',this)" style="width:32px;height:32px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#a855f7',this)" style="width:32px;height:32px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <div onclick="setAccent('#ff6b00',this)" style="width:20px;height:20px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#22c55e',this)" style="width:20px;height:20px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#818cf8',this)" style="width:20px;height:20px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#f43f5e',this)" style="width:20px;height:20px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#0ea5e9',this)" style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#a855f7',this)" style="width:20px;height:20px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
       </div>
     </div>
   </div>
