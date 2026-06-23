@@ -1,0 +1,23 @@
+# Node / NestJS
+node_modules/
+dist/
+*.log
+
+# Env
+backend/.env
+.env
+
+# Prisma
+backend/prisma/migrations/dev.db
+
+# macOS / Xcode
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Docker volumes (если используются bind-mounts)
+pg_data/
+redis_data/
+minio_data/

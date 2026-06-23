@@ -1,0 +1,456 @@
+// OMSFinance — доменная модель pocket-бухгалтерии для МСБ в РФ
+// PostgreSQL 16 + Prisma. Все денежные суммы — Decimal(18,2) в копейках через rubли.
+// Дата генерации схемы: 2026.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH & IDENTITY
+// ─────────────────────────────────────────────────────────────
+
+enum AuthProvider {
+  YANDEX
+  APPLE
+  ECP // ЭЦП (квалифицированная электронная подпись)
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  email        String?       @unique
+  phone        String?       @unique
+  fullName     String?
+  avatarUrl    String?
+  provider     AuthProvider
+  providerSub  String // внешний идентификатор (sub) от провайдера
+  ecpThumbprint String?      // отпечаток сертификата при входе по ЭЦП
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  memberships  Membership[]
+  sessions     Session[]
+  threads      AssistantThread[]
+
+  @@unique([provider, providerSub])
+  @@index([email])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  refreshHash  String // bcrypt-хэш refresh-токена
+  userAgent    String?
+  ip           String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum Role {
+  OWNER
+  ACCOUNTANT
+  VIEWER
+}
+
+model Membership {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @db.Uuid
+  organizationId String       @db.Uuid
+  role           Role         @default(OWNER)
+  createdAt      DateTime     @default(now())
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ORGANIZATION (реквизиты налогоплательщика)
+// ─────────────────────────────────────────────────────────────
+
+enum TaxRegime {
+  OSNO   // общая
+  USN_D  // УСН доходы
+  USN_DR // УСН доходы минус расходы
+  PSN    // патент
+  ESHN   // ЕСХН
+  NPD    // самозанятость
+  AUSN   // автоматизированная УСН
+}
+
+enum OrgKind {
+  IP  // индивидуальный предприниматель
+  OOO // общество с ограниченной ответственностью
+  AO  // акционерное общество
+}
+
+model Organization {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String
+  shortName   String?
+  kind        OrgKind
+  inn         String     @unique // 10 (ЮЛ) или 12 (ИП) цифр
+  kpp         String? // только ЮЛ
+  ogrn        String? // ОГРН / ОГРНИП
+  okved       String? // основной ОКВЭД2
+  taxRegime   TaxRegime  @default(USN_D)
+  vatPayer    Boolean    @default(false)
+  legalAddress String?
+  directorName String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  memberships   Membership[]
+  counterparties Counterparty[]
+  documents     Document[]
+  tasks         Task[]
+  taxAccount    TaxAccount?
+  vatEntries    VatEntry[]
+  fnsMessages   FnsMessage[]
+  reports       Report[]
+  bankAccounts  BankAccount[]
+  credentials   SigningCredential[]
+  threads       AssistantThread[]
+
+  @@index([inn])
+}
+
+// Печати и подписи (изображения хранятся в объектном хранилище — здесь только метаданные)
+model SigningCredential {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  kind           CredentialKind
+  title          String
+  storageKey     String // ключ объекта в S3/MinIO
+  isDefault      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+enum CredentialKind {
+  STAMP // печать
+  SIGNATURE // факсимиле подписи
+}
+
+// ─────────────────────────────────────────────────────────────
+// COUNTERPARTIES (контрагенты)
+// ─────────────────────────────────────────────────────────────
+
+model Counterparty {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  name           String
+  inn            String
+  kpp            String?
+  address        String?
+  isCustomer     Boolean      @default(true)
+  isSupplier     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents      Document[]
+
+  @@unique([organizationId, inn, kpp])
+  @@index([organizationId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// PRIMARY DOCUMENTS (первичные документы)
+// ─────────────────────────────────────────────────────────────
+
+enum DocumentType {
+  UPD          // универсальный передаточный документ
+  INVOICE      // счёт-фактура
+  BILL         // счёт на оплату
+  TORG12       // товарная накладная
+  ACT          // акт выполненных работ/услуг
+  WAYBILL      // транспортная накладная
+  CONTRACT     // договор
+  RECONCILIATION // акт сверки
+}
+
+enum DocumentStatus {
+  DRAFT
+  ISSUED   // выставлен
+  SIGNED   // подписан
+  SENT     // отправлен контрагенту/в ЭДО
+  PAID
+  CANCELED
+}
+
+model Document {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  counterpartyId String?        @db.Uuid
+  type           DocumentType
+  status         DocumentStatus @default(DRAFT)
+  number         String
+  issueDate      DateTime       @db.Date
+  currency       String         @default("RUB")
+  // Денормализованные суммы для быстрых витрин
+  amountNet      Decimal        @default(0) @db.Decimal(18, 2) // без НДС
+  amountVat      Decimal        @default(0) @db.Decimal(18, 2) // НДС
+  amountTotal    Decimal        @default(0) @db.Decimal(18, 2) // итого
+  hasInvoice     Boolean        @default(false) // привязана ли счёт-фактура (для вычета)
+  xmlStorageKey  String? // сгенерированный XML по формату ФНС
+  pdfStorageKey  String? // печатная форма PDF
+  metadata       Json? // произвольные поля под конкретный формат ФНС
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  counterparty   Counterparty?  @relation(fields: [counterpartyId], references: [id])
+  items          DocumentItem[]
+  vatEntry       VatEntry?
+
+  @@unique([organizationId, type, number])
+  @@index([organizationId, issueDate])
+  @@index([organizationId, status])
+}
+
+model DocumentItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  documentId  String   @db.Uuid
+  name        String
+  unit        String   @default("шт")
+  quantity    Decimal  @db.Decimal(18, 3)
+  price       Decimal  @db.Decimal(18, 2) // цена без НДС
+  vatRate     Int      @default(20) // 0 / 10 / 20
+  amountNet   Decimal  @db.Decimal(18, 2)
+  amountVat   Decimal  @db.Decimal(18, 2)
+  position    Int      @default(0)
+
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// TAX — ЕНС и НДС
+// ─────────────────────────────────────────────────────────────
+
+// Единый налоговый счёт: текущее сальдо организации
+model TaxAccount {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @unique @db.Uuid
+  balance        Decimal      @default(0) @db.Decimal(18, 2) // сальдо ЕНС (+ переплата / − задолженность)
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  operations     TaxOperation[]
+}
+
+enum TaxOperationKind {
+  ACCRUAL // начисление
+  PAYMENT // уплата (пополнение ЕНС)
+  REFUND
+  PENALTY
+}
+
+model TaxOperation {
+  id           String           @id @default(uuid()) @db.Uuid
+  taxAccountId String           @db.Uuid
+  kind         TaxOperationKind
+  title        String
+  amount       Decimal          @db.Decimal(18, 2)
+  dueDate      DateTime?        @db.Date
+  createdAt    DateTime         @default(now())
+
+  taxAccount   TaxAccount       @relation(fields: [taxAccountId], references: [id], onDelete: Cascade)
+
+  @@index([taxAccountId])
+}
+
+enum VatDirection {
+  INCOMING // входящий НДС (к вычету)
+  OUTGOING // исходящий НДС (к уплате)
+}
+
+// Регистр НДС: каждая запись опирается на документ
+model VatEntry {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  documentId     String       @unique @db.Uuid
+  direction      VatDirection
+  period         String // "2026-Q1"
+  base           Decimal      @db.Decimal(18, 2)
+  vatAmount      Decimal      @db.Decimal(18, 2)
+  deductible     Boolean      @default(false) // подтверждён ли вычет счётом-фактурой
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  document       Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, period])
+  @@index([organizationId, direction])
+}
+
+// ─────────────────────────────────────────────────────────────
+// TASKS (задачи по налогам/взносам + навигационные)
+// ─────────────────────────────────────────────────────────────
+
+enum TaskKind {
+  TAX        // налог/взнос с дедлайном
+  REPORT     // сдать отчёт
+  NAVIGATION // навигационная подсказка в приложении
+}
+
+enum TaskStatus {
+  OPEN
+  DONE
+  OVERDUE
+}
+
+model Task {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  kind           TaskKind
+  status         TaskStatus   @default(OPEN)
+  title          String
+  subtitle       String?
+  amount         Decimal?     @db.Decimal(18, 2)
+  dueDate        DateTime?    @db.Date
+  // глубокая ссылка для навигационных задач, например "create/document?type=UPD"
+  deeplink       String?
+  priority       Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, dueDate])
+}
+
+// ─────────────────────────────────────────────────────────────
+// FNS — письма, требования, отчёты
+// ─────────────────────────────────────────────────────────────
+
+enum FnsMessageKind {
+  LETTER       // письмо
+  REQUIREMENT  // требование
+  NOTICE       // уведомление
+}
+
+model FnsMessage {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  kind           FnsMessageKind
+  subject        String
+  body           String?
+  receivedAt     DateTime       @default(now())
+  isRead         Boolean        @default(false)
+  dueDate        DateTime?      @db.Date
+  attachmentKey  String?
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, isRead])
+}
+
+enum ReportDestination {
+  FNS
+  SFR // Социальный фонд России
+  PFR // (исторически) ПФР
+  EFS // ЕФС-1
+}
+
+enum ReportStatus {
+  PREPARED
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
+model Report {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  destination    ReportDestination
+  title          String
+  period         String
+  status         ReportStatus      @default(PREPARED)
+  sentAt         DateTime?
+  receiptKey     String? // квитанция о приёме
+  createdAt      DateTime          @default(now())
+
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, destination])
+}
+
+// ─────────────────────────────────────────────────────────────
+// BANK ACCOUNTS (расчётные счета для выписок)
+// ─────────────────────────────────────────────────────────────
+
+model BankAccount {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  bankName       String
+  bik            String
+  accountNumber  String
+  // токен доступа к банковскому API (выписки) — хранится зашифрованным
+  accessTokenEnc String?
+  lastSyncAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, accountNumber])
+}
+
+// ─────────────────────────────────────────────────────────────
+// AI ASSISTANT (чат для составления документов)
+// ─────────────────────────────────────────────────────────────
+
+model AssistantThread {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @db.Uuid
+  userId         String            @db.Uuid
+  title          String            @default("Новый документ")
+  // тип документа, который собираем в этом треде
+  targetType     DocumentType?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages       AssistantMessage[]
+
+  @@index([organizationId, userId])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model AssistantMessage {
+  id        String          @id @default(uuid()) @db.Uuid
+  threadId  String          @db.Uuid
+  role      MessageRole
+  content   String
+  // структурированный draft документа, который ассистент предлагает
+  draft     Json?
+  createdAt DateTime        @default(now())
+
+  thread    AssistantThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+}

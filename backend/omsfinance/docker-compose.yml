@@ -1,0 +1,76 @@
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: oms_api
+    restart: unless-stopped
+    env_file: ./backend/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+    networks:
+      - oms_net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: oms_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: oms
+      POSTGRES_PASSWORD: oms_password
+      POSTGRES_DB: omsfinance
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oms -d omsfinance"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - oms_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: oms_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - oms_net
+
+  minio:
+    image: minio/minio:latest
+    container_name: oms_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - oms_net
+
+volumes:
+  pg_data:
+  redis_data:
+  minio_data:
+
+networks:
+  oms_net:
+    driver: bridge
