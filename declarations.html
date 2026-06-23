@@ -227,39 +227,45 @@
 
 <!-- УСН -->
 <div class="page" id="page-usn">
-  <div class="section-title">Декларация по УСН (Доходы − Расходы)</div>
+  <div class="section-title">Декларация по УСН</div>
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div>
-        <div style="font-size:15px;font-weight:600">УСН 15% · <span id="usnYear"></span></div>
+        <div style="font-size:15px;font-weight:600" id="usnTitle">УСН · <span id="usnYear"></span></div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px">Автоматически заполнено из ваших данных</div>
       </div>
       <span class="status-badge status-draft">Черновик</span>
     </div>
-    
+
+    <!-- Переключатель режима -->
+    <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px;width:fit-content">
+      <button id="usnBtn6" onclick="setUSNMode(6)" style="padding:7px 18px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:Inter,sans-serif;background:var(--accent);color:#fff;">Доходы · 6%</button>
+      <button id="usnBtn15" onclick="setUSNMode(15)" style="padding:7px 18px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:Inter,sans-serif;background:transparent;color:var(--muted);">Доходы − Расходы · 15%</button>
+    </div>
+
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Раздел 2. Расчёт налога</div>
-    
+
     <div class="field-row">
       <div class="field-label">Доходы за год (строка 213)</div>
       <div class="field-value green" id="usnIncome">—</div>
     </div>
-    <div class="field-row">
+    <div class="field-row" id="usnExpenseRow">
       <div class="field-label">Расходы за год (строка 223)</div>
       <div class="field-value red" id="usnExpense">—</div>
     </div>
     <div class="field-row">
-      <div class="field-label">Налоговая база (строка 243)</div>
+      <div class="field-label" id="usnBaseLabel">Налоговая база (строка 243)</div>
       <div class="field-value" id="usnBase">—</div>
     </div>
     <div class="field-row">
-      <div class="field-label">Ставка налога (строка 260)</div>
-      <div class="field-value">15%</div>
+      <div class="field-label">Ставка налога</div>
+      <div class="field-value" id="usnRateLabel">6%</div>
     </div>
     <div class="field-row">
       <div class="field-label" style="font-weight:600">Исчисленный налог (строка 271)</div>
       <div class="field-value accent" id="usnTax">—</div>
     </div>
-    
+
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -268,14 +274,14 @@
       </div>
     </div>
   </div>
-  
+
   <div class="card">
     <div class="section-title">Корректировки</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="font-size:13px">Страховые взносы ИП</div>
-          <div style="font-size:11px;color:var(--muted)">Уменьшают налог</div>
+          <div style="font-size:13px" id="insuranceLabel">Страховые взносы ИП</div>
+          <div style="font-size:11px;color:var(--muted)" id="insuranceDesc">Уменьшают налог напрямую (УСН 6%) или через расходы (УСН 15%)</div>
         </div>
         <input type="number" id="insuranceAmount" placeholder="49 500" style="width:120px;text-align:right">
       </div>
@@ -597,29 +603,76 @@ function renderAll() {
   updateDeadlines();
 }
 
+let usnMode = parseInt(localStorage.getItem('omsfin_usn_mode') || '6');
+
+function setUSNMode(mode) {
+  usnMode = mode;
+  localStorage.setItem('omsfin_usn_mode', String(mode));
+  document.getElementById('usnExpenseRow').style.display = mode === 15 ? '' : 'none';
+  document.getElementById('usnRateLabel').textContent = mode === 6 ? '6%' : '15%';
+  document.getElementById('usnBaseLabel').textContent = mode === 6 ? 'Налоговая база — доходы (стр. 113)' : 'Налоговая база (строка 243)';
+  document.getElementById('usnTitle').innerHTML = `УСН ${mode}% · <span id="usnYear">${year}</span>`;
+  document.getElementById('insuranceDesc').textContent = mode === 6
+    ? 'Уменьшают сам налог (до 50% для ООО, 100% для ИП без сотрудников)'
+    : 'Включаются в расходы, уменьшают налоговую базу';
+  renderUSN();
+}
+
 function renderUSN() {
   document.getElementById('usnYear').textContent = year;
-  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const income  = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const base = Math.max(0, income - expense);
-  const tax = base * 0.15;
-  
+
   document.getElementById('usnIncome').textContent = fmt(income);
   document.getElementById('usnExpense').textContent = fmt(expense);
-  document.getElementById('usnBase').textContent = fmt(base);
-  document.getElementById('usnBase').className = 'field-value ' + (base > 0 ? 'green' : 'red');
-  document.getElementById('usnTax').textContent = fmt(tax);
+
+  if (usnMode === 6) {
+    const tax = Math.round(income * 0.06);
+    document.getElementById('usnBase').textContent = fmt(income);
+    document.getElementById('usnBase').className = 'field-value green';
+    document.getElementById('usnTax').textContent = fmt(tax);
+  } else {
+    const base = Math.max(0, income - expense);
+    const tax = Math.round(base * 0.15);
+    document.getElementById('usnBase').textContent = fmt(base);
+    document.getElementById('usnBase').className = 'field-value ' + (base > 0 ? 'green' : 'red');
+    document.getElementById('usnTax').textContent = fmt(tax);
+  }
+  // Синхронизируем стили кнопок без рекурсии
+  const m = usnMode;
+  document.getElementById('usnBtn6').style.background  = m === 6  ? 'var(--accent)' : 'transparent';
+  document.getElementById('usnBtn6').style.color       = m === 6  ? '#fff' : 'var(--muted)';
+  document.getElementById('usnBtn15').style.background = m === 15 ? 'var(--accent)' : 'transparent';
+  document.getElementById('usnBtn15').style.color      = m === 15 ? '#fff' : 'var(--muted)';
+  document.getElementById('usnExpenseRow').style.display = m === 15 ? '' : 'none';
+  document.getElementById('usnRateLabel').textContent = m === 6 ? '6%' : '15%';
 }
 
 function recalcUSN() {
   const insurance = parseFloat(document.getElementById('insuranceAmount').value) || 0;
-  const advances = parseFloat(document.getElementById('advanceAmount').value) || 0;
-  const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-  const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const base = Math.max(0, income - expense - insurance);
-  const tax = Math.max(0, base * 0.15 - advances);
+  const advances  = parseFloat(document.getElementById('advanceAmount').value)  || 0;
+  const income    = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense   = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+
+  let base, tax;
+  if (usnMode === 6) {
+    // При УСН 6%: взносы уменьшают сам налог (не базу)
+    const rawTax = Math.round(income * 0.06);
+    tax  = Math.max(0, rawTax - insurance - advances);
+    base = income;
+  } else {
+    // При УСН 15%: взносы входят в расходы
+    base = Math.max(0, income - expense - insurance);
+    tax  = Math.max(0, Math.round(base * 0.15) - advances);
+    // Минимальный налог — 1% от доходов при УСН 15%
+    const minTax = Math.round(income * 0.01);
+    if (tax < minTax && income > 0) {
+      tax = minTax;
+      showToast('ℹ️ Применён минимальный налог 1% от доходов');
+    }
+  }
   document.getElementById('usnBase').textContent = fmt(base);
-  document.getElementById('usnTax').textContent = fmt(tax);
+  document.getElementById('usnTax').textContent  = fmt(tax);
   showToast('✅ Пересчитано');
 }
 
@@ -788,30 +841,58 @@ function exportNDSExcel() {
   );
 }
 
-// ─── УСН: раздел 2.2 (доходы минус расходы) ────────────────────────────────────
+// ─── УСН: экспорт Excel (поддержка 6% и 15%) ────────────────────────────────────
 function exportUSNExcel() {
-  const income = Math.round(allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0));
-  const expense = Math.round(allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0));
+  const income    = Math.round(allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0));
+  const expense   = Math.round(allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0));
   const insurance = Math.round(parseFloat(document.getElementById('insuranceAmount')?.value) || 0);
-  const advances = Math.round(parseFloat(document.getElementById('advanceAmount')?.value) || 0);
-  const base = Math.max(0, income - expense - insurance);
-  const tax = Math.round(base * 0.15);
-  const finalTax = Math.max(0, tax - advances);
+  const advances  = Math.round(parseFloat(document.getElementById('advanceAmount')?.value)  || 0);
 
-  const rows = [
-    ['', 'РАЗДЕЛ 2.2. РАСЧЁТ НАЛОГА (ДОХОДЫ − РАСХОДЫ)', ''],
-    ['213', 'Сумма полученных доходов за год', income],
-    ['223', 'Сумма произведённых расходов за год (вкл. страховые взносы)', expense + insurance],
-    ['243', 'Налоговая база для исчисления налога', base],
-    ['260', 'Ставка налога, %', 15],
-    ['271', 'Сумма исчисленного налога', tax],
-    ['', '', ''],
-    ['', 'РАЗДЕЛ 1.2. ИТОГ', ''],
-    ['100', 'Уплаченные авансовые платежи', advances],
-    ['100', 'Сумма налога к доплате за налоговый период', finalTax],
-  ];
+  let rows, filename, title;
 
-  exportDeclarationExcel(`УСН_${year}.xlsx`, `ДЕКЛАРАЦИЯ ПО УСН (доходы минус расходы) — ${year} год`, rows);
+  if (usnMode === 6) {
+    const rawTax   = Math.round(income * 0.06);
+    const deduct   = Math.min(insurance, rawTax); // вычет взносов из налога
+    const finalTax = Math.max(0, rawTax - deduct - advances);
+    rows = [
+      ['', 'РАЗДЕЛ 2.1.1. РАСЧЁТ НАЛОГА (ДОХОДЫ)', ''],
+      ['113', 'Сумма полученных доходов за год', income],
+      ['120', 'Ставка налога, %', 6],
+      ['133', 'Сумма исчисленного налога (стр.113 × 6%)', rawTax],
+      ['', '', ''],
+      ['', 'РАЗДЕЛ 2.1.2. УМЕНЬШЕНИЕ НАЛОГА', ''],
+      ['141', 'Страховые взносы (уменьшение налога)', deduct],
+      ['', '', ''],
+      ['', 'РАЗДЕЛ 1.1. ИТОГ', ''],
+      ['040', 'Уплаченные авансовые платежи', advances],
+      ['100', 'Сумма налога к доплате за налоговый период', finalTax],
+    ];
+    filename = `УСН_6%_${year}.xlsx`;
+    title    = `ДЕКЛАРАЦИЯ ПО УСН (доходы, 6%) — ${year} год`;
+  } else {
+    const base     = Math.max(0, income - expense - insurance);
+    const tax      = Math.round(base * 0.15);
+    const minTax   = Math.round(income * 0.01);
+    const taxFinal = Math.max(tax, income > 0 ? minTax : 0);
+    const finalTax = Math.max(0, taxFinal - advances);
+    rows = [
+      ['', 'РАЗДЕЛ 2.2. РАСЧЁТ НАЛОГА (ДОХОДЫ − РАСХОДЫ)', ''],
+      ['213', 'Сумма полученных доходов за год', income],
+      ['223', 'Сумма произведённых расходов за год (вкл. страховые взносы)', expense + insurance],
+      ['243', 'Налоговая база для исчисления налога', base],
+      ['260', 'Ставка налога, %', 15],
+      ['271', 'Сумма исчисленного налога', tax],
+      ['280', 'Минимальный налог (1% от доходов)', minTax],
+      ['', '', ''],
+      ['', 'РАЗДЕЛ 1.2. ИТОГ', ''],
+      ['040', 'Уплаченные авансовые платежи', advances],
+      ['100', 'Сумма налога к доплате за налоговый период', finalTax],
+    ];
+    filename = `УСН_15%_${year}.xlsx`;
+    title    = `ДЕКЛАРАЦИЯ ПО УСН (доходы минус расходы, 15%) — ${year} год`;
+  }
+
+  exportDeclarationExcel(filename, title, rows);
 }
 
 // ─── 6-НДФЛ: раздел 1 и 2 ───────────────────────────────────────────────────────
@@ -1079,9 +1160,10 @@ function cqCalculate() {
   const vatBuy   = chicken * 10/110;
   const nds      = Math.max(0, Math.round(vatSales - vatBuy));
 
-  // УСН 15% (доходы − расходы)
-  const usnBase  = Math.max(0, income - allExp);
-  const usn      = Math.round(usnBase * 0.15);
+  // УСН — режим берём из настройки пользователя
+  const usnBase = usnMode === 6 ? income : Math.max(0, income - allExp);
+  const usnRate = usnMode === 6 ? 0.06 : 0.15;
+  const usn     = Math.round(usnBase * usnRate);
 
   // Налог на прибыль 25%
   const profBase = Math.max(0, income - allExp);
@@ -1122,7 +1204,7 @@ function cqCalculate() {
 
     <div class="cq-tax-row">
       <div class="cq-tax-label">
-        <strong>УСН 15% (авансовый)</strong>
+        <strong>УСН ${usnMode}% (авансовый)</strong>
         <div>База: ${fmt(Math.round(usnBase))}</div>
         <div class="cq-kbk">${CQ_KBK.usn.kbk}</div>
         <div style="font-size:10px;color:rgba(255,107,0,0.5);margin-top:2px">до ${ppDeadline}</div>
