@@ -524,6 +524,7 @@
       <option value="">Компания...</option>
     </select>
     <button id="overviewBtn" onclick="window.location.href='/companies-overview'" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 9px;cursor:pointer" title="Сводка по всем компаниям">🏢 Все</button>
+    <button onclick="document.dispatchEvent(new KeyboardEvent('keydown',{key:'?',bubbles:true}))" style="background:none;border:1px solid var(--border);border-radius:8px;width:28px;height:28px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Горячие клавиши (?)">?</button>
     <div style="position:relative">
       <button id="profileBtn" onclick="toggleProfile()" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;font-size:12px;font-weight:700;color:#000;display:flex;align-items:center;justify-content:center;">М</button>
       <div id="profileMenu" style="display:none;position:absolute;right:0;top:40px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:180px;z-index:200;box-shadow:0 20px 40px rgba(0,0,0,0.4);">
@@ -3525,6 +3526,101 @@ function showOnboardingOverlay() {
   </div>`;
   document.body.appendChild(el);
 }
+
+// ─── Drag & Drop загрузка выписки ────────────────────────────────────────────
+(function() {
+  var overlay = null;
+  var dragCount = 0;
+
+  function createOverlay() {
+    overlay = document.createElement('div');
+    overlay.id = 'dropOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 0.15s';
+    overlay.innerHTML = '<div style="font-size:52px;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(255,107,0,0.6))">📂</div>' +
+      '<div style="font-size:18px;font-weight:700;color:#fff;font-family:Unbounded,sans-serif">Отпусти для загрузки</div>' +
+      '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px">CSV, TXT, XML — выписки из банков</div>';
+    document.body.appendChild(overlay);
+  }
+
+  document.addEventListener('dragenter', function(e) {
+    if (!e.dataTransfer.types.includes('Files')) return;
+    dragCount++;
+    if (!overlay) createOverlay();
+    overlay.style.opacity = '1';
+    overlay.style.pointerEvents = 'all';
+  });
+
+  document.addEventListener('dragleave', function(e) {
+    dragCount--;
+    if (dragCount <= 0) {
+      dragCount = 0;
+      if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+    }
+  });
+
+  document.addEventListener('dragover', function(e) { e.preventDefault(); });
+
+  document.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dragCount = 0;
+    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+    var files = Array.from(e.dataTransfer.files).filter(f => /\.(csv|txt|xml)$/i.test(f.name));
+    if (!files.length) { showToast('❌ Нужен файл CSV, TXT или XML'); return; }
+    // Прокидываем через существующий input
+    var dt = new DataTransfer();
+    files.forEach(f => dt.items.add(f));
+    var input = document.getElementById('fileInput');
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  });
+})();
+
+// ─── Горячие клавиши ─────────────────────────────────────────────────────────
+(function() {
+  var shortcuts = {
+    'n': function() { showPage('add', null); showToast('➕ Новая операция'); },
+    't': function() {
+      var pill = document.querySelector('.pill[onclick*="transactions"]');
+      showPage('transactions', pill);
+      var s = document.getElementById('txSearch'); if (s) s.focus();
+    },
+    'a': function() { window.location.href = '/analytics'; },
+    'v': function() { window.location.href = '/vat'; },
+    'd': function() { window.location.href = '/docs'; },
+    '/': function() {
+      var pill = document.querySelector('.pill[onclick*="transactions"]');
+      showPage('transactions', pill);
+      setTimeout(function() { var s = document.getElementById('txSearch'); if (s) { s.focus(); s.select(); }}, 50);
+    },
+    '?': function() { showHotkeysHelp(); }
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var fn = shortcuts[e.key.toLowerCase()];
+    if (fn) { e.preventDefault(); fn(); }
+  });
+
+  function showHotkeysHelp() {
+    var existing = document.getElementById('hotkeysModal');
+    if (existing) { existing.remove(); return; }
+    var modal = document.createElement('div');
+    modal.id = 'hotkeysModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:flex;align-items:center;justify-content:center';
+    modal.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;width:90%;max-width:340px">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:14px">⌨️ Горячие клавиши</div>' +
+      [['N','Новая операция'],['T','Транзакции'],['A','Аналитика'],['V','НДС'],['D','Документы'],['/','Поиск'],['?','Эта подсказка']].map(function(k) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">' +
+          '<span style="color:var(--muted)">' + k[1] + '</span>' +
+          '<kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:monospace;font-size:11px;color:var(--text)">' + k[0] + '</kbd></div>';
+      }).join('') +
+      '<button onclick="document.getElementById(\'hotkeysModal\').remove()" style="margin-top:14px;width:100%;background:none;border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--muted);font-size:12px;cursor:pointer">Закрыть</button>' +
+      '</div>';
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  }
+})();
 </script>
 
 <!-- AI Ассистент -->
