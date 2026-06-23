@@ -39,9 +39,67 @@ function nearestDeadline(deadlines, now) {
   return { deadline: next, days: daysUntil(next, now) };
 }
 
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const FROM_EMAIL = 'OMSFIN <noreply@omsfin.ru>';
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_API_KEY) return { ok: false, error: 'RESEND_API_KEY не настроен' };
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html })
+  });
+  const data = await r.json();
+  return r.ok ? { ok: true, id: data.id } : { ok: false, error: data.message };
+}
+
 export default async function handler(req, res) {
+  // Транзакционный email — POST ?action=email, Bearer-токен пользователя
+  if (req.method === 'POST' && req.query.action === 'email') {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
+
+    // Получаем email пользователя из Supabase auth
+    const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    if (!userR.ok) return res.status(401).json({ error: 'Неверный токен' });
+    const user = await userR.json();
+    const email = user.email;
+    if (!email) return res.status(400).json({ error: 'Email не найден' });
+
+    const { subject, html, text } = req.body || {};
+    if (!subject) return res.status(400).json({ error: 'subject обязателен' });
+
+    const body = html || `<pre>${text || ''}</pre>`;
+    const result = await sendEmail(email, subject, body);
+    return res.status(result.ok ? 200 : 500).json(result);
+  }
+
+  // Тестовая отправка email — GET ?action=test_email
+  if (req.method === 'GET' && req.query.action === 'test_email') {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
+    const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    if (!userR.ok) return res.status(401).json({ error: 'Неверный токен' });
+    const user = await userR.json();
+    if (!user.email) return res.status(400).json({ error: 'Email не найден' });
+    const result = await sendEmail(user.email, 'OMSFIN — тест уведомлений',
+      `<div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px">OMS<span style="color:#ff6b00">FIN</span></div>
+        <p>Email-уведомления работают ✅</p>
+        <p style="color:#666;font-size:13px">Ты будешь получать напоминания о налоговых сроках и важных событиях.</p>
+      </div>`
+    );
+    return res.status(result.ok ? 200 : 500).json(result);
+  }
+
   const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && req.method !== 'GET') {
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({error: 'Unauthorized'});
   }
 
@@ -120,8 +178,12 @@ export default async function handler(req, res) {
     for (const user of users) {
       const {telegram_id, user_id} = user;
 
-      const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${user_id}&limit=5000`, {
-        headers: {...adminHeaders, 'Prefer': 'return=representation'}
+      // Загружаем транзакции только за текущий квартал для НДС
+      const qStart = month - (month % 3); // первый месяц квартала (0-indexed)
+      const qPeriods = [qStart, qStart+1, qStart+2].map(m => `${String(m+1).padStart(2,'0')}.${year}`);
+      const qFilter = `period=in.(${qPeriods.join(',')})`;
+      const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${user_id}&${qFilter}&limit=5000`, {
+        headers: adminHeaders
       });
       const txs = await txR.json();
 
@@ -131,9 +193,9 @@ export default async function handler(req, res) {
       if (vat.days !== null && REMIND_DAYS.includes(vat.days)) {
         let vatToPay = 0;
         if (Array.isArray(txs) && txs.length) {
-          const income    = txs.filter(t => t.amount > 0 && t.category === 'income').reduce((s, t) => s + Number(t.amount), 0);
-          const purchases = txs.filter(t => t.amount < 0 && t.category === 'chicken').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
-          vatToPay = Math.round((income * 10 / 110) - (purchases * 10 / 110));
+          const income    = txs.filter(t => t.amount > 0).reduce((s, t) => s + Number(t.amount), 0);
+          const purchases = txs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+          vatToPay = Math.max(0, Math.round((income * 10 / 110) - (purchases * 10 / 110)));
         }
         if (vatToPay > 0) {
           messages.push(
@@ -218,6 +280,113 @@ export default async function handler(req, res) {
         await sendTelegram(telegram_id, msg);
         notified++;
       }
+
+      // Email-дублирование (раз в неделю — только если день ≤3 до дедлайна)
+      if (RESEND_API_KEY && messages.length) {
+        const hasUrgentDeadline = [vat.days, ndfl.days, rsv.days, efs1.days, profit.days]
+          .some(d => d !== null && REMIND_DAYS.includes(d) && d <= 3);
+        const urgentMessages = hasUrgentDeadline ? messages : [];
+        if (urgentMessages.length) {
+          try {
+            const emailR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
+            });
+            const emailData = await emailR.json();
+            const userEmail = emailData.email;
+            if (userEmail) {
+              const htmlBody = urgentMessages.map(m =>
+                '<p style="margin-bottom:16px">' + m.replace(/<[^>]+>/g,'') + '</p>'
+              ).join('');
+              await sendEmail(userEmail, '⚠️ OMSFIN — срочные налоговые напоминания',
+                `<div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#0f0f0f;color:#f5f5f5;border-radius:12px">
+                  <div style="font-size:18px;font-weight:700;margin-bottom:16px">OMS<span style="color:#ff6b00">FIN</span></div>
+                  ${htmlBody}
+                  <a href="${BASE_URL}" style="display:inline-block;margin-top:16px;background:#ff6b00;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Открыть OMSFIN</a>
+                </div>`
+              );
+            }
+          } catch(e) {}
+        }
+      }
+    }
+
+    // ─── Email onboarding-цепочка ─────────────────────────────────────────────
+    // Для каждого пользователя: проверяем company_settings.onboarding_emails_sent
+    // Шаг 0 (день 1): приветствие — при первом запуске крона после регистрации
+    // Шаг 1 (день 3): советы по работе с выписками и категориями
+    // Шаг 2 (день 7): налоговые возможности и напоминание об НДС
+    if (RESEND_API_KEY) {
+      try {
+        const allSettingsR = await fetch(`${SUPABASE_URL}/rest/v1/company_settings?select=user_id,onboarding_emails_sent,created_at&limit=1000`, {
+          headers: adminHeaders
+        });
+        const allSettings = await allSettingsR.json();
+        if (Array.isArray(allSettings)) {
+          for (const s of allSettings) {
+            const sent = s.onboarding_emails_sent || 0;
+            if (sent >= 3) continue;
+            const createdAt = new Date(s.created_at);
+            const daysSince = Math.floor((now - createdAt) / 86400000);
+            let emailStep = -1;
+            if (sent === 0 && daysSince >= 0) emailStep = 0;
+            else if (sent === 1 && daysSince >= 3) emailStep = 1;
+            else if (sent === 2 && daysSince >= 7) emailStep = 2;
+            if (emailStep < 0) continue;
+
+            const uR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${s.user_id}`, {
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
+            });
+            const uData = await uR.json();
+            if (!uData.email) continue;
+
+            const emailTemplates = [
+              {
+                subject: '👋 Добро пожаловать в OMSFIN',
+                html: `<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#f5f5f5;background:#0f0f0f;border-radius:14px">
+                  <div style="font-size:22px;font-weight:900;margin-bottom:16px;font-family:sans-serif">OMS<span style="color:#ff6b00">FIN</span></div>
+                  <p style="font-size:16px;font-weight:600;margin-bottom:8px">Кабинет готов — начни за 2 минуты</p>
+                  <p style="color:#999;font-size:13px;line-height:1.7;margin-bottom:20px">Загрузи CSV-выписку из банка — и получишь полную картину финансов: доходы, расходы, НДС, прогноз.</p>
+                  <div style="background:#1a1a1a;border-radius:10px;padding:16px;margin-bottom:20px">
+                    <p style="font-size:13px;font-weight:600;margin-bottom:8px">🏦 Поддерживаемые банки:</p>
+                    <p style="color:#888;font-size:12px">Т-Банк, Сбер Бизнес, Альфа-Банк, ВТБ, 1С (XML и КлиентБанк), Excel</p>
+                  </div>
+                  <a href="${BASE_URL}" style="display:inline-block;background:#ff6b00;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Открыть OMSFIN →</a>
+                </div>`
+              },
+              {
+                subject: '💡 3 функции OMSFIN, о которых ты мог не знать',
+                html: `<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#f5f5f5;background:#0f0f0f;border-radius:14px">
+                  <div style="font-size:22px;font-weight:900;margin-bottom:20px;font-family:sans-serif">OMS<span style="color:#ff6b00">FIN</span></div>
+                  <div style="margin-bottom:16px;padding:14px;background:#1a1a1a;border-radius:10px"><p style="font-weight:600;margin-bottom:4px">🤖 Автоматические правила</p><p style="color:#888;font-size:12px;line-height:1.6">Задай правило: если в названии "Яндекс" → категория "Реклама". Экономит часы ручной разметки.</p></div>
+                  <div style="margin-bottom:16px;padding:14px;background:#1a1a1a;border-radius:10px"><p style="font-weight:600;margin-bottom:4px">📱 Telegram-бот</p><p style="color:#888;font-size:12px;line-height:1.6">Команды /stats /nds /top /last прямо в мессенджере. Привяжи в Настройках → Telegram.</p></div>
+                  <div style="margin-bottom:20px;padding:14px;background:#1a1a1a;border-radius:10px"><p style="font-weight:600;margin-bottom:4px">🏦 Автоимпорт из банка</p><p style="color:#888;font-size:12px;line-height:1.6">Настрой вебхук в Т-Банк Бизнес — операции будут появляться автоматически без загрузки файлов.</p></div>
+                  <a href="${BASE_URL}/settings" style="display:inline-block;background:#ff6b00;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Настроить →</a>
+                </div>`
+              },
+              {
+                subject: '🧾 Не забудь про НДС — OMSFIN считает за тебя',
+                html: `<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:28px 24px;color:#f5f5f5;background:#0f0f0f;border-radius:14px">
+                  <div style="font-size:22px;font-weight:900;margin-bottom:20px;font-family:sans-serif">OMS<span style="color:#ff6b00">FIN</span></div>
+                  <p style="font-size:15px;font-weight:600;margin-bottom:12px">Налоговый календарь 2026 уже встроен</p>
+                  <p style="color:#999;font-size:13px;line-height:1.7;margin-bottom:20px">OMSFIN автоматически напоминает о сроках: НДС 25-го, 6-НДФЛ, РСВ, страховые взносы. Все дедлайны с учётом актуального законодательства 2026 года.</p>
+                  <div style="background:#1a1a1a;border-radius:10px;padding:16px;margin-bottom:20px">
+                    <p style="font-size:12px;color:#888;line-height:1.8">✅ НДС 10%/22% с расчётом к уплате<br>✅ УСН 6% и 15% с авансовыми платежами<br>✅ Прогрессивный НДФЛ 2026<br>✅ Страховые взносы 30% (без льготы МСП)</p>
+                  </div>
+                  <a href="${BASE_URL}/calendar" style="display:inline-block;background:#ff6b00;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px">Открыть налоговый календарь →</a>
+                </div>`
+              }
+            ];
+
+            await sendEmail(uData.email, emailTemplates[emailStep].subject, emailTemplates[emailStep].html);
+            // Обновляем счётчик
+            await fetch(`${SUPABASE_URL}/rest/v1/company_settings?user_id=eq.${s.user_id}`, {
+              method: 'PATCH',
+              headers: { ...adminHeaders, 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ onboarding_emails_sent: sent + 1 })
+            });
+          }
+        }
+      } catch(e) {}
     }
 
     return res.status(200).json({

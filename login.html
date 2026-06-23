@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Вход</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://telegram.org/js/telegram-web-app.js" async></script>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#0a0a0a;--surface:#141414;--surface2:#1e1e1e;--border:#2a2a2a;--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f0f0f0;--muted:#666;}
+  /* Плавный переход между темами */
+  body,body *{transition:background-color 0.25s ease,border-color 0.25s ease,color 0.2s ease,box-shadow 0.25s ease;}
+  body .chart-card canvas,body canvas{transition:none;}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:380px;margin:20px;}
@@ -38,7 +42,9 @@
     .logo{font-size:14px;}
     main{padding:12px 14px;}
     .input-row{grid-template-columns:1fr;}
-    .btn{padding:9px 14px;font-size:10px;}
+    .btn{padding:9px 14px;font-size:10px;min-height:44px;}
+    .btn-outline{min-height:44px;}
+    .tab-btn{min-height:44px;font-size:13px;}
     .tabs{overflow-x:auto;padding:8px 14px 0;}
     .tab{font-size:11px;padding:7px 10px;white-space:nowrap;}
     .stats-row{grid-template-columns:1fr 1fr;gap:6px;}
@@ -48,6 +54,8 @@
     .doc-types{grid-template-columns:1fr 1fr;}
     table{font-size:11px;}
     th,td{padding:5px 6px;}
+    .input-group input{font-size:16px!important;}
+    .card{margin:12px;padding:24px 20px;}
   }
 </style>
 </head>
@@ -73,7 +81,11 @@
       <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn" id="loginBtn" onclick="login()">Войти</button>
-      <button onclick="showForgot()" style="background:none;border:none;color:#666;font-size:12px;cursor:pointer;margin-top:8px;width:100%;text-align:center">Забыл пароль?</button>
+    <button onclick="showForgot()" style="background:none;border:none;color:#666;font-size:12px;cursor:pointer;margin-top:8px;width:100%;text-align:center">Забыл пароль?</button>
+    <div style="display:flex;align-items:center;gap:10px;margin:14px 0"><div style="flex:1;height:1px;background:var(--border)"></div><span style="font-size:11px;color:#444">или</span><div style="flex:1;height:1px;background:var(--border)"></div></div>
+    <button onclick="enterDemo()" style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.3);color:var(--accent);border-radius:8px;padding:11px 18px;font-size:13px;cursor:pointer;width:100%;font-family:'Inter',sans-serif;transition:all 0.2s" onmouseover="this.style.background='rgba(255,107,0,0.15)'" onmouseout="this.style.background='rgba(255,107,0,0.08)'">
+      👁 Посмотреть демо (без регистрации)
+    </button>
     <div class="error" id="loginError"></div>
   </div>
 
@@ -113,6 +125,58 @@
 <script>
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+// Инициализация Telegram WebApp (после загрузки async-скрипта)
+function initTelegram() {
+const tgApp = window.Telegram?.WebApp;
+if (tgApp) {
+  tgApp.ready();
+  tgApp.expand();
+  // Пробуем автологин через Telegram initData
+  (async () => {
+    const initData = tgApp.initData;
+    if (!initData) return;
+    try {
+      const r = await fetch(`/api/telegram?action=tg-auth&initData=${encodeURIComponent(initData)}`);
+      const data = await r.json();
+      if (data.action_link) {
+        // Magic link — обмениваем на сессию
+        const url = new URL(data.action_link);
+        const tokenHash = url.searchParams.get('token');
+        const type = url.searchParams.get('type') || 'magiclink';
+        if (tokenHash) {
+          const sessResp = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'apikey': SUPABASE_KEY},
+            body: JSON.stringify({ token: tokenHash, type, redirect_to: '/' })
+          });
+          const sessData = await sessResp.json();
+          if (sessData.access_token) {
+            localStorage.setItem('omschicken_token', sessData.access_token);
+            localStorage.setItem('omsfin_refresh', sessData.refresh_token || '');
+            localStorage.setItem('omsfin_onboarded', '1');
+            window.location.href = '/';
+            return;
+          }
+        }
+      }
+      if (data.error === 'not_linked') {
+        // Аккаунт не привязан — показываем подсказку
+        const hint = document.createElement('div');
+        hint.style.cssText = 'background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.25);border-radius:10px;padding:12px 14px;font-size:12px;color:#ff9944;margin-bottom:16px;line-height:1.5';
+        hint.innerHTML = '📱 Ты открыл OMSFIN из Telegram.<br>Войди один раз — в следующий раз будешь авторизован автоматически.';
+        document.querySelector('.card').insertBefore(hint, document.querySelector('.tabs'));
+      }
+    } catch(e) { /* молча игнорируем */ }
+  })();
+} // end initTelegram
+
+// Запускаем Telegram-инит после загрузки скрипта (или сразу если уже загружен)
+if (document.querySelector('script[src*="telegram"]').readyState === 'complete' || window.Telegram) {
+  initTelegram();
+} else {
+  document.querySelector('script[src*="telegram"]').addEventListener('load', initTelegram);
+}
 
 const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
 if (token) { window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding'; }
@@ -203,6 +267,15 @@ async function register() {
         localStorage.setItem('omschicken_token', data.access_token);
         localStorage.setItem('omschicken_refresh', data.refresh_token);
         localStorage.setItem('omsfin_user', JSON.stringify(data.user));
+        // Сохраняем реферальный код если пришли по ссылке
+        const refCode = new URLSearchParams(window.location.search).get('ref');
+        if (refCode && data.user?.id) {
+          const refs = JSON.parse(localStorage.getItem('omsfin_referrals') || '[]');
+          if (!refs.find(r => r.uid === data.user.id)) {
+            refs.push({ uid: data.user.id, by: refCode, at: Date.now() });
+            localStorage.setItem('omsfin_referrals', JSON.stringify(refs));
+          }
+        }
         window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding';
       } else {
         success.textContent = '✅ Аккаунт создан! Проверь почту для подтверждения.';
@@ -248,6 +321,44 @@ async function sendReset() {
     result.style.color = '#ef4444';
     result.textContent = '❌ Ошибка отправки';
   }
+}
+
+function enterDemo() {
+  // Генерируем реалистичные демо-транзакции для ООО "Пример"
+  const today = new Date();
+  function dmy(d) { return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
+  function ago(days) { const d = new Date(today); d.setDate(d.getDate()-days); return d; }
+  function per(d) { return `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
+
+  const demoTx = [
+    {id:'d1',date:dmy(ago(1)),amount:1250000,name:'ООО ТД Птицепром',description:'Оплата по договору поставки №45 от 01.06.2026',category:'income',period:per(ago(1))},
+    {id:'d2',date:dmy(ago(2)),amount:-680000,name:'ООО Агрохолдинг Юг',description:'Закупка куриного филе 12 000 кг',category:'chicken',period:per(ago(2))},
+    {id:'d3',date:dmy(ago(3)),amount:890000,name:'ИП Сидоров А.В.',description:'Реализация мяса птицы опт',category:'income',period:per(ago(3))},
+    {id:'d4',date:dmy(ago(4)),amount:-245000,name:'ИФНС России',description:'НДС за 2 квартал 2026',category:'taxes',period:per(ago(4))},
+    {id:'d5',date:dmy(ago(5)),amount:-380000,name:'ООО Транслогистик',description:'Транспортные услуги май 2026',category:'logistics',period:per(ago(5))},
+    {id:'d6',date:dmy(ago(6)),amount:2100000,name:'АО Магнит',description:'Отгрузка куриной грудки 40 000 кг',category:'income',period:per(ago(6))},
+    {id:'d7',date:dmy(ago(8)),amount:-850000,name:'КФХ Степное',description:'Закупка тушки куриной ГОСТ',category:'chicken',period:per(ago(8))},
+    {id:'d8',date:dmy(ago(10)),amount:-412000,name:'АО Т-Банк',description:'Погашение кредита + %',category:'bank',period:per(ago(10))},
+    {id:'d9',date:dmy(ago(12)),amount:1650000,name:'ООО Метро C&C',description:'Договор поставки №67',category:'income',period:per(ago(12))},
+    {id:'d10',date:dmy(ago(14)),amount:-180000,name:'ООО Охрана-Про',description:'Услуги охраны склада июнь',category:'other',period:per(ago(14))},
+    {id:'d11',date:dmy(ago(15)),amount:-520000,name:'Выплата зарплат',description:'Зарплата сотрудников за май 2026',category:'salary',period:per(ago(15))},
+    {id:'d12',date:dmy(ago(16)),amount:980000,name:'ООО Лента',description:'Реализация мяса птицы — накладная 89',category:'income',period:per(ago(16))},
+    {id:'d13',date:dmy(ago(18)),amount:-95000,name:'ПАО МТС',description:'Корпоративная связь + интернет',category:'other',period:per(ago(18))},
+    {id:'d14',date:dmy(ago(20)),amount:3200000,name:'ООО Ашан Ритейл',description:'Поставка по контракту №12-К',category:'income',period:per(ago(20))},
+    {id:'d15',date:dmy(ago(22)),amount:-1200000,name:'ООО Птицефабрика Сибирь',description:'Закупка куриных окорочков 25 т',category:'chicken',period:per(ago(22))},
+  ];
+
+  localStorage.setItem('omsfin_demo', '1');
+  localStorage.setItem('omsfin_demo_tx', JSON.stringify(demoTx));
+  localStorage.setItem('omschicken_seller', JSON.stringify({
+    name: 'ООО "ПРИМЕР"', inn: '7701234567', kpp: '770101001',
+    addr: 'г. Москва, ул. Примерная, д. 1',
+    director: 'Иванов Иван Иванович',
+    bank: 'АО «Т-Банк»', rs: '40702810000000001234',
+    ks: '30101810145250000974', bik: '044525974'
+  }));
+  localStorage.setItem('omsfin_onboarded', '1');
+  window.location.href = '/';
 }
 
 </script>

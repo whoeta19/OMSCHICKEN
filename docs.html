@@ -4,15 +4,63 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Документы</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
+  /* Плавный переход между темами */
+  body,body *{transition:background-color 0.25s ease,border-color 0.25s ease,color 0.2s ease,box-shadow 0.25s ease;}
+  body .chart-card canvas,body canvas{transition:none;}
+  body.light{--bg:#f2f0eb;--surface:#ffffff;--surface2:#f7f6f2;--border:rgba(0,0,0,0.09);--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#7a7060;--shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);}
+  body.blue{--bg:#060d1f;--surface:#0c1830;--surface2:#112040;--border:rgba(96,165,250,0.13);--green:#34d399;--red:#f87171;--text:#e8f0fe;--muted:#4a6fa5;--shadow:0 4px 24px rgba(0,0,0,0.4);}
+  body.light{font-family:'Nunito',sans-serif!important;}
+  body.light .logo,.body.light .stat-value,.body.light .section-title,.body.light .hero-stat-value{font-family:'Nunito',sans-serif!important;}
+  /* ── Светлая тема: фикс хардкоженных rgba(255,255,255,...) ── */
+  body.light .stat-label{color:rgba(0,0,0,0.45)!important;}
+  body.light .tx-date,body.light .tx-desc{color:rgba(0,0,0,0.45)!important;}
+  body.light .hero-stat-sub{color:rgba(0,0,0,0.45)!important;}
+  body.light .stat-card{box-shadow:0 1px 4px rgba(0,0,0,0.07),0 2px 10px rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.06);}
+  body.light .stat-card:hover{box-shadow:0 4px 16px rgba(229,80,0,0.12)!important;}
+  body.light header{box-shadow:0 1px 8px rgba(0,0,0,0.08);}
+  body.light .hero-stat{background:linear-gradient(135deg,rgba(229,80,0,0.06),rgba(229,80,0,0.02))!important;border:1px solid rgba(229,80,0,0.12);}
+  body.light .hero-stat::before{background:radial-gradient(circle at 0% 50%,rgba(229,80,0,0.08),transparent 60%)!important;}
+  body.light .pill{color:rgba(0,0,0,0.55)!important;background:rgba(0,0,0,0.04)!important;}
+  body.light .pill.active,.body.light .pill:hover{color:var(--accent)!important;background:rgba(229,80,0,0.08)!important;}
+  body.light .progress-track,.body.light .chart-bar-wrap,.body.light .progress-wrap{background:rgba(0,0,0,0.07)!important;}
+  body.light .section-title{color:var(--accent);}
+  body.light .empty,.body.light .empty-state{color:rgba(0,0,0,0.35);}
+  body.light .chart-card,.body.light .usn-calc-card,.body.light .forecast-card{box-shadow:0 1px 4px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);}
+  body.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);}
+  body.light .ai-fab{box-shadow:0 4px 20px rgba(229,80,0,0.35);}
+  body.light .bottom-nav{box-shadow:0 -1px 8px rgba(0,0,0,0.08);}
+  body.light .tx-row:hover{background:rgba(0,0,0,0.02)!important;}
+  body.light .modal,.body.light .ai-modal{box-shadow:0 20px 60px rgba(0,0,0,0.15)!important;}
+  body.light input,body.light select,body.light textarea{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light input::placeholder,body.light textarea::placeholder{color:rgba(0,0,0,0.35)!important;}
+  body.light .btn-outline{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light .history-item{box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+  body.light .bottom-nav{background:rgba(255,255,255,0.95)!important;border-top:1px solid rgba(0,0,0,0.08)!important;}
+  body.light .bottom-nav a{color:rgba(0,0,0,0.45)!important;}
+  body.light .bottom-nav a.active{color:var(--accent)!important;}
+  body.light .tab{background:#fff!important;border-color:rgba(0,0,0,0.1)!important;color:rgba(0,0,0,0.55)!important;}
+  body.light .tab.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+  /* ── Аврора: градиентные акценты ── */
+  body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
+  body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
+  body.aurora .hero-stat{background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(167,139,250,0.03))!important;border:1px solid rgba(167,139,250,0.15)!important;}
+  body.aurora .hero-stat::before{background:radial-gradient(circle at 0% 50%,rgba(167,139,250,0.12),transparent 60%)!important;}
+  body.aurora .progress-fill{background:linear-gradient(90deg,#a78bfa,#c4b5fd)!important;}
+  body.aurora .ai-fab{background:linear-gradient(135deg,#a78bfa,#7c3aed)!important;box-shadow:0 4px 20px rgba(167,139,250,0.45)!important;}
+  body.aurora header{border-bottom:1px solid rgba(167,139,250,0.1);}
+  body.aurora .stat-card:hover{border-color:rgba(167,139,250,0.3)!important;box-shadow:0 4px 16px rgba(167,139,250,0.15)!important;}
+  body.aurora .section-title{color:var(--accent);}
+  body.aurora .logo span{color:var(--accent);}
+  body.aurora{--bg:#0e0b1a;--surface:#150f2a;--surface2:#1d1535;--border:rgba(167,139,250,0.14);--green:#34d399;--red:#f87171;--text:#f0eaff;--muted:#8b7db5;--shadow:0 4px 24px rgba(139,92,246,0.15);}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
-  header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);backdrop-filter:blur(24px);position:sticky;top:0;z-index:100;}
   .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
   .logo span{color:var(--accent);}
-  .tabs{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border);background:rgba(8,8,8,0.9);backdrop-filter:blur(24px);overflow-x:auto;}
+  .tabs{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border);background:var(--surface);backdrop-filter:blur(24px);overflow-x:auto;}
   .tab{padding:12px 16px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;font-weight:500;}
   .tab.active{color:var(--text);border-bottom-color:var(--accent);}
   main{padding:20px 24px;max-width:900px;margin:0 auto;}
@@ -70,14 +118,37 @@
   .upload-area{border:1px dashed rgba(255,255,255,0.1);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;}
   .upload-area:hover{border-color:rgba(255,107,0,0.4);}
   
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media(max-width:600px){
-    .doc-types{grid-template-columns:repeat(2,1fr);}
+    header{padding:10px 14px;}
+    .logo{font-size:14px;}
+    main{padding:12px 14px;padding-bottom:80px;}
+    .doc-types{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .doc-type-btn{padding:12px 8px;}
+    .doc-type-icon{font-size:20px;}
+    .doc-type-name{font-size:11px;}
+    .doc-type-desc{font-size:9px;}
     .input-row{grid-template-columns:1fr;}
     .input-row-3{grid-template-columns:1fr;}
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 14px 0;white-space:nowrap;}
+    .tab{font-size:11px;padding:7px 10px;}
+    .btn{padding:9px 14px;font-size:11px;}
+    .card{padding:14px;}
+    .section-title{font-size:10px;}
+    table{font-size:10px;}
+    th,td{padding:4px 5px;}
+    /* Акт сверки на мобильном */
+    #svRowsWrap div[style*="grid"]{grid-template-columns:1fr 1fr!important;}
+    #svRowsWrap input.sv-debit, #svRowsWrap input.sv-credit{width:100%;}
   }
 </style>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -88,6 +159,7 @@
 <div class="tabs">
   <button class="tab active" onclick="showPage('create',this)">📄 Создать</button>
   <button class="tab" onclick="showPage('history',this)">📋 История</button>
+  <button class="tab" onclick="showPage('templates',this)">⭐ Шаблоны</button>
   <button class="tab" onclick="showPage('settings',this)">⚙️ Настройки</button>
 </div>
 <main>
@@ -140,6 +212,130 @@
       <div class="doc-type-icon">🚛</div>
       <div class="doc-type-name">ТТН</div>
       <div class="doc-type-desc">Товарно-транспортная</div>
+    </div>
+    <div class="doc-type-btn" id="btn-sverka" onclick="selectDoc('sverka',this)">
+      <div class="doc-type-icon">⚖️</div>
+      <div class="doc-type-name">Акт сверки</div>
+      <div class="doc-type-desc">Взаиморасчёты</div>
+    </div>
+    <div class="doc-type-btn" id="btn-pp" onclick="selectDoc('pp',this)">
+      <div class="doc-type-icon">🏦</div>
+      <div class="doc-type-name">Платёжное поручение</div>
+      <div class="doc-type-desc">Форма 0401060</div>
+    </div>
+  </div>
+
+  <!-- Форма акта сверки -->
+  <div id="sverka-form" style="display:none">
+    <div class="card">
+      <div class="section-title">Акт сверки взаимных расчётов</div>
+      <div class="input-row">
+        <div class="input-group"><label>Номер акта</label><input type="text" id="svNum" placeholder="1"></div>
+        <div class="input-group"><label>Период (от)</label><input type="date" id="svDateFrom"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Период (до)</label><input type="date" id="svDateTo"></div>
+        <div class="input-group"><label>Дата составления</label><input type="date" id="svDate"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Наша организация</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="svOurName" placeholder="ООО Омсчикен"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="svOurInn" placeholder="5500000001 / 550101001"></div>
+      </div>
+      <div class="input-group"><label>Лицо, подписывающее акт</label><input type="text" id="svOurSigner" placeholder="Директор Иванов И.И."></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Контрагент</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="svCpName" placeholder="ООО Поставщик"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="svCpInn" placeholder="7700000001 / 770101001"></div>
+      </div>
+      <div class="input-group"><label>Лицо со стороны контрагента</label><input type="text" id="svCpSigner" placeholder="Директор Петров П.П."></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Операции по нашей стороне</div>
+      <div id="svRowsWrap">
+        <div class="sv-row" style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:6px;margin-bottom:6px">
+          <div style="opacity:.5;font-size:12px">Дата</div>
+          <div style="opacity:.5;font-size:12px">Основание</div>
+          <div style="opacity:.5;font-size:12px">Дебет (нам должны)</div>
+          <div style="opacity:.5;font-size:12px">Кредит (мы должны)</div>
+        </div>
+      </div>
+      <button class="btn" style="background:var(--surface);color:var(--text);margin-top:4px" onclick="addSvRow()">+ Добавить строку</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn" onclick="generateSverka()">📋 Сформировать акт</button>
+    </div>
+  </div>
+
+  <!-- Форма платёжного поручения -->
+  <div id="pp-form" style="display:none">
+    <div class="card">
+      <div class="section-title">Платёжное поручение — Форма 0401060</div>
+      <div class="input-row">
+        <div class="input-group"><label>Номер поручения</label><input type="text" id="ppNum" placeholder="001"></div>
+        <div class="input-group"><label>Дата</label><input type="date" id="ppDate"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Сумма (цифрами)</label><input type="number" id="ppAmount" placeholder="0.00" step="0.01" oninput="ppUpdateAmount()"></div>
+        <div class="input-group"><label>Вид платежа</label>
+          <select id="ppKind"><option value="">Электронно</option><option value="срочно">Срочно</option><option value="почтой">Почтой</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Плательщик</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="ppPayerName" placeholder="ООО Омсчикен"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="ppPayerInn" placeholder="5500000001 / 550101001"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ppPayerAcc" placeholder="40702810000000000001" maxlength="20"></div>
+        <div class="input-group"><label>Банк плательщика</label><input type="text" id="ppPayerBank" placeholder="АО «Тинькофф Банк»"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>БИК</label><input type="text" id="ppPayerBik" placeholder="044525974" maxlength="9"></div>
+        <div class="input-group"><label>Корр. счёт банка плательщика</label><input type="text" id="ppPayerCorr" placeholder="30101810145250000974" maxlength="20"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Получатель</div>
+      <div class="input-row">
+        <div class="input-group"><label>Наименование</label><input type="text" id="ppPayeeName" placeholder="ООО Поставщик"></div>
+        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="ppPayeeInn" placeholder="7700000001 / 770101001"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ppPayeeAcc" placeholder="40702810000000000002" maxlength="20"></div>
+        <div class="input-group"><label>Банк получателя</label><input type="text" id="ppPayeeBank" placeholder="ВТБ (ПАО)"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>БИК</label><input type="text" id="ppPayeeBik" placeholder="044525187" maxlength="9"></div>
+        <div class="input-group"><label>Корр. счёт банка получателя</label><input type="text" id="ppPayeeCorr" placeholder="30101810100000000187" maxlength="20"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Детали платежа</div>
+      <div class="input-row">
+        <div class="input-group"><label>Вид оп.</label><input type="text" id="ppOp" value="01" style="max-width:60px"></div>
+        <div class="input-group"><label>Очерёдность платежа</label>
+          <select id="ppQueue"><option value="3">3 — налоги, сборы</option><option value="4" selected>4 — по исполнит. листу</option><option value="5">5 — прочие</option></select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>КБК (для налогов)</label><input type="text" id="ppKbk" placeholder="18201061201010000510 (ЕНС)" maxlength="20"></div>
+        <div class="input-group"><label>ОКТМО</label><input type="text" id="ppOktmo" placeholder="52701000" maxlength="11"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>Основание (НП/ТП/ЗД)</label><input type="text" id="ppBase" placeholder="ТП — текущий период"></div>
+        <div class="input-group"><label>Налоговый период</label><input type="text" id="ppPeriod" placeholder="КВ.02.2026"></div>
+      </div>
+      <div class="input-group"><label>Назначение платежа</label><input type="text" id="ppPurpose" placeholder="Оплата по договору № 1 от 01.01.2026. Без НДС."></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <button class="btn" onclick="generatePP()">📋 Сформировать</button>
     </div>
   </div>
 
@@ -221,6 +417,7 @@
     <div class="preview-btn-row">
       <button class="btn" onclick="printDoc()">🖨️ Печать / PDF</button>
       <button class="btn-outline" onclick="saveHistory()">💾 В историю</button>
+      <button class="btn-outline" onclick="saveTemplate()" style="color:var(--accent);border-color:var(--accent)">⭐ Шаблон</button>
     </div>
     <div class="doc-print" id="docPreview"></div>
   </div>
@@ -256,6 +453,14 @@
     </div>
   </div>
   <div id="historyList"></div>
+</div>
+
+<!-- ШАБЛОНЫ -->
+<div class="page" id="page-templates">
+  <div class="section-title">⭐ Сохранённые шаблоны</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Сохраняйте часто используемые документы как шаблоны — покупатель, товары и сумма подставятся автоматически.</div>
+  <div id="templatesList"></div>
+  <div style="margin-top:12px;font-size:11px;color:var(--muted)">Чтобы сохранить шаблон — заполните документ и нажмите «⭐ Шаблон» рядом с кнопкой сохранения.</div>
 </div>
 
 <!-- НАСТРОЙКИ -->
@@ -368,6 +573,197 @@ function selectDoc(type, el) {
   currentDoc = type;
   document.querySelectorAll('.doc-type-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('pp-form').style.display = type === 'pp' ? 'block' : 'none';
+  document.getElementById('sverka-form').style.display = type === 'sverka' ? 'block' : 'none';
+  if (type === 'sverka' && !document.querySelector('#svRowsWrap input.sv-date')) addSvRow();
+}
+
+function ppAmountWords(n) {
+  const units = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять'];
+  const teens = ['десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  const tens = ['','десять','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+  const hundreds = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+  const thousands = ['тысяча','тысячи','тысяч'];
+  const millions = ['миллион','миллиона','миллионов'];
+  function plural(n, forms) {
+    const n10 = n % 10, n100 = n % 100;
+    if (n100 >= 11 && n100 <= 19) return forms[2];
+    if (n10 === 1) return forms[0];
+    if (n10 >= 2 && n10 <= 4) return forms[1];
+    return forms[2];
+  }
+  function threeDigits(n, feminine) {
+    let r = '';
+    r += hundreds[Math.floor(n/100)];
+    const t = n % 100;
+    if (t >= 10 && t <= 19) { r += (r?' ':'')+teens[t-10]; }
+    else {
+      r += (tens[Math.floor(t/10)] ? (r?' ':'')+tens[Math.floor(t/10)] : '');
+      const u = t % 10;
+      if (u) {
+        const uWords = feminine ? ['одна','две','три','четыре','пять','шесть','семь','восемь','девять'] : units;
+        r += (r?' ':'')+uWords[u];
+      }
+    }
+    return r;
+  }
+  if (!n || isNaN(n)) return '—';
+  const rub = Math.floor(n), kop = Math.round((n - rub) * 100);
+  let result = '';
+  const mln = Math.floor(rub / 1000000);
+  const ths = Math.floor((rub % 1000000) / 1000);
+  const rem = rub % 1000;
+  if (mln) result += threeDigits(mln, false) + ' ' + plural(mln, millions);
+  if (ths) result += (result?' ':'')+threeDigits(ths, true) + ' ' + plural(ths, thousands);
+  if (rem || !result) result += (result?' ':'')+threeDigits(rem, false)+' рублей';
+  else result += ' рублей';
+  result += ' ' + String(kop).padStart(2,'0') + ' копеек';
+  return result.trim();
+}
+
+function ppUpdateAmount() {
+  const n = parseFloat(document.getElementById('ppAmount').value) || 0;
+  const words = ppAmountWords(n);
+}
+
+function generatePP() {
+  const v = id => document.getElementById(id).value;
+  if (!v('ppPayerName').trim()) { _docFieldErr('ppPayerName', 'Укажи наименование плательщика'); return; }
+  if (!v('ppPayeeName').trim()) { _docFieldErr('ppPayeeName', 'Укажи наименование получателя'); return; }
+  if (!parseFloat(v('ppAmount'))) { _docFieldErr('ppAmount', 'Укажи сумму платежа'); return; }
+  const amount = parseFloat(v('ppAmount')) || 0;
+  const amountStr = amount.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const words = ppAmountWords(amount);
+  const date = v('ppDate') ? new Date(v('ppDate')).toLocaleDateString('ru-RU') : '__.__.____';
+
+  const html = `<div class="doc-print" style="font-family:'Times New Roman',Times,serif;font-size:9pt;color:#000;background:#fff;padding:10mm">
+<table style="width:100%;border-collapse:collapse;font-size:9pt">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;width:60px;text-align:center;font-weight:bold" rowspan="4">0401060</td>
+    <td style="border:1px solid #000;padding:3px 5px;width:90px;font-size:8pt">Поступ. в банк пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Списано со сч. пл.</td>
+  </tr>
+  <tr>
+    <td colspan="2" style="border:1px solid #000;padding:2px 5px;text-align:center;font-size:10pt;font-weight:bold">ПЛАТЁЖНОЕ ПОРУЧЕНИЕ № ${v('ppNum')}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Дата</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Вид платежа</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-weight:bold">${date}</td>
+    <td style="border:1px solid #000;padding:3px 5px">${v('ppKind')}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt" colspan="3">Сумма прописью</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold;width:70%" colspan="2">${words}</td>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold;white-space:nowrap">Сумма | ${amountStr}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt" colspan="4">Плательщик</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;width:50%" colspan="2">${v('ppPayerName')}<br><span style="font-size:8pt">ИНН/КПП: ${v('ppPayerInn')}</span></td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold">${v('ppPayerAcc')}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;width:40%">${v('ppPayerBank')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">БИК<br>${v('ppPayerBik')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppPayerCorr')}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt" colspan="4">Получатель</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;width:40%">${v('ppPayeeBank')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">БИК<br>${v('ppPayeeBik')}</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppPayeeCorr')}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px" colspan="2">${v('ppPayeeName')}<br><span style="font-size:8pt">ИНН/КПП: ${v('ppPayeeInn')}</span></td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Сч. №</td>
+    <td style="border:1px solid #000;padding:4px 5px;font-weight:bold">${v('ppPayeeAcc')}</td>
+  </tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Вид оп.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Срок пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:14%">Наз. пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Очер. пл.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:12%">Код</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Рез. поле</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px;text-align:center">${v('ppOp')}</td>
+    <td style="border:1px solid #000;padding:4px 5px"></td>
+    <td style="border:1px solid #000;padding:4px 5px"></td>
+    <td style="border:1px solid #000;padding:4px 5px;text-align:center">${v('ppQueue')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">0</td>
+    <td style="border:1px solid #000;padding:4px 5px"></td>
+  </tr>
+</table>
+
+${v('ppKbk') ? `<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:25%">КБК</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:20%">ОКТМО</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:10%">Основ.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">Нал. период</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt;width:15%">№ докум.</td>
+    <td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Дата докум.</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppKbk')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppOktmo')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppBase')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">${v('ppPeriod')}</td>
+    <td style="border:1px solid #000;padding:4px 5px">0</td>
+    <td style="border:1px solid #000;padding:4px 5px">0</td>
+  </tr>
+</table>` : ''}
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:-1px">
+  <tr><td style="border:1px solid #000;padding:3px 5px;font-size:8pt">Назначение платежа</td></tr>
+  <tr><td style="border:1px solid #000;padding:6px 5px;min-height:30px">${v('ppPurpose')}</td></tr>
+</table>
+
+<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-top:8px">
+  <tr>
+    <td style="border:1px solid #000;padding:6px 5px;width:50%">Подписи плательщика<br><br><br>_________________________</td>
+    <td style="border:1px solid #000;padding:6px 5px">Отметки банка<br><br><br></td>
+  </tr>
+</table>
+</div>`;
+
+  const win = window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ПП №${v('ppNum')}</title>
+<style>body{margin:0;background:#fff}@media print{body{margin:0}}</style></head>
+<body onload="window.print()">${html}<nav class="bottom-nav">
+  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html" class="active"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
+</body></html>`);
+  win.document.close();
+  showToast('✅ Платёжное поручение сформировано');
 }
 
 function addRow() {
@@ -458,14 +854,99 @@ function stampHTML() {
   return `<div style="width:80px;height:80px;border:2px solid #00008B;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#00008B;text-align:center;transform:rotate(-15deg);padding:6px"><div style="border:1px solid #00008B;border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-weight:bold">М.П.</div></div>`;
 }
 
+// ── Сумма прописью ────────────────────────────────────────────────────────────
+function numToWords(n) {
+  const ones = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять',
+    'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
+    'шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  const tens = ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+  const hunds = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+  const onesF = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять',
+    'десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать',
+    'шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+  function chunk(num, fem) {
+    let r = '';
+    const h = Math.floor(num/100); if(h) r += hunds[h]+' ';
+    const t = num%100;
+    if(t<20) { r += (fem?onesF:ones)[t]; if(t) r+=' '; }
+    else { r += tens[Math.floor(t/10)]+' '; const o=t%10; if(o) r+=(fem?onesF:ones)[o]+' '; }
+    return r.trim();
+  }
+  function thousands(num) {
+    const forms = ['тысяча','тысячи','тысяч'];
+    const r = num%100; const o = num%10;
+    if(r>=11&&r<=19) return forms[2];
+    if(o===1) return forms[0];
+    if(o>=2&&o<=4) return forms[1];
+    return forms[2];
+  }
+  function millions(num) {
+    const forms = ['миллион','миллиона','миллионов'];
+    const r = num%100; const o = num%10;
+    if(r>=11&&r<=19) return forms[2];
+    if(o===1) return forms[0];
+    if(o>=2&&o<=4) return forms[1];
+    return forms[2];
+  }
+  if(n===0) return 'ноль';
+  let result = '';
+  const mil = Math.floor(n/1000000);
+  const th = Math.floor((n%1000000)/1000);
+  const rem = n%1000;
+  if(mil) result += chunk(mil,false)+' '+millions(mil)+' ';
+  if(th) result += chunk(th,true)+' '+thousands(th)+' ';
+  if(rem) result += chunk(rem,false);
+  return result.trim();
+}
+function rubles(amount) {
+  const rub = Math.floor(amount);
+  const kop = Math.round((amount - rub)*100);
+  const rubStr = numToWords(rub);
+  const rubForm = (()=>{ const r=rub%100,o=rub%10; if(r>=11&&r<=19) return 'рублей'; if(o===1) return 'рубль'; if(o>=2&&o<=4) return 'рубля'; return 'рублей'; })();
+  const kopStr = kop.toString().padStart(2,'0');
+  const kopForm = (()=>{ const r=kop%100,o=kop%10; if(r>=11&&r<=19) return 'копеек'; if(o===1) return 'копейка'; if(o>=2&&o<=4) return 'копейки'; return 'копеек'; })();
+  return rubStr.charAt(0).toUpperCase()+rubStr.slice(1)+' '+rubForm+' '+kopStr+' '+kopForm;
+}
+
 function signHTML(label) {
   const sig = signImg ? `<img src="${signImg}" style="height:30px;max-width:100px;opacity:0.85;display:block;margin-bottom:2px">` : '_________________';
   return `${label} ${sig}`;
 }
 
+function _docFieldErr(id, msg) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.borderColor = '#ef4444';
+    el.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.2)';
+    el.addEventListener('input', function c() { el.style.borderColor=''; el.style.boxShadow=''; el.removeEventListener('input',c); }, {once:true});
+    el.focus();
+  }
+  showToast('⚠️ ' + msg);
+}
+
 function generateDoc() {
+  if (currentDoc === 'sverka') { generateSverka(); return; }
+  if (currentDoc === 'pp') { generatePP(); return; }
   const items = getItems();
-  if (!items.length) { showToast('Добавь хотя бы один товар'); return; }
+  // Документы без позиций (доверенность, ПКО, договор без позиций)
+  const noItemsDocs = ['dover', 'ko1'];
+  if (!noItemsDocs.includes(currentDoc) && !items.length) {
+    showToast('⚠️ Добавь хотя бы один товар с ненулевой ценой');
+    return;
+  }
+  // Проверяем позиции — цена или количество 0
+  const zeroItems = items.filter(i => i.price === 0 || i.qty === 0);
+  if (zeroItems.length) {
+    showToast(`⚠️ В позиции "${zeroItems[0].name}" цена или количество равно 0`);
+    return;
+  }
+  // Покупатель обязателен для большинства документов
+  const needBuyer = !['dover'].includes(currentDoc);
+  const buyerName = document.getElementById('buyerName')?.value.trim();
+  if (needBuyer && !buyerName) {
+    _docFieldErr('buyerName', 'Укажи наименование покупателя');
+    return;
+  }
   const buyer = getBuyer();
   const doc = getDocInfo();
   const totalNoVat = items.reduce((s,i)=>s+i.sum,0);
@@ -516,7 +997,10 @@ function genSchet(items, buyer, doc, noVat, vat, total) {
       <thead><tr><th style="width:5%">№</th><th>Наименование товара (работ, услуг)</th><th style="width:8%">Ед.</th><th style="width:8%">Кол-во</th><th style="width:10%">Цена, ₽</th><th style="width:10%">НДС %</th><th style="width:12%">Сумма, ₽</th></tr></thead>
       <tbody>${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}</tbody>
     </table>
-    <table style="margin-top:4px"><tr><td style="border:none;text-align:right" colspan="6"><span class="bold">Итого: ${fmtN(noVat)} руб.</span> &nbsp; <span>НДС: ${fmtN(vat)} руб.</span> &nbsp; <span class="bold">ИТОГО К ОПЛАТЕ: ${fmtN(total)} руб.</span></td></tr></table>
+    <table style="margin-top:4px">
+      <tr><td style="border:none;text-align:right" colspan="7"><span>Итого без НДС: ${fmtN(noVat)} руб.</span> &nbsp; <span>НДС: ${fmtN(vat)} руб.</span> &nbsp; <span class="bold">ИТОГО К ОПЛАТЕ: ${fmtN(total)} руб.</span></td></tr>
+    </table>
+    <div style="margin-top:6px;font-size:10pt;font-style:italic">Итого к оплате: <b>${rubles(total)}</b></div>
     <div style="margin-top:4px;font-size:9pt"><i>Оплата данного счёта означает согласие с условиями поставки. Уведомление об оплате обязательно.</i></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
       <div>
@@ -527,133 +1011,341 @@ function genSchet(items, buyer, doc, noVat, vat, total) {
     </div>`;
 }
 
-// УПД
+// УПД (форма по Письму ФНС ММВ-20-3/96@ с изм. 2026)
 function genUPD(items, buyer, doc, noVat, vat, total) {
-  const vatItems = items.filter(i=>i.vatPct>0);
   return `
-    <div style="border:2px solid #000;padding:6px;margin-bottom:6px;text-align:center">
-      <div class="bold" style="font-size:12pt">УНИВЕРСАЛЬНЫЙ ПЕРЕДАТОЧНЫЙ ДОКУМЕНТ</div>
-      <div class="small">Счёт-фактура № ${doc.num} от «${doc.date}» | Статус: 1 (счёт-фактура и передаточный документ)</div>
+    <div style="border:2px solid #000;padding:5px 8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="bold" style="font-size:13pt">УНИВЕРСАЛЬНЫЙ ПЕРЕДАТОЧНЫЙ ДОКУМЕНТ</div>
+        <div class="small">Счёт-фактура № <b>${doc.num}</b> от «${doc.date}»</div>
+      </div>
+      <div style="border:1px solid #000;padding:4px 10px;text-align:center">
+        <div class="small">Статус</div>
+        <div class="bold" style="font-size:16pt">1</div>
+        <div class="small" style="font-size:7pt">счёт-фактура<br>и передаточный<br>документ</div>
+      </div>
     </div>
-    <table style="margin-bottom:6px">
-      <tr><td style="width:15%;background:#f0f0f0" class="bold small">Продавец:</td><td>${S.name}, ИНН/КПП ${S.inn}/${S.kpp}</td><td style="width:15%;background:#f0f0f0" class="bold small">Покупатель:</td><td>${buyer.name}, ИНН/КПП ${buyer.inn}</td></tr>
-      <tr><td class="bold small">Адрес:</td><td class="small">${S.addr}</td><td class="bold small">Адрес:</td><td class="small">${buyer.addr}</td></tr>
-      <tr><td class="bold small">К п/п счёт:</td><td class="small">№ ${doc.num} от ${doc.date}</td><td class="bold small">Грузополучатель:</td><td class="small">${buyer.name}</td></tr>
-      ${doc.advanceNum ? `<tr><td class="bold small">Стр. 5б (аванс):</td><td class="small" colspan="3">Авансовый счёт-фактура № ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
+
+    <table style="margin-bottom:4px;font-size:9pt">
+      <tr>
+        <td style="width:13%;background:#f0f0f0" class="bold small">1. Продавец:</td>
+        <td style="width:37%">${S.name}</td>
+        <td style="width:13%;background:#f0f0f0" class="bold small">Покупатель:</td>
+        <td>${buyer.name}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">ИНН/КПП:</td>
+        <td class="small">${S.inn} / ${S.kpp}</td>
+        <td class="bold small" style="background:#f0f0f0">ИНН/КПП:</td>
+        <td class="small">${buyer.inn}${buyer.kpp ? ' / '+buyer.kpp : ''}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">2. Грузоотправитель:</td>
+        <td class="small">${S.name}, ${S.addr}</td>
+        <td class="bold small" style="background:#f0f0f0">6. Грузополучатель:</td>
+        <td class="small">${buyer.name}, ${buyer.addr}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">3. Адрес продавца:</td>
+        <td class="small">${S.addr}</td>
+        <td class="bold small" style="background:#f0f0f0">Адрес покупателя:</td>
+        <td class="small">${buyer.addr}</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">4. К п/п документу:</td>
+        <td class="small">№ ${doc.num} от ${doc.date}</td>
+        <td class="bold small" style="background:#f0f0f0">7. Валюта:</td>
+        <td class="small">Российский рубль, 643</td>
+      </tr>
+      <tr>
+        <td class="bold small" style="background:#f0f0f0">5а. Документ об отгрузке:</td>
+        <td class="small">Настоящий УПД</td>
+        <td></td><td></td>
+      </tr>
+      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f9e8d0">5б. Авансовый с/ф:</td><td class="small" colspan="3">№ ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
     </table>
-    <table>
+
+    <table style="font-size:8.5pt">
       <thead>
-        <tr>
-          <th rowspan="2">№</th><th rowspan="2">Наименование<br>товара</th><th rowspan="2">Ед.</th>
-          <th rowspan="2">Кол-во</th><th rowspan="2">Цена<br>без НДС</th>
-          <th colspan="2">НДС</th><th rowspan="2">Стоимость<br>с НДС</th>
+        <tr style="background:#f0f0f0">
+          <th rowspan="2" style="width:4%">№<br><span class="small">1</span></th>
+          <th rowspan="2">Наименование товара (описание выполненных работ, услуг)<br><span class="small">1а — код товара</span></th>
+          <th colspan="2">Единица измерения</th>
+          <th rowspan="2">Кол-во<br><span class="small">4</span></th>
+          <th rowspan="2">Цена за ед.<br>без НДС, руб.<br><span class="small">5</span></th>
+          <th rowspan="2">Стоимость<br>без НДС, руб.<br><span class="small">6</span></th>
+          <th rowspan="2">В т.ч.<br>акциз<br><span class="small">6а</span></th>
+          <th colspan="2">НДС</th>
+          <th rowspan="2">Стоимость<br>с НДС, руб.<br><span class="small">9</span></th>
+          <th rowspan="2">Страна<br>происх.<br><span class="small">10</span></th>
+          <th rowspan="2">Рег. №<br>декл.<br><span class="small">11</span></th>
         </tr>
-        <tr><th>Ставка</th><th>Сумма</th></tr>
+        <tr style="background:#f0f0f0">
+          <th style="font-size:7pt">наим.<br><span>2</span></th>
+          <th style="font-size:7pt">код<br>ОКЕИ<br><span>2а</span></th>
+          <th style="font-size:7pt">Налог.<br>ставка<br><span>7</span></th>
+          <th style="font-size:7pt">Сумма<br>НДС, руб.<br><span>8</span></th>
+        </tr>
       </thead>
       <tbody>
-        ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
-        <tr><td colspan="4" class="bold">Итого</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+        ${items.map(i=>`<tr>
+          <td class="center">${i.num}</td>
+          <td>${i.name}</td>
+          <td class="center">${i.unit}</td>
+          <td class="center">${i.unitCode||'796'}</td>
+          <td class="center">${i.qty}</td>
+          <td class="right">${fmtN(i.price)}</td>
+          <td class="right">${fmtN(i.sum)}</td>
+          <td class="center small">без акциза</td>
+          <td class="center">${i.vatPct}%</td>
+          <td class="right">${fmtN(i.vat)}</td>
+          <td class="right">${fmtN(i.total)}</td>
+          <td class="center small">РФ</td>
+          <td class="center small">—</td>
+        </tr>`).join('')}
+        <tr style="background:#f5f5f5">
+          <td colspan="5" class="right bold">Всего к оплате:</td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td>
+          <td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+          <td></td><td></td>
+        </tr>
       </tbody>
     </table>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <div style="border:1px solid #000;padding:6px">
-        <div class="small bold">Товар (груз) передал / услуги оказал:</div>
-        <div style="margin-top:20px">${signHTML('')} ${S.director}<br><span class="small">(подпись) (ФИО)</span></div>
-        <div style="margin-top:6px;text-align:center">${stampHTML()}</div>
-      </div>
-      <div style="border:1px solid #000;padding:6px">
-        <div class="small bold">Товар (груз) получил / услуги принял:</div>
-        <div style="margin-top:20px">_________________ ${buyer.director}<br><span class="small">(подпись) (ФИО)</span></div>
-        <div style="margin-top:6px">Дата получения: _________________</div>
-      </div>
+
+    <table style="margin-top:6px;font-size:9pt">
+      <tr>
+        <td style="width:50%;background:#f0f0f0" class="bold small">А. Подписи со стороны продавца</td>
+        <td style="background:#f0f0f0" class="bold small">Б. Подписи со стороны покупателя</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 6px">
+          <div class="small bold">8. Основание передачи (сдачи):</div>
+          <div class="small" style="margin-bottom:6px">${doc.base || 'Договор поставки № ' + doc.num + ' от ' + doc.date}</div>
+          <div class="small bold">Руководитель:</div>
+          <div style="margin-top:16px">${signHTML('')} &nbsp; ${S.director}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          <div style="margin-top:8px" class="small bold">Главный бухгалтер:</div>
+          <div style="margin-top:16px">_________________ &nbsp; ${S.buh}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          <div style="margin-top:8px" class="small bold">Товар (груз) передал / услуги оказал:</div>
+          <div style="margin-top:16px">_________________ &nbsp; _________________</div>
+          <div class="small">(должность, подпись, ФИО)</div>
+          <div style="margin-top:6px" class="small">Дата отгрузки: <b>${doc.date}</b></div>
+          <div style="text-align:center;margin-top:6px">${stampHTML()}</div>
+        </td>
+        <td style="padding:4px 6px">
+          <div class="small bold">Товар (груз) получил / услуги принял:</div>
+          <div style="margin-top:16px">_________________ &nbsp; ${buyer.director}</div>
+          <div class="small">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (ФИО)</div>
+          <div style="margin-top:8px" class="small bold">Ответственный за правильность оформления:</div>
+          <div style="margin-top:16px">_________________ &nbsp; _________________</div>
+          <div class="small">(должность, подпись, ФИО)</div>
+          <div style="margin-top:8px">Дата получения: _________________</div>
+          <div style="margin-top:6px" class="small bold">Иные сведения об отгрузке / получении:</div>
+          <div style="margin-top:4px;min-height:30px;border-bottom:1px solid #ccc" class="small">&nbsp;</div>
+          <div style="text-align:center;margin-top:6px">М.П.</div>
+        </td>
+      </tr>
+    </table>
+    <div style="margin-top:4px;font-size:8pt;color:#555">
+      Сумма к оплате: <b>${rubles(total)}</b>
     </div>`;
 }
 
 // ТОРГ-12
 function genTORG12(items, buyer, doc, noVat, vat, total) {
+  const totalQty = items.reduce((s,i)=>s+i.qty, 0);
   return `
     <div style="text-align:right;font-size:9pt;margin-bottom:4px">Унифицированная форма № ТОРГ-12<br>Утверждена постановлением Госкомстата России от 25.12.98 № 132</div>
     <div class="title-center">ТОВАРНАЯ НАКЛАДНАЯ</div>
     <div style="text-align:center;margin-bottom:8px">№ ${doc.num} от «${doc.date}» г.</div>
-    <table style="margin-bottom:6px">
-      <tr><td class="bold small" style="width:20%;background:#f0f0f0">Организация-грузоотправитель:</td><td>${S.name}<br><span class="small">ИНН/КПП: ${S.inn}/${S.kpp} | ${S.addr}<br>Р/С: ${S.rs} | ${S.bank} | БИК: ${S.bik}</span></td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Организация-грузополучатель:</td><td>${buyer.name}<br><span class="small">ИНН/КПП: ${buyer.inn} | ${buyer.addr}</span></td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Поставщик:</td><td>${S.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Плательщик:</td><td>${buyer.name}</td></tr>
+    <table style="margin-bottom:6px;font-size:9pt">
+      <tr><td class="bold small" style="width:20%;background:#f0f0f0">Организация-грузоотправитель:</td><td colspan="3">${S.name}<br><span class="small">ИНН/КПП: ${S.inn}/${S.kpp} | ${S.addr}</span></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Структурное подразделение:</td><td colspan="3">—</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Организация-грузополучатель:</td><td colspan="3">${buyer.name}<br><span class="small">ИНН/КПП: ${buyer.inn} | ${buyer.addr}</span></td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Поставщик:</td><td>${S.name}</td><td class="bold small" style="background:#f0f0f0">По доверенности №:</td><td>—&nbsp;&nbsp;&nbsp; от &nbsp;&nbsp;&nbsp; выд.: </td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Плательщик:</td><td colspan="3">${buyer.name}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">Основание:</td><td colspan="3">Договор поставки № ${doc.num} от ${doc.date}</td></tr>
     </table>
-    <table>
+    <table style="font-size:8.5pt">
       <thead>
-        <tr>
-          <th style="width:5%">№</th><th>Наименование товара</th><th>Ед.</th>
-          <th>Кол-во</th><th>Цена без НДС, руб.</th><th>Сумма без НДС, руб.</th>
-          <th>НДС %</th><th>Сумма НДС, руб.</th><th>Сумма с НДС, руб.</th>
+        <tr style="background:#f0f0f0">
+          <th rowspan="2" style="width:4%">№<br><span style="font-weight:normal">1</span></th>
+          <th rowspan="2">Наименование товара<br><span style="font-weight:normal;font-size:7pt">2</span></th>
+          <th rowspan="2">Код товара<br><span style="font-weight:normal;font-size:7pt">3</span></th>
+          <th colspan="2">Единица измерения</th>
+          <th rowspan="2">Вид упаковки<br><span style="font-weight:normal;font-size:7pt">6</span></th>
+          <th colspan="2">Количество</th>
+          <th rowspan="2">Масса брутто, кг<br><span style="font-weight:normal;font-size:7pt">9</span></th>
+          <th rowspan="2">Кол-во мест, штаб<br><span style="font-weight:normal;font-size:7pt">10</span></th>
+          <th rowspan="2">Масса нетто, кг<br><span style="font-weight:normal;font-size:7pt">11</span></th>
+          <th rowspan="2">Цена без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">12</span></th>
+          <th rowspan="2">Сумма без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">13</span></th>
+          <th rowspan="2">НДС %<br><span style="font-weight:normal;font-size:7pt">14</span></th>
+          <th rowspan="2">Сумма НДС, руб.<br><span style="font-weight:normal;font-size:7pt">15</span></th>
+          <th rowspan="2">Сумма с НДС, руб.<br><span style="font-weight:normal;font-size:7pt">16</span></th>
         </tr>
-        <tr>${['1','2','3','4','5','6','7','8','9'].map(n=>`<th>${n}</th>`).join('')}</tr>
+        <tr style="background:#f0f0f0">
+          <th style="font-size:7pt">наим.<br>4</th>
+          <th style="font-size:7pt">код ОКЕИ<br>5</th>
+          <th style="font-size:7pt">в одном месте<br>7</th>
+          <th style="font-size:7pt">мест, штаб<br>8</th>
+        </tr>
       </thead>
       <tbody>
-        ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="right">${fmtN(i.sum)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
-        <tr><td colspan="4" class="bold right">Итого:</td><td></td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+        ${items.map(i=>`<tr>
+          <td class="center">${i.num}</td>
+          <td>${i.name}</td>
+          <td class="center">—</td>
+          <td class="center">${i.unit}</td>
+          <td class="center">796</td>
+          <td class="center">—</td>
+          <td class="center">${i.qty}</td>
+          <td class="center">${i.qty}</td>
+          <td class="center">—</td>
+          <td class="center">${i.qty}</td>
+          <td class="center">—</td>
+          <td class="right">${fmtN(i.price)}</td>
+          <td class="right">${fmtN(i.sum)}</td>
+          <td class="center">${i.vatPct}%</td>
+          <td class="right">${fmtN(i.vat)}</td>
+          <td class="right">${fmtN(i.total)}</td>
+        </tr>`).join('')}
+        <tr style="background:#f5f5f5">
+          <td colspan="7" class="right bold">Итого:</td>
+          <td class="center bold">${totalQty}</td>
+          <td></td><td class="center bold">${totalQty}</td><td></td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+        </tr>
+        <tr>
+          <td colspan="7" class="right bold">Всего по накладной:</td>
+          <td class="center bold">${totalQty}</td>
+          <td></td><td class="center bold">${totalQty}</td><td></td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+        </tr>
       </tbody>
     </table>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <div>
-        <div class="bold small">Отпустил:</div>
-        <div style="margin-top:4px"><span class="small">Директор</span> ${signHTML('')}<br><span class="small">(должность) (подпись) (расшифровка)</span></div>
-        <div style="text-align:center;margin-top:6px">${stampHTML()}</div>
-      </div>
-      <div>
-        <div class="bold small">Груз принял:</div>
-        <div style="margin-top:4px"><span class="small">_____________</span> _________________<br><span class="small">(должность) (подпись) (расшифровка)</span></div>
-        <div style="margin-top:6px">Груз получил грузополучатель:<br>_________________ _________________<br><span class="small">(подпись) (расшифровка)</span><br>М.П.</div>
-      </div>
-    </div>`;
+    <div style="margin-top:4px;font-size:9pt">
+      <div>Товарная накладная имеет приложение на <b>___</b> листах и содержит <b>${items.length}</b> порядковых номеров записей.</div>
+      <div style="margin-top:2px">Всего мест: <b>${totalQty}</b> &nbsp;&nbsp; Масса груза (нетто): <b>—</b> кг &nbsp;&nbsp; Масса груза (брутто): <b>—</b> кг</div>
+      <div style="margin-top:4px">Всего отпущено на сумму: <b>${rubles(total)}</b></div>
+    </div>
+    <table style="margin-top:10px;font-size:9pt">
+      <tr>
+        <td style="width:50%;border:none;padding:4px 0">
+          <div class="bold">Отпуск груза разрешил:</div>
+          <div style="margin-top:4px">Директор &nbsp; ${signHTML('')} &nbsp; ${S.director}</div>
+          <div class="small">(должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
+          <div style="margin-top:8px">Главный бухгалтер &nbsp; _________________ &nbsp; ${S.buh}</div>
+          <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка подписи)</div>
+          <div style="margin-top:8px">Отпуск груза произвёл:</div>
+          <div style="margin-top:4px">Кладовщик &nbsp; _________________ &nbsp; _________________</div>
+          <div class="small">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (должность) &nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp; (расшифровка)</div>
+          <div style="margin-top:8px">${stampHTML()}</div>
+        </td>
+        <td style="width:50%;border:none;padding:4px 0 4px 16px">
+          <div class="bold">Груз принял:</div>
+          <div style="margin-top:4px">_________________ &nbsp; _________________ &nbsp; _________________</div>
+          <div class="small">(должность) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (расшифровка)</div>
+          <div style="margin-top:10px" class="bold">Груз получил грузополучатель:</div>
+          <div style="margin-top:4px">_________________ &nbsp; _________________ &nbsp; ${buyer.director}</div>
+          <div class="small">(должность) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (расшифровка)</div>
+          <div style="margin-top:8px">Дата получения: _________________ г.</div>
+          <div style="margin-top:8px">М.П.</div>
+        </td>
+      </tr>
+    </table>`;
 }
 
-// СЧЁТ-ФАКТУРА
+// СЧЁТ-ФАКТУРА (форма по НК РФ ст.169, Постановление Правительства № 1137)
 function genSF(items, buyer, doc, noVat, vat, total) {
   return `
-    <div style="border:2px solid #000;padding:6px;margin-bottom:6px">
-      <div class="title-center">СЧЁТ-ФАКТУРА № ${doc.num} от «${doc.date}» г.</div>
-      <div class="small right">ИСПРАВЛЕНИЕ № ___ от «___» ____________ _____ г.</div>
+    <div style="border:2px solid #000;padding:6px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="title-center" style="margin:0">СЧЁТ-ФАКТУРА № ${doc.num} от «${doc.date}» г.</div>
+      </div>
+      <div style="font-size:9pt;text-align:right">ИСПРАВЛЕНИЕ № ___ от «___» ________ _____ г.</div>
     </div>
-    <table style="margin-bottom:6px">
-      <tr><td style="background:#f0f0f0;width:25%" class="bold small">Продавец:</td><td>${S.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Адрес:</td><td class="small">${S.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">ИНН/КПП продавца:</td><td>${S.inn} / ${S.kpp}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Грузоотправитель и его адрес:</td><td>${S.name}, ${S.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Грузополучатель и его адрес:</td><td>${buyer.name}, ${buyer.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">К расчётно-платёжному документу:</td><td>№ ${doc.num} от ${doc.date}</td></tr>
-      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f0f0f0">Стр. 5б (аванс):</td><td>Авансовый счёт-фактура № ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
-      <tr><td class="bold small" style="background:#f0f0f0">Покупатель:</td><td>${buyer.name}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Адрес:</td><td class="small">${buyer.addr}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">ИНН/КПП покупателя:</td><td>${buyer.inn}</td></tr>
-      <tr><td class="bold small" style="background:#f0f0f0">Валюта: наименование, код:</td><td>Российский рубль, 643</td></tr>
+    <table style="margin-bottom:4px;font-size:9pt">
+      <tr><td style="background:#f0f0f0;width:30%" class="bold small">1. Продавец:</td><td colspan="3">${S.name}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">1а. Адрес:</td><td colspan="3" class="small">${S.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">1б. ИНН/КПП продавца:</td><td>${S.inn} / ${S.kpp}</td><td class="bold small" style="background:#f0f0f0" style="width:20%">КПП обособл.:</td><td>—</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">2. Грузоотправитель и его адрес:</td><td colspan="3">${S.name}, ${S.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">3. Грузополучатель и его адрес:</td><td colspan="3">${buyer.name}, ${buyer.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">4. К расчётно-платёжному документу:</td><td>№ ${doc.num} от ${doc.date}</td><td class="bold small" style="background:#f0f0f0">5. Идент. номер гос. контракта:</td><td>—</td></tr>
+      ${doc.advanceNum ? `<tr><td class="bold small" style="background:#f9e8d0">5б. Авансовый счёт-фактура:</td><td colspan="3">№ ${doc.advanceNum} от ${doc.advanceDate || '—'}</td></tr>` : ''}
+      <tr><td class="bold small" style="background:#f0f0f0">6. Покупатель:</td><td>${buyer.name}</td><td class="bold small" style="background:#f0f0f0">7. Валюта (код):</td><td>Российский рубль, 643</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">6а. Адрес:</td><td colspan="3" class="small">${buyer.addr}</td></tr>
+      <tr><td class="bold small" style="background:#f0f0f0">6б. ИНН/КПП покупателя:</td><td colspan="3">${buyer.inn}</td></tr>
     </table>
-    <table>
+    <table style="font-size:8.5pt">
       <thead>
-        <tr>
-          <th rowspan="2" style="width:5%">№</th>
-          <th rowspan="2">Наименование товара</th>
-          <th rowspan="2">Ед.</th>
-          <th rowspan="2">Кол-во</th>
-          <th rowspan="2">Цена без НДС</th>
-          <th rowspan="2">Стоимость без НДС</th>
-          <th colspan="2">НДС</th>
-          <th rowspan="2">Стоимость с НДС</th>
+        <tr style="background:#f0f0f0">
+          <th rowspan="2" style="width:4%">№<br><span style="font-weight:normal">1</span></th>
+          <th rowspan="2">Наименование товара (описание выполненных работ, услуг)<br><span style="font-weight:normal;font-size:7pt">1а — код вида товара</span></th>
+          <th colspan="2" style="font-size:7pt">Единица измерения</th>
+          <th rowspan="2">Кол-во<br><span style="font-weight:normal;font-size:7pt">4</span></th>
+          <th rowspan="2">Цена без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">5</span></th>
+          <th rowspan="2">Стоимость без НДС, руб.<br><span style="font-weight:normal;font-size:7pt">6</span></th>
+          <th rowspan="2">В т.ч. сумма акциза<br><span style="font-weight:normal;font-size:7pt">6а</span></th>
+          <th colspan="2" style="font-size:7pt">НДС</th>
+          <th rowspan="2">Стоимость с НДС, руб.<br><span style="font-weight:normal;font-size:7pt">9</span></th>
+          <th rowspan="2">Страна происх.<br><span style="font-weight:normal;font-size:7pt">10</span></th>
+          <th rowspan="2">Рег. номер декларации<br><span style="font-weight:normal;font-size:7pt">11</span></th>
         </tr>
-        <tr><th>Ставка</th><th>Сумма</th></tr>
-        <tr>${['1','2','3','4','5','6','7','8','9'].map(n=>`<th>${n}</th>`).join('')}</tr>
+        <tr style="background:#f0f0f0">
+          <th style="font-size:7pt">наим.<br>2</th>
+          <th style="font-size:7pt">код ОКЕИ<br>2а</th>
+          <th style="font-size:7pt">Нал. ставка<br>7</th>
+          <th style="font-size:7pt">Сумма НДС<br>8</th>
+        </tr>
       </thead>
       <tbody>
-        ${items.map(i=>`<tr><td class="center">${i.num}</td><td>${i.name}</td><td class="center">${i.unit}</td><td class="center">${i.qty}</td><td class="right">${fmtN(i.price)}</td><td class="right">${fmtN(i.sum)}</td><td class="center">${i.vatPct}%</td><td class="right">${fmtN(i.vat)}</td><td class="right">${fmtN(i.total)}</td></tr>`).join('')}
-        <tr><td colspan="5" class="right bold">Всего к оплате</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
+        ${items.map(i=>`<tr>
+          <td class="center">${i.num}</td>
+          <td>${i.name}</td>
+          <td class="center">${i.unit}</td>
+          <td class="center">796</td>
+          <td class="center">${i.qty}</td>
+          <td class="right">${fmtN(i.price)}</td>
+          <td class="right">${fmtN(i.sum)}</td>
+          <td class="center small">без акциза</td>
+          <td class="center">${i.vatPct > 0 ? i.vatPct+'%' : 'Без НДС'}</td>
+          <td class="right">${fmtN(i.vat)}</td>
+          <td class="right">${fmtN(i.total)}</td>
+          <td class="center small">РФ</td>
+          <td class="center small">—</td>
+        </tr>`).join('')}
+        <tr style="background:#f5f5f5">
+          <td colspan="5" class="right bold">Всего к оплате:</td>
+          <td></td>
+          <td class="right bold">${fmtN(noVat)}</td>
+          <td></td><td></td>
+          <td class="right bold">${fmtN(vat)}</td>
+          <td class="right bold">${fmtN(total)}</td>
+          <td></td><td></td>
+        </tr>
       </tbody>
     </table>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;font-size:9pt">
       <div>
-        <div>${signHTML('Руководитель организации')} ${S.director}</div>
-        <div style="margin-top:8px">Гл. бухгалтер _________________ ${S.buh}</div>
-        <div style="margin-top:8px"><span class="small">Индивидуальный предприниматель _________________</span></div>
+        <div>${signHTML('Руководитель организации или иное уполномоченное лицо')} &nbsp; ${S.director}</div>
+        <div style="font-size:8pt;color:#555;margin-bottom:6px">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
+        <div>Главный бухгалтер или иное уполномоченное лицо &nbsp; _________________ &nbsp; ${S.buh}</div>
+        <div style="font-size:8pt;color:#555">(подпись) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Ф.И.О.)</div>
+        <div style="margin-top:6px" class="small">Индивидуальный предприниматель _________________ (подпись) _________________ (Ф.И.О.) _________________ (реквизиты свидетельства о гос. регистрации)</div>
       </div>
       <div>${stampHTML()}</div>
     </div>`;
@@ -661,9 +1353,11 @@ function genSF(items, buyer, doc, noVat, vat, total) {
 
 // АКТ ОБ УСЛУГАХ / РАБОТАХ
 function genAKT(items, buyer, doc, noVat, vat, total) {
+  const cityMatch = (S.addr || '').match(/г\.?\s*([А-ЯЁ][а-яё\-]+)/);
+  const city = cityMatch ? cityMatch[1] : '_________________';
   return `
     <div class="title-center">АКТ № ${doc.num}<br>об оказании услуг / выполнении работ</div>
-    <div style="text-align:center;margin-bottom:8px">г. _________________ &nbsp;&nbsp; «${doc.date}» г.</div>
+    <div style="text-align:center;margin-bottom:8px">г. ${city} &nbsp;&nbsp;&nbsp; «${doc.date}» г.</div>
     <p style="font-size:10pt;margin-bottom:10px"><span class="bold">${S.name}</span>, ИНН ${S.inn}/КПП ${S.kpp}, далее «Исполнитель», и <span class="bold">${buyer.name}</span>, ИНН/КПП ${buyer.inn}, далее «Заказчик», составили настоящий Акт о том, что Исполнитель оказал услуги/выполнил работы на условиях, указанных ниже, а Заказчик принял их без претензий по объёму, качеству и срокам.</p>
     <table>
       <thead>
@@ -676,7 +1370,7 @@ function genAKT(items, buyer, doc, noVat, vat, total) {
         <tr><td colspan="5" class="right bold">Итого с НДС:</td><td class="right bold">${fmtN(total)}</td></tr>
       </tbody>
     </table>
-    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб. (${sumWords(total)})</strong></div>
+    <div style="margin-top:8px;font-size:9pt">Всего оказано услуг/выполнено работ на сумму: <strong>${fmtN(total)} руб.</strong> (${rubles(total)})</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <div style="border:1px solid #000;padding:6px">
         <div class="bold small">Исполнитель:</div>
@@ -787,11 +1481,9 @@ function genDOVER(buyer, doc) {
     <p style="font-size:10pt;margin-bottom:4px">Паспорт: серия _______ № _____________ выдан ___________________________________</p>
     <p style="font-size:10pt;margin-bottom:8px">получить от <span class="bold">${S.name}</span> товарно-материальные ценности согласно счёту № ${doc.num} от ${doc.date}.</p>
     <table>
-      <thead><tr><th>№</th><th>Наименование ценностей</th><th>Ед. изм.</th><th>Количество</th><th>Примечание</th></tr></thead>
+      <thead><tr><th style="width:5%">№</th><th>Наименование ценностей</th><th style="width:8%">Ед. изм.</th><th style="width:12%">Количество (цифрами)</th><th style="width:15%">Количество (прописью)</th><th style="width:12%">Примечание</th></tr></thead>
       <tbody>
-        <tr><td class="center">1</td><td></td><td></td><td></td><td></td></tr>
-        <tr><td class="center">2</td><td></td><td></td><td></td><td></td></tr>
-        <tr><td class="center">3</td><td></td><td></td><td></td><td></td></tr>
+        ${(()=>{const its=getItems();const rows=its.length?its:Array(3).fill(null);return rows.map((i,n)=>`<tr><td class="center">${n+1}</td><td>${i?i.name:''}</td><td class="center">${i?i.unit:''}</td><td class="center">${i?i.qty:''}</td><td>${i?numToWords(i.qty):''}</td><td></td></tr>`).join('');})()}
       </tbody>
     </table>
     <div style="margin-top:12px">
@@ -821,7 +1513,7 @@ function genKO1(buyer, doc, total, vat) {
     </table>
     <p style="font-size:10pt;margin-bottom:4px">Принято от: <span class="bold">${buyer.name}</span></p>
     <p style="font-size:10pt;margin-bottom:4px">Основание: Оплата по счёту № ${doc.num} от ${doc.date}</p>
-    <p style="font-size:10pt;margin-bottom:4px">Сумма: <span class="bold">${fmtN(total)}</span> руб. (<span style="font-style:italic">${sumWords(total)}</span>)</p>
+    <p style="font-size:10pt;margin-bottom:4px">Сумма: <span class="bold">${fmtN(total)}</span> руб. (<span style="font-style:italic">${rubles(total)}</span>)</p>
     <p style="font-size:10pt;margin-bottom:12px">В т.ч. НДС: ${vatLine}</p>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <div>
@@ -832,7 +1524,7 @@ function genKO1(buyer, doc, total, vat) {
     </div>
     <hr style="margin-top:16px">
     <div style="text-align:center;font-size:9pt;margin-top:4px">КВИТАНЦИЯ к приходному кассовому ордеру № ${doc.num} от ${doc.date}</div>
-    <p style="font-size:9pt">Принято от ${buyer.name} сумма ${fmtN(total)} руб. (${sumWords(total)})</p>
+    <p style="font-size:9pt">Принято от ${buyer.name} сумма ${fmtN(total)} руб. (${rubles(total)})</p>
     <p style="font-size:9pt">Основание: оплата по счёту № ${doc.num}</p>
     <div style="display:flex;justify-content:space-between;margin-top:8px">
       <div>Гл. бухгалтер _________________ ${S.buh}</div>
@@ -863,7 +1555,7 @@ function genTTN(items, buyer, doc, noVat, vat, total) {
         <tr><td colspan="6" class="right bold">Итого:</td><td class="right bold">${fmtN(noVat)}</td><td></td><td class="right bold">${fmtN(vat)}</td><td class="right bold">${fmtN(total)}</td></tr>
       </tbody>
     </table>
-    <div style="margin-top:8px;font-size:9pt">Всего отпущено на сумму: <strong>${fmtN(total)} руб. (${sumWords(total)})</strong></div>
+    <div style="margin-top:8px;font-size:9pt">Всего отпущено на сумму: <strong>${fmtN(total)} руб. (${rubles(total)})</strong></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <div style="border:1px solid #000;padding:8px;font-size:9pt">
         <div class="bold">Сдал:</div>
@@ -887,12 +1579,6 @@ function genTTN(items, buyer, doc, noVat, vat, total) {
     </table>`;
 }
 
-function sumWords(n) {
-  // Упрощённо
-  const num = Math.floor(n);
-  const kop = Math.round((n - num) * 100);
-  return `${num} рублей ${kop.toString().padStart(2,'0')} копеек`;
-}
 
 function printDoc() {
   const content = document.getElementById('docPreview').innerHTML;
@@ -995,10 +1681,13 @@ function showPage(name,btn){
   if(btn)btn.classList.add('active');
   if(name==='history')renderHistory();
   if(name==='settings')initSettings();
+  if(name==='templates')renderTemplates();
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
 document.getElementById('docDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('ppDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('ppNum').value = String(history.length+1).padStart(3,'0');
 document.getElementById('docNum').value = String(history.length+1).padStart(3,'0');
 renderHistory();
 initSettings();
@@ -1012,6 +1701,194 @@ if (prefill) {
     localStorage.removeItem('omsfin_doc_prefill');
   } catch(e){}
 }
+
+// ─── Акт сверки ───────────────────────────────────────────────────────────────
+function addSvRow() {
+  const wrap = document.getElementById('svRowsWrap');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:6px;margin-bottom:4px;align-items:center';
+  row.innerHTML = `<input type="date" class="sv-date" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">
+    <input type="text" class="sv-doc" placeholder="Документ/основание" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">
+    <input type="number" class="sv-debit" placeholder="0.00" step="0.01" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">
+    <input type="number" class="sv-credit" placeholder="0.00" step="0.01" style="padding:4px 6px;background:var(--surface);border:1px solid var(--border,#333);border-radius:6px;color:var(--text);font-size:12px">`;
+  wrap.appendChild(row);
+}
+
+function generateSverka() {
+  const ourName = document.getElementById('svOurName')?.value.trim();
+  const cpName = document.getElementById('svCpName')?.value.trim();
+  if (!ourName) { _docFieldErr('svOurName', 'Укажи наименование нашей организации'); return; }
+  if (!cpName) { _docFieldErr('svCpName', 'Укажи наименование контрагента'); return; }
+  // Проверяем что есть хоть одна строка с данными
+  const dates = document.querySelectorAll('#svRowsWrap input.sv-date');
+  if (!dates.length) { showToast('⚠️ Добавь хотя бы одну строку операций'); return; }
+  const v = id => document.getElementById(id).value;
+  const dateFrom = v('svDateFrom') ? new Date(v('svDateFrom')).toLocaleDateString('ru-RU') : '__.__.____';
+  const dateTo = v('svDateTo') ? new Date(v('svDateTo')).toLocaleDateString('ru-RU') : '__.__.____';
+  const dateDoc = v('svDate') ? new Date(v('svDate')).toLocaleDateString('ru-RU') : '__.__.____';
+
+  const rows = document.querySelectorAll('#svRowsWrap .sv-row:not(:first-child), #svRowsWrap div[style*="grid"]');
+  let tableRows = '';
+  let totalDebit = 0, totalCredit = 0;
+  let rowNum = 0;
+  document.querySelectorAll('#svRowsWrap input.sv-date').forEach((_, i) => {
+    const date = document.querySelectorAll('#svRowsWrap input.sv-date')[i].value;
+    const doc = document.querySelectorAll('#svRowsWrap input.sv-doc')[i].value || '—';
+    const debit = parseFloat(document.querySelectorAll('#svRowsWrap input.sv-debit')[i].value) || 0;
+    const credit = parseFloat(document.querySelectorAll('#svRowsWrap input.sv-credit')[i].value) || 0;
+    totalDebit += debit;
+    totalCredit += credit;
+    rowNum++;
+    const dateStr = date ? new Date(date).toLocaleDateString('ru-RU') : '';
+    tableRows += `<tr>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:center">${rowNum}</td>
+      <td style="border:1px solid #999;padding:4px 6px">${dateStr}</td>
+      <td style="border:1px solid #999;padding:4px 6px">${doc}</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${debit ? debit.toLocaleString('ru-RU',{minimumFractionDigits:2}) : ''}</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${credit ? credit.toLocaleString('ru-RU',{minimumFractionDigits:2}) : ''}</td>
+    </tr>`;
+  });
+
+  const balance = totalDebit - totalCredit;
+  const balanceStr = Math.abs(balance).toLocaleString('ru-RU',{minimumFractionDigits:2});
+  const balanceDesc = balance > 0 ? `Задолженность ${v('svCpName') || 'контрагента'}: ${balanceStr} руб.`
+                    : balance < 0 ? `Задолженность ${v('svOurName') || 'нашей организации'}: ${balanceStr} руб.`
+                    : 'Задолженности нет, расчёты совпадают';
+
+  const html = `<div class="doc-print" style="font-family:'Times New Roman',Times,serif;font-size:10pt;color:#000;background:#fff;padding:15mm">
+<h2 style="text-align:center;margin:0 0 4px;font-size:13pt">АКТ СВЕРКИ ВЗАИМНЫХ РАСЧЁТОВ № ${v('svNum')}</h2>
+<p style="text-align:center;margin:0 0 12px;font-size:10pt">за период с ${dateFrom} по ${dateTo}</p>
+<table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:12px">
+  <tr>
+    <td style="width:50%;padding:4px;vertical-align:top"><b>${v('svOurName') || '________________________'}</b><br>ИНН/КПП: ${v('svOurInn') || '____________'}</td>
+    <td style="width:50%;padding:4px;vertical-align:top"><b>${v('svCpName') || '________________________'}</b><br>ИНН/КПП: ${v('svCpInn') || '____________'}</td>
+  </tr>
+</table>
+<table style="width:100%;border-collapse:collapse;font-size:9pt">
+  <thead>
+    <tr style="background:#f0f0f0">
+      <th style="border:1px solid #999;padding:5px;width:40px">№</th>
+      <th style="border:1px solid #999;padding:5px">Дата</th>
+      <th style="border:1px solid #999;padding:5px">Документ / основание</th>
+      <th style="border:1px solid #999;padding:5px;width:120px">Дебет (нам должны), руб.</th>
+      <th style="border:1px solid #999;padding:5px;width:120px">Кредит (мы должны), руб.</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border:1px solid #999;padding:4px 6px" colspan="3"><b>Сальдо начальное</b></td>
+      <td style="border:1px solid #999;padding:4px 6px"></td>
+      <td style="border:1px solid #999;padding:4px 6px"></td>
+    </tr>
+    ${tableRows}
+    <tr style="font-weight:bold">
+      <td style="border:1px solid #999;padding:4px 6px" colspan="3">Обороты за период</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${totalDebit.toLocaleString('ru-RU',{minimumFractionDigits:2})}</td>
+      <td style="border:1px solid #999;padding:4px 6px;text-align:right">${totalCredit.toLocaleString('ru-RU',{minimumFractionDigits:2})}</td>
+    </tr>
+    <tr style="font-weight:bold">
+      <td style="border:1px solid #999;padding:4px 6px" colspan="5">${balanceDesc}</td>
+    </tr>
+  </tbody>
+</table>
+<p style="margin:16px 0 4px;font-size:10pt">По данным учёта обеих сторон задолженность подтверждается. Акт составлен ${dateDoc}.</p>
+<table style="width:100%;margin-top:20px;font-size:10pt">
+  <tr>
+    <td style="width:50%;padding:4px;vertical-align:bottom">
+      <p style="margin:0 0 20px">${v('svOurName') || '________________________'}</p>
+      <p style="margin:0">${v('svOurSigner') || '________________________'} _______________</p>
+      <p style="margin:0;font-size:9pt;color:#555">М.П.</p>
+    </td>
+    <td style="width:50%;padding:4px;vertical-align:bottom">
+      <p style="margin:0 0 20px">${v('svCpName') || '________________________'}</p>
+      <p style="margin:0">${v('svCpSigner') || '________________________'} _______________</p>
+      <p style="margin:0;font-size:9pt;color:#555">М.П.</p>
+    </td>
+  </tr>
+</table>
+</div>`;
+
+  document.getElementById('docPreview').innerHTML = html;
+  document.getElementById('previewWrap').classList.add('active');
+  document.getElementById('previewWrap').scrollIntoView({behavior:'smooth'});
+}
+
+// ─── Шаблоны документов ───────────────────────────────────────────────────────
+const TMPL_KEY = 'omsfin_doc_templates';
+function getTemplates() { return JSON.parse(localStorage.getItem(TMPL_KEY) || '[]'); }
+function saveTemplates(t) { localStorage.setItem(TMPL_KEY, JSON.stringify(t)); }
+
+function saveTemplate() {
+  const docNames = {schet:'Счёт',upd:'УПД',torg12:'ТОРГ-12',sf:'Счёт-фактура',akt:'Акт об услугах',dog:'Договор',dover:'Доверенность М-2',ko1:'ПКО КО-1',ttn:'ТТН'};
+  const name = prompt('Название шаблона:', (document.getElementById('buyerName')?.value || docNames[currentDoc] || 'Шаблон') + ' — шаблон');
+  if (!name) return;
+
+  // Собираем все заполненные поля формы
+  const fields = {};
+  ['buyerName','buyerInn','buyerKpp','buyerAddr','docNum','docDate',
+   'sumTotal','vatRate','contractNum','contractDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value) fields[id] = el.value;
+  });
+  // Строки товаров
+  const rows = [];
+  document.querySelectorAll('.item-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const r = {};
+    inputs.forEach(inp => { if (inp.id && inp.value) r[inp.id] = inp.value; });
+    if (Object.keys(r).length) rows.push(r);
+  });
+
+  const tmpl = { id: Date.now(), name, type: currentDoc, typeName: docNames[currentDoc], fields, rows, created: new Date().toLocaleDateString('ru-RU') };
+  const templates = getTemplates();
+  templates.unshift(tmpl);
+  saveTemplates(templates.slice(0, 30));
+  showToast('⭐ Шаблон сохранён: ' + name);
+}
+
+function applyTemplate(id) {
+  const tmpl = getTemplates().find(t => t.id === id);
+  if (!tmpl) return;
+  // Переключить тип документа
+  const btn = document.querySelector(`.doc-type-btn[data-type="${tmpl.type}"]`);
+  if (btn) { selectDoc(tmpl.type, btn); }
+  // Заполнить поля
+  setTimeout(() => {
+    Object.entries(tmpl.fields || {}).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
+    });
+    showToast('✅ Шаблон «' + tmpl.name + '» применён');
+  }, 100);
+}
+
+function deleteTemplate(id) {
+  saveTemplates(getTemplates().filter(t => t.id !== id));
+  renderTemplates();
+  showToast('🗑️ Шаблон удалён');
+}
+
+function renderTemplates() {
+  const list = document.getElementById('templatesList');
+  if (!list) return;
+  const templates = getTemplates();
+  const icons = {schet:'🧾',upd:'📋',torg12:'📦',sf:'💰',akt:'✅',dog:'📝',dover:'📜',ko1:'💵',ttn:'🚛'};
+  if (!templates.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Шаблонов пока нет.<br>Заполните документ и нажмите ⭐ Шаблон</div>';
+    return;
+  }
+  list.innerHTML = templates.map(t => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+      <span style="font-size:24px;flex-shrink:0">${icons[t.type]||'📄'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${t.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${t.typeName} · сохранён ${t.created}</div>
+      </div>
+      <button onclick="applyTemplate(${t.id});showPage('create',document.querySelector('.tab'))" style="background:var(--accent);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer">Применить</button>
+      <button onclick="deleteTemplate(${t.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px">✕</button>
+    </div>`).join('');
+}
+
 </script>
 </body>
 </html>

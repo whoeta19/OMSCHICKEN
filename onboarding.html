@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Добро пожаловать</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#060608;color:#f5f5f5;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
@@ -58,10 +58,11 @@
     <div class="step-dot" id="dot-1"></div>
     <div class="step-dot" id="dot-2"></div>
     <div class="step-dot" id="dot-3"></div>
+    <div class="step-dot" id="dot-4"></div>
   </div>
 
   <div class="progress">
-    <div class="progress-fill" id="progressFill" style="width:25%"></div>
+    <div class="progress-fill" id="progressFill" style="width:20%"></div>
   </div>
 
   <div class="card">
@@ -113,9 +114,44 @@
       <button class="btn-skip" onclick="nextStep()">Пропустить, настрою позже</button>
     </div>
 
-    <!-- Шаг 2: Загрузка выписки -->
+    <!-- Шаг 2: Налоговый режим -->
     <div class="step" id="step-2">
-      <div class="step-num">Шаг 2 из 3</div>
+      <div class="step-num">Шаг 2 из 4</div>
+      <div class="step-title">Налоговый режим</div>
+      <div class="step-desc">Это поможет правильно рассчитывать налоги и давать нужные подсказки.</div>
+      <div class="features" style="margin-bottom:16px">
+        <div class="feature" id="reg-usn6" onclick="selectRegime('usn6',this)" style="cursor:pointer;border:1px solid rgba(255,255,255,0.07);transition:all 0.2s">
+          <div class="feature-icon">6%</div>
+          <div class="feature-text"><strong>УСН 6% — Доходы</strong>Налог с выручки, проще учёт. Лучше при низких расходах.</div>
+        </div>
+        <div class="feature" id="reg-usn15" onclick="selectRegime('usn15',this)" style="cursor:pointer;border:1px solid rgba(255,255,255,0.07);transition:all 0.2s">
+          <div class="feature-icon">15%</div>
+          <div class="feature-text"><strong>УСН 15% — Доходы минус расходы</strong>Лучше при расходах больше 60% выручки.</div>
+        </div>
+        <div class="feature" id="reg-osno" onclick="selectRegime('osno',this)" style="cursor:pointer;border:1px solid rgba(255,255,255,0.07);transition:all 0.2s">
+          <div class="feature-icon">НДС</div>
+          <div class="feature-text"><strong>ОСНО — Общая система</strong>Платите НДС 10%/22%, налог на прибыль 25%.</div>
+        </div>
+        <div class="feature" id="reg-other" onclick="selectRegime('other',this)" style="cursor:pointer;border:1px solid rgba(255,255,255,0.07);transition:all 0.2s">
+          <div class="feature-icon">⋯</div>
+          <div class="feature-text"><strong>Другое / Не знаю</strong>ПСН, ЕСХН или определимся позже.</div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Ставка НДС (если на ОСНО)</label>
+        <select id="ob-vat-rate" style="width:100%;background:#161616;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:11px 14px;color:#f5f5f5;font-size:13px;outline:none">
+          <option value="10">10% (продукты питания, базовые товары)</option>
+          <option value="22">22% (основная ставка)</option>
+          <option value="0">0% (экспорт / не плачу НДС)</option>
+        </select>
+      </div>
+      <button class="btn" onclick="saveRegime()">Сохранить и продолжить →</button>
+      <button class="btn-skip" onclick="nextStep()">Пропустить</button>
+    </div>
+
+    <!-- Шаг 3: Загрузка выписки -->
+    <div class="step" id="step-3">
+      <div class="step-num">Шаг 3 из 4</div>
       <div class="step-title">Загрузи первую выписку</div>
       <div class="step-desc">Скачай CSV-выписку из интернет-банка и загрузи сюда — данные появятся мгновенно.</div>
       <div class="bank-logos">
@@ -138,8 +174,8 @@
       <button class="btn-skip" onclick="nextStep()">Пропустить, загружу позже</button>
     </div>
 
-    <!-- Шаг 3: Готово -->
-    <div class="step" id="step-3">
+    <!-- Шаг 4: Готово -->
+    <div class="step" id="step-4">
       <div class="success-icon">🎉</div>
       <div class="step-num">Всё готово!</div>
       <div class="step-title">Кабинет настроен</div>
@@ -166,8 +202,44 @@
 
 <script>
 let currentStep = 0;
+const TOTAL_STEPS = 5; // 0-4
+
+// Автозаполнение из данных регистрации
+(function prefill() {
+  try {
+    const u = JSON.parse(localStorage.getItem('omsfin_user') || '{}');
+    const name = u.user_metadata?.company_name || '';
+    if (name) {
+      const el = document.getElementById('ob-name');
+      if (el) el.value = name;
+    }
+    // Если уже проходил онбординг — сразу на главную
+    if (localStorage.getItem('omsfin_onboarded')) window.location.href = '/';
+  } catch(e) {}
+})();
 const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
+
+let selectedRegime = '';
+
+function selectRegime(code, el) {
+  selectedRegime = code;
+  document.querySelectorAll('[id^="reg-"]').forEach(e => {
+    e.style.borderColor = 'rgba(255,255,255,0.07)';
+    e.style.background = '';
+  });
+  el.style.borderColor = '#ff6b00';
+  el.style.background = 'rgba(255,107,0,0.06)';
+}
+
+function saveRegime() {
+  if (selectedRegime) {
+    localStorage.setItem('omsfin_tax_regime', selectedRegime);
+  }
+  const vatRate = document.getElementById('ob-vat-rate').value;
+  localStorage.setItem('omsfin_vat_rate', vatRate);
+  nextStep();
+}
 
 function nextStep() {
   document.getElementById('step-'+currentStep).classList.remove('active');
@@ -176,7 +248,7 @@ function nextStep() {
   currentStep++;
   document.getElementById('step-'+currentStep).classList.add('active');
   document.getElementById('dot-'+currentStep).classList.add('active');
-  document.getElementById('progressFill').style.width = ((currentStep+1)/4*100) + '%';
+  document.getElementById('progressFill').style.width = ((currentStep+1)/TOTAL_STEPS*100) + '%';
 }
 
 function saveRequisites() {
@@ -216,7 +288,6 @@ function fileSelected(input) {
 }
 
 function finish(url) {
-  localStorage.setItem('omsfin_onboarded', '1');
   localStorage.setItem('omsfin_onboarded', '1');
   window.location.href = url;
 }

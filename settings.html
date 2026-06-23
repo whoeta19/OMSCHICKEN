@@ -4,10 +4,55 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OMSFIN — Настройки</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
-  body.light{--bg:#f5f5f5;--surface:#ffffff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111;--muted:#888;}
+  /* Плавный переход между темами */
+  body,body *{transition:background-color 0.25s ease,border-color 0.25s ease,color 0.2s ease,box-shadow 0.25s ease;}
+  body .chart-card canvas,body canvas{transition:none;}
+  body.light{--bg:#f2f0eb;--surface:#ffffff;--surface2:#f7f6f2;--border:rgba(0,0,0,0.09);--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#7a7060;--shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);}
+  body.blue{--bg:#060d1f;--surface:#0c1830;--surface2:#112040;--border:rgba(96,165,250,0.13);--green:#34d399;--red:#f87171;--text:#e8f0fe;--muted:#4a6fa5;--shadow:0 4px 24px rgba(0,0,0,0.4);}
+  body.light{font-family:'Nunito',sans-serif!important;}
+  body.light .logo,.body.light .stat-value,.body.light .section-title,.body.light .hero-stat-value{font-family:'Nunito',sans-serif!important;}
+  /* ── Светлая тема: фикс хардкоженных rgba(255,255,255,...) ── */
+  body.light .stat-label{color:rgba(0,0,0,0.45)!important;}
+  body.light .tx-date,body.light .tx-desc{color:rgba(0,0,0,0.45)!important;}
+  body.light .hero-stat-sub{color:rgba(0,0,0,0.45)!important;}
+  body.light .stat-card{box-shadow:0 1px 4px rgba(0,0,0,0.07),0 2px 10px rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.06);}
+  body.light .stat-card:hover{box-shadow:0 4px 16px rgba(229,80,0,0.12)!important;}
+  body.light header{box-shadow:0 1px 8px rgba(0,0,0,0.08);}
+  body.light .hero-stat{background:linear-gradient(135deg,rgba(229,80,0,0.06),rgba(229,80,0,0.02))!important;border:1px solid rgba(229,80,0,0.12);}
+  body.light .hero-stat::before{background:radial-gradient(circle at 0% 50%,rgba(229,80,0,0.08),transparent 60%)!important;}
+  body.light .pill{color:rgba(0,0,0,0.55)!important;background:rgba(0,0,0,0.04)!important;}
+  body.light .pill.active,.body.light .pill:hover{color:var(--accent)!important;background:rgba(229,80,0,0.08)!important;}
+  body.light .progress-track,.body.light .chart-bar-wrap,.body.light .progress-wrap{background:rgba(0,0,0,0.07)!important;}
+  body.light .section-title{color:var(--accent);}
+  body.light .empty,.body.light .empty-state{color:rgba(0,0,0,0.35);}
+  body.light .chart-card,.body.light .usn-calc-card,.body.light .forecast-card{box-shadow:0 1px 4px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);}
+  body.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.15);}
+  body.light .ai-fab{box-shadow:0 4px 20px rgba(229,80,0,0.35);}
+  body.light .bottom-nav{box-shadow:0 -1px 8px rgba(0,0,0,0.08);}
+  body.light .tx-row:hover{background:rgba(0,0,0,0.02)!important;}
+  body.light .modal,.body.light .ai-modal{box-shadow:0 20px 60px rgba(0,0,0,0.15)!important;}
+  body.light input,body.light select,body.light textarea{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light input::placeholder,body.light textarea::placeholder{color:rgba(0,0,0,0.35)!important;}
+  body.light .btn-outline{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light .btn-outline:hover{background:rgba(229,80,0,0.06)!important;border-color:var(--accent)!important;color:var(--accent)!important;}
+  body.light .bottom-nav{background:rgba(255,255,255,0.95)!important;border-top:1px solid rgba(0,0,0,0.08)!important;}
+  body.light .bottom-nav a{color:rgba(0,0,0,0.45)!important;}
+  body.light .bottom-nav a.active{color:var(--accent)!important;}
+  /* ── Аврора: градиентные акценты ── */
+  body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
+  body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
+  body.aurora .hero-stat{background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(167,139,250,0.03))!important;border:1px solid rgba(167,139,250,0.15)!important;}
+  body.aurora .hero-stat::before{background:radial-gradient(circle at 0% 50%,rgba(167,139,250,0.12),transparent 60%)!important;}
+  body.aurora .progress-fill{background:linear-gradient(90deg,#a78bfa,#c4b5fd)!important;}
+  body.aurora .ai-fab{background:linear-gradient(135deg,#a78bfa,#7c3aed)!important;box-shadow:0 4px 20px rgba(167,139,250,0.45)!important;}
+  body.aurora header{border-bottom:1px solid rgba(167,139,250,0.1);}
+  body.aurora .stat-card:hover{border-color:rgba(167,139,250,0.3)!important;box-shadow:0 4px 16px rgba(167,139,250,0.15)!important;}
+  body.aurora .section-title{color:var(--accent);}
+  body.aurora .logo span{color:var(--accent);}
+  body.aurora{--bg:#0e0b1a;--surface:#150f2a;--surface2:#1d1535;--border:rgba(167,139,250,0.14);--green:#34d399;--red:#f87171;--text:#f0eaff;--muted:#8b7db5;--shadow:0 4px 24px rgba(139,92,246,0.15);}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;transition:background 0.3s,color 0.3s;}
   header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100;}
@@ -40,30 +85,42 @@
   .toast{position:fixed;bottom:20px;right:16px;left:16px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.3s;z-index:999;}
   .toast.show{transform:translateY(0);opacity:1;}
   .theme-btns{display:flex;gap:8px;margin-top:8px;}
+  .toggle-wrap{display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0;}
+  .toggle-wrap input{display:none;}
+  .toggle-track{width:44px;height:24px;background:rgba(128,128,128,0.3);border:1px solid rgba(128,128,128,0.25);border-radius:12px;position:relative;transition:background 0.2s,border-color 0.2s;flex-shrink:0;}
+  .toggle-wrap input:checked + .toggle-track{background:var(--accent);border-color:var(--accent);}
+  .toggle-thumb{position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+  .toggle-wrap input:checked + .toggle-track .toggle-thumb{left:23px;}
   .theme-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;transition:all 0.2s;background:var(--surface2);}
   .theme-btn.active{border-color:var(--accent);color:var(--accent);}
   .notif-day{display:flex;align-items:center;gap:8px;}
   .notif-day input[type=number]{width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;}
 
+  .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
+  .bottom-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:9px;padding:4px 0;transition:color 0.15s;}
+  .bottom-nav a.active,.bottom-nav a:hover{color:var(--accent);}
+  .bottom-nav .bn-icon{font-size:20px;line-height:1;}
+  @media(max-width:700px){.bottom-nav{display:flex;} body{padding-bottom:60px;}}
   @media (max-width: 600px) {
-    header{padding:12px 14px;}
+    header{padding:10px 14px;}
     .logo{font-size:14px;}
-    main{padding:12px 14px;}
+    main{padding:12px 14px;padding-bottom:80px;}
     .input-row{grid-template-columns:1fr;}
-    .btn{padding:9px 14px;font-size:10px;}
-    .tabs{overflow-x:auto;padding:8px 14px 0;}
-    .tab{font-size:11px;padding:7px 10px;white-space:nowrap;}
-    .stats-row{grid-template-columns:1fr 1fr;gap:6px;}
-    .stat-value{font-size:12px;}
-    .charts-grid{grid-template-columns:1fr;}
-    .chart-card.full{grid-column:1;}
-    .doc-types{grid-template-columns:1fr 1fr;}
-    table{font-size:11px;}
-    th,td{padding:5px 6px;}
+    .btn{padding:9px 14px;font-size:11px;}
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:8px 14px 0;white-space:nowrap;}
+    .tab{font-size:11px;padding:7px 10px;}
+    .card{padding:14px;}
+    .section-title{font-size:10px;}
+    /* Цвета акцента — уменьшить кружки */
+    #accentColors{gap:6px;}
+    /* Тема — 2 колонки */
+    .theme-grid{grid-template-columns:1fr 1fr!important;}
   }
 </style>
+<script src="/nav.js"></script>
 </head>
 <body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;gap:8px">
@@ -80,17 +137,32 @@
       <div class="theme-btns">
         <div class="theme-btn" id="theme-dark" onclick="setTheme('dark',this)">🌙 Тёмная</div>
         <div class="theme-btn" id="theme-light" onclick="setTheme('light',this)">☀️ Светлая</div>
+        <div class="theme-btn" id="theme-blue" onclick="setTheme('blue',this)">🌊 Синяя</div>
+        <div class="theme-btn" id="theme-aurora" onclick="setTheme('aurora',this)">🌌 Аврора</div>
+      </div>
+    </div>
+    <div class="input-group" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Авто-тема по времени суток</span>
+        <span style="font-size:10px;color:var(--accent)" id="autoThemeStatus"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div onclick="document.getElementById('autoThemeToggle').click()" style="width:44px;height:24px;border-radius:12px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.2s" id="toggleTrack">
+          <div id="toggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.35)"></div>
+          <input type="checkbox" id="autoThemeToggle" onchange="toggleAutoTheme(this.checked)" style="display:none">
+        </div>
+        <span style="font-size:11px;color:var(--muted)">День 07:00–21:00 → светлая, ночь → тёмная</span>
       </div>
     </div>
     <div class="input-group">
       <label>Акцентный цвет</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-        <div onclick="setAccent('#ff6b00',this)" style="width:32px;height:32px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent" class="accent-dot active-accent"></div>
-        <div onclick="setAccent('#22c55e',this)" style="width:32px;height:32px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#818cf8',this)" style="width:32px;height:32px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#f43f5e',this)" style="width:32px;height:32px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#0ea5e9',this)" style="width:32px;height:32px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
-        <div onclick="setAccent('#a855f7',this)" style="width:32px;height:32px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent" class="accent-dot"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <div onclick="setAccent('#ff6b00',this)" style="width:20px;height:20px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#22c55e',this)" style="width:20px;height:20px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#818cf8',this)" style="width:20px;height:20px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#f43f5e',this)" style="width:20px;height:20px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#0ea5e9',this)" style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+        <div onclick="setAccent('#a855f7',this)" style="width:20px;height:20px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
       </div>
     </div>
   </div>
@@ -246,8 +318,35 @@
       </div>
       <button class="toggle on" id="togReport" onclick="toggleNotif(this,'notif_report')"></button>
     </div>
+    <div class="toggle-row" style="margin-top:12px">
+      <div>
+        <div class="toggle-label">Крупные списания в Telegram</div>
+        <div class="toggle-sub">Уведомление при списании больше порога</div>
+      </div>
+      <button class="toggle" id="togBigTx" onclick="toggleNotif(this,'notif_big_tx')"></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+      <span style="font-size:12px;color:var(--muted)">Порог:</span>
+      <input type="number" id="bigTxThreshold" value="50000" min="1000" step="1000"
+        style="width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;">
+      <span style="font-size:12px;color:var(--muted)">₽</span>
+    </div>
     <button class="btn" onclick="saveNotifications()" style="margin-top:12px">💾 Сохранить уведомления</button>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">* Уведомления показываются при открытии приложения</div>
+  </div>
+
+  <!-- Email уведомления -->
+  <div class="card">
+    <div class="section-title">📧 Email уведомления</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      При критических дедлайнах (≤3 дня) — дополнительное напоминание на почту. Email берётся из твоего аккаунта.
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="testEmail()" class="btn" style="background:transparent;border:1px solid var(--border);color:var(--text);font-size:12px;padding:9px 16px;width:auto">
+        📨 Отправить тестовое письмо
+      </button>
+    </div>
+    <div id="emailStatus" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
   </div>
 
   <!-- Telegram -->
@@ -283,6 +382,72 @@
     </div>
   </div>
 
+
+  <!-- МойСклад интеграция -->
+  <div class="card">
+    <div class="section-title">🏪 МойСклад</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Импортируй платежи напрямую из МойСклад без выписки банка.</p>
+    <div class="input-group">
+      <label>API токен МойСклад</label>
+      <input type="password" id="msToken" placeholder="Токен из МойСклад → Настройки → Доступ к API"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:monospace">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-outline" onclick="saveMsToken()">💾 Сохранить токен</button>
+      <button class="btn-outline" onclick="testMsToken()" id="msBtnTest">🔗 Проверить соединение</button>
+    </div>
+    <div id="msStatus" style="font-size:12px;margin-top:8px"></div>
+  </div>
+
+  <!-- Автоимпорт из банка (вебхук) -->
+  <div class="card">
+    <div class="section-title">🏦 Автоимпорт из банка</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      Настрой вебхук в интернет-банке — и операции будут поступать автоматически без ручной загрузки выписок.
+      Поддерживаются <strong style="color:var(--text)">Т-Банк, Альфа-Банк, Сбер Бизнес</strong> и любой банк с HTTP-уведомлениями.
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Выбери банк</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="bankTabs">
+        <button onclick="selectBank('tbank')" id="tab_tbank" style="padding:5px 12px;border-radius:8px;border:1px solid var(--accent);background:rgba(255,107,0,0.1);color:var(--accent);font-size:12px;cursor:pointer">Т-Банк</button>
+        <button onclick="selectBank('alfa')" id="tab_alfa" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Альфа-Банк</button>
+        <button onclick="selectBank('sber')" id="tab_sber" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Сбер Бизнес</button>
+        <button onclick="selectBank('other')" id="tab_other" style="padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer">Другой банк</button>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">URL для вебхука</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div id="webhookUrl" style="flex:1;font-size:11px;color:var(--text);font-family:monospace;word-break:break-all;background:var(--bg);padding:8px 10px;border-radius:7px;border:1px solid var(--border)">—</div>
+        <button onclick="copyWebhookUrl()" style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;white-space:nowrap" id="webhookCopyBtn">Копировать</button>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <button onclick="regenerateWebhookSecret()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer">🔄 Сгенерировать новый секрет</button>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px">Старый URL перестанет работать</span>
+    </div>
+    <div id="bankInstructions">
+      <details open style="margin-top:8px">
+        <summary style="font-size:12px;color:var(--accent);cursor:pointer;list-style:none">▶ Инструкция</summary>
+        <div id="bankInstructionText" style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.8;background:var(--surface2);border-radius:10px;padding:12px"></div>
+      </details>
+    </div>
+    <div id="webhookStatus" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+  </div>
+
+  <!-- Реферальная программа -->
+  <div class="card">
+    <div class="section-title">🎁 Реферальная программа</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      Приглашай друзей — получай бесплатные месяцы Pro. За каждого зарегистрировавшегося по твоей ссылке — <strong style="color:var(--text)">+1 месяц Pro</strong> тебе и другу.
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="flex:1;font-size:12px;color:var(--text);font-family:monospace;word-break:break-all" id="refLink">—</div>
+      <button onclick="copyRefLink()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 14px;font-family:Unbounded,sans-serif;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0" id="refCopyBtn">Копировать</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted)" id="refStats">Загрузка...</div>
+  </div>
+
   <!-- Аккаунт -->
   <div class="card">
     <div class="section-title">👤 Аккаунт</div>
@@ -311,33 +476,78 @@ if (user.email) document.getElementById('userEmail').textContent = user.email;
 
 // Применяем тему
 function applyTheme(theme) {
-  document.body.classList.toggle('light', theme === 'light');
-  document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
-  document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+  document.body.classList.remove('light', 'blue', 'aurora');
+  if (theme === 'light') document.body.classList.add('light');
+  if (theme === 'blue') document.body.classList.add('blue');
+  if (theme === 'aurora') document.body.classList.add('aurora');
+  ['dark','light','blue','aurora'].forEach(t => {
+    const el = document.getElementById('theme-'+t);
+    if (el) el.classList.toggle('active', t === (theme||'dark'));
+  });
 }
 
 function setTheme(theme, el) {
   applyTheme(theme);
   settings.theme = theme;
+  settings.autoTheme = false;
+  document.getElementById('autoThemeToggle').checked = false;
+  updateAutoThemeStatus();
   localStorage.setItem('omsfin_settings', JSON.stringify(settings));
   showToast('✅ Тема изменена');
 }
 
+function getAutoTheme() {
+  const h = new Date().getHours();
+  return (h >= 7 && h < 21) ? 'light' : 'dark';
+}
+
+function toggleAutoTheme(on) {
+  settings.autoTheme = on;
+  if (on) {
+    const t = getAutoTheme();
+    applyTheme(t);
+    settings.theme = t;
+    showToast('🌗 Авто-тема включена');
+  }
+  updateAutoThemeStatus();
+  localStorage.setItem('omsfin_settings', JSON.stringify(settings));
+}
+
+function updateAutoThemeStatus() {
+  const el = document.getElementById('autoThemeStatus');
+  if (el) {
+    if (settings.autoTheme) {
+      const h = new Date().getHours();
+      el.textContent = (h >= 7 && h < 21) ? '☀️ сейчас светлая' : '🌙 сейчас тёмная';
+    } else {
+      el.textContent = '';
+    }
+  }
+  // Обновить визуал тоггла
+  const track = document.getElementById('toggleTrack');
+  const thumb = document.getElementById('toggleThumb');
+  if (track) track.style.background = settings.autoTheme ? 'var(--accent)' : 'rgba(128,128,128,0.3)';
+  if (thumb) thumb.style.left = settings.autoTheme ? '23px' : '3px';
+}
+
 // Акцентный цвет
 function setAccent(color, el) {
-  document.documentElement.style.setProperty('--accent', color);
+  document.body.style.setProperty('--accent', color);
   document.querySelectorAll('.accent-dot').forEach(d => d.style.border = '2px solid transparent');
-  el.style.border = '2px solid white';
+  el.style.border = '2px solid var(--text,#fff)';
   settings.accent = color;
   localStorage.setItem('omsfin_settings', JSON.stringify(settings));
 }
 
 // Инициализация темы и цвета
 applyTheme(settings.theme || 'dark');
+document.getElementById('autoThemeToggle').checked = !!settings.autoTheme;
+updateAutoThemeStatus();
 if (settings.accent) {
-  document.documentElement.style.setProperty('--accent', settings.accent);
+  document.body.style.setProperty('--accent', settings.accent);
   document.querySelectorAll('.accent-dot').forEach(d => {
-    if (d.style.background === settings.accent) d.style.border = '2px solid white';
+    const m = (d.getAttribute('onclick') || '').match(/'(#[0-9a-fA-F]+)'/);
+    if (m && m[1] === settings.accent) d.style.border = '2px solid var(--text,#fff)';
   });
 }
 
@@ -659,6 +869,7 @@ async function removeMember(targetUserId) {
 const notifSettings = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
 if (notifSettings.vatDays) document.getElementById('vatDays').value = notifSettings.vatDays;
 if (notifSettings.salaryDay) document.getElementById('salaryDay').value = notifSettings.salaryDay;
+if (notifSettings.bigTxThreshold) document.getElementById('bigTxThreshold').value = notifSettings.bigTxThreshold;
 ['vat','salary','report'].forEach(key => {
   const tog = document.getElementById('tog' + key.charAt(0).toUpperCase() + key.slice(1));
   if (notifSettings['notif_' + key] === false) tog.classList.remove('on');
@@ -675,6 +886,7 @@ function saveNotifications() {
   const notif = JSON.parse(localStorage.getItem('omsfin_notif') || '{}');
   notif.vatDays = document.getElementById('vatDays').value;
   notif.salaryDay = document.getElementById('salaryDay').value;
+  notif.bigTxThreshold = parseInt(document.getElementById('bigTxThreshold').value) || 50000;
   localStorage.setItem('omsfin_notif', JSON.stringify(notif));
   showToast('✅ Уведомления сохранены');
 }
@@ -783,6 +995,166 @@ async function checkTelegramStatus() {
 }
 checkTelegramStatus();
 
+// ── Реферальная программа ─────────────────────────────────────────────
+(function initReferral() {
+  try {
+    const user = JSON.parse(localStorage.getItem('omsfin_user') || '{}');
+    const uid = user.id || '';
+    if (!uid) { document.getElementById('refStats').textContent = 'Войдите чтобы получить ссылку'; return; }
+    // Код — первые 8 символов UUID без дефисов
+    const code = uid.replace(/-/g,'').substring(0, 8).toUpperCase();
+    const origin = window.location.origin;
+    const link = `${origin}/login?ref=${code}`;
+    document.getElementById('refLink').textContent = link;
+    // Считаем сколько пользователей зарегистрировались по этой ссылке (localStorage)
+    const refs = JSON.parse(localStorage.getItem('omsfin_referrals') || '[]');
+    const count = refs.filter(r => r.by === code).length;
+    document.getElementById('refStats').textContent = count > 0
+      ? `🎉 По твоей ссылке зарегистрировались: ${count} чел. · Бонус: +${count} мес. Pro`
+      : 'Пока никто не зарегистрировался. Поделись ссылкой!';
+  } catch(e) {}
+})();
+
+function copyRefLink() {
+  const link = document.getElementById('refLink').textContent;
+  if (!link || link === '—') return;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('refCopyBtn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  }).catch(() => {
+    // Fallback для старых браузеров
+    const el = document.createElement('textarea');
+    el.value = link;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    const btn = document.getElementById('refCopyBtn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  });
+}
+
+// ─── Вебхук для автоимпорта из банка ────────────────────────────────────────
+const WEBHOOK_DOMAIN = 'https://omschicken-u5dn.vercel.app';
+const BANK_LABELS = { tbank: 'Т-Банк', alfa: 'Альфа-Банк', sber: 'Сбер Бизнес', other: 'Банк' };
+const BANK_INSTRUCTIONS = {
+  tbank: '1. Войди в <strong style="color:var(--text)">business.tinkoff.ru</strong><br>2. Настройки → Уведомления → Webhook-уведомления<br>3. Вставь URL выше в поле «URL для уведомлений»<br>4. Выбери события: <strong style="color:var(--text)">Поступление</strong> и <strong style="color:var(--text)">Списание</strong><br>5. Сохрани — операции будут приходить автоматически',
+  alfa:  '1. Войди в <strong style="color:var(--text)">ib.alfabank.ru</strong> → Настройки<br>2. Раздел «Уведомления» → «Webhook / HTTP-уведомления»<br>3. Вставь URL выше, выбери валюту и тип операций<br>4. Подтверди настройку кодом из SMS<br>5. Альфа шлёт JSON с полями <code>documentNumber, amount, direction, payerInn, beneficiaryInn</code>',
+  sber:  '1. Войди в <strong style="color:var(--text)">sbi.sberbank.ru</strong> → Управление счётом<br>2. Настройки → Уведомления → «Push/Webhook»<br>3. Вставь URL выше, выбери счёт и типы операций<br>4. Сбер шлёт JSON с полями <code>externalId, amount, operationDate, paymentPurpose, operationType</code><br><em>Примечание: в некоторых тарифах Сбера функция доступна только в пакете «Бизнес-онлайн»</em>',
+  other: 'Найди в настройках банка раздел «HTTP-уведомления», «Webhook» или «Push-уведомления».<br>Вставь URL выше. Если банк позволяет настроить формат JSON — используй поля:<br><code>{ "amount": 1000, "date": "2026-01-15", "name": "Контрагент", "description": "Назначение" }</code><br>Отрицательная сумма = списание, положительная = поступление.'
+};
+
+let _webhookSecret = '';
+let _selectedBank = 'tbank';
+
+function buildWebhookUrl(secret, bank) {
+  const accountName = BANK_LABELS[bank] || 'Банк';
+  return WEBHOOK_DOMAIN + '/api/transactions?action=webhook&secret=' + encodeURIComponent(secret) + '&account=' + encodeURIComponent(accountName);
+}
+
+function selectBank(bank) {
+  _selectedBank = bank;
+  ['tbank','alfa','sber','other'].forEach(b => {
+    const btn = document.getElementById('tab_' + b);
+    if (!btn) return;
+    const active = b === bank;
+    btn.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+    btn.style.background = active ? 'rgba(255,107,0,0.1)' : 'transparent';
+    btn.style.color = active ? 'var(--accent)' : 'var(--muted)';
+  });
+  if (_webhookSecret) {
+    document.getElementById('webhookUrl').textContent = buildWebhookUrl(_webhookSecret, bank);
+  }
+  const instr = document.getElementById('bankInstructionText');
+  if (instr) instr.innerHTML = BANK_INSTRUCTIONS[bank] || '';
+}
+
+async function initWebhook() {
+  const tok = localStorage.getItem('omsfin_token') || '';
+  if (!tok) return;
+  const statusEl = document.getElementById('webhookStatus');
+  const urlEl = document.getElementById('webhookUrl');
+  selectBank('tbank');
+  try {
+    const r = await fetch('/api/company_settings', { headers: { Authorization: 'Bearer ' + tok } });
+    if (!r.ok) return;
+    const data = await r.json();
+    let secret = data.webhook_secret;
+    if (!secret) {
+      secret = crypto.randomUUID().replace(/-/g, '');
+      await fetch('/api/company_settings', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webhook_secret: secret })
+      });
+    }
+    _webhookSecret = secret;
+    urlEl.textContent = buildWebhookUrl(secret, _selectedBank);
+    statusEl.textContent = '✅ URL готов — выбери банк и вставь в его настройки';
+  } catch (e) {
+    statusEl.textContent = '❌ Ошибка загрузки';
+  }
+}
+
+function copyWebhookUrl() {
+  const url = document.getElementById('webhookUrl').textContent;
+  if (!url || url === '—') return;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('webhookCopyBtn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  });
+}
+
+async function regenerateWebhookSecret() {
+  const tok = localStorage.getItem('omsfin_token') || '';
+  if (!tok) return;
+  const statusEl = document.getElementById('webhookStatus');
+  const urlEl = document.getElementById('webhookUrl');
+  if (!confirm('Старый URL перестанет работать. Продолжить?')) return;
+  try {
+    const secret = crypto.randomUUID().replace(/-/g, '');
+    const r = await fetch('/api/company_settings', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhook_secret: secret })
+    });
+    if (!r.ok) throw new Error('save failed');
+    urlEl.textContent = buildWebhookUrl(secret);
+    statusEl.textContent = '✅ Новый URL сгенерирован — не забудь обновить его в банке';
+  } catch (e) {
+    statusEl.textContent = '❌ Ошибка сохранения';
+  }
+}
+
+initWebhook();
+
+// ─── Email уведомления ────────────────────────────────────────────────────────
+async function testEmail() {
+  const tok = localStorage.getItem('omsfin_token') || '';
+  if (!tok) { alert('Войди в аккаунт'); return; }
+  const statusEl = document.getElementById('emailStatus');
+  statusEl.textContent = '⏳ Отправляю...';
+  try {
+    const r = await fetch('/api/notify?action=test_email', {
+      headers: { Authorization: 'Bearer ' + tok }
+    });
+    const data = await r.json();
+    statusEl.textContent = data.ok ? '✅ Письмо отправлено — проверь почту' : '❌ ' + (data.error || 'Ошибка. Возможно, RESEND_API_KEY не настроен в Vercel.');
+  } catch(e) {
+    statusEl.textContent = '❌ Ошибка сети';
+  }
+}
+
 </script>
+<nav class="bottom-nav">
+  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
+  <a href="/settings.html" class="active"><span class="bn-icon">⚙️</span>Настройки</a>
+</nav>
 </body>
 </html>
