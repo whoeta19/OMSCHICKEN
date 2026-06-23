@@ -49,6 +49,21 @@
   body.light .bottom-nav{box-shadow:0 -1px 8px rgba(0,0,0,0.08);}
   body.light .tx-row:hover{background:rgba(0,0,0,0.02)!important;}
   body.light .modal,.body.light .ai-modal{box-shadow:0 20px 60px rgba(0,0,0,0.15)!important;}
+  body.light input,body.light select,body.light textarea{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light input::placeholder,body.light textarea::placeholder{color:rgba(0,0,0,0.35)!important;}
+  body.light .cat-badge{opacity:0.85;}
+  body.light .info-box{background:rgba(229,80,0,0.06)!important;border-color:rgba(229,80,0,0.18)!important;}
+  body.light .btn-outline{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light .btn-outline:hover{background:rgba(229,80,0,0.06)!important;border-color:var(--accent)!important;color:var(--accent)!important;}
+  body.light .page-tab,.body.light .tab{background:#fff!important;border-color:rgba(0,0,0,0.1)!important;color:rgba(0,0,0,0.55)!important;}
+  body.light .page-tab.active,.body.light .tab.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+  body.light .drag-cat-zone{background:rgba(229,80,0,0.06)!important;border-color:rgba(229,80,0,0.2)!important;}
+  body.light .forecast-card{border-color:rgba(0,0,0,0.06)!important;}
+  body.light .hero-stats{background:linear-gradient(135deg,rgba(229,80,0,0.05) 0%,rgba(255,255,255,0) 100%);}
+  body.light .bottom-nav{background:rgba(255,255,255,0.95)!important;border-top:1px solid rgba(0,0,0,0.08)!important;}
+  body.light .bottom-nav a{color:rgba(0,0,0,0.45)!important;}
+  body.light .bottom-nav a.active{color:var(--accent)!important;}
+  body.light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,0.06) 25%,rgba(0,0,0,0.03) 50%,rgba(0,0,0,0.06) 75%)!important;background-size:200% 100%!important;}
   /* ── Аврора: градиентные акценты ── */
   body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
   body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
@@ -2882,6 +2897,8 @@ function txHTML(tx) {
       <button onclick="saveNote(${tx.id})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-size:11px;cursor:pointer;">💾</button>
       <button onclick="toggleRecurring(${tx.id})" title="${tx.is_recurring ? 'Убрать из регулярных' : 'Пометить как регулярный'}"
         style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;color:${tx.is_recurring ? 'var(--accent)' : 'var(--muted)'}">🔁</button>
+      <button onclick="togglePending(${tx.id})" title="${tx.status ? 'Снять статус ожидания' : (tx.amount > 0 ? 'Ожидается поступление' : 'Ожидается оплата')}"
+        style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;color:${tx.status === 'pending_income' ? '#22c55e' : tx.status === 'pending_expense' ? '#ef4444' : 'var(--muted)'}">⏳</button>
     </div>
   </div>`;
 }
@@ -2912,6 +2929,24 @@ async function dropOnCat(cat) {
     body: JSON.stringify({id, category: cat, ...(currentCompanyId?{company_id:currentCompanyId}:{})})
   });
   showToast(`✅ Категория изменена: ${cat}`);
+}
+
+async function togglePending(id) {
+  const tx = allTx.find(t=>t.id==id);
+  if (!tx) return;
+  // Циклически: нет → pending_income/expense → нет
+  let newStatus = null;
+  if (!tx.status) newStatus = tx.amount > 0 ? 'pending_income' : 'pending_expense';
+  const token = localStorage.getItem('omsfin_token');
+  if (!IS_DEMO) {
+    await fetch('/api/transactions', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ id, status: newStatus, ...(currentCompanyId ? {company_id: currentCompanyId} : {}) })
+    });
+  }
+  tx.status = newStatus;
+  renderTxList();
 }
 
 async function toggleRecurring(id) {
