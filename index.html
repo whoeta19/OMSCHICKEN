@@ -859,9 +859,19 @@
     🏷️ Разметка операций
     <button class="btn btn-sm" onclick="saveRules()">💾 Сохранить правила</button>
   </div>
+  <div id="autoclassifyBanner" style="display:none;margin-bottom:12px;background:linear-gradient(135deg,rgba(255,107,0,0.1),rgba(255,107,0,0.04));border:1px solid rgba(255,107,0,0.25);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:3px">🤖 <span id="unknownCountLabel">0</span> операций без категории</div>
+      <div style="font-size:12px;color:var(--muted)">Система может распознать их автоматически по ключевым словам</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button class="btn btn-sm" onclick="autoClassifyUnknown()" style="background:var(--accent);color:#000;font-weight:700">⚡ Авто-разметка</button>
+      <button class="btn btn-sm" onclick="document.getElementById('reclassifyFilter').value='unknown';renderReclassify();document.getElementById('autoclassifyBanner').style.display='none'">Вручную</button>
+    </div>
+  </div>
   <div class="info-box" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
     <span>Нажми на категорию — система запомнит правило и применит ко <b>всем</b> операциям этого контрагента.</span>
-    <button class="btn btn-sm" onclick="applyAllRules()" style="white-space:nowrap;flex-shrink:0">🤖 Применить ко всем</button>
+    <button class="btn btn-sm" onclick="applyAllRules()" style="white-space:nowrap;flex-shrink:0">📚 По правилам</button>
   </div>
   <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
     <select id="reclassifyFilter" onchange="renderReclassify()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-size:12px;outline:none">
@@ -1951,6 +1961,8 @@ async function parseAndProcess(text) {
     }
     // Показать баннер дублей если их много
     if (skippedCount > 0) showDuplicatesBanner(insertedCount, skippedCount, monthKey);
+    // Показать баннер авто-разметки если есть нераспознанные
+    if (unknownCount > 0) showAutoclassifyBanner();
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
@@ -2027,6 +2039,51 @@ function deleteRule(keyword) {
 function saveRules() {
   localStorage.setItem('omsfin_rules', JSON.stringify(userRules));
   showToast('✅ Правила сохранены');
+}
+
+function showAutoclassifyBanner() {
+  const unknown = allTx.filter(t => t.category === 'unknown' && t.amount < 0).length;
+  const banner = document.getElementById('autoclassifyBanner');
+  if (!banner) return;
+  if (unknown > 0) {
+    document.getElementById('unknownCountLabel').textContent = unknown;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+async function autoClassifyUnknown() {
+  const targets = allTx.filter(t => t.category === 'unknown' && t.amount < 0);
+  if (!targets.length) { showToast('✅ Нет операций без категории'); return; }
+  const btn = document.querySelector('#autoclassifyBanner button');
+  if (btn) { btn.textContent = '⏳ Разбираю...'; btn.disabled = true; }
+  const toUpdate = [];
+  targets.forEach(t => {
+    const cat = classify(t.name || '', t.description || '', t.amount);
+    if (cat !== 'unknown') {
+      t.category = cat;
+      t.is_personal = ['personal', 'food'].includes(cat);
+      toUpdate.push({id: t.id, category: cat});
+    }
+  });
+  if (toUpdate.length) {
+    await apiBulkUpdateCategory(toUpdate.map(x => x.id), null, toUpdate);
+    renderAll();
+    renderReclassify();
+  }
+  const leftover = allTx.filter(t => t.category === 'unknown' && t.amount < 0).length;
+  document.getElementById('autoclassifyBanner').style.display = leftover > 0 ? 'flex' : 'none';
+  if (leftover > 0) {
+    document.getElementById('unknownCountLabel').textContent = leftover;
+    if (btn) { btn.textContent = '⚡ Авто-разметка'; btn.disabled = false; }
+  }
+  const notClassified = targets.length - toUpdate.length;
+  if (toUpdate.length) {
+    showToast(`✅ Авто-разметка: ${toUpdate.length} распознано${notClassified ? ` · ${notClassified} требуют ручной разметки` : ' · всё готово!'}`);
+  } else {
+    showToast('⚠️ Не удалось распознать автоматически — разметь вручную');
+  }
 }
 
 async function applyAllRules() {
@@ -2884,7 +2941,7 @@ function showPage(name,btn){
   document.querySelectorAll('.pill').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(btn)btn.classList.add('active');
-  if(name==='reclassify') renderReclassify();
+  if(name==='reclassify') { renderReclassify(); showAutoclassifyBanner(); }
   if(name==='recurring') renderRecurring();
   if(name==='taxes') { renderUSN(); renderForecast(); renderTaxCalendar(); }
   if(name==='budget') { try { initBudgetPeriodSel(); renderBudget(); } catch(e){} }
