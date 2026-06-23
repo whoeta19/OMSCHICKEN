@@ -371,10 +371,17 @@ async function handleBankWebhook(req, res) {
 }
 
 export default async function handler(req, res) {
-  // Rate limiting — все запросы кроме вебхуков
-  if (req.query.action !== 'webhook') {
+  // Rate limiting — для всех запросов (вебхук — отдельный мягкий лимит 300/мин)
+  {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
+    const limit = req.query.action === 'webhook' ? 300 : 120;
+    const now = Date.now();
+    const key = ip + (req.query.action === 'webhook' ? '_wh' : '');
+    const entry = _rl.get(key) || { count: 0, reset: now + 60000 };
+    if (now > entry.reset) { entry.count = 0; entry.reset = now + 60000; }
+    entry.count++;
+    _rl.set(key, entry);
+    if (entry.count > limit) {
       return res.status(429).json({ error: 'Слишком много запросов, подождите минуту' });
     }
   }

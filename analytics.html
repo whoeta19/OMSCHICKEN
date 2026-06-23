@@ -884,7 +884,9 @@ function renderDebtCards(txs) {
   const creditorList = document.getElementById('creditorList');
   const debtorTotal = document.getElementById('debtorTotal');
   const creditorTotal = document.getElementById('creditorTotal');
-  if (!debtorList) return;
+  if (!debtorList || !creditorList) return;
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   const debtors = txs.filter(t => t.status === 'pending_income');
   const creditors = txs.filter(t => t.status === 'pending_expense');
@@ -893,22 +895,22 @@ function renderDebtCards(txs) {
     const total = debtors.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
     debtorList.innerHTML = debtors.map(t =>
       `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <div><div style="font-weight:600">${t.name}</div><div style="color:var(--muted);font-size:10px">${t.date}</div></div>
+        <div><div style="font-weight:600">${esc(t.name)}</div><div style="color:var(--muted);font-size:10px">${esc(t.date)}</div></div>
         <div style="color:#22c55e;font-weight:700">${fmt(Math.abs(t.amount))}</div>
       </div>`
     ).join('');
-    debtorTotal.textContent = 'Итого: ' + fmt(total);
+    if (debtorTotal) debtorTotal.textContent = 'Итого: ' + fmt(total);
   }
 
   if (creditors.length) {
     const total = creditors.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
     creditorList.innerHTML = creditors.map(t =>
       `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <div><div style="font-weight:600">${t.name}</div><div style="color:var(--muted);font-size:10px">${t.date}</div></div>
+        <div><div style="font-weight:600">${esc(t.name)}</div><div style="color:var(--muted);font-size:10px">${esc(t.date)}</div></div>
         <div style="color:#ef4444;font-weight:700">${fmt(Math.abs(t.amount))}</div>
       </div>`
     ).join('');
-    creditorTotal.textContent = 'Итого: ' + fmt(total);
+    if (creditorTotal) creditorTotal.textContent = 'Итого: ' + fmt(total);
   }
 }
 
