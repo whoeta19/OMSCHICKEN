@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Налоговый календарь — OMSFIN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.06);
+  --text:#f5f5f5;--muted:rgba(255,255,255,0.35);--accent:#ff6b00;
+  --green:#16a34a;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;
+  --card-radius:14px;
+}
+body.light{--bg:#f4f4f4;--surface:#fff;--surface2:#f9f9f9;--border:rgba(0,0,0,0.08);--text:#111;--muted:rgba(0,0,0,0.4);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;font-size:14px;min-height:100vh;}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);}
+.logo{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:900;letter-spacing:-0.5px;}
+.logo span{color:var(--accent);}
+.main{max-width:900px;margin:0 auto;padding:24px 16px 80px;}
+h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bottom:4px;}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:24px;}
+
+/* Фильтры */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-size:12px;cursor:pointer;transition:all 0.15s;font-family:Inter,sans-serif;}
+.filter-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.2);}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+body.light .filter-btn{background:#fff;}
+body.light .filter-btn.active{background:var(--accent);color:#fff;}
+
+/* Статистика */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);padding:14px 16px;}
+.stat-num{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:900;margin-bottom:2px;}
+.stat-label{font-size:11px;color:var(--muted);}
+.stat-card.urgent .stat-num{color:var(--red);}
+.stat-card.soon .stat-num{color:var(--yellow);}
+.stat-card.done .stat-num{color:var(--green);}
+
+/* Блоки месяца */
+.month-block{margin-bottom:28px;}
+.month-title{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);}
+.month-title span{color:var(--accent);margin-left:8px;font-size:11px;}
+
+/* Карточка события */
+.event-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);
+  padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px;
+  transition:border-color 0.15s,opacity 0.2s;cursor:pointer;}
+.event-card:hover{border-color:rgba(255,255,255,0.15);}
+.event-card.done-card{opacity:0.45;}
+.event-card.urgent-card{border-left:3px solid var(--red);}
+.event-card.soon-card{border-left:3px solid var(--yellow);}
+
+.event-check{width:20px;height:20px;min-width:20px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all 0.15s;flex-shrink:0;}
+.event-card.done-card .event-check{background:var(--green);border-color:var(--green);color:#fff;font-size:11px;}
+
+.event-body{flex:1;min-width:0;}
+.event-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.event-date{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--accent);}
+.event-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;white-space:nowrap;}
+.tag-usn{background:rgba(59,130,246,0.15);color:#60a5fa;}
+.tag-nds{background:rgba(239,68,68,0.15);color:#f87171;}
+.tag-ndfl{background:rgba(234,179,8,0.15);color:#fbbf24;}
+.tag-vznosy{background:rgba(22,163,74,0.15);color:#4ade80;}
+.tag-profit{background:rgba(168,85,247,0.15);color:#c084fc;}
+.tag-salary{background:rgba(249,115,22,0.15);color:#fb923c;}
+.tag-stat{background:rgba(100,116,139,0.15);color:#94a3b8;}
+.event-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+.event-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.event-badge-urgent{font-size:10px;color:var(--red);font-weight:600;}
+.event-badge-soon{font-size:10px;color:var(--yellow);font-weight:600;}
+
+.event-actions{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.btn-tg{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;font-family:Inter,sans-serif;transition:all 0.15s;}
+.btn-tg:hover{color:var(--text);border-color:rgba(255,255,255,0.2);}
+
+/* Пустой блок */
+.empty-month{color:var(--muted);font-size:12px;padding:12px 0;}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:10px 18px;font-size:13px;opacity:0;transition:all 0.3s;z-index:999;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:600px){
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:8px;}
+  .stat-num{font-size:18px;}
+  .event-card{padding:12px;}
+  .main{padding:16px 12px 80px;}
+}
+</style>
+<script src="/utils.js"></script>
+<script src="/nav.js"></script>
+</head>
+<body>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<header>
+  <div class="logo">OMS<span>FIN</span></div>
+  <button style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;" onclick="window.location.href='/'">← Назад</button>
+</header>
+
+<div class="main">
+  <h1>📅 Налоговый календарь 2026</h1>
+  <div class="subtitle">Все дедлайны по уплате налогов и сдаче отчётности. Отмечай выполненные — они сохраняются.</div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Все</button>
+    <button class="filter-btn" data-filter="usn" onclick="setFilter('usn',this)">УСН</button>
+    <button class="filter-btn" data-filter="nds" onclick="setFilter('nds',this)">НДС</button>
+    <button class="filter-btn" data-filter="ndfl" onclick="setFilter('ndfl',this)">НДФЛ</button>
+    <button class="filter-btn" data-filter="vznosy" onclick="setFilter('vznosy',this)">Взносы</button>
+    <button class="filter-btn" data-filter="profit" onclick="setFilter('profit',this)">Прибыль</button>
+    <button class="filter-btn" data-filter="salary" onclick="setFilter('salary',this)">Зарплата</button>
+    <button class="filter-btn" data-filter="upcoming" onclick="setFilter('upcoming',this)">⚡ Ближайшие</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card urgent"><div class="stat-num" id="statUrgent">0</div><div class="stat-label">Горящих (до 14 дн.)</div></div>
+    <div class="stat-card soon"><div class="stat-num" id="statSoon">0</div><div class="stat-label">Предстоящих</div></div>
+    <div class="stat-card done"><div class="stat-num" id="statDone">0</div><div class="stat-label">Выполнено</div></div>
+  </div>
+
+  <div id="calendarRoot"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── Данные календаря 2026 ────────────────────────────────────────
+// Источник: НК РФ, актуальные сроки с учётом переносов выходных
+const EVENTS = [
+  // ЯНВАРЬ
+  {id:'j1', date:'2026-01-09', tags:['salary'],    title:'Уплата НДФЛ с зарплаты декабря', desc:'НДФЛ, удержанный с 1 по 22 декабря 2025 г.'},
+  {id:'j2', date:'2026-01-15', tags:['vznosy'],    title:'Страховые взносы за декабрь 2025', desc:'Единый тариф 30% (МСП — без льгот с 2026). Срок — 28-е, перенос на 15-е нет, уточни дату'},
+  {id:'j3', date:'2026-01-26', tags:['nds'],       title:'Уплата НДС (1/3 за IV квартал 2025)', desc:'Первый платёж НДС за Q4 2025'},
+  {id:'j4', date:'2026-01-26', tags:['ndfl'],      title:'Уведомление ЕНП по НДФЛ (1–22 января)', desc:'Уведомление об исчисленных суммах НДФЛ'},
+  {id:'j5', date:'2026-01-28', tags:['vznosy'],    title:'Страховые взносы за декабрь 2025', desc:'Единый тариф: 30% до базы 2 979 000 ₽, 15.1% сверх'},
+  {id:'j6', date:'2026-01-28', tags:['profit'],    title:'Авансовый платёж по налогу на прибыль', desc:'Ежемесячный аванс для организаций на ОСНО'},
+
+  // ФЕВРАЛЬ
+  {id:'f1', date:'2026-02-25', tags:['nds'],       title:'Уплата НДС (2/3 за IV квартал 2025)', desc:'Второй платёж НДС за Q4 2025'},
+  {id:'f2', date:'2026-02-25', tags:['ndfl'],      title:'Уведомление ЕНП по НДФЛ (23 янв – 22 фев)', desc:'Уведомление об исчисленных суммах НДФЛ'},
+  {id:'f3', date:'2026-02-28', tags:['vznosy'],    title:'Страховые взносы за январь 2026', desc:'Срок уплаты — 28-е число следующего месяца'},
+  {id:'f4', date:'2026-02-28', tags:['profit'],    title:'Авансовый платёж по налогу на прибыль', desc:'Ежемесячный аванс. Ставка 25% (8% федеральный + 17% региональный)'},
+
+  // МАРТ
+  {id:'m1', date:'2026-03-25', tags:['nds'],       title:'Уплата НДС (3/3 за IV квартал 2025)', desc:'Последний платёж НДС за Q4 2025'},
+  {id:'m2', date:'2026-03-25', tags:['nds'],       title:'Декларация НДС за IV квартал 2025', desc:'Подача декларации в ФНС'},
+  {id:'m3', date:'2026-03-25', tags:['ndfl'],      title:'Уведомление ЕНП по НДФЛ (23 фев – 22 мар)', desc:'Уведомление об исчисленных суммах НДФЛ'},
+  {id:'m4', date:'2026-03-25', tags:['profit'],    title:'Декларация по налогу на прибыль за 2025 год', desc:'Годовая декларация. Уплата годового налога'},
+  {id:'m5', date:'2026-03-28', tags:['vznosy'],    title:'Страховые взносы за февраль 2026', desc:'Единый тариф 30%'},
+  {id:'m6', date:'2026-03-28', tags:['profit'],    title:'Авансовый платёж по налогу на прибыль', desc:'Ежемесячный аванс за февраль'},
+  {id:'m7', date:'2026-03-31', tags:['usn'],       title:'Уплата УСН за 2025 год (ООО)', desc:'Годовой налог УСН для организаций. ИП — до 28 апреля'},
+
+  // АПРЕЛЬ
+  {id:'a1', date:'2026-04-01', tags:['nds'],       title:'УПД/счёт-фактура: обязательна строка 5б', desc:'С 01.04.2026 при отгрузке в счёт аванса строка 5б обязательна'},
+  {id:'a2', date:'2026-04-25', tags:['nds'],       title:'Уплата НДС (1/3 за I квартал 2026)', desc:'Первый платёж НДС за Q1 2026'},
+  {id:'a3', date:'2026-04-25', tags:['nds'],       title:'Декларация НДС за I квартал 2026', desc:'Подача декларации в ФНС'},
+  {id:'a4', date:'2026-04-25', tags:['usn'],       title:'Авансовый платёж УСН за I квартал 2026', desc:'Уплата аванса по УСН 6% или 15%'},
+  {id:'a5', date:'2026-04-25', tags:['ndfl'],      title:'6-НДФЛ за I квартал 2026', desc:'Расчёт 6-НДФЛ — ежеквартальная форма'},
+  {id:'a6', date:'2026-04-25', tags:['vznosy'],    title:'РСВ за I квартал 2026', desc:'Расчёт по страховым взносам'},
+  {id:'a7', date:'2026-04-28', tags:['usn'],       title:'Уплата УСН за 2025 год (ИП)', desc:'Годовой налог УСН для индивидуальных предпринимателей'},
+  {id:'a8', date:'2026-04-28', tags:['vznosy'],    title:'Страховые взносы за март 2026', desc:''},
+  {id:'a9', date:'2026-04-28', tags:['profit'],    title:'Декларация и аванс по налогу на прибыль (Q1)', desc:'Квартальная декларация + авансовый платёж'},
+
+  // МАЙ
+  {id:'may1', date:'2026-05-05', tags:['usn'],     title:'Декларация УСН за 2025 год (ИП)', desc:'Подача декларации по УСН для ИП. Для ООО — до 25 марта'},
+  {id:'may2', date:'2026-05-26', tags:['nds'],     title:'Уплата НДС (2/3 за I квартал 2026)', desc:''},
+  {id:'may3', date:'2026-05-26', tags:['ndfl'],    title:'Уведомление ЕНП по НДФЛ', desc:''},
+  {id:'may4', date:'2026-05-28', tags:['vznosy'],  title:'Страховые взносы за апрель 2026', desc:''},
+  {id:'may5', date:'2026-05-28', tags:['profit'],  title:'Авансовый платёж по налогу на прибыль', desc:'Ежемесячный аванс'},
+
+  // ИЮНЬ
+  {id:'jun1', date:'2026-06-25', tags:['nds'],     title:'Уплата НДС (3/3 за I квартал 2026)', desc:'Последний платёж НДС за Q1 2026'},
+  {id:'jun2', date:'2026-06-25', tags:['ndfl'],    title:'Уведомление ЕНП по НДФЛ', desc:''},
+  {id:'jun3', date:'2026-06-28', tags:['vznosy'],  title:'Страховые взносы за май 2026', desc:''},
+  {id:'jun4', date:'2026-06-28', tags:['profit'],  title:'Авансовый платёж по налогу на прибыль', desc:'Ежемесячный аванс за май'},
+
+  // ИЮЛЬ
+  {id:'jul1', date:'2026-07-25', tags:['nds'],     title:'Уплата НДС (1/3 за II квартал 2026)', desc:''},
+  {id:'jul2', date:'2026-07-25', tags:['nds'],     title:'Декларация НДС за II квартал 2026', desc:''},
+  {id:'jul3', date:'2026-07-25', tags:['usn'],     title:'Авансовый платёж УСН за полугодие 2026', desc:''},
+  {id:'jul4', date:'2026-07-25', tags:['ndfl'],    title:'6-НДФЛ за полугодие 2026', desc:'Расчёт 6-НДФЛ за 6 месяцев'},
+  {id:'jul5', date:'2026-07-25', tags:['vznosy'],  title:'РСВ за полугодие 2026', desc:''},
+  {id:'jul6', date:'2026-07-28', tags:['vznosy'],  title:'Страховые взносы за июнь 2026', desc:''},
+  {id:'jul7', date:'2026-07-28', tags:['profit'],  title:'Декларация и аванс по налогу на прибыль (полугодие)', desc:''},
+
+  // АВГУСТ
+  {id:'aug1', date:'2026-08-25', tags:['nds'],     title:'Уплата НДС (2/3 за II квартал 2026)', desc:''},
+  {id:'aug2', date:'2026-08-25', tags:['ndfl'],    title:'Уведомление ЕНП по НДФЛ', desc:''},
+  {id:'aug3', date:'2026-08-28', tags:['vznosy'],  title:'Страховые взносы за июль 2026', desc:''},
+  {id:'aug4', date:'2026-08-28', tags:['profit'],  title:'Авансовый платёж по налогу на прибыль', desc:''},
+
+  // СЕНТЯБРЬ
+  {id:'sep1', date:'2026-09-25', tags:['nds'],     title:'Уплата НДС (3/3 за II квартал 2026)', desc:''},
+  {id:'sep2', date:'2026-09-25', tags:['ndfl'],    title:'Уведомление ЕНП по НДФЛ', desc:''},
+  {id:'sep3', date:'2026-09-28', tags:['vznosy'],  title:'Страховые взносы за август 2026', desc:''},
+  {id:'sep4', date:'2026-09-28', tags:['profit'],  title:'Авансовый платёж по налогу на прибыль', desc:''},
+
+  // ОКТЯБРЬ
+  {id:'oct1', date:'2026-10-25', tags:['nds'],     title:'Уплата НДС (1/3 за III квартал 2026)', desc:''},
+  {id:'oct2', date:'2026-10-25', tags:['nds'],     title:'Декларация НДС за III квартал 2026', desc:''},
+  {id:'oct3', date:'2026-10-25', tags:['usn'],     title:'Авансовый платёж УСН за 9 месяцев 2026', desc:''},
+  {id:'oct4', date:'2026-10-25', tags:['ndfl'],    title:'6-НДФЛ за 9 месяцев 2026', desc:''},
+  {id:'oct5', date:'2026-10-25', tags:['vznosy'],  title:'РСВ за 9 месяцев 2026', desc:''},
+  {id:'oct6', date:'2026-10-28', tags:['vznosy'],  title:'Страховые взносы за сентябрь 2026', desc:''},
+  {id:'oct7', date:'2026-10-28', tags:['profit'],  title:'Декларация и аванс по налогу на прибыль (9 мес.)', desc:''},
+
+  // НОЯБРЬ
+  {id:'nov1', date:'2026-11-25', tags:['nds'],     title:'Уплата НДС (2/3 за III квартал 2026)', desc:''},
+  {id:'nov2', date:'2026-11-25', tags:['ndfl'],    title:'Уведомление ЕНП по НДФЛ', desc:''},
+  {id:'nov3', date:'2026-11-28', tags:['vznosy'],  title:'Страховые взносы за октябрь 2026', desc:''},
+  {id:'nov4', date:'2026-11-28', tags:['profit'],  title:'Авансовый платёж по налогу на прибыль', desc:''},
+
+  // ДЕКАБРЬ
+  {id:'dec1', date:'2026-12-25', tags:['nds'],     title:'Уплата НДС (3/3 за III квартал 2026)', desc:''},
+  {id:'dec2', date:'2026-12-25', tags:['ndfl'],    title:'Уведомление ЕНП по НДФЛ', desc:''},
+  {id:'dec3', date:'2026-12-28', tags:['vznosy'],  title:'Страховые взносы за ноябрь 2026', desc:''},
+  {id:'dec4', date:'2026-12-28', tags:['profit'],  title:'Авансовый платёж по налогу на прибыль', desc:''},
+  {id:'dec5', date:'2026-12-31', tags:['vznosy'],  title:'Фиксированные взносы ИП за 2026 год', desc:'Последний день уплаты фиксированных страховых взносов ИП за себя'},
+];
+
+const MONTH_NAMES = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const TAG_LABELS = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взносы',profit:'Прибыль',salary:'Зарплата',stat:'Статистика'};
+
+let doneIds = JSON.parse(localStorage.getItem('omsfin_cal_done') || '[]');
+let currentFilter = 'all';
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+function getStatus(dateStr) {
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  const diff = Math.round((d - TODAY) / 86400000);
+  if (diff < 0) return 'past';
+  if (diff <= 14) return 'urgent';
+  if (diff <= 45) return 'soon';
+  return 'future';
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function toggleDone(id, e) {
+  e.stopPropagation();
+  if (doneIds.includes(id)) {
+    doneIds = doneIds.filter(x => x !== id);
+  } else {
+    doneIds.push(id);
+    showToast('✅ Отмечено как выполнено');
+  }
+  localStorage.setItem('omsfin_cal_done', JSON.stringify(doneIds));
+  render();
+}
+
+async function remindTg(event, e) {
+  e.stopPropagation();
+  const token = localStorage.getItem('omschicken_token') || '';
+  if (!token) { showToast('⚠️ Нужна авторизация'); return; }
+  const d = new Date(event.date);
+  const dateStr = d.toLocaleDateString('ru-RU', {day:'numeric',month:'long'});
+  const text = `📅 Напоминание\n${dateStr}: ${event.title}`;
+  try {
+    const r = await fetch('/api/notify', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({message: text})
+    });
+    if (r.ok) showToast('📱 Напоминание отправлено в Telegram');
+    else showToast('⚠️ Telegram не подключён — настрой в параметрах');
+  } catch(err) {
+    showToast('⚠️ Telegram не подключён');
+  }
+}
+
+function render() {
+  let events = EVENTS;
+
+  if (currentFilter === 'upcoming') {
+    events = events.filter(e => {
+      const s = getStatus(e.date);
+      return (s === 'urgent' || s === 'soon') && !doneIds.includes(e.id);
+    });
+  } else if (currentFilter !== 'all') {
+    events = events.filter(e => e.tags.includes(currentFilter));
+  }
+
+  // Статистика
+  const allFuture = EVENTS.filter(e => getStatus(e.date) !== 'past');
+  const urgent = allFuture.filter(e => getStatus(e.date) === 'urgent' && !doneIds.includes(e.id));
+  const soon = allFuture.filter(e => getStatus(e.date) === 'soon' && !doneIds.includes(e.id));
+  document.getElementById('statUrgent').textContent = urgent.length;
+  document.getElementById('statSoon').textContent = soon.length;
+  document.getElementById('statDone').textContent = doneIds.length;
+
+  // Группировка по месяцам
+  const byMonth = {};
+  events.forEach(e => {
+    const key = e.date.substring(0,7); // YYYY-MM
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(e);
+  });
+
+  const root = document.getElementById('calendarRoot');
+  if (!Object.keys(byMonth).length) {
+    root.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px 0;font-size:14px;">Нет событий по выбранному фильтру</div>';
+    return;
+  }
+
+  root.innerHTML = Object.keys(byMonth).sort().map(key => {
+    const [yr, mo] = key.split('-');
+    const monthName = MONTH_NAMES[parseInt(mo)-1] + ' ' + yr;
+    const monthEvents = byMonth[key];
+    const urgentCount = monthEvents.filter(e => getStatus(e.date) === 'urgent' && !doneIds.includes(e.id)).length;
+
+    const eventsHtml = monthEvents.map(e => {
+      const done = doneIds.includes(e.id);
+      const status = getStatus(e.date);
+      const d = new Date(e.date);
+      const dateLabel = d.toLocaleDateString('ru-RU', {day:'numeric',month:'long'});
+      const urgentBadge = !done && status === 'urgent' ? '<span class="event-badge-urgent">🔥 Срочно</span>' : '';
+      const soonBadge = !done && status === 'soon' ? '<span class="event-badge-soon">⏰ Скоро</span>' : '';
+      const cardClass = done ? 'event-card done-card' : status === 'urgent' ? 'event-card urgent-card' : status === 'soon' ? 'event-card soon-card' : 'event-card';
+      const checkInner = done ? '✓' : '';
+      const tagsHtml = e.tags.map(t => `<span class="event-tag tag-${t}">${TAG_LABELS[t]||t}</span>`).join('');
+      return `
+        <div class="${cardClass}" onclick="toggleDone('${e.id}',event)">
+          <div class="event-check">${checkInner}</div>
+          <div class="event-body">
+            <div class="event-header">
+              <span class="event-date">${dateLabel}</span>
+              ${tagsHtml}
+              ${urgentBadge}${soonBadge}
+            </div>
+            <div class="event-title">${e.title}</div>
+            ${e.desc ? `<div class="event-desc">${e.desc}</div>` : ''}
+            <div class="event-actions">
+              <button class="btn-tg" onclick="remindTg(${JSON.stringify(e).replace(/"/g,'&quot;')},event)">📱 Напомнить в Telegram</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="month-block">
+        <div class="month-title">${monthName}${urgentCount ? `<span>🔥 ${urgentCount} срочных</span>` : ''}</div>
+        ${eventsHtml}
+      </div>`;
+  }).join('');
+}
+
+let _toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Автоскролл к ближайшему событию при загрузке
+window.addEventListener('DOMContentLoaded', () => {
+  render();
+  // Небольшой скролл к текущему месяцу
+  setTimeout(() => {
+    const now = new Date();
+    const key = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    const blocks = document.querySelectorAll('.month-block');
+    blocks.forEach(b => {
+      if (b.querySelector('.month-title') && b.querySelector('.month-title').textContent.includes(MONTH_NAMES[now.getMonth()])) {
+        b.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+  }, 200);
+});
+</script>
+</body>
+</html>

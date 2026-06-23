@@ -13,6 +13,10 @@
       "destination": "/utils.js"
     },
     {
+      "source": "/calendar",
+      "destination": "/calendar.html"
+    },
+    {
       "source": "/api/telegram_link",
       "destination": "/api/telegram_link.js"
     },

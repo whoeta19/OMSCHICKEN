@@ -642,6 +642,9 @@
     </div>
   </div>
 
+  <!-- ─── Налоговый календарь: ближайшие дедлайны ─── -->
+  <div id="calWidget" style="margin-bottom:14px"></div>
+
   <!-- ─── Аномалии (появляются только когда есть) ─── -->
   <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
   <div id="anomalyBlock" style="margin-bottom:0"></div>
@@ -4823,6 +4826,70 @@ setTimeout(function() {
     startTour();
   }
 }, 1500);
+
+// ─── Виджет налогового календаря на дашборде ────────────────────
+(function renderCalWidget() {
+  const CAL_EVENTS = [
+    {id:'j1',date:'2026-01-09',tags:['salary'],title:'Уплата НДФЛ с зарплаты декабря'},
+    {id:'j3',date:'2026-01-26',tags:['nds'],title:'Уплата НДС (1/3 за IV кв. 2025)'},
+    {id:'j5',date:'2026-01-28',tags:['vznosy'],title:'Страховые взносы за декабрь 2025'},
+    {id:'f1',date:'2026-02-25',tags:['nds'],title:'Уплата НДС (2/3 за IV кв. 2025)'},
+    {id:'f3',date:'2026-02-28',tags:['vznosy'],title:'Страховые взносы за январь 2026'},
+    {id:'m2',date:'2026-03-25',tags:['nds'],title:'Декларация НДС + уплата (3/3)'},
+    {id:'m4',date:'2026-03-25',tags:['profit'],title:'Декларация налог на прибыль за 2025'},
+    {id:'m7',date:'2026-03-31',tags:['usn'],title:'Уплата УСН за 2025 год (ООО)'},
+    {id:'a2',date:'2026-04-25',tags:['nds'],title:'Декларация НДС за Q1 2026'},
+    {id:'a4',date:'2026-04-25',tags:['usn'],title:'Авансовый платёж УСН за Q1'},
+    {id:'a5',date:'2026-04-25',tags:['ndfl'],title:'6-НДФЛ за Q1 2026'},
+    {id:'a6',date:'2026-04-25',tags:['vznosy'],title:'РСВ за Q1 2026'},
+    {id:'a7',date:'2026-04-28',tags:['usn'],title:'Уплата УСН за 2025 год (ИП)'},
+    {id:'may1',date:'2026-05-05',tags:['usn'],title:'Декларация УСН за 2025 (ИП)'},
+    {id:'may2',date:'2026-05-26',tags:['nds'],title:'НДС (2/3 за Q1 2026)'},
+    {id:'jun1',date:'2026-06-25',tags:['nds'],title:'НДС (3/3 за Q1 2026)'},
+    {id:'jul1',date:'2026-07-25',tags:['nds'],title:'Декларация НДС за Q2 2026'},
+    {id:'jul3',date:'2026-07-25',tags:['usn'],title:'Авансовый платёж УСН полугодие'},
+    {id:'jul4',date:'2026-07-25',tags:['ndfl'],title:'6-НДФЛ за полугодие'},
+    {id:'jul5',date:'2026-07-25',tags:['vznosy'],title:'РСВ за полугодие 2026'},
+    {id:'oct1',date:'2026-10-25',tags:['nds'],title:'Декларация НДС за Q3 2026'},
+    {id:'oct3',date:'2026-10-25',tags:['usn'],title:'Авансовый платёж УСН 9 мес.'},
+    {id:'oct4',date:'2026-10-25',tags:['ndfl'],title:'6-НДФЛ за 9 месяцев'},
+    {id:'oct5',date:'2026-10-25',tags:['vznosy'],title:'РСВ за 9 месяцев 2026'},
+    {id:'dec5',date:'2026-12-31',tags:['vznosy'],title:'Фиксированные взносы ИП за 2026'},
+  ];
+  const TAG_COLORS = {usn:'#60a5fa',nds:'#f87171',ndfl:'#fbbf24',vznosy:'#4ade80',profit:'#c084fc',salary:'#fb923c'};
+  const TAG_LABELS = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взносы',profit:'Прибыль',salary:'Зарплата'};
+  const done = JSON.parse(localStorage.getItem('omsfin_cal_done') || '[]');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = CAL_EVENTS.filter(e => {
+    const d = new Date(e.date); d.setHours(0,0,0,0);
+    return d >= today && !done.includes(e.id);
+  }).slice(0,3);
+  const el = document.getElementById('calWidget');
+  if (!el || !upcoming.length) return;
+  const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const items = upcoming.map(e => {
+    const d = new Date(e.date);
+    const diff = Math.round((d - today) / 86400000);
+    const urgentStyle = diff <= 14 ? 'color:var(--red);font-weight:700;' : diff <= 45 ? 'color:var(--yellow);' : 'color:var(--muted);';
+    const dateLabel = d.getDate() + ' ' + MONTHS[d.getMonth()];
+    const tagColor = TAG_COLORS[e.tags[0]] || '#94a3b8';
+    const tagLabel = TAG_LABELS[e.tags[0]] || e.tags[0];
+    const diffLabel = diff === 0 ? 'сегодня!' : diff === 1 ? 'завтра!' : `через ${diff} дн.`;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="min-width:52px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--accent)">${dateLabel}</div>
+      <div style="flex:1;font-size:12px;font-weight:500">${e.title}</div>
+      <div style="font-size:10px;padding:2px 7px;border-radius:8px;background:${tagColor}22;color:${tagColor};white-space:nowrap">${tagLabel}</div>
+      <div style="font-size:11px;${urgentStyle}white-space:nowrap">${diffLabel}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">📅 Ближайшие дедлайны</span>
+      <a href="/calendar" style="font-size:11px;color:var(--accent);text-decoration:none;">Все →</a>
+    </div>
+    ${items}
+  </div>`;
+})();
 </script>
 
 <!-- Дропдаун "Ещё" -->

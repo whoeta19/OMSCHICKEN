@@ -10,6 +10,7 @@
     { href: '/docs',         label: 'Документы',    icon: '📄' },
     { href: '/tools',        label: 'Инструменты',  icon: '⚡' },
     { href: '/counterparty', label: 'Контрагенты',  icon: '🔍' },
+    { href: '/calendar',    label: 'Календарь',    icon: '📅' },
   ];
 
   function injectStyles() {
