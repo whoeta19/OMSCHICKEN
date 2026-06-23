@@ -11,6 +11,7 @@
     { href: '/tools',        label: 'Инструменты',  icon: '⚡' },
     { href: '/counterparty', label: 'Контрагенты',  icon: '🔍' },
     { href: '/calendar',    label: 'Календарь',    icon: '📅' },
+    { href: '/warehouse',   label: 'Склад',         icon: '📦' },
   ];
 
   function injectStyles() {

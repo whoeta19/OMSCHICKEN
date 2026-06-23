@@ -645,6 +645,9 @@
   <!-- ─── Счета: остатки по расчётным счетам ─── -->
   <div id="accountsWidget" style="margin-bottom:14px"></div>
 
+  <!-- ─── Склад: предупреждения об остатках ─── -->
+  <div id="warehouseWidget" style="margin-bottom:14px"></div>
+
   <!-- ─── Налоговый календарь: ближайшие дедлайны ─── -->
   <div id="calWidget" style="margin-bottom:14px"></div>
 
@@ -4984,6 +4987,41 @@ setTimeout(function() {
     startTour();
   }
 }, 1500);
+
+// ─── Виджет склада на дашборде ──────────────────────────────────
+(function renderWarehouseWidget() {
+  const el = document.getElementById('warehouseWidget');
+  if (!el) return;
+  const items = JSON.parse(localStorage.getItem('omsfin_warehouse_items') || '[]');
+  if (!items.length) return;
+  const lowItems = items.filter(i => {
+    const qty = parseFloat(i.qty) || 0;
+    const min = parseFloat(i.minQty) || 0;
+    return qty <= 0 || (min > 0 && qty <= min);
+  });
+  if (!lowItems.length) return; // всё хорошо — виджет не показываем
+
+  const rows = lowItems.slice(0, 4).map(i => {
+    const qty = parseFloat(i.qty) || 0;
+    const isEmpty = qty <= 0;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:500">${i.name}</div>
+      <div style="font-size:11px;font-weight:700;color:${isEmpty ? 'var(--red)' : 'var(--yellow)'}">
+        ${isEmpty ? '❌ Закончилось' : `⚠️ ${qty % 1 === 0 ? qty : qty.toFixed(2)} ${i.unit || ''}`}
+      </div>
+    </div>`;
+  }).join('');
+
+  const more = lowItems.length > 4 ? `<div style="font-size:11px;color:var(--muted);text-align:center;padding-top:6px">Ещё ${lowItems.length - 4} позиций...</div>` : '';
+
+  el.innerHTML = `<div style="background:var(--surface);border:1px solid rgba(234,179,8,0.3);border-radius:14px;padding:14px 16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:0.5px">⚠️ Склад: мало товара</span>
+      <a href="/warehouse" style="font-size:11px;color:var(--accent);text-decoration:none;">Склад →</a>
+    </div>
+    ${rows}${more}
+  </div>`;
+})();
 
 // ─── Виджет налогового календаря на дашборде ────────────────────
 (function renderCalWidget() {

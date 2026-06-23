@@ -17,6 +17,10 @@
       "destination": "/calendar.html"
     },
     {
+      "source": "/warehouse",
+      "destination": "/warehouse.html"
+    },
+    {
       "source": "/api/telegram_link",
       "destination": "/api/telegram_link.js"
     },
