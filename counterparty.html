@@ -108,6 +108,7 @@
     .tabs{-webkit-overflow-scrolling:touch;overflow-x:auto;}
   }
 </style>
+<script src="/utils.js"></script>
 <script src="/nav.js"></script>
 </head>
 <body>
@@ -167,14 +168,6 @@
 <script>
 let checkHistory = JSON.parse(localStorage.getItem('omsfin_cp_history') || '[]');
 
-// Преобразует дату формата DD.MM.YYYY в timestamp для корректного хронологического сравнения
-// (обычное сравнение строк '20.12.2025' > '05.01.2026' даёт неверный результат).
-function parseDMY(str) {
-  if (!str) return 0;
-  const [dd, mm, yyyy] = str.split('.').map(Number);
-  if (!dd || !mm || !yyyy) return 0;
-  return new Date(yyyy, mm - 1, dd).getTime();
-}
 
 async function checkCompany() {
   const query = document.getElementById('searchInput').value.trim();

@@ -9,6 +9,10 @@
       "destination": "/nav.js"
     },
     {
+      "source": "/utils.js",
+      "destination": "/utils.js"
+    },
+    {
       "source": "/api/telegram_link",
       "destination": "/api/telegram_link.js"
     },

@@ -156,6 +156,7 @@
     .chart-bar-wrap{height:16px;}
   }
 </style>
+<script src="/utils.js"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
@@ -262,12 +263,6 @@ let compareTx = [];
 let currentPeriod = 'all';
 let compareMode = false;
 
-function parseDMY(str) {
-  const [dd, mm, yyyy] = str.split('.').map(Number);
-  return new Date(yyyy, mm - 1, dd).getTime();
-}
-
-function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
 function fmtShort(n){
   const abs = Math.abs(n);
   if(abs>=1000000) return (n/1000000).toFixed(1)+'М';

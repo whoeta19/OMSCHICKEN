@@ -538,6 +538,7 @@
   .cf-bar{flex:1;min-width:0;border-radius:4px 4px 0 0;transition:height 0.4s ease;cursor:default;position:relative;}
   .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--text);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
 </style>
+<script src="/utils.js"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
@@ -2954,16 +2955,6 @@ function buildExcel() {
   showToast('📊 Excel скачан — 4 листа');
 }
 
-function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
-
-// Преобразует дату формата DD.MM.YYYY в timestamp для корректного хронологического сравнения
-// (обычное сравнение строк '20.12.2025' > '05.01.2026' даёт неверный результат).
-function parseDMY(str) {
-  if (!str) return 0;
-  const [dd, mm, yyyy] = str.split('.').map(Number);
-  if (!dd || !mm || !yyyy) return 0;
-  return new Date(yyyy, mm - 1, dd).getTime();
-}
 
 // Стабильный отпечаток транзакции — используется сервером, чтобы не вставлять
 // одну и ту же операцию дважды при повторной/частично перекрывающейся загрузке выписки.

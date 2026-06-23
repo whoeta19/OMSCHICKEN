@@ -114,6 +114,7 @@
     .btn-outline{min-height:44px;}
   }
 </style>
+<script src="/utils.js"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
@@ -494,7 +495,6 @@ function showTool(name, btn) {
   btn.classList.add('active');
 }
 
-function fmt(n){return Math.abs(n).toLocaleString('ru-RU',{maximumFractionDigits:0})+' ₽';}
 function fmtPct(n){return n.toFixed(1)+'%';}
 
 // ЗАРПЛАТА
