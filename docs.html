@@ -916,6 +916,8 @@ function _docFieldErr(id, msg) {
 }
 
 function generateDoc() {
+  if (currentDoc === 'sverka') { generateSverka(); return; }
+  if (currentDoc === 'pp') { generatePP(); return; }
   const items = getItems();
   // Документы без позиций (доверенность, ПКО, договор без позиций)
   const noItemsDocs = ['dover', 'ko1'];
