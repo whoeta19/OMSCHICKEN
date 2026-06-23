@@ -39,7 +39,63 @@ function nearestDeadline(deadlines, now) {
   return { deadline: next, days: daysUntil(next, now) };
 }
 
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const FROM_EMAIL = 'OMSFIN <noreply@omsfin.ru>';
+
+async function sendEmail(to, subject, html) {
+  if (!RESEND_API_KEY) return { ok: false, error: 'RESEND_API_KEY не настроен' };
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html })
+  });
+  const data = await r.json();
+  return r.ok ? { ok: true, id: data.id } : { ok: false, error: data.message };
+}
+
 export default async function handler(req, res) {
+  // Транзакционный email — POST ?action=email, Bearer-токен пользователя
+  if (req.method === 'POST' && req.query.action === 'email') {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
+
+    // Получаем email пользователя из Supabase auth
+    const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    if (!userR.ok) return res.status(401).json({ error: 'Неверный токен' });
+    const user = await userR.json();
+    const email = user.email;
+    if (!email) return res.status(400).json({ error: 'Email не найден' });
+
+    const { subject, html, text } = req.body || {};
+    if (!subject) return res.status(400).json({ error: 'subject обязателен' });
+
+    const body = html || `<pre>${text || ''}</pre>`;
+    const result = await sendEmail(email, subject, body);
+    return res.status(result.ok ? 200 : 500).json(result);
+  }
+
+  // Тестовая отправка email — GET ?action=test_email
+  if (req.method === 'GET' && req.query.action === 'test_email') {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Нет токена' });
+    const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    const user = await userR.json();
+    const result = await sendEmail(user.email, 'OMSFIN — тест уведомлений',
+      `<div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px">OMS<span style="color:#ff6b00">FIN</span></div>
+        <p>Email-уведомления работают ✅</p>
+        <p style="color:#666;font-size:13px">Ты будешь получать напоминания о налоговых сроках и важных событиях.</p>
+      </div>`
+    );
+    return res.status(result.ok ? 200 : 500).json(result);
+  }
+
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({error: 'Unauthorized'});
@@ -221,6 +277,35 @@ export default async function handler(req, res) {
       for (const msg of messages) {
         await sendTelegram(telegram_id, msg);
         notified++;
+      }
+
+      // Email-дублирование (раз в неделю — только если день ≤3 до дедлайна)
+      if (RESEND_API_KEY && messages.length) {
+        const urgentMessages = messages.filter((_, i) => {
+          const days = [vat.days, ndfl.days, rsv.days, efs1.days, profit.days].filter(d => d !== null && REMIND_DAYS.includes(d) && d <= 3);
+          return days.length > 0;
+        });
+        if (urgentMessages.length) {
+          try {
+            const emailR = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user_id}`, {
+              headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY }
+            });
+            const emailData = await emailR.json();
+            const userEmail = emailData.email;
+            if (userEmail) {
+              const htmlBody = urgentMessages.map(m =>
+                '<p style="margin-bottom:16px">' + m.replace(/<[^>]+>/g,'') + '</p>'
+              ).join('');
+              await sendEmail(userEmail, '⚠️ OMSFIN — срочные налоговые напоминания',
+                `<div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#0f0f0f;color:#f5f5f5;border-radius:12px">
+                  <div style="font-size:18px;font-weight:700;margin-bottom:16px">OMS<span style="color:#ff6b00">FIN</span></div>
+                  ${htmlBody}
+                  <a href="${BASE_URL}" style="display:inline-block;margin-top:16px;background:#ff6b00;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Открыть OMSFIN</a>
+                </div>`
+              );
+            }
+          } catch(e) {}
+        }
       }
     }
 
