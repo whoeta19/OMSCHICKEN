@@ -203,6 +203,15 @@
       </div>
     </div>
 
+    <!-- Топ-10 категорий расходов -->
+    <div class="chart-card full" id="topCatsCard" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-title" style="margin:0">📊 Топ категорий расходов</div>
+        <span style="font-size:10px;color:var(--muted)" id="topCatsPeriodLabel"></span>
+      </div>
+      <div id="topCatsList"></div>
+    </div>
+
     <!-- Топ контрагентов -->
     <div class="charts-grid">
       <div class="chart-card">
@@ -410,6 +419,7 @@ function renderAll() {
   renderTopLists();
   renderBalanceChart();
   renderCashflow(allTx);
+  renderTopCategories();
 }
 
 function getDayData(txs) {
@@ -695,6 +705,61 @@ function exportPDF() {
   document.title = 'OMSFIN Аналитика ' + period;
   window.print();
   document.title = 'OMSFIN — Аналитика';
+}
+
+function renderTopCategories() {
+  const card = document.getElementById('topCatsCard');
+  const list = document.getElementById('topCatsList');
+  if (!card || !list) return;
+
+  const catNames = {
+    chicken:'🐔 Закупка (курятина)', transport:'🚗 Транспорт', salary:'👥 Зарплата',
+    bank:'🏦 Банковские расходы', food:'🍽️ Питание', office:'🏢 Офис',
+    unknown:'❓ Прочее', personal:'🛍️ Личное'
+  };
+
+  // Текущий и предыдущий периоды из filteredTx
+  const periods = [...new Set(filteredTx.map(t=>t.period).filter(Boolean))].sort();
+  const curPeriod = periods[periods.length - 1];
+  const prevPeriod = periods[periods.length - 2];
+
+  const curTx  = filteredTx.filter(t => t.amount < 0);
+  const prevTx = allTx.filter(t => t.amount < 0 && t.period === prevPeriod);
+
+  // Группируем по категориям
+  const cur = {}, prev = {};
+  curTx.forEach(t  => { const k = t.category||'unknown'; cur[k]  = (cur[k]  || 0) + Math.abs(t.amount); });
+  prevTx.forEach(t => { const k = t.category||'unknown'; prev[k] = (prev[k] || 0) + Math.abs(t.amount); });
+
+  const total = Object.values(cur).reduce((a,b) => a+b, 0);
+  if (total === 0) { card.style.display = 'none'; return; }
+
+  const sorted = Object.entries(cur).sort((a,b) => b[1]-a[1]).slice(0, 10);
+
+  card.style.display = 'block';
+  const label = document.getElementById('topCatsPeriodLabel');
+  if (label) label.textContent = curPeriod ? `За ${curPeriod}` : '';
+
+  list.innerHTML = sorted.map(([k, val]) => {
+    const pct = Math.round(val / total * 100);
+    const prevVal = prev[k] || 0;
+    let trend = '';
+    if (prevVal > 0) {
+      const delta = Math.round((val - prevVal) / prevVal * 100);
+      const color = delta > 10 ? '#ef4444' : delta < -10 ? '#22c55e' : 'var(--muted)';
+      const arrow = delta > 0 ? '↑' : '↓';
+      trend = `<span style="font-size:10px;color:${color};font-weight:600;margin-left:6px">${arrow}${Math.abs(delta)}%</span>`;
+    }
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${catNames[k] || k}${trend}</div>
+        <div style="font-size:12px;color:var(--text);font-weight:700">${fmt(val)} <span style="font-size:10px;color:var(--muted);font-weight:400">${pct}%</span></div>
+      </div>
+      <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:3px;transition:width 0.4s"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 loadData();

@@ -133,6 +133,7 @@
 <div class="tabs">
   <button class="tab active" onclick="showPage('create',this)">📄 Создать</button>
   <button class="tab" onclick="showPage('history',this)">📋 История</button>
+  <button class="tab" onclick="showPage('templates',this)">⭐ Шаблоны</button>
   <button class="tab" onclick="showPage('settings',this)">⚙️ Настройки</button>
 </div>
 <main>
@@ -339,6 +340,7 @@
     <div class="preview-btn-row">
       <button class="btn" onclick="printDoc()">🖨️ Печать / PDF</button>
       <button class="btn-outline" onclick="saveHistory()">💾 В историю</button>
+      <button class="btn-outline" onclick="saveTemplate()" style="color:var(--accent);border-color:var(--accent)">⭐ Шаблон</button>
     </div>
     <div class="doc-print" id="docPreview"></div>
   </div>
@@ -374,6 +376,14 @@
     </div>
   </div>
   <div id="historyList"></div>
+</div>
+
+<!-- ШАБЛОНЫ -->
+<div class="page" id="page-templates">
+  <div class="section-title">⭐ Сохранённые шаблоны</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Сохраняйте часто используемые документы как шаблоны — покупатель, товары и сумма подставятся автоматически.</div>
+  <div id="templatesList"></div>
+  <div style="margin-top:12px;font-size:11px;color:var(--muted)">Чтобы сохранить шаблон — заполните документ и нажмите «⭐ Шаблон» рядом с кнопкой сохранения.</div>
 </div>
 
 <!-- НАСТРОЙКИ -->
@@ -1576,6 +1586,89 @@ if (prefill) {
     if (d.buyer) document.getElementById('buyerName').value = d.buyer;
     localStorage.removeItem('omsfin_doc_prefill');
   } catch(e){}
+}
+
+// ─── Шаблоны документов ───────────────────────────────────────────────────────
+const TMPL_KEY = 'omsfin_doc_templates';
+function getTemplates() { return JSON.parse(localStorage.getItem(TMPL_KEY) || '[]'); }
+function saveTemplates(t) { localStorage.setItem(TMPL_KEY, JSON.stringify(t)); }
+
+function saveTemplate() {
+  const docNames = {schet:'Счёт',upd:'УПД',torg12:'ТОРГ-12',sf:'Счёт-фактура',akt:'Акт об услугах',dog:'Договор',dover:'Доверенность М-2',ko1:'ПКО КО-1',ttn:'ТТН'};
+  const name = prompt('Название шаблона:', (document.getElementById('buyerName')?.value || docNames[currentDoc] || 'Шаблон') + ' — шаблон');
+  if (!name) return;
+
+  // Собираем все заполненные поля формы
+  const fields = {};
+  ['buyerName','buyerInn','buyerKpp','buyerAddr','docNum','docDate',
+   'sumTotal','vatRate','contractNum','contractDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value) fields[id] = el.value;
+  });
+  // Строки товаров
+  const rows = [];
+  document.querySelectorAll('.item-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const r = {};
+    inputs.forEach(inp => { if (inp.id && inp.value) r[inp.id] = inp.value; });
+    if (Object.keys(r).length) rows.push(r);
+  });
+
+  const tmpl = { id: Date.now(), name, type: currentDoc, typeName: docNames[currentDoc], fields, rows, created: new Date().toLocaleDateString('ru-RU') };
+  const templates = getTemplates();
+  templates.unshift(tmpl);
+  saveTemplates(templates.slice(0, 30));
+  showToast('⭐ Шаблон сохранён: ' + name);
+}
+
+function applyTemplate(id) {
+  const tmpl = getTemplates().find(t => t.id === id);
+  if (!tmpl) return;
+  // Переключить тип документа
+  const btn = document.querySelector(`.doc-type-btn[data-type="${tmpl.type}"]`);
+  if (btn) { selectDoc(tmpl.type, btn); }
+  // Заполнить поля
+  setTimeout(() => {
+    Object.entries(tmpl.fields || {}).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
+    });
+    showToast('✅ Шаблон «' + tmpl.name + '» применён');
+  }, 100);
+}
+
+function deleteTemplate(id) {
+  saveTemplates(getTemplates().filter(t => t.id !== id));
+  renderTemplates();
+  showToast('🗑️ Шаблон удалён');
+}
+
+function renderTemplates() {
+  const list = document.getElementById('templatesList');
+  if (!list) return;
+  const templates = getTemplates();
+  const icons = {schet:'🧾',upd:'📋',torg12:'📦',sf:'💰',akt:'✅',dog:'📝',dover:'📜',ko1:'💵',ttn:'🚛'};
+  if (!templates.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Шаблонов пока нет.<br>Заполните документ и нажмите ⭐ Шаблон</div>';
+    return;
+  }
+  list.innerHTML = templates.map(t => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+      <span style="font-size:24px;flex-shrink:0">${icons[t.type]||'📄'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${t.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${t.typeName} · сохранён ${t.created}</div>
+      </div>
+      <button onclick="applyTemplate(${t.id});showPage('create',document.querySelector('.tab'))" style="background:var(--accent);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:700;cursor:pointer">Применить</button>
+      <button onclick="deleteTemplate(${t.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px">✕</button>
+    </div>`).join('');
+}
+
+// Рендер при переходе на вкладку
+const _origShowPageDocs = showPage;
+function showPage(name, btn) {
+  _origShowPageDocs(name, btn);
+  if (name === 'templates') renderTemplates();
 }
 </script>
 </body>
