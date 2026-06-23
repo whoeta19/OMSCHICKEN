@@ -319,10 +319,12 @@
     .stat-value{font-size:14px;}
     .stat-label{font-size:9px;}
 
-    /* Шапка дашборда — кнопки на всю ширину */
-    #dashTopActions{flex-direction:column!important;gap:8px!important;align-items:stretch!important;width:100%;}
-    #importDropWrap, #importDropWrap > button{width:100%;}
-    #dashAddBtn{width:100%!important;justify-content:center!important;}
+    /* Шапка дашборда — весь ряд вертикально */
+    #dashTopRow{flex-direction:column!important;gap:12px!important;}
+    #dashTopActions{flex-direction:row!important;gap:8px!important;align-items:stretch!important;width:100%;}
+    #importDropWrap{flex:1;}
+    #importDropWrap > button{width:100%;justify-content:center;}
+    #dashAddBtn{flex:1;justify-content:center!important;}
 
     .tx-row{display:flex!important;flex-wrap:wrap;padding:12px 14px;gap:4px;}
     .tx-row > div:nth-child(2){display:block!important;}
@@ -595,7 +597,7 @@
   </div>
 
   <!-- ─── Шапка: приветствие + 2 главных действия ─── -->
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+  <div id="dashTopRow" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
     <div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:0.03em" id="homeDate">Загрузка...</div>
       <div style="font-family:'Unbounded',sans-serif;font-size:17px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:-0.2px" id="homeGreeting">Добро пожаловать</div>
