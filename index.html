@@ -609,6 +609,9 @@
     <div class="stat-card"><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
 
+  <!-- ─── Умная лента инсайтов ─── -->
+  <div id="insightsFeed" style="display:none;margin-bottom:12px"></div>
+
   <!-- ─── Здоровье бизнеса (компактная строка) ─── -->
   <div id="healthScoreCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:14px">
@@ -3931,10 +3934,163 @@ function openTxDetail(tx) {
 // ══════════════════════════════════════════════════════════
 // ПОДКЛЮЧЕНИЕ К renderAll
 // ══════════════════════════════════════════════════════════
+// ─── Умная лента инсайтов ────────────────────────────────────────────────────
+function renderInsights() {
+  const feed = document.getElementById('insightsFeed');
+  if (!feed || !allTx.length) { if (feed) feed.style.display = 'none'; return; }
+
+  const insights = [];
+  const now = new Date();
+  const curMonth = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
+  const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0') + '.' + prevDate.getFullYear();
+
+  function parseDMY(s) { const [d,m,y]=s.split('.').map(Number); return new Date(y,m-1,d).getTime(); }
+  function fmt2(n) { return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(n))+' ₽'; }
+
+  const curTx  = allTx.filter(t => t.period === curMonth);
+  const prevTx = allTx.filter(t => t.period === prevMonth);
+
+  const curIncome  = curTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+  const curExpense = curTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+  const prevIncome  = prevTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+  const prevExpense = prevTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+
+  // 1. Рост/падение расходов
+  if (prevExpense > 0 && curExpense > 0) {
+    const delta = (curExpense - prevExpense) / prevExpense * 100;
+    if (Math.abs(delta) >= 15) {
+      const up = delta > 0;
+      // найдём топ-категорию роста
+      const catCur = {}, catPrev = {};
+      curTx.filter(t=>t.amount<0).forEach(t=>{ catCur[t.category||'Прочее'] = (catCur[t.category||'Прочее']||0)+Math.abs(t.amount); });
+      prevTx.filter(t=>t.amount<0).forEach(t=>{ catPrev[t.category||'Прочее'] = (catPrev[t.category||'Прочее']||0)+Math.abs(t.amount); });
+      let topCat = '', topDelta = 0;
+      Object.keys(catCur).forEach(c => {
+        const d = (catCur[c]||0) - (catPrev[c]||0);
+        if (d > topDelta) { topDelta = d; topCat = c; }
+      });
+      insights.push({
+        type: up ? 'warn' : 'good',
+        icon: up ? '📈' : '📉',
+        text: `Расходы ${up?'выросли':'упали'} на <b>${Math.abs(delta).toFixed(0)}%</b> vs прошлый месяц${topCat && up ? ` — в основном «${topCat}» (+${fmt2(topDelta)})` : ''}`,
+        action: null
+      });
+    }
+  }
+
+  // 2. Кассовый разрыв — прогноз
+  if (curIncome > 0 && curExpense > 0) {
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    const projectedExpense = curExpense / dayOfMonth * daysInMonth;
+    const projectedIncome  = curIncome  / dayOfMonth * daysInMonth;
+    const gap = projectedIncome - projectedExpense;
+    if (gap < 0) {
+      insights.push({
+        type: 'danger',
+        icon: '⚠️',
+        text: `При текущем темпе к концу месяца прогнозируется <b>кассовый разрыв ~${fmt2(Math.abs(gap))}</b>`,
+        action: { label: 'Прогноз →', fn: "showPage('taxes',null)" }
+      });
+    }
+  }
+
+  // 3. НДС vs остаток на счёте
+  const vatAmount = curTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0) * 0.10 / 1.10;
+  const balance = allTx.slice(0,1).length ? (() => {
+    let b = 0; allTx.forEach(t=>{ b += t.amount; }); return b;
+  })() : 0;
+  if (vatAmount > 0 && balance > 0 && vatAmount > balance * 0.8) {
+    insights.push({
+      type: 'warn',
+      icon: '🧾',
+      text: `НДС к уплате ~${fmt2(vatAmount)} — это <b>${Math.round(vatAmount/balance*100)}% от текущего остатка</b>. Стоит зарезервировать`,
+      action: { label: 'НДС →', fn: "window.location.href='/vat'" }
+    });
+  }
+
+  // 4. Падение выручки
+  if (prevIncome > 0 && curIncome > 0) {
+    const delta = (curIncome - prevIncome) / prevIncome * 100;
+    if (delta < -20) {
+      insights.push({
+        type: 'warn',
+        icon: '📊',
+        text: `Выручка в этом месяце <b>на ${Math.abs(delta).toFixed(0)}% ниже</b> прошлого — ${fmt2(curIncome)} vs ${fmt2(prevIncome)}`,
+        action: { label: 'Аналитика →', fn: "window.location.href='/analytics'" }
+      });
+    } else if (delta > 20) {
+      insights.push({
+        type: 'good',
+        icon: '🚀',
+        text: `Выручка выросла на <b>${delta.toFixed(0)}%</b> по сравнению с прошлым месяцем — отличный результат!`,
+        action: null
+      });
+    }
+  }
+
+  // 5. Дебиторка — крупные поступления задерживаются
+  const debitorTx = allTx.filter(t => t.amount < 0 && t.category === 'Дебиторская задолженность');
+  if (debitorTx.length > 0) {
+    const total = debitorTx.reduce((s,t)=>s+Math.abs(t.amount),0);
+    insights.push({
+      type: 'warn', icon: '🔔',
+      text: `Дебиторская задолженность: <b>${fmt2(total)}</b> — проверь, нет ли просроченных платежей`,
+      action: { label: 'Контрагенты →', fn: "window.location.href='/counterparty'" }
+    });
+  }
+
+  // 6. Нет данных за текущий месяц
+  if (curTx.length === 0 && allTx.length > 0) {
+    insights.push({
+      type: 'info', icon: '📂',
+      text: `Данных за <b>${curMonth}</b> нет — загрузи свежую выписку чтобы видеть актуальную картину`,
+      action: { label: 'Загрузить', fn: "document.getElementById('fileInput').click()" }
+    });
+  }
+
+  // 7. Поздравление — если всё хорошо
+  if (insights.length === 0 && curTx.length > 0) {
+    const profit = curIncome - curExpense;
+    if (profit > 0) {
+      insights.push({
+        type: 'good', icon: '✅',
+        text: `Всё под контролем — прибыль за месяц <b>${fmt2(profit)}</b>, кассового разрыва нет`,
+        action: null
+      });
+    }
+  }
+
+  if (!insights.length) { feed.style.display = 'none'; return; }
+
+  const colors = {
+    danger: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', dot: '#ef4444' },
+    warn:   { bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.25)', dot: '#fb923c' },
+    good:   { bg: 'rgba(34,197,94,0.08)',  border: 'rgba(34,197,94,0.22)',  dot: '#22c55e' },
+    info:   { bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.22)', dot: '#60a5fa' }
+  };
+
+  feed.style.display = 'block';
+  feed.innerHTML = `
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;padding:0 2px">💡 Инсайты</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${insights.map(ins => {
+        const c = colors[ins.type] || colors.info;
+        return `<div style="background:${c.bg};border:1px solid ${c.border};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:16px;flex-shrink:0">${ins.icon}</span>
+          <div style="flex:1;font-size:12px;color:var(--text);line-height:1.45">${ins.text}</div>
+          ${ins.action ? `<button onclick="${ins.action.fn}" style="flex-shrink:0;background:none;border:1px solid ${c.border};border-radius:7px;padding:4px 10px;color:var(--text);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${ins.action.label}</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
 function renderAll() {
   _origRenderAll();
   try { detectAnomalies(); } catch(e) {}
   try { renderBreakeven(); } catch(e) {}
+  try { renderInsights(); } catch(e) { console.error('insights:', e); }
 }
 
 // Запуск таймера
