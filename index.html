@@ -305,49 +305,57 @@
     .logo{font-size:14px;}
     .header-right{gap:5px;}
     .sync-btn{font-size:10px;padding:4px 8px;}
-    #companySwitcher{max-width:80px;font-size:10px;}
+    #companySwitcher{display:none!important;} /* на мобиле не хватает места */
+    #overviewBtn{display:none!important;}
     .header-meta{display:none;}
-    
-    .nav-pills{padding:0 12px;}
-    .pill{padding:0 12px;font-size:11px;height:40px;}
-    
+
+    .nav-pills{display:none;}  /* заменяет нижний нав */
+
     main{padding:12px 14px;padding-bottom:80px;}
-    
+
+    /* Три статкарточки — первая на всю строку, остальные две рядом */
     .stats-row{grid-template-columns:1fr 1fr;gap:8px;}
-    .stat-value{font-size:13px;}
+    .stats-row .stat-card:first-child{grid-column:1/-1;}
+    .stat-value{font-size:14px;}
     .stat-label{font-size:9px;}
-    
-    .tx-row{grid-template-columns:1fr auto;gap:6px;padding:10px 12px;}
-    .tx-row > div:nth-child(2){display:none;}
-    .tx-name{font-size:12px;}
-    
+
+    /* Шапка дашборда — кнопки на всю ширину */
+    #dashTopActions{flex-direction:column!important;gap:8px!important;align-items:stretch!important;width:100%;}
+    #importDropWrap, #importDropWrap > button{width:100%;}
+    #dashAddBtn{width:100%!important;justify-content:center!important;}
+
+    .tx-row{display:flex!important;flex-wrap:wrap;padding:12px 14px;gap:4px;}
+    .tx-row > div:nth-child(2){display:block!important;}
+    .tx-name{font-size:13px;}
+    .tx-amount{font-size:13px;}
+
     .input-row{grid-template-columns:1fr;}
-    .filter-bar{gap:4px;}
-    .filter-btn{font-size:10px;padding:4px 8px;}
-    
+    .filter-bar{gap:4px;flex-wrap:wrap;}
+    .filter-btn{font-size:11px;padding:6px 10px;min-height:36px;}
+
+    /* iOS — запрет зума при фокусе на input */
+    input, select, textarea{font-size:16px!important;}
+
     .upload-zone{padding:18px;}
     .upload-title{font-size:13px;}
     .section-title{font-size:10px;}
-    
-    .btn{padding:9px 14px;font-size:10px;}
-    .btn-sm{padding:5px 10px;font-size:9px;}
-    
-    .reclassify-row{padding:10px 12px;}
-    .cat-btns{gap:4px;}
-    .cat-btn{font-size:10px;padding:3px 7px;}
-    
+
+    .btn{padding:11px 16px;font-size:12px;min-height:44px;}
+    .btn-sm{padding:7px 12px;font-size:11px;}
+
+    .reclassify-row{padding:12px 14px;}
+    .cat-btns{gap:4px;flex-wrap:wrap;}
+    .cat-btn{font-size:11px;padding:5px 10px;min-height:36px;}
+
     .chart-label{width:70px;font-size:10px;}
     .chart-val{width:60px;font-size:9px;}
-    
+
     .mobile-nav{display:flex!important;}
+
 
     /* Дашборд */
     .quick-actions-grid{grid-template-columns:repeat(2,1fr)!important;}
     .suggestions-grid{grid-template-columns:1fr!important;}
-
-    /* Операции — показываем категорию, убираем только лишнее */
-    .tx-row{display:flex!important;flex-wrap:wrap;padding:10px 12px;gap:4px;}
-    .tx-row > div:nth-child(2){display:block!important;}
 
     /* Комментарий и кнопки в операции */
     #txSearch{font-size:14px!important;} /* чтобы iOS не зумил */
@@ -444,6 +452,14 @@
   .mobile-nav-btn span{font-size:20px;line-height:1;}
   .mobile-nav-btn.active{color:var(--accent);}
   .mobile-nav-btn:hover{color:var(--text);}
+  /* Центральная кнопка "Добавить" */
+  #mnav-add{
+    background:var(--accent);border-radius:16px;color:#000!important;
+    margin:-10px 4px 0;padding:8px 6px 6px!important;
+    box-shadow:0 4px 14px rgba(255,107,0,0.4);
+    min-width:54px;
+  }
+  #mnav-add span{font-size:22px!important;color:#000!important;}
 
   /* Бумага и графит — мягкие тени на всех карточках с фоном surface, как в эталонном дизайне */
   .stat-card, .progress-wrap, .info-box, .reclassify-row, .tx-row,
@@ -585,7 +601,7 @@
       <div style="font-family:'Unbounded',sans-serif;font-size:17px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:-0.2px" id="homeGreeting">Добро пожаловать</div>
       <div style="font-size:11px;color:var(--muted);margin-top:5px" id="homeSub">Синхронизировано</div>
     </div>
-    <div style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
+    <div id="dashTopActions" style="display:flex;gap:8px;flex-shrink:0;margin-top:4px" data-role="director,accountant">
       <!-- Выписка + dropdown форматов -->
       <div style="position:relative" id="importDropWrap">
         <button onclick="toggleImportDrop(event)" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color 0.15s" onmouseover="this.style.borderColor='rgba(255,107,0,0.5)'" onmouseout="this.style.borderColor='var(--border)'">📂 Выписка <span style="font-size:9px;opacity:0.6">▼</span></button>
@@ -596,7 +612,7 @@
         </div>
         <input type="file" id="file1cInput" accept=".xml,.txt" style="display:none">
       </div>
-      <button onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
+      <button id="dashAddBtn" onclick="showPage('add',null)" style="background:var(--accent);border:1px solid var(--accent);border-radius:10px;padding:8px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">➕ <span>Добавить</span></button>
     </div>
   </div>
 
@@ -851,30 +867,32 @@
 </div>
 
 <div class="page" id="page-add">
-  <div class="section-title">Добавить вручную</div>
-  <div class="input-row">
-    <div class="input-group"><label>Контрагент</label><input type="text" id="addName" placeholder="ООО Агросфера"></div>
-    <div class="input-group"><label>Сумма (- расход, + доход)</label><input type="number" id="addAmount" placeholder="-50000"></div>
+  <div class="section-title">Добавить операцию</div>
+  <!-- Тип операции — крупные тап-кнопки -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+    <button id="addTypeExpense" onclick="setAddType('expense')" style="background:rgba(239,68,68,0.1);border:2px solid #ef4444;border-radius:10px;padding:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer">📤 Расход</button>
+    <button id="addTypeIncome" onclick="setAddType('income')" style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer">📥 Доход</button>
   </div>
+  <div class="input-group"><label>Сумма</label><input type="number" id="addAmount" placeholder="50 000" inputmode="decimal" style="font-size:20px!important;font-weight:700;padding:12px 14px;"></div>
   <div class="input-row">
     <div class="input-group"><label>Дата</label><input type="date" id="addDate"></div>
-    <div class="input-group"><label>Назначение</label><input type="text" id="addDesc" placeholder="Оплата по счёту..."></div>
+    <div class="input-group"><label>Категория</label>
+      <select id="addCat">
+        <option value="">Автоматически</option>
+        <option value="income">Доход от продаж</option>
+        <option value="chicken">Закупка сырья</option>
+        <option value="transport">Транспорт</option>
+        <option value="food">Еда (личное)</option>
+        <option value="personal">Личные расходы</option>
+        <option value="salary">Зарплата</option>
+        <option value="office">Офис/Аренда</option>
+        <option value="bank">Банк/Кредиты</option>
+      </select>
+    </div>
   </div>
-  <div class="input-group">
-    <label>Категория</label>
-    <select id="addCat">
-      <option value="">Автоматически</option>
-      <option value="income">💰 Доход от продаж</option>
-      <option value="chicken">🐔 Закупка курятины</option>
-      <option value="transport">🚗 Транспорт</option>
-      <option value="food">🍽️ Еда (личное)</option>
-      <option value="personal">🛍️ Личные расходы</option>
-      <option value="salary">👥 Зарплата</option>
-      <option value="office">🏢 Офис/Аренда</option>
-      <option value="bank">🏦 Банк/Кредиты</option>
-    </select>
-  </div>
-  <button class="btn" onclick="addManual()" style="width:100%;margin-bottom:12px">✅ Сохранить</button>
+  <div class="input-group"><label>Контрагент</label><input type="text" id="addName" placeholder="ООО Агросфера" autocomplete="organization"></div>
+  <div class="input-group"><label>Назначение</label><input type="text" id="addDesc" placeholder="Оплата по счёту №..."></div>
+  <button class="btn" onclick="addManual()" style="width:100%;margin-bottom:12px;font-size:14px;padding:14px">Сохранить</button>
   <div id="addResult"></div>
   <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
     <div class="section-title">Управление</div>
@@ -2009,13 +2027,30 @@ async function applyAllRules() {
   showToast(`✅ Обновлено ${toUpdate.length} операций по ${Object.keys(userRules).length} правилам`);
 }
 
+let _addTypeSign = -1; // -1 расход, +1 доход
+
+function setAddType(type) {
+  _addTypeSign = type === 'income' ? 1 : -1;
+  const eBtn = document.getElementById('addTypeExpense');
+  const iBtn = document.getElementById('addTypeIncome');
+  if (type === 'expense') {
+    eBtn.style.cssText = 'background:rgba(239,68,68,0.15);border:2px solid #ef4444;border-radius:10px;padding:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer';
+    iBtn.style.cssText = 'background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer';
+  } else {
+    iBtn.style.cssText = 'background:rgba(34,197,94,0.15);border:2px solid #22c55e;border-radius:10px;padding:12px;color:#22c55e;font-size:13px;font-weight:700;cursor:pointer';
+    eBtn.style.cssText = 'background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer';
+  }
+}
+
 function addManual() {
   const name = document.getElementById('addName').value.trim();
-  const amount = parseFloat(document.getElementById('addAmount').value);
+  let amount = parseFloat(document.getElementById('addAmount').value);
   const date = document.getElementById('addDate').value || new Date().toISOString().split('T')[0];
   const desc = document.getElementById('addDesc').value.trim();
   const manualCat = document.getElementById('addCat').value;
   if (!name||isNaN(amount)) { showToast('Заполни название и сумму'); return; }
+  // Применяем знак из кнопки Расход/Доход — берём абсолютное значение и умножаем
+  amount = Math.abs(amount) * _addTypeSign;
   const cat = manualCat || classify(name, desc, amount);
   const tx = {name, amount, date, description:desc, category:cat, is_personal:['personal','food'].includes(cat)};
   apiPost([tx]).then(()=>syncNow()).catch(e=>showToast('❌ '+e.message));
@@ -2024,6 +2059,7 @@ function addManual() {
   document.getElementById('addAmount').value = '';
   document.getElementById('addDesc').value = '';
   document.getElementById('addCat').value = '';
+  setAddType('expense'); // сбросить в режим расхода
 }
 
 async function clearAll() {
