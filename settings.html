@@ -378,6 +378,39 @@
     <div id="msStatus" style="font-size:12px;margin-top:8px"></div>
   </div>
 
+  <!-- Автоимпорт из банка (вебхук) -->
+  <div class="card">
+    <div class="section-title">🏦 Автоимпорт из банка</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      Настрой вебхук в интернет-банке — и операции будут поступать автоматически без ручной загрузки выписок.
+      Поддерживаются <strong style="color:var(--text)">Т-Банк Бизнес</strong> и любой банк с поддержкой HTTP-уведомлений.
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">Твой URL для вебхука</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div id="webhookUrl" style="flex:1;font-size:11px;color:var(--text);font-family:monospace;word-break:break-all;background:var(--bg);padding:8px 10px;border-radius:7px;border:1px solid var(--border)">—</div>
+        <button onclick="copyWebhookUrl()" style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;white-space:nowrap" id="webhookCopyBtn">Копировать</button>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <button onclick="regenerateWebhookSecret()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer">🔄 Сгенерировать новый секрет</button>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px">Старый URL перестанет работать</span>
+    </div>
+    <details style="margin-top:8px">
+      <summary style="font-size:12px;color:var(--accent);cursor:pointer;list-style:none">▶ Инструкция: как настроить в Т-Банк Бизнес</summary>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted);line-height:1.8;background:var(--surface2);border-radius:10px;padding:12px">
+        1. Войди в <strong style="color:var(--text)">business.tinkoff.ru</strong><br>
+        2. Настройки → Уведомления → Webhook-уведомления<br>
+        3. Вставь URL выше в поле «URL для уведомлений»<br>
+        4. Выбери события: <strong style="color:var(--text)">Поступление</strong> и <strong style="color:var(--text)">Списание</strong><br>
+        5. Сохрани — теперь операции будут приходить автоматически<br><br>
+        <strong style="color:var(--text)">Для других банков</strong> (ВТБ, Альфа, Сбер):<br>
+        Найди в настройках «HTTP-уведомления» или «Вебхуки» и вставь URL. Формат JSON — универсальный.
+      </div>
+    </details>
+    <div id="webhookStatus" style="margin-top:12px;font-size:12px;color:var(--muted)"></div>
+  </div>
+
   <!-- Реферальная программа -->
   <div class="card">
     <div class="section-title">🎁 Реферальная программа</div>
@@ -978,6 +1011,71 @@ function copyRefLink() {
     setTimeout(() => btn.textContent = 'Копировать', 2000);
   });
 }
+
+// ─── Вебхук для автоимпорта из банка ────────────────────────────────────────
+const WEBHOOK_DOMAIN = 'https://omschicken-u5dn.vercel.app';
+
+function buildWebhookUrl(secret) {
+  return WEBHOOK_DOMAIN + '/api/transactions?action=webhook&secret=' + encodeURIComponent(secret) + '&account=%D0%A2-%D0%91%D0%B0%D0%BD%D0%BA';
+}
+
+async function initWebhook() {
+  const tok = localStorage.getItem('omsfin_token') || '';
+  if (!tok) return;
+  const statusEl = document.getElementById('webhookStatus');
+  const urlEl = document.getElementById('webhookUrl');
+  try {
+    const r = await fetch('/api/company_settings', { headers: { Authorization: 'Bearer ' + tok } });
+    if (!r.ok) return;
+    const data = await r.json();
+    let secret = data.webhook_secret;
+    if (!secret) {
+      secret = crypto.randomUUID().replace(/-/g, '');
+      await fetch('/api/company_settings', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webhook_secret: secret })
+      });
+    }
+    urlEl.textContent = buildWebhookUrl(secret);
+    statusEl.textContent = '✅ URL готов — вставь его в настройки банка';
+  } catch (e) {
+    statusEl.textContent = '❌ Ошибка загрузки';
+  }
+}
+
+function copyWebhookUrl() {
+  const url = document.getElementById('webhookUrl').textContent;
+  if (!url || url === '—') return;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('webhookCopyBtn');
+    btn.textContent = '✅ Скопировано';
+    setTimeout(() => btn.textContent = 'Копировать', 2000);
+  });
+}
+
+async function regenerateWebhookSecret() {
+  const tok = localStorage.getItem('omsfin_token') || '';
+  if (!tok) return;
+  const statusEl = document.getElementById('webhookStatus');
+  const urlEl = document.getElementById('webhookUrl');
+  if (!confirm('Старый URL перестанет работать. Продолжить?')) return;
+  try {
+    const secret = crypto.randomUUID().replace(/-/g, '');
+    const r = await fetch('/api/company_settings', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhook_secret: secret })
+    });
+    if (!r.ok) throw new Error('save failed');
+    urlEl.textContent = buildWebhookUrl(secret);
+    statusEl.textContent = '✅ Новый URL сгенерирован — не забудь обновить его в банке';
+  } catch (e) {
+    statusEl.textContent = '❌ Ошибка сохранения';
+  }
+}
+
+initWebhook();
 
 </script>
 <nav class="bottom-nav">
