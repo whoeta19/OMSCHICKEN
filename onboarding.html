@@ -173,7 +173,6 @@
       <button class="btn" id="ob-upload-btn" onclick="nextStep()" style="opacity:0.5" disabled>Продолжить →</button>
       <button class="btn-skip" onclick="nextStep()">Пропустить, загружу позже</button>
     </div>
-    </div><!-- закрываем step-3 который был step-2 -->
 
     <!-- Шаг 4: Готово -->
     <div class="step" id="step-4">
@@ -204,6 +203,20 @@
 <script>
 let currentStep = 0;
 const TOTAL_STEPS = 5; // 0-4
+
+// Автозаполнение из данных регистрации
+(function prefill() {
+  try {
+    const u = JSON.parse(localStorage.getItem('omsfin_user') || '{}');
+    const name = u.user_metadata?.company_name || '';
+    if (name) {
+      const el = document.getElementById('ob-name');
+      if (el) el.value = name;
+    }
+    // Если уже проходил онбординг — сразу на главную
+    if (localStorage.getItem('omsfin_onboarded')) window.location.href = '/';
+  } catch(e) {}
+})();
 const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
@@ -275,7 +288,6 @@ function fileSelected(input) {
 }
 
 function finish(url) {
-  localStorage.setItem('omsfin_onboarded', '1');
   localStorage.setItem('omsfin_onboarded', '1');
   window.location.href = url;
 }
