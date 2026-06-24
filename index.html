@@ -654,7 +654,6 @@
     <div class="pill-sep" data-role="director,accountant"></div>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/payroll'">Зарплата</button>
     <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">Документы</button>
-    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/marketplace'" style="background:rgba(255,107,0,0.1);border-color:var(--accent)">🛒 WB/Ozon</button>
     <div class="pill-more" id="pillMoreWrap">
       <button class="pill" onclick="toggleMoreMenu(event)">Ещё ↓</button>
     </div>
@@ -2163,7 +2162,6 @@ async function parseAndProcess(text, accountName) {
     // Альфа: выгрузка "Клиент-Банк" — TAB-разделённый файл с тех.заголовками
     // (statement_unid, Date, d_c, sum_rur, plat_name, plat_inn, pol_name, pol_inn, text70, ...)
     // Колонки могут сдвигаться между версиями выгрузки — ищем их по имени заголовка.
-    const myInn = _myInn;
 
     let hdrRow = -1;
     for (let i = 0; i < Math.min(5, lines.length); i++) {
@@ -2212,14 +2210,14 @@ async function parseAndProcess(text, accountName) {
       const receiverInn = (cols[recvInnIdx] || '').trim();
 
       let name = amount > 0
-        ? (payerInn !== myInn ? payer : receiver)
-        : (receiverInn !== myInn ? receiver : payer);
+        ? (payerInn !== _myInn ? payer : receiver)
+        : (receiverInn !== _myInn ? receiver : payer);
       name = (_myNameRe ? name.replace(_myNameRe, '') : name).trim() || description.substring(0, 60);
 
       const category = classify(name, description, amount);
       const counterpartyInn = amount > 0
-        ? (payerInn !== myInn ? payerInn : receiverInn)
-        : (receiverInn !== myInn ? receiverInn : payerInn);
+        ? (payerInn !== _myInn ? payerInn : receiverInn)
+        : (receiverInn !== _myInn ? receiverInn : payerInn);
       txs.push({
         name: name || description.substring(0, 40) || 'Операция',
         amount,
@@ -2243,26 +2241,24 @@ async function parseAndProcess(text, accountName) {
       if (isNaN(amount) || amount === 0) continue;
       if (!monthKey) { const p = dateStr.split('.'); monthKey = p[1] + '.' + p[2]; }
       const description = (cols[9] || '').substring(0, 100);
-      const myInn = _myInn;
       const receiver = (cols[12] || '').trim();
       const receiverInn = (cols[13] || '').trim();
       const sender = (cols[18] || '').trim();
       const senderInn = (cols[19] || '').trim();
       let name = amount > 0
-        ? (senderInn !== myInn ? sender : receiver)
-        : (receiverInn !== myInn ? receiver : sender);
+        ? (senderInn !== _myInn ? sender : receiver)
+        : (receiverInn !== _myInn ? receiver : sender);
       name = (_myNameRe ? (name || description.substring(0, 60)).replace(_myNameRe, '') : (name || description.substring(0, 60))).trim();
       const category = classify(name, description, amount);
       const counterpartyInn = amount > 0
-        ? (senderInn !== myInn ? senderInn : receiverInn)
-        : (receiverInn !== myInn ? receiverInn : senderInn);
+        ? (senderInn !== _myInn ? senderInn : receiverInn)
+        : (receiverInn !== _myInn ? receiverInn : senderInn);
       txs.push({name: name || 'Операция', amount, date:dateStr, description, category, period:monthKey, is_personal:['personal','food'].includes(category), inn: counterpartyInn || null});
     }
   } else if (isBankSber(text)) {
     // Сбер Бизнес Онлайн — два формата выгрузки:
     // 1) полный: "Дата проведения";"Дата операции";"Вид";"Сумма";"Плательщик";"ИНН плательщика";...;"Получатель";"ИНН получателя";...;"Назначение платежа"
     // 2) краткий: "Дата";"Контрагент";"Назначение";"Расход";"Приход"
-    const myInn = _myInn;
 
     // Ищем строку заголовка
     let hdrRow = -1;
@@ -2318,14 +2314,14 @@ async function parseAndProcess(text, accountName) {
       const recvInn  = recvInnIdx >= 0  ? (cols[recvInnIdx]||'').trim() : '';
 
       let name = amount > 0
-        ? (payerInn && payerInn !== myInn ? payer : recv)
-        : (recvInn  && recvInn  !== myInn ? recv  : payer);
+        ? (payerInn && payerInn !== _myInn ? payer : recv)
+        : (recvInn  && recvInn  !== _myInn ? recv  : payer);
       name = (_myNameRe ? (name || description.substring(0,60)).replace(_myNameRe,'') : (name || description.substring(0,60))).replace(/ПАО СБЕРБАНК|ПАО "Сбербанк"/gi,'').trim();
 
       const category = classify(name, description, amount);
       const counterpartyInn = amount > 0
-        ? (payerInn && payerInn !== myInn ? payerInn : recvInn)
-        : (recvInn  && recvInn  !== myInn ? recvInn  : payerInn);
+        ? (payerInn && payerInn !== _myInn ? payerInn : recvInn)
+        : (recvInn  && recvInn  !== _myInn ? recvInn  : payerInn);
       txs.push({
         name: name || description.substring(0,40) || 'Операция',
         amount, date: dateStr, description, category, period: monthKey,
@@ -4297,7 +4293,7 @@ function showOnboardingOverlay() {
     <button onclick="window.location.href='/payroll';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">👥<span>Зарплата</span></button>
     <button onclick="window.location.href='/counterparty';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🔍<span>Контрагенты</span></button>
     <button onclick="window.location.href='/settings';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">⚙️<span>Настройки</span></button>
-    <button onclick="window.location.href='/marketplace';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🛒<span>WB/Ozon</span></button>
+    <button onclick="window.location.href='/marketplace';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">📦<span>WB/Ozon</span></button>
   </div>
 </div>
 
