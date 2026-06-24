@@ -32,7 +32,7 @@ function doExport(allTx) {
 
   // Лист 2 — Сводка по категориям
   const cats = ['chicken','transport','food','personal','salary','office','bank','unknown'];
-  const catNames = {'chicken':'Курятина','transport':'Транспорт','food':'Еда','personal':'Личное','salary':'Зарплата','office':'Офис','bank':'Банк','unknown':'Прочее'};
+  const catNames = {'chicken':'Закупки','transport':'Транспорт','food':'Еда','personal':'Личное','salary':'Зарплата','office':'Офис','bank':'Банк','unknown':'Прочее'};
   const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
 
@@ -99,6 +99,6 @@ function doExport(allTx) {
 }
 
 function getCatName(cat) {
-  const m = {income:'Доход',chicken:'Курятина',transport:'Транспорт',food:'Еда',personal:'Личное',salary:'Зарплата',office:'Офис',bank:'Банк',unknown:'Прочее'};
+  const m = {income:'Доход',chicken:'Закупки',transport:'Транспорт',food:'Еда',personal:'Личное',salary:'Зарплата',office:'Офис',bank:'Банк',unknown:'Прочее'};
   return m[cat] || cat;
 }

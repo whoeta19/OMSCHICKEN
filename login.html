@@ -82,7 +82,7 @@
   <div id="tab-login">
     <div class="input-group">
       <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="oms@chicken.ru" autocomplete="email">
+      <input type="email" id="loginEmail" placeholder="ivan@company.ru" autocomplete="email">
     </div>
     <div class="input-group">
       <label>Пароль</label>
@@ -340,21 +340,21 @@ function enterDemo() {
   function per(d) { return `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
 
   const demoTx = [
-    {id:'d1',date:dmy(ago(1)),amount:1250000,name:'ООО ТД Птицепром',description:'Оплата по договору поставки №45 от 01.06.2026',category:'income',period:per(ago(1))},
-    {id:'d2',date:dmy(ago(2)),amount:-680000,name:'ООО Агрохолдинг Юг',description:'Закупка куриного филе 12 000 кг',category:'chicken',period:per(ago(2))},
-    {id:'d3',date:dmy(ago(3)),amount:890000,name:'ИП Сидоров А.В.',description:'Реализация мяса птицы опт',category:'income',period:per(ago(3))},
-    {id:'d4',date:dmy(ago(4)),amount:-245000,name:'ИФНС России',description:'НДС за 2 квартал 2026',category:'taxes',period:per(ago(4))},
-    {id:'d5',date:dmy(ago(5)),amount:-380000,name:'ООО Транслогистик',description:'Транспортные услуги май 2026',category:'logistics',period:per(ago(5))},
-    {id:'d6',date:dmy(ago(6)),amount:2100000,name:'АО Магнит',description:'Отгрузка куриной грудки 40 000 кг',category:'income',period:per(ago(6))},
-    {id:'d7',date:dmy(ago(8)),amount:-850000,name:'КФХ Степное',description:'Закупка тушки куриной ГОСТ',category:'chicken',period:per(ago(8))},
+    {id:'d1',date:dmy(ago(1)),amount:1250000,name:'ООО ТД Снабжение',description:'Оплата по договору поставки №45 от 01.06.2026',category:'income',period:per(ago(1))},
+    {id:'d2',date:dmy(ago(2)),amount:-680000,name:'ООО Оптторг Юг',description:'Закупка товаров по накладной №34',category:'chicken',period:per(ago(2))},
+    {id:'d3',date:dmy(ago(3)),amount:890000,name:'ИП Сидоров А.В.',description:'Реализация товаров оптом',category:'income',period:per(ago(3))},
+    {id:'d4',date:dmy(ago(4)),amount:-245000,name:'ИФНС России',description:'НДС за 2 квартал 2026',category:'tax',period:per(ago(4))},
+    {id:'d5',date:dmy(ago(5)),amount:-380000,name:'ООО Транслогистик',description:'Транспортные услуги май 2026',category:'transport',period:per(ago(5))},
+    {id:'d6',date:dmy(ago(6)),amount:2100000,name:'АО Магнит',description:'Поставка по договору №88, партия 40 т',category:'income',period:per(ago(6))},
+    {id:'d7',date:dmy(ago(8)),amount:-850000,name:'ООО Промснаб',description:'Закупка товара по спецификации №12',category:'chicken',period:per(ago(8))},
     {id:'d8',date:dmy(ago(10)),amount:-412000,name:'АО Т-Банк',description:'Погашение кредита + %',category:'bank',period:per(ago(10))},
     {id:'d9',date:dmy(ago(12)),amount:1650000,name:'ООО Метро C&C',description:'Договор поставки №67',category:'income',period:per(ago(12))},
-    {id:'d10',date:dmy(ago(14)),amount:-180000,name:'ООО Охрана-Про',description:'Услуги охраны склада июнь',category:'other',period:per(ago(14))},
+    {id:'d10',date:dmy(ago(14)),amount:-180000,name:'ООО Охрана-Про',description:'Услуги охраны склада июнь',category:'office',period:per(ago(14))},
     {id:'d11',date:dmy(ago(15)),amount:-520000,name:'Выплата зарплат',description:'Зарплата сотрудников за май 2026',category:'salary',period:per(ago(15))},
-    {id:'d12',date:dmy(ago(16)),amount:980000,name:'ООО Лента',description:'Реализация мяса птицы — накладная 89',category:'income',period:per(ago(16))},
-    {id:'d13',date:dmy(ago(18)),amount:-95000,name:'ПАО МТС',description:'Корпоративная связь + интернет',category:'other',period:per(ago(18))},
+    {id:'d12',date:dmy(ago(16)),amount:980000,name:'ООО Лента',description:'Реализация товаров — накладная №89',category:'income',period:per(ago(16))},
+    {id:'d13',date:dmy(ago(18)),amount:-95000,name:'ПАО МТС',description:'Корпоративная связь + интернет',category:'office',period:per(ago(18))},
     {id:'d14',date:dmy(ago(20)),amount:3200000,name:'ООО Ашан Ритейл',description:'Поставка по контракту №12-К',category:'income',period:per(ago(20))},
-    {id:'d15',date:dmy(ago(22)),amount:-1200000,name:'ООО Птицефабрика Сибирь',description:'Закупка куриных окорочков 25 т',category:'chicken',period:per(ago(22))},
+    {id:'d15',date:dmy(ago(22)),amount:-1200000,name:'ООО Торговый Дом Восток',description:'Закупка товара, партия 25 т',category:'chicken',period:per(ago(22))},
   ];
 
   localStorage.setItem('omsfin_demo', '1');

@@ -226,7 +226,7 @@
     <div class="decl-icon">🧾</div>
     <div class="decl-info">
       <div class="decl-name">Декларация по НДС</div>
-      <div class="decl-desc">Квартальная · НДС 10% с продаж курятины</div>
+      <div class="decl-desc">Квартальная · НДС 10% с продаж товаров</div>
       <div class="decl-deadline" id="vatDeadline">⏰ Срок: рассчитывается...</div>
     </div>
     <div id="vatStatus" class="status-badge status-draft">Черновик</div>
@@ -361,7 +361,7 @@
         style="width:130px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px;outline:none;text-align:right">
     </div>
     <div class="field-row">
-      <div class="field-label">НДС начисленный 10% — продажи курятины</div>
+      <div class="field-label">НДС начисленный 10% — продажи товаров</div>
       <div class="field-value red" id="ndsCharged10">—</div>
     </div>
     <div class="field-row">
@@ -374,7 +374,7 @@
     </div>
     <div style="margin-top:12px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Вычеты (книга покупок)</div>
     <div class="field-row">
-      <div class="field-label">Вычет НДС 10% — закупка курятины</div>
+      <div class="field-label">Вычет НДС 10% — закупки товаров</div>
       <div class="field-value green" id="ndsDeduct10">—</div>
     </div>
     <div class="field-row">
@@ -630,7 +630,7 @@
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--muted)">Взносы по базовому тарифу</span><span id="efs_base_amt" style="font-weight:600">0 ₽</span></div>
       <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">Итого к уплате</span><span id="efs_total" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
     </div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted)">Тариф зависит от класса профессионального риска (от 0.2% до 8.5%). Для оптовой торговли мясом птицей (ОКВЭД 46.32) — обычно 0.2%.</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted)">Тариф зависит от класса профессионального риска (от 0.2% до 8.5%). Для оптовой торговли (ОКВЭД 46.xx) — обычно 0.2–0.5%.</div>
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
       <button class="btn" onclick="exportEFSExcel()">📊 Скачать Excel для СФР</button>
@@ -753,7 +753,7 @@ function renderNDS() {
   document.getElementById('ndsYear').textContent = year;
 
   const sales = allTx.filter(t=>t.amount>0&&t.category==='income');
-  // Закупки курятины — НДС 10%
+  // Закупки товаров — НДС 10%
   const purchases10 = allTx.filter(t=>t.amount<0&&t.category==='chicken');
   // Аренда, транспорт, банковские услуги — НДС 20%
   const purchases20 = allTx.filter(t=>t.amount<0&&['office','transport'].includes(t.category));
@@ -919,7 +919,7 @@ function exportNDSExcel() {
   const rows = [
     ['', 'РАЗДЕЛ 3. РАСЧЁТ СУММЫ НАЛОГА', ''],
     ['020', 'Реализация по ставке 10% (налоговая база без НДС)', salesBase10],
-    ['020', 'НДС начисленный 10% (продажи курятины)', vatCharged10],
+    ['020', 'НДС начисленный 10% (продажи товаров)', vatCharged10],
     ...(sales22Manual > 0 ? [
       ['030', 'Реализация по ставке 22% (налоговая база без НДС)', salesBase22],
       ['030', 'НДС начисленный 22% (прочие продажи)', vatCharged22],
@@ -927,7 +927,7 @@ function exportNDSExcel() {
     ['118', 'Общая сумма НДС исчисленная (стр.118)', vatCharged],
     ['', '', ''],
     ['', 'КНИГА ПОКУПОК (ВЫЧЕТЫ)', ''],
-    ['120', 'Вычет НДС 10% — закупка курятины (стр.120)', vatDeduct10],
+    ['120', 'Вычет НДС 10% — закупки товаров (стр.120)', vatDeduct10],
     ['120', 'Вычет НДС 20% — аренда, транспорт, услуги (стр.120)', vatDeduct20],
     ['190', 'Общая сумма НДС к вычету (стр.190)', vatDeduct],
     ['', '', ''],

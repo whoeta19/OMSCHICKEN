@@ -197,7 +197,7 @@
 <div class="page" id="page-purchases">
   <div class="section-title">📉 Книга покупок</div>
   <div class="info-box" style="margin-bottom:12px;font-size:12px">
-    Закупки курятины у поставщиков. НДС 10% к вычету.
+    Закупки товаров у поставщиков. НДС 10% к вычету.
   </div>
   <div class="table-wrap">
     <table id="purchasesTable">
@@ -373,13 +373,13 @@ function calcVat(amount, pct) {
 }
 
 function renderSummary() {
-  // Продажи (доходы от покупателей курятины)
+  // Продажи (доходы от реализации товаров)
   const sales = filteredTx.filter(t => t.amount > 0 && t.category === 'income');
   const totalSales = sales.reduce((s,t) => s + Number(t.amount), 0);
   const vatSales = calcVat(totalSales, 10);
   const salesNoVat = totalSales - vatSales;
 
-  // Закупки курятины
+  // Закупки товаров
   const purchases = filteredTx.filter(t => t.amount < 0 && t.category === 'chicken');
   const totalPurchases = purchases.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
   const vatPurchases = calcVat(totalPurchases, 10);
@@ -453,7 +453,7 @@ function renderSummary() {
         </tr>
         <tr><td colspan="2" style="padding:8px 0"></td></tr>
         <tr>
-          <td style="padding:8px 0;color:var(--muted)">Закупки курятины (с НДС)</td>
+          <td style="padding:8px 0;color:var(--muted)">Закупки товаров (с НДС)</td>
           <td style="text-align:right;font-weight:500">${fmt(totalPurchases)}</td>
         </tr>
         <tr>
@@ -472,7 +472,7 @@ function renderSummary() {
     </div>
 
     <div class="info-box" style="font-size:12px">
-      <strong>ℹ️ Справка:</strong> НДС рассчитан по ставке 10% (мясо птицы, ОКВЭД 46.32.1). 
+      <strong>ℹ️ Справка:</strong> НДС рассчитан по ставке 10% (продовольственные товары). 
       Формула: НДС = Сумма × 10 / 110. Декларация подаётся ежеквартально до 25-го числа месяца, следующего за кварталом.
       <br><br>
       <strong>Квартальные сроки:</strong> Q1 → 25 апреля | Q2 → 25 июля | Q3 → 25 октября | Q4 → 25 января

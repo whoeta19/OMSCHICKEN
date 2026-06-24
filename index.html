@@ -870,7 +870,7 @@
   <div class="filter-bar">
     <button class="filter-btn active" onclick="filterTx('all',this)">Все</button>
     <button class="filter-btn" onclick="filterTx('income',this)">💰 Доход</button>
-    <button class="filter-btn" onclick="filterTx('chicken',this)">🐔 Курятина</button>
+    <button class="filter-btn" onclick="filterTx('chicken',this)">🛒 Закупки</button>
     <button class="filter-btn" onclick="filterTx('transport',this)">🚗 Транспорт</button>
     <button class="filter-btn" onclick="filterTx('food',this)">🍽️ Еда</button>
     <button class="filter-btn" onclick="filterTx('personal',this)">🛍️ Личное</button>
@@ -900,7 +900,7 @@
   <!-- Зона drag-to-categorize — появляется при перетаскивании -->
   <div id="dragCatZone" style="display:none;position:sticky;bottom:0;left:0;right:0;background:rgba(8,8,8,0.96);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:10px 16px;flex-wrap:wrap;gap:8px;align-items:center;z-index:200">
     <span style="font-size:11px;color:var(--muted);margin-right:4px">Перетащи сюда →</span>
-    <div ondragover="event.preventDefault()" ondrop="dropOnCat('chicken')" style="background:rgba(255,107,0,0.1);border:1px dashed rgba(255,107,0,0.4);border-radius:20px;padding:6px 14px;font-size:12px;cursor:copy">🐔 Закупки</div>
+    <div ondragover="event.preventDefault()" ondrop="dropOnCat('chicken')" style="background:rgba(255,107,0,0.1);border:1px dashed rgba(255,107,0,0.4);border-radius:20px;padding:6px 14px;font-size:12px;cursor:copy">🛒 Закупки</div>
     <div ondragover="event.preventDefault()" ondrop="dropOnCat('transport')" style="background:rgba(59,130,246,0.1);border:1px dashed rgba(59,130,246,0.4);border-radius:20px;padding:6px 14px;font-size:12px;cursor:copy">🚗 Транспорт</div>
     <div ondragover="event.preventDefault()" ondrop="dropOnCat('salary')" style="background:rgba(168,85,247,0.1);border:1px dashed rgba(168,85,247,0.4);border-radius:20px;padding:6px 14px;font-size:12px;cursor:copy">👥 Зарплата</div>
     <div ondragover="event.preventDefault()" ondrop="dropOnCat('office')" style="background:rgba(20,184,166,0.1);border:1px dashed rgba(20,184,166,0.4);border-radius:20px;padding:6px 14px;font-size:12px;cursor:copy">🏢 Офис</div>
@@ -955,7 +955,7 @@
       <option value="unknown">Показать: Прочее</option>
       <option value="all">Показать: Все</option>
       <option value="income">Доход</option>
-      <option value="chicken">Курятина</option>
+      <option value="chicken">Закупка товаров</option>
       <option value="transport">Транспорт</option>
       <option value="food">Еда</option>
       <option value="personal">Личное</option>
@@ -1229,7 +1229,7 @@ function classify(name, description, amount) {
   // Зарплата
   if (/зарплата|зп\b|выплата сотрудник|выдача зарплаты|выплата зарплаты/.test(text)) return 'salary';
   // Закупка товара
-  if (/агросфера|агро|птица знает|птицефабрик|мясное дело|тихонов|мясокомбинат|chicken|бройлер|тушка|курятина|куры|мясо/.test(text)) return 'chicken';
+  if (/оптторг|закупка товар|поставка товар|птицефабрик|мясокомбинат|chicken|бройлер|тушка|курятина|куры|мясо|агрохолдинг|промснаб|снабжение/.test(text)) return 'chicken';
   // Транспорт и доставка
   if (/яндекс.?такси|yandex.*taxi|yandex.*go|yandex.*4121|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|gazpromneft|shell|топливо|бензин|rnazk|rosneft|смартлогистика|грузоперевозк|набокин|доставка груза|транспортные услуги|межгород|пензапрокат|алексеев.*доставк|доставк.*алексеев/.test(text)) return 'transport';
   // Доставка еды Яндекс
@@ -2407,7 +2407,7 @@ function renderReclassify() {
   const filtered = filter === 'all' ? allTx.filter(t=>t.amount<0) : allTx.filter(t=>t.category===filter && t.amount<0);
   document.getElementById('reclassifyCount').textContent = filtered.length + ' операций';
   const cats = [
-    {k:'chicken',l:'🐔 Курятина'},{k:'transport',l:'🚗 Транспорт'},{k:'food',l:'🍽️ Еда'},
+    {k:'chicken',l:'🛒 Закупки'},{k:'transport',l:'🚗 Транспорт'},{k:'food',l:'🍽️ Еда'},
     {k:'personal',l:'🛍️ Личное'},{k:'salary',l:'👥 Зарплата'},{k:'office',l:'🏢 Офис'},
     {k:'bank',l:'🏦 Банк'},{k:'cash',l:'💵 Наличные'},{k:'loan',l:'🤝 Займы'},
     {k:'tax',l:'🏛️ Налоги'},{k:'transit',l:'🔄 Транзит'},{k:'unknown',l:'❓ Прочее'}
@@ -2981,7 +2981,7 @@ function renderMonthCloser() {
 
 function renderChart() {
   const cats=[
-    {key:'chicken',label:'🐔 Курятина',color:'#4ade80'},
+    {key:'chicken',label:'🛒 Закупки',color:'#4ade80'},
     {key:'transport',label:'🚗 Транспорт',color:'#818cf8'},
     {key:'food',label:'🍽️ Еда',color:'#fbbf24'},
     {key:'personal',label:'🛍️ Личное',color:'#fb923c'},
@@ -3260,7 +3260,7 @@ async function saveNote(id) {
 }
 
 function getCatBadge(cat) {
-  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🐔 Курятина'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],cash:['cat-bank','💵 Наличные'],loan:['cat-bank','🤝 Займы'],tax:['cat-bank','🏛️ Налоги'],transit:['cat-unknown','🔄 Транзит'],unknown:['cat-unknown','❓ Прочее']};
+  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🛒 Закупки'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],cash:['cat-bank','💵 Наличные'],loan:['cat-bank','🤝 Займы'],tax:['cat-bank','🏛️ Налоги'],transit:['cat-unknown','🔄 Транзит'],unknown:['cat-unknown','❓ Прочее']};
   const[cls,lbl] = m[cat]||m.unknown;
   return `<span class="cat-badge ${cls}">${lbl}</span>`;
 }
@@ -3862,7 +3862,7 @@ function aiAnswer(q) {
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
+  const cats = {chicken:'🛒 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
 
   // ── Приветствие ──
   if (/^(привет|хай|здравствуй|добрый|помоги|что умеешь|что можешь|помощ|start)/.test(ql)) {
@@ -4358,7 +4358,7 @@ function detectAnomalies() {
       return s + allTx.filter(t=>t.period===p&&t.category===cat&&t.amount<0).reduce((ss,t)=>ss+Math.abs(t.amount),0);
     },0) / prevPeriods.length;
     if (prevAvg > 0 && cur > prevAvg * 2.2) {
-      const catLabels = {chicken:'Курятина',transport:'Транспорт',food:'Питание',salary:'Зарплата',bank:'Банк',office:'Офис',cash:'Наличные',loan:'Займы',tax:'Налоги',transit:'Транзит',unknown:'Прочее'};
+      const catLabels = {chicken:'Закупки',transport:'Транспорт',food:'Питание',salary:'Зарплата',bank:'Банк',office:'Офис',cash:'Наличные',loan:'Займы',tax:'Налоги',transit:'Транзит',unknown:'Прочее'};
       anomalies.push({cat:catLabels[cat]||cat, cur, prevAvg, ratio:(cur/prevAvg).toFixed(1)});
     }
   });
@@ -4467,7 +4467,7 @@ function openPL() {
   allTx.filter(t=>t.amount<0).forEach(t=>{ bycat[t.category]=(bycat[t.category]||0)+Math.abs(t.amount); });
   const totalExp = Object.values(bycat).reduce((a,b)=>a+b,0);
   const profit = income - totalExp;
-  const catNames = {chicken:'Закупка (курятина)',transport:'Транспорт и логистика',salary:'Фонд оплаты труда',bank:'Банковские расходы',food:'Питание',office:'Офис и прочее',unknown:'Прочие расходы'};
+  const catNames = {chicken:'Закупки товаров',transport:'Транспорт и логистика',salary:'Фонд оплаты труда',bank:'Банковские расходы',food:'Питание',office:'Офис и прочее',unknown:'Прочие расходы'};
   const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort();
   const period = periods.length ? (periods[0]+(periods.length>1?' — '+periods[periods.length-1]:'')) : 'Все периоды';
 
@@ -4572,7 +4572,7 @@ function openTxDetail(tx) {
   document.querySelectorAll('.tx-row').forEach(r=>r.classList.remove('focused'));
   const panel = document.getElementById('txDetailContent');
   const plus = tx.amount > 0;
-  const cats = {chicken:'🐔 Курятина',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
+  const cats = {chicken:'🛒 Закупки',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
   panel.innerHTML = `
     <div style="margin-bottom:16px">
       <div style="font-size:22px;font-family:'Unbounded',sans-serif;font-weight:700;color:${plus?'var(--green)':'var(--red)'};margin-bottom:4px">${plus?'+':''}${fmt(tx.amount)}</div>
@@ -4801,7 +4801,7 @@ function initBudgetPeriodSel() {
 }
 
 const BUDGET_CATS = [
-  {k:'chicken',l:'🐔 Курятина'},{k:'salary',l:'👥 Зарплата'},{k:'transport',l:'🚗 Транспорт'},
+  {k:'chicken',l:'🛒 Закупки'},{k:'salary',l:'👥 Зарплата'},{k:'transport',l:'🚗 Транспорт'},
   {k:'office',l:'🏢 Офис'},{k:'bank',l:'🏦 Банк'},{k:'food',l:'🍽️ Еда'},
   {k:'personal',l:'🛍️ Личное'},{k:'unknown',l:'❓ Прочее'}
 ];

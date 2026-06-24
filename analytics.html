@@ -208,7 +208,7 @@
       <div class="stat-card"><div class="stat-label">Рентабельность</div><div class="stat-value blue" id="kpiMargin">—</div><div class="stat-delta" id="deltaMargin"></div></div>
     </div>
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-label">Закупка курятины</div><div class="stat-value orange" id="kpiChicken">—</div></div>
+      <div class="stat-card"><div class="stat-label">Закупки товаров</div><div class="stat-value orange" id="kpiChicken">—</div></div>
       <div class="stat-card"><div class="stat-label">Личные расходы</div><div class="stat-value red" id="kpiPersonal">—</div></div>
       <div class="stat-card"><div class="stat-label">Зарплата</div><div class="stat-value blue" id="kpiSalary">—</div></div>
       <div class="stat-card"><div class="stat-label">Банк/Кредиты</div><div class="stat-value" id="kpiBank" style="color:#c084fc">—</div></div>
@@ -617,7 +617,7 @@ function renderDaysChart() {
 function renderPieChart() {
   destroyChart('chartPie');
   const cats = [
-    {k:'chicken',l:'🐔 Курятина',c:'#4ade80'},
+    {k:'chicken',l:'🛒 Закупки',c:'#4ade80'},
     {k:'transport',l:'🚗 Транспорт',c:'#818cf8'},
     {k:'food',l:'🍽️ Еда',c:'#fbbf24'},
     {k:'personal',l:'🛍️ Личное',c:'#fb923c'},
@@ -855,7 +855,7 @@ function renderTopCategories() {
   if (!card || !list) return;
 
   const catNames = {
-    chicken:'🐔 Закупка (курятина)', transport:'🚗 Транспорт', salary:'👥 Зарплата',
+    chicken:'🛒 Закупки товаров', transport:'🚗 Транспорт', salary:'👥 Зарплата',
     bank:'🏦 Банковские расходы', food:'🍽️ Питание', office:'🏢 Офис',
     unknown:'❓ Прочее', personal:'🛍️ Личное'
   };
@@ -908,7 +908,7 @@ function renderTopCategories() {
 // ─── Бюджетирование (план vs факт) ───────────────────────────────────────────
 const BUDGET_KEY = 'omsfin_budgets';
 const DEFAULT_BUDGETS = {
-  chicken: { label: '🐔 Закупка птицы', limit: 1500000 },
+  chicken: { label: '🛒 Закупки товаров', limit: 1500000 },
   salary:  { label: '👥 Зарплата', limit: 600000 },
   logistics:{ label: '🚚 Логистика', limit: 400000 },
   taxes:   { label: '📋 Налоги', limit: 300000 },
