@@ -260,7 +260,7 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
 <div id="toast"></div>
 
 <script>
-const TOKEN_KEY = 'omschicken_token';
+const TOKEN_KEY = 'omsfin_token';
 let items = [];      // [{id,name,category,unit,qty,minQty,price,salePrice}]
 let movements = [];  // [{id,itemId,type,qty,price,date,note}]
 let currentFilter = 'all';
@@ -269,7 +269,7 @@ let _saving = false;
 // ─── Загрузка / сохранение через company_settings ───────────────
 async function loadData() {
   try {
-    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || '';
     if (!token) { loadLocal(); return; }
     const r = await fetch('/api/company_settings', {
       headers: { 'Authorization': 'Bearer ' + token }
@@ -294,7 +294,7 @@ async function saveData() {
   if (_saving) return;
   _saving = true;
   try {
-    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || '';
     if (!token) return;
     await fetch('/api/company_settings', {
       method: 'POST',

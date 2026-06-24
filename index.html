@@ -1104,16 +1104,16 @@ async function saveUserSettings() {
 }
 
 // Ключи хранилища
-const TOKEN_KEY = 'omschicken_token';
-const REFRESH_KEY = 'omschicken_refresh';
+const TOKEN_KEY = 'omsfin_token';
+const REFRESH_KEY = 'omsfin_refresh';
 const SUPABASE_URL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
 // ─── Демо-режим ──────────────────────────────────────────────────────────────
 const IS_DEMO = !!localStorage.getItem('omsfin_demo');
 
-// Проверка авторизации
-if (!IS_DEMO && !localStorage.getItem(TOKEN_KEY) && !localStorage.getItem(REFRESH_KEY)) {
+// Проверка авторизации (omsfin_token приоритетный, omschicken_token — обратная совместимость)
+if (!IS_DEMO && !localStorage.getItem(TOKEN_KEY) && !localStorage.getItem('omschicken_token') && !localStorage.getItem(REFRESH_KEY) && !localStorage.getItem('omschicken_refresh')) {
   window.location.href = '/login';
 }
 
@@ -1136,8 +1136,8 @@ function exitDemo() {
 }
 
 async function getValidToken() {
-  const token = localStorage.getItem(TOKEN_KEY);
-  const refresh = localStorage.getItem(REFRESH_KEY);
+  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
+  const refresh = localStorage.getItem(REFRESH_KEY) || localStorage.getItem('omschicken_refresh');
   
   // Проверяем срок токена
   if (token) {
