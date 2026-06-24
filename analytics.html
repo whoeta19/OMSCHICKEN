@@ -306,6 +306,14 @@ let compareTx = [];
 let currentPeriod = 'all';
 let compareMode = false;
 
+function chartColors() {
+  const light = document.body.classList.contains('light');
+  return {
+    grid: light ? 'rgba(0,0,0,0.07)' : '#1e1e1e',
+    ticks: light ? 'rgba(0,0,0,0.45)' : '#666',
+  };
+}
+
 function fmtShort(n){
   const abs = Math.abs(n);
   if(abs>=1000000) return (n/1000000).toFixed(1)+'М';
@@ -585,8 +593,8 @@ function renderDaysChart() {
       responsive:true, maintainAspectRatio:true,
       plugins:{legend:{labels:{color:'#999',font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}},
       scales:{
-        x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
-        y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
+        x:{ticks:{color:chartColors().ticks,font:{size:9},maxRotation:45},grid:{color:chartColors().grid}},
+        y:{ticks:{color:chartColors().ticks,font:{size:10},callback:v=>fmtShort(v)},grid:{color:chartColors().grid}}
       }
     }
   });
@@ -646,8 +654,8 @@ function renderProfitChart() {
       responsive:true, maintainAspectRatio:true,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)}`}}},
       scales:{
-        x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
-        y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
+        x:{ticks:{color:chartColors().ticks,font:{size:9},maxRotation:45},grid:{color:chartColors().grid}},
+        y:{ticks:{color:chartColors().ticks,font:{size:10},callback:v=>fmtShort(v)},grid:{color:chartColors().grid}}
       }
     }
   });
@@ -716,8 +724,8 @@ function renderBalanceChart() {
       responsive:true, maintainAspectRatio:true,
       plugins:{legend:{display: compareMode, labels:{color:'#999',font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}},
       scales:{
-        x:{ticks:{color:'#666',font:{size:9},maxRotation:45},grid:{color:'#1e1e1e'}},
-        y:{ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)},grid:{color:'#1e1e1e'}}
+        x:{ticks:{color:chartColors().ticks,font:{size:9},maxRotation:45},grid:{color:chartColors().grid}},
+        y:{ticks:{color:chartColors().ticks,font:{size:10},callback:v=>fmtShort(v)},grid:{color:chartColors().grid}}
       }
     }
   });
@@ -813,8 +821,8 @@ function renderCashflow(txs) {
         tooltip: { callbacks: { label: c => ' ' + fmtShort(c.raw) + ' ₽' } }
       },
       scales: {
-        x: { ticks:{color:'#666',font:{size:10}}, grid:{color:'#1e1e1e'} },
-        y: { ticks:{color:'#666',font:{size:10},callback:v=>fmtShort(v)}, grid:{color:'#1e1e1e'} }
+        x: { ticks:{color:chartColors().ticks,font:{size:10}}, grid:{color:chartColors().grid} },
+        y: { ticks:{color:chartColors().ticks,font:{size:10},callback:v=>fmtShort(v)}, grid:{color:chartColors().grid} }
       }
     }
   });

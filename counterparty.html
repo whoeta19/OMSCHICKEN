@@ -42,6 +42,22 @@
   body.light .bottom-nav{box-shadow:0 -1px 8px rgba(0,0,0,0.08);}
   body.light .tx-row:hover{background:rgba(0,0,0,0.02)!important;}
   body.light .modal,.body.light .ai-modal{box-shadow:0 20px 60px rgba(0,0,0,0.15)!important;}
+  body.light input,body.light select,body.light textarea{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light input::placeholder,body.light textarea::placeholder{color:rgba(0,0,0,0.35)!important;}
+  body.light .btn-outline{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light .btn-outline:hover{background:rgba(229,80,0,0.06)!important;border-color:var(--accent)!important;color:var(--accent)!important;}
+  body.light .bottom-nav{background:rgba(255,255,255,0.95)!important;border-top:1px solid rgba(0,0,0,0.08)!important;}
+  body.light .bottom-nav a{color:rgba(0,0,0,0.45)!important;}
+  body.light .bottom-nav a.active{color:var(--accent)!important;}
+  body.light .tabs{background:var(--surface)!important;border-bottom:1px solid var(--border)!important;}
+  body.light .tab{background:transparent!important;color:rgba(0,0,0,0.5)!important;border-color:transparent!important;}
+  body.light .tab.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+  body.light .tab:hover:not(.active){background:rgba(0,0,0,0.04)!important;color:var(--text)!important;}
+  body.light .history-item{background:var(--surface)!important;border-color:var(--border)!important;}
+  body.light .history-item:hover{background:var(--surface2)!important;}
+  body.light .info-item{background:var(--surface2)!important;}
+  body.light .risk-factors .risk-item{background:rgba(239,68,68,0.06)!important;border-color:rgba(239,68,68,0.15)!important;}
+  body.light .risk-factors .positive-item{background:rgba(34,197,94,0.06)!important;border-color:rgba(34,197,94,0.15)!important;}
   /* ── Аврора: градиентные акценты ── */
   body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
   body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
@@ -657,7 +673,7 @@ function renderHistory() {
 
 function exportHistoryCSV() {
   if (!checkHistory.length) { alert('История проверок пуста'); return; }
-  const cols = ['Дата проверки','Наименование','ИНН','ОГРН','Статус','Риск-балл','Регион','Дата регистрации'];
+  const cols = ['Дата проверки','Наименование','ИНН','ОГРН','Статус','Риск-балл','Юр.адрес','Дата регистрации'];
   const rows = checkHistory.map(d => [
     new Date(d.checkedAt).toLocaleDateString('ru-RU'),
     d.name || '',
@@ -665,7 +681,7 @@ function exportHistoryCSV() {
     d.ogrn || '',
     d.statusText || '',
     d.riskScore ?? '',
-    d.region || '',
+    d.address || '',
     d.regDate || '',
   ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(';'));
   const csv = '﻿' + [cols.join(';'), ...rows].join('\r\n');

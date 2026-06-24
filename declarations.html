@@ -50,6 +50,14 @@
   body.light .bottom-nav{background:rgba(255,255,255,0.95)!important;border-top:1px solid rgba(0,0,0,0.08)!important;}
   body.light .bottom-nav a{color:rgba(0,0,0,0.45)!important;}
   body.light .bottom-nav a.active{color:var(--accent)!important;}
+  body.light input,body.light select,body.light textarea{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light input::placeholder,body.light textarea::placeholder{color:rgba(0,0,0,0.35)!important;}
+  body.light .btn-outline{background:#fff!important;border-color:rgba(0,0,0,0.14)!important;color:#1a1a1a!important;}
+  body.light .btn-outline:hover{background:rgba(229,80,0,0.06)!important;border-color:var(--accent)!important;color:var(--accent)!important;}
+  body.light .tabs{background:var(--surface)!important;border-bottom:1px solid var(--border)!important;}
+  body.light .tab{background:transparent!important;color:rgba(0,0,0,0.5)!important;border-color:transparent!important;}
+  body.light .tab.active{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important;}
+  body.light .tab:hover:not(.active){background:rgba(0,0,0,0.04)!important;color:var(--text)!important;}
   /* ── Аврора: градиентные акценты ── */
   body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
   body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
@@ -166,7 +174,7 @@
 
 <!-- МОДАЛ: ЗАКРЫТЬ КВАРТАЛ -->
 <div id="cqOverlay" onclick="if(event.target===this)closeCQ()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;overflow-y:auto;padding:20px;box-sizing:border-box">
-  <div style="max-width:560px;margin:0 auto;background:#0f0f0f;border:1px solid rgba(255,107,0,0.2);border-radius:18px;padding:24px">
+  <div style="max-width:560px;margin:0 auto;background:var(--surface);border:1px solid rgba(255,107,0,0.2);border-radius:18px;padding:24px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-family:'Unbounded',sans-serif;font-size:15px;font-weight:700">🏁 Закрыть квартал</div>
       <button onclick="closeCQ()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1">✕</button>

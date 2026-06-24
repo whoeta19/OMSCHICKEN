@@ -5509,7 +5509,7 @@ setTimeout(function() {
 
 <!-- ══════════════ P&L МОДАЛ ══════════════ -->
 <div id="plModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px)" onclick="closePL()">
-  <div style="max-width:640px;margin:40px auto;background:#0f0f0f;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
+  <div style="max-width:640px;margin:40px auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.07)">
       <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700">Отчёт о прибылях и убытках</div>
       <div style="display:flex;gap:8px">
@@ -5523,7 +5523,7 @@ setTimeout(function() {
 
 <!-- ══════════════ СРАВНЕНИЕ ПЕРИОДОВ МОДАЛ ══════════════ -->
 <div id="compareModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px)" onclick="closeCompare()">
-  <div style="max-width:700px;margin:40px auto;background:#0f0f0f;border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
+  <div style="max-width:700px;margin:40px auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column" onclick="event.stopPropagation()">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.07)">
       <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700">Сравнение периодов</div>
       <button onclick="closeCompare()" style="background:rgba(255,255,255,0.06);color:var(--muted);border:none;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">✕</button>
@@ -5540,7 +5540,7 @@ setTimeout(function() {
 
 <!-- Модальное окно экспорта -->
 <div id="exportModal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center" onclick="closeExportModal()">
-  <div style="background:#0f0f0f;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;width:320px;max-width:90vw" onclick="event.stopPropagation()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:320px;max-width:90vw" onclick="event.stopPropagation()">
     <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">Экспорт данных</div>
     <div id="exportModalSub" style="font-size:12px;color:var(--muted);margin-bottom:20px">операций</div>
     <button onclick="doExportExcel()" style="width:100%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin-bottom:10px;text-align:left;display:flex;align-items:center;gap:10px">
