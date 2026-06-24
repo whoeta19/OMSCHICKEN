@@ -70,14 +70,14 @@ nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:2
 .preview-section{padding:80px 20px;background:linear-gradient(180deg,transparent,rgba(255,107,0,0.05),transparent);}
 .preview-inner{max-width:1100px;margin:0 auto;text-align:center;}
 .app-preview{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-top:50px;overflow:hidden;}
-.app-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#0d0d0d;border-radius:10px;margin-bottom:16px;}
+.app-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,0.04);border-radius:10px;margin-bottom:16px;}
 .app-logo-sm{font-family:'Unbounded',sans-serif;font-weight:900;font-size:13px;}
 .app-logo-sm span{color:var(--accent);}
 .app-tabs{display:flex;gap:2px;padding:8px 16px 0;border-bottom:1px solid var(--border);margin-bottom:16px;}
 .app-tab{padding:7px 12px;border-radius:6px 6px 0 0;font-size:11px;color:var(--muted);}
 .app-tab.active{color:var(--accent);border-bottom:2px solid var(--accent);}
 .app-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
-.app-stat{background:#0d0d0d;border-radius:8px;padding:12px;}
+.app-stat{background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;}
 .app-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
 .app-stat-val{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;}
 .app-stat-val.g{color:var(--green);}
@@ -739,13 +739,18 @@ setTimeout(() => {
 
 <script>
 function goToApp() {
-  var tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omschicken_refresh');
+  var tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omsfin_refresh') || localStorage.getItem('omschicken_token') || localStorage.getItem('omschicken_refresh');
   if (tok) {
     window.location.href = '/';
   } else {
     window.location.href = '/login';
   }
 }
+// Авторизованных пользователей сразу отправляем на дашборд
+(function() {
+  var tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token');
+  if (tok) window.location.replace('/');
+})();
 </script>
 </body>
 </html>

@@ -160,7 +160,7 @@ if (tgApp) {
           });
           const sessData = await sessResp.json();
           if (sessData.access_token) {
-            localStorage.setItem('omschicken_token', sessData.access_token);
+            localStorage.setItem('omsfin_token', sessData.access_token);
             localStorage.setItem('omsfin_refresh', sessData.refresh_token || '');
             localStorage.setItem('omsfin_onboarded', '1');
             window.location.href = '/';
@@ -187,7 +187,7 @@ if (window.Telegram) {
   document.querySelector('script[src*="telegram"]').addEventListener('load', initTelegram);
 }
 
-const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
+const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token');
 if (token) { window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding'; }
 
 document.addEventListener('keydown', e => {
@@ -225,8 +225,8 @@ async function login() {
     });
     const data = await r.json();
     if (data.access_token) {
-      localStorage.setItem('omschicken_token', data.access_token);
-      localStorage.setItem('omschicken_refresh', data.refresh_token);
+      localStorage.setItem('omsfin_token', data.access_token);
+      localStorage.setItem('omsfin_refresh', data.refresh_token);
       localStorage.setItem('omsfin_user', JSON.stringify(data.user));
       window.location.href = localStorage.getItem('omsfin_onboarded') ? '/' : '/onboarding';
     } else {
@@ -273,8 +273,8 @@ async function register() {
 
     if (data.user || data.access_token) {
       if (data.access_token) {
-        localStorage.setItem('omschicken_token', data.access_token);
-        localStorage.setItem('omschicken_refresh', data.refresh_token);
+        localStorage.setItem('omsfin_token', data.access_token);
+        localStorage.setItem('omsfin_refresh', data.refresh_token);
         localStorage.setItem('omsfin_user', JSON.stringify(data.user));
         // Сохраняем реферальный код если пришли по ссылке
         const refCode = new URLSearchParams(window.location.search).get('ref');
