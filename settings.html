@@ -1003,6 +1003,39 @@ async function checkTelegramStatus() {
 }
 checkTelegramStatus();
 
+// Привязка Telegram: запрашиваем у сервера код и показываем его + deep-link на бота
+async function linkTelegram() {
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+  if (!tok) { showToast('Войдите в аккаунт'); return; }
+  const btn = document.querySelector('#tgNotLinked .btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Получаем код...'; }
+  try {
+    const r = await fetch('/api/telegram_link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }
+    });
+    const d = await r.json();
+    if (!r.ok || !d.code) { showToast('❌ ' + (d.error || 'Не удалось получить код')); return; }
+    document.getElementById('tgCode').textContent = d.code;
+    const link = document.getElementById('tgLink');
+    if (link) link.href = `https://t.me/${d.bot || 'omsfin_bot'}?start=${d.code}`;
+    document.getElementById('tgCodeBlock').style.display = 'block';
+  } catch(e) {
+    showToast('❌ Ошибка: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✈️ Привязать Telegram'; }
+  }
+}
+
+// МойСклад: интеграция пока не реализована на сервере (нужен API-прокси).
+// Честные заглушки вместо «мёртвых» кнопок.
+function saveMsToken() {
+  showToast('🏗 Интеграция с МойСклад в разработке. Пока импортируйте через выписку банка.');
+}
+function testMsToken() {
+  showToast('🏗 Интеграция с МойСклад в разработке.');
+}
+
 // ── Реферальная программа ─────────────────────────────────────────────
 (function initReferral() {
   try {
