@@ -621,7 +621,7 @@ function clearImage(key, previewId, icon) {
 // Token loaded dynamically
 
 async function loadCloudSettings() {
-  const tok = localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   if (!tok) { initImagePreviews(); return; }
   try {
     const r = await fetch('/api/company_settings?nc=' + Date.now(), {
@@ -666,7 +666,7 @@ async function loadCloudSettings() {
 }
 
 async function saveToCloud(key, value) {
-  const tok = localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   try {
     await fetch('/api/company_settings', {
       method: 'POST',
@@ -1080,7 +1080,7 @@ function selectBank(bank) {
 }
 
 async function initWebhook() {
-  const tok = localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   if (!tok) return;
   const statusEl = document.getElementById('webhookStatus');
   const urlEl = document.getElementById('webhookUrl');
@@ -1117,7 +1117,7 @@ function copyWebhookUrl() {
 }
 
 async function regenerateWebhookSecret() {
-  const tok = localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
   if (!tok) return;
   const statusEl = document.getElementById('webhookStatus');
   const urlEl = document.getElementById('webhookUrl');
@@ -1141,8 +1141,8 @@ initWebhook();
 
 // ─── Email уведомления ────────────────────────────────────────────────────────
 async function testEmail() {
-  const tok = localStorage.getItem('omsfin_token') || '';
-  if (!tok) { alert('Войди в аккаунт'); return; }
+  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+  if (!tok) { showToast('Войди в аккаунт'); return; }
   const statusEl = document.getElementById('emailStatus');
   statusEl.textContent = '⏳ Отправляю...';
   try {

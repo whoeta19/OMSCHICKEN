@@ -2932,7 +2932,7 @@ async function dropOnCat(cat) {
   if (!tx) return;
   tx.category = cat;
   renderTxList();
-  const token = localStorage.getItem('omsfin_token');
+  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
   await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -2947,7 +2947,7 @@ async function togglePending(id) {
   // Циклически: нет → pending_income/expense → нет
   let newStatus = null;
   if (!tx.status) newStatus = tx.amount > 0 ? 'pending_income' : 'pending_expense';
-  const token = localStorage.getItem('omsfin_token');
+  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
   if (!IS_DEMO) {
     await fetch('/api/transactions', {
       method: 'PATCH',
@@ -2967,7 +2967,7 @@ async function toggleRecurring(id) {
   if (is_recurring && !recurring_label) {
     recurring_label = prompt('Название платежа (например: Аренда склада):', tx.name) || tx.name;
   }
-  const token = localStorage.getItem('omsfin_token');
+  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
   await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -3111,7 +3111,7 @@ async function saveNote(id) {
   const input = document.getElementById('note-'+id);
   if (!input) return;
   const note = input.value.trim();
-  const token = localStorage.getItem('omsfin_token');
+  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
   const companyId = currentCompanyId;
   await fetch('/api/transactions', {
     method: 'PATCH',

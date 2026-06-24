@@ -1161,7 +1161,7 @@ function cqSelectQ(q, y, btn) {
 function closeCQ() { document.getElementById('cqOverlay').style.display = 'none'; }
 
 function cqCalculate() {
-  if (!cqSelectedQ) { alert('Выберите квартал'); return; }
+  if (!cqSelectedQ) { showToast('Выберите квартал'); return; }
   const {q, y} = cqSelectedQ;
   const months = [[1,2,3],[4,5,6],[7,8,9],[10,11,12]][q-1];
 
@@ -1331,15 +1331,15 @@ async function cqSendTelegram() {
   try {
     const r = await fetch('/api/telegram_link');
     const {chat_id, token} = await r.json();
-    if (!chat_id || !token) { alert('Telegram не подключён — зайдите в Настройки'); return; }
+    if (!chat_id || !token) { showToast('Telegram не подключён — зайдите в Настройки'); return; }
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({chat_id, text, parse_mode:'HTML'})
     });
-    alert('✅ Сводка отправлена в Telegram!');
+    showToast('✅ Сводка отправлена в Telegram!');
   } catch(e) {
-    alert('❌ Ошибка отправки: ' + e.message);
+    showToast('❌ Ошибка отправки: ' + e.message);
   }
 }
 // ─────────────────────────────────────────────────────────────────

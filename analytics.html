@@ -370,7 +370,7 @@ function destroyAllCharts() {
 }
 
 function exportCSV() {
-  if (!filteredTx.length) { alert('Нет данных для экспорта'); return; }
+  if (!filteredTx.length) { showToast('Нет данных для экспорта'); return; }
   const period = document.getElementById('periodSelect').value;
   const cols = ['Дата','Сумма','Категория','Контрагент','Назначение','ИНН'];
   const rows = filteredTx.map(t => [

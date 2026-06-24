@@ -728,7 +728,7 @@ function calcPenalty() {
   const dateFrom = new Date(document.getElementById('penDateFrom').value);
   const dateTo = new Date(document.getElementById('penDateTo').value);
   const rate = parseFloat(document.getElementById('penRate').value) || 16;
-  if (!dateFrom || !dateTo || dateTo <= dateFrom) { alert('Укажи даты'); return; }
+  if (!dateFrom || !dateTo || dateTo <= dateFrom) { showToast('Укажи даты'); return; }
   
   const days = Math.ceil((dateTo - dateFrom) / (1000*60*60*24));
   const penaltyRate = rate / 300 / 100;
