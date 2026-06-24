@@ -11,34 +11,53 @@ export default async function handler(req, res) {
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
   
-  const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + (userToken || SUPABASE_KEY),
+  // Получаем user_id из токена (нужен для фильтрации компаний по членству)
+  let userId = null;
+  if (userToken) {
+    try {
+      const ur = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
+      });
+      const ud = await ur.json();
+      userId = ud.id || null;
+    } catch(e) {}
+  }
+  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
+
+  const svcHeaders = {
+    'apikey': SERVICE_KEY,
+    'Authorization': 'Bearer ' + SERVICE_KEY,
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
 
   try {
     if (req.method === 'GET') {
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/companies?order=created_at.asc`, { headers });
-      const data = await r.json();
-      return res.status(200).json(Array.isArray(data) ? data : []);
+      // Получаем все company_id где пользователь является участником
+      const mR = await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}&select=company_id,role`, {
+        headers: svcHeaders
+      });
+      const members = await mR.json();
+      if (!Array.isArray(members) || members.length === 0) {
+        return res.status(200).json([]);
+      }
+      const ids = members.map(m => m.company_id).join(',');
+      const cR = await fetch(`${SUPABASE_URL}/rest/v1/companies?id=in.(${ids})&order=created_at.asc`, {
+        headers: svcHeaders
+      });
+      const companies = await cR.json();
+      if (!Array.isArray(companies)) return res.status(200).json([]);
+      // Добавляем роль пользователя к каждой компании
+      const roleMap = {};
+      members.forEach(m => { roleMap[m.company_id] = m.role; });
+      return res.status(200).json(companies.map(c => ({ ...c, my_role: roleMap[c.id] || null })));
     }
 
     if (req.method === 'POST') {
-      // Получаем user_id
-      let userId = null;
-      if (userToken) {
-        const ur = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
-        });
-        const ud = await ur.json();
-        userId = ud.id || null;
-      }
       const body = { ...req.body, user_id: userId };
       const r = await fetch(`${SUPABASE_URL}/rest/v1/companies`, {
         method: 'POST',
-        headers,
+        headers: svcHeaders,
         body: JSON.stringify(body)
       });
       const data = await r.json();
@@ -64,7 +83,7 @@ export default async function handler(req, res) {
       const { id, ...updates } = req.body;
       const r = await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${id}`, {
         method: 'PATCH',
-        headers,
+        headers: svcHeaders,
         body: JSON.stringify(updates)
       });
       const data = await r.json();
@@ -76,28 +95,17 @@ export default async function handler(req, res) {
 
       // Удаление аккаунта (152-ФЗ право на забвение)
       if (action === 'delete_account') {
-        if (!userToken) return res.status(401).json({ error: 'Не авторизован' });
-        const ur = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
-        });
-        const ud = await ur.json();
-        const userId = ud.id;
-        if (!userId) return res.status(401).json({ error: 'Пользователь не найден' });
-
-        const svcH = { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
-        // Удаляем данные пользователя
-        await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}`, { method: 'DELETE', headers: svcH });
-        await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}`, { method: 'DELETE', headers: svcH });
-        await fetch(`${SUPABASE_URL}/rest/v1/audit_log?user_id=eq.${userId}`, { method: 'DELETE', headers: svcH });
-        // Удаляем самого пользователя из Auth
-        await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, { method: 'DELETE', headers: svcH });
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}`, { method: 'DELETE', headers: svcHeaders });
+        await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}`, { method: 'DELETE', headers: svcHeaders });
+        await fetch(`${SUPABASE_URL}/rest/v1/audit_log?user_id=eq.${userId}`, { method: 'DELETE', headers: svcHeaders });
+        await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, { method: 'DELETE', headers: svcHeaders });
         return res.status(200).json({ ok: true });
       }
 
       const { id } = req.body;
       await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${id}`, {
         method: 'DELETE',
-        headers
+        headers: svcHeaders
       });
       return res.status(200).json({ ok: true });
     }
