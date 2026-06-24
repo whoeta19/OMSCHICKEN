@@ -6,11 +6,11 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({error: 'Method not allowed'});
+  if (req.method !== 'POST') return res.status(405).json({error: 'Метод не поддерживается'});
 
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
-  if (!userToken) return res.status(401).json({error: 'No token'});
+  if (!userToken) return res.status(401).json({error: 'Не авторизован'});
 
   // Декодируем JWT без верификации чтобы получить user_id
   let userId = null;
@@ -19,16 +19,16 @@ export default async function handler(req, res) {
     userId = payload.sub;
     // Проверяем не истёк ли токен
     if (payload.exp && payload.exp < Math.floor(Date.now()/1000)) {
-      return res.status(401).json({error: 'Token expired'});
+      return res.status(401).json({error: 'Сессия истекла, войдите снова'});
     }
   } catch(e) {
-    return res.status(401).json({error: 'Invalid token format'});
+    return res.status(401).json({error: 'Неверный токен'});
   }
 
-  if (!userId) return res.status(401).json({error: 'No user id'});
+  if (!userId) return res.status(401).json({error: 'Пользователь не найден'});
 
   const { password } = req.body;
-  if (!password || password.length < 6) return res.status(400).json({error: 'Password too short'});
+  if (!password || password.length < 6) return res.status(400).json({error: 'Пароль слишком короткий (минимум 6 символов)'});
 
   try {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {

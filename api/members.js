@@ -70,13 +70,13 @@ export default async function handler(req, res) {
 
   // ── resource=ai: чат с Gemini-ассистентом (без auth — контекст передаётся с фронта) ──
   if (req.query.resource === 'ai') {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST запросы' });
 
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY не настроен' });
 
     const { message, context, history } = req.body;
-    if (!message) return res.status(400).json({ error: 'message required' });
+    if (!message) return res.status(400).json({ error: 'Не указано сообщение' });
 
     const ctx = context || {};
     const fmtMoney = (n) => n ? Math.round(n).toLocaleString('ru-RU') + ' ₽' : 'нет данных';
@@ -175,12 +175,12 @@ ${ctx.recentTxs ? `Последние операции: ${ctx.recentTxs}` : ''}
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
   const userId = await getUserId(userToken);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
 
   if (req.query.resource === 'audit-log') {
-    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Метод не поддерживается' });
     const companyId = req.query.company_id;
-    if (!companyId) return res.status(400).json({ error: 'company_id required' });
+    if (!companyId) return res.status(400).json({ error: 'Не указана компания' });
 
     const role = await getUserRole(companyId, userId);
     if (role !== 'director') return res.status(403).json({ error: 'Только директор может просматривать журнал действий' });
@@ -220,7 +220,7 @@ ${ctx.recentTxs ? `Последние операции: ${ctx.recentTxs}` : ''}
     // ── GET: список участников компании ИЛИ список приглашений ───────────
     if (req.method === 'GET') {
       const { company_id, action } = req.query;
-      if (!company_id) return res.status(400).json({ error: 'company_id required' });
+      if (!company_id) return res.status(400).json({ error: 'Не указана компания' });
 
       const role = await getUserRole(company_id, userId);
       if (!role) return res.status(403).json({ error: 'Вы не состоите в этой компании' });
@@ -331,7 +331,7 @@ ${ctx.recentTxs ? `Последние операции: ${ctx.recentTxs}` : ''}
         return res.status(200).json({ ok: true });
       }
 
-      return res.status(400).json({ error: 'Unknown action' });
+      return res.status(400).json({ error: 'Неизвестное действие' });
     }
 
     // ── DELETE: убрать участника из компании (только директор, не себя) ──

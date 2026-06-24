@@ -950,9 +950,8 @@ function saveNotifications() {
 
 // Аккаунт
 function logout() {
-  localStorage.removeItem('omsfin_token');
-  localStorage.removeItem('omsfin_refresh');
-  localStorage.removeItem('omsfin_user');
+  ['omsfin_token','omsfin_refresh','omsfin_user','omsfin_company',
+   'omschicken_token','omschicken_refresh'].forEach(k => localStorage.removeItem(k));
   window.location.href = '/login';
 }
 

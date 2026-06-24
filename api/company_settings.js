@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     } catch(e) {}
   }
 
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
 
   try {
     if (req.method === 'GET') {

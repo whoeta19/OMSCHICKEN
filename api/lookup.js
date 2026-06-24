@@ -17,7 +17,7 @@ const DADATA_TOKEN_SUGGEST = process.env.DADATA_TOKEN_SUGGEST || process.env.DAD
 
 async function handleEgrul(req, res) {
   const { inn } = req.query;
-  if (!inn) return res.status(400).json({ error: 'No INN' });
+  if (!inn) return res.status(400).json({ error: 'Не указан ИНН' });
 
   try {
     // API ФНС ЕГРЮЛ
@@ -73,7 +73,7 @@ async function handleDadata(req, res) {
 
   if (action === 'suggest') {
     if (!DADATA_TOKEN_SUGGEST) return res.status(500).json({ error: 'DADATA_TOKEN_SUGGEST не настроен на сервере' });
-    if (!query) return res.status(400).json({ error: 'query is required' });
+    if (!query) return res.status(400).json({ error: 'Не указан запрос' });
     const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/party', {
       method: 'POST',
       headers: {
@@ -86,7 +86,7 @@ async function handleDadata(req, res) {
     return res.status(200).json(data);
   }
 
-  return res.status(400).json({ error: 'Unknown action. Use action=findById or action=suggest' });
+  return res.status(400).json({ error: 'Неизвестное действие' });
 }
 
 export default async function handler(req, res) {
