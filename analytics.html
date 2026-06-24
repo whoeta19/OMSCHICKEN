@@ -416,7 +416,7 @@ async function loadData() {
   document.getElementById('content').style.display = 'none';
   try {
     const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
-    const companyId = localStorage.getItem('omsfin_company_id') || '';
+    const companyId = localStorage.getItem('omsfin_company') || '';
     const url = companyId ? `/api/transactions?company_id=${companyId}` : '/api/transactions';
     const r = await fetch(url, token ? {headers:{Authorization:'Bearer '+token}} : {});
     allTx = await r.json();

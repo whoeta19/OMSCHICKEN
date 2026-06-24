@@ -660,11 +660,14 @@ const year = now.getFullYear();
 
 async function loadData() {
   const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  const cid = localStorage.getItem('omsfin_company') || '';
+  const url = cid ? `/api/transactions?company_id=${encodeURIComponent(cid)}` : '/api/transactions';
   try {
-    const r = await fetch('/api/transactions', {headers:{'Authorization':'Bearer '+token}});
+    const r = await fetch(url, {headers:{'Authorization':'Bearer '+token}});
     allTx = await r.json();
+    if (!Array.isArray(allTx)) allTx = [];
     renderAll();
-  } catch(e) {}
+  } catch(e) { showToast('❌ Ошибка загрузки данных'); }
 }
 
 function renderAll() {

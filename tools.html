@@ -991,6 +991,18 @@ function showTool(name, btn) {
   _origShowTool(name, btn);
   if (name === 'currency') initCurrencyTool();
 }
+
+let _toastTid;
+function showToast(msg, dur=3000) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(30,30,30,0.97);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.22s,transform 0.22s;max-width:90vw;text-align:center;border:1px solid rgba(255,255,255,0.1);'; document.body.appendChild(t); }
+  t.textContent = msg;
+  clearTimeout(_toastTid);
+  requestAnimationFrame(() => { t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+  _toastTid = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(12px)'; }, dur);
+}
+window.addEventListener('unhandledrejection', e => { const m = e.reason?.message||String(e.reason); if (m && m.length < 100) showToast('⚠️ ' + m); });
+window.onerror = (msg, src, line) => { if (String(msg).length < 120) showToast('⚠️ Ошибка: ' + msg); return false; };
 </script>
 </body>
 </html>
