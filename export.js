@@ -95,7 +95,7 @@ function doExport(allTx) {
 
   // Скачиваем
   const date = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, `ОМСЧИКЕН_${date}.xlsx`);
+  XLSX.writeFile(wb, `OMSFIN_${date}.xlsx`);
 }
 
 function getCatName(cat) {

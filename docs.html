@@ -303,9 +303,9 @@
     </div>
     <div class="card">
       <div class="section-title">Стороны</div>
-      <div class="input-group"><label>Продавец</label><input type="text" id="ksfSeller" placeholder='ООО "ОМСЧИКЕН"'></div>
+      <div class="input-group"><label>Продавец</label><input type="text" id="ksfSeller" placeholder='Название продавца'></div>
       <div class="input-row">
-        <div class="input-group"><label>ИНН продавца</label><input type="text" id="ksfSellerInn" placeholder="5800015301"></div>
+        <div class="input-group"><label>ИНН продавца</label><input type="text" id="ksfSellerInn" placeholder="ИНН организации"></div>
         <div class="input-group"><label>КПП продавца</label><input type="text" id="ksfSellerKpp" placeholder="580001001"></div>
       </div>
       <div class="input-group" style="margin-top:10px"><label>Покупатель</label><input type="text" id="ksfBuyer" placeholder='ООО "Покупатель"'></div>
@@ -603,10 +603,10 @@ let signImg = localStorage.getItem('omsfin_sign') || localStorage.getItem('omsch
 
 // Реквизиты
 let S = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {
-  name:'ООО "ОМСЧИКЕН"', inn:'5800015301', kpp:'580001001', ogrn:'1255800003447',
-  addr:'440013, г. Пенза, ул. Чаадаева, 72', phone:'8(9869)47-66-97',
-  bank:'АО «ТБанк»', rs:'40702810210001915113', ks:'30101810145250000974', bik:'044525411',
-  director:'Симутин Семен Евгеньевич', buh:'Симутин Семен Евгеньевич'
+  name:'', inn:'', kpp:'', ogrn:'',
+  addr:'', phone:'',
+  bank:'', rs:'', ks:'', bik:'',
+  director:'', buh:''
 };
 
 // Инициализация настроек
@@ -1822,7 +1822,7 @@ function generateKSF() {
   const date = document.getElementById('ksfDate').value;
   const origNum = document.getElementById('ksfOrigNum').value;
   const origDate = document.getElementById('ksfOrigDate').value;
-  const seller = document.getElementById('ksfSeller').value || 'ООО "ОМСЧИКЕН"';
+  const seller = document.getElementById('ksfSeller').value || S.name || 'Продавец';
   const sellerInn = document.getElementById('ksfSellerInn').value;
   const sellerKpp = document.getElementById('ksfSellerKpp').value;
   const buyer = document.getElementById('ksfBuyer').value;

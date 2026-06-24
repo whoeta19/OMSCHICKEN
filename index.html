@@ -1333,7 +1333,7 @@ async function loadCompanies() {
     if (!sel) return;
     sel.innerHTML = '<option value="">Все компании</option>' + 
       companies.map(c=>`<option value="${escapeHtml(c.id)}" ${c.id===currentCompanyId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
-    // Если компаний нет — создаём ОМСЧИКЕН автоматически
+    // Если компаний нет — создаём компанию по умолчанию
     if (companies.length === 0) {
       await createDefaultCompany();
     }
@@ -1942,6 +1942,9 @@ function extractDate(str) {
 }
 
 function parseBank(text, bank) {
+  const _seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {};
+  const _myInn = _seller.inn || '';
+  const _myNameRe = _seller.name ? new RegExp(_seller.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi') : null;
   const sep = text.includes(';') ? ';' : ',';
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   const txs = [];
@@ -1994,7 +1997,7 @@ function parseBank(text, bank) {
     // (statement_unid, Date, d_c, sum_rur, plat_name, plat_inn, pol_name, pol_inn, text70, ...)
     // Колонки могут сдвигаться между версиями выгрузки, поэтому ищем их по имени заголовка,
     // а не по фиксированному индексу.
-    const myInn = '5800015301';
+    const myInn = _myInn;
 
     // Находим строку с тех.заголовками (содержит и 'd_c', и 'sum_rur')
     let hdrRow = -1;
@@ -2048,7 +2051,7 @@ function parseBank(text, bank) {
       let name = amount > 0
         ? (payerInn !== myInn ? payer : receiver)
         : (receiverInn !== myInn ? receiver : payer);
-      name = name.replace(/ООО "ОМСЧИКЕН"|ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ОМСЧИКЕН"/gi, '').trim() || description.substring(0, 60);
+      name = (_myNameRe ? name.replace(_myNameRe, '') : name).trim() || description.substring(0, 60);
 
       const category = classify(name, description, amount);
       txs.push({
@@ -2151,7 +2154,7 @@ async function parseAndProcess(text, accountName) {
     // Альфа: выгрузка "Клиент-Банк" — TAB-разделённый файл с тех.заголовками
     // (statement_unid, Date, d_c, sum_rur, plat_name, plat_inn, pol_name, pol_inn, text70, ...)
     // Колонки могут сдвигаться между версиями выгрузки — ищем их по имени заголовка.
-    const myInn = '5800015301';
+    const myInn = _myInn;
 
     let hdrRow = -1;
     for (let i = 0; i < Math.min(5, lines.length); i++) {
@@ -2202,7 +2205,7 @@ async function parseAndProcess(text, accountName) {
       let name = amount > 0
         ? (payerInn !== myInn ? payer : receiver)
         : (receiverInn !== myInn ? receiver : payer);
-      name = name.replace(/ООО "ОМСЧИКЕН"|ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ОМСЧИКЕН"/gi, '').trim() || description.substring(0, 60);
+      name = (_myNameRe ? name.replace(_myNameRe, '') : name).trim() || description.substring(0, 60);
 
       const category = classify(name, description, amount);
       const counterpartyInn = amount > 0
@@ -2231,7 +2234,7 @@ async function parseAndProcess(text, accountName) {
       if (isNaN(amount) || amount === 0) continue;
       if (!monthKey) { const p = dateStr.split('.'); monthKey = p[1] + '.' + p[2]; }
       const description = (cols[9] || '').substring(0, 100);
-      const myInn = '5800015301';
+      const myInn = _myInn;
       const receiver = (cols[12] || '').trim();
       const receiverInn = (cols[13] || '').trim();
       const sender = (cols[18] || '').trim();
@@ -2239,7 +2242,7 @@ async function parseAndProcess(text, accountName) {
       let name = amount > 0
         ? (senderInn !== myInn ? sender : receiver)
         : (receiverInn !== myInn ? receiver : sender);
-      name = (name || description.substring(0, 60)).replace(/ООО "ОМСЧИКЕН"|ООО ОМСЧИКЕН/gi, '').trim();
+      name = (_myNameRe ? (name || description.substring(0, 60)).replace(_myNameRe, '') : (name || description.substring(0, 60))).trim();
       const category = classify(name, description, amount);
       const counterpartyInn = amount > 0
         ? (senderInn !== myInn ? senderInn : receiverInn)
@@ -2250,7 +2253,7 @@ async function parseAndProcess(text, accountName) {
     // Сбер Бизнес Онлайн — два формата выгрузки:
     // 1) полный: "Дата проведения";"Дата операции";"Вид";"Сумма";"Плательщик";"ИНН плательщика";...;"Получатель";"ИНН получателя";...;"Назначение платежа"
     // 2) краткий: "Дата";"Контрагент";"Назначение";"Расход";"Приход"
-    const myInn = '5800015301';
+    const myInn = _myInn;
 
     // Ищем строку заголовка
     let hdrRow = -1;
@@ -2308,7 +2311,7 @@ async function parseAndProcess(text, accountName) {
       let name = amount > 0
         ? (payerInn && payerInn !== myInn ? payer : recv)
         : (recvInn  && recvInn  !== myInn ? recv  : payer);
-      name = (name || description.substring(0,60)).replace(/ООО "ОМСЧИКЕН"|ООО ОМСЧИКЕН|ПАО СБЕРБАНК|ПАО "Сбербанк"/gi,'').trim();
+      name = (_myNameRe ? (name || description.substring(0,60)).replace(_myNameRe,'') : (name || description.substring(0,60))).replace(/ПАО СБЕРБАНК|ПАО "Сбербанк"/gi,'').trim();
 
       const category = classify(name, description, amount);
       const counterpartyInn = amount > 0

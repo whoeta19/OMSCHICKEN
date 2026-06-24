@@ -632,8 +632,8 @@ function genKP() {
         <div style="font-size:9pt">Контактное лицо: ${contact}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:bold;font-size:14pt">${S.name || 'ООО ОМСЧИКЕН'}</div>
-        <div style="font-size:9pt">ИНН: ${S.inn || '5800015301'}</div>
+        <div style="font-weight:bold;font-size:14pt">${S.name || 'Ваша компания'}</div>
+        <div style="font-size:9pt">ИНН: ${S.inn || ''}</div>
         <div style="font-size:9pt">${S.phone || ''}</div>
       </div>
     </div>
@@ -642,7 +642,7 @@ function genKP() {
     </div>
     <div style="font-size:9pt;color:#666;margin-bottom:12px">Дата: ${date}</div>
     <p style="margin-bottom:12px">Уважаемый(ая) ${contact}!</p>
-    <p style="margin-bottom:12px">Компания <strong>${S.name || 'ООО ОМСЧИКЕН'}</strong> рада предложить Вам следующие условия сотрудничества:</p>
+    <p style="margin-bottom:12px">Компания <strong>${S.name || 'Ваша компания'}</strong> рада предложить Вам следующие условия сотрудничества:</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
       <tr style="background:#f5f5f5"><td style="padding:8px;border:1px solid #ddd;font-weight:bold;width:40%">Предмет предложения</td><td style="padding:8px;border:1px solid #ddd">${subject}</td></tr>
       <tr><td style="padding:8px;border:1px solid #ddd;font-weight:bold">Цена</td><td style="padding:8px;border:1px solid #ddd"><strong>${price} руб./кг</strong> (с НДС 10%)</td></tr>

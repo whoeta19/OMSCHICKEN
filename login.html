@@ -323,7 +323,7 @@ async function sendReset() {
     const r = await fetch(`${SUPABASE_URL_FP}/auth/v1/recover`, {
       method: 'POST',
       headers: {'apikey': SUPABASE_KEY_FP, 'Content-Type': 'application/json'},
-      body: JSON.stringify({email, redirect_to: 'https://omschicken-u5dn.vercel.app/login'})
+      body: JSON.stringify({email, redirect_to: window.location.origin + '/login'})
     });
     result.style.color = '#22c55e';
     result.textContent = '✅ Письмо отправлено! Проверь почту.';

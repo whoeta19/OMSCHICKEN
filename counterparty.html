@@ -163,7 +163,7 @@
   <div class="search-box">
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Введи ИНН или название компании</div>
     <div class="search-row">
-      <input type="text" class="search-input" id="searchInput" placeholder="ИНН: 5800015301 или название" maxlength="100"
+      <input type="text" class="search-input" id="searchInput" placeholder="ИНН или название компании" maxlength="100"
         onkeydown="if(event.key==='Enter')checkCompany()">
       <button class="btn" onclick="checkCompany()">Проверить →</button>
     </div>
@@ -171,7 +171,7 @@
       <span style="font-size:11px;color:var(--muted)">Попробуй:</span>
       <span onclick="document.getElementById('searchInput').value='7707083893';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Сбербанк</span>
       <span onclick="document.getElementById('searchInput').value='7736207543';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Газпром</span>
-      <span onclick="document.getElementById('searchInput').value='5800015301';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">ОМСЧИКЕН</span>
+      <span onclick="document.getElementById('searchInput').value='7707083893';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Сбербанк</span>
     </div>
   </div>
   <div id="searchResult"></div>

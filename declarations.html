@@ -861,8 +861,8 @@ function renderCalendar() {
 function exportDeclarationExcel(filename, title, rows, markQuarterly) {
   if (typeof XLSX === 'undefined') { showToast('❌ Библиотека Excel не загрузилась'); return; }
   const seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || '{}');
-  const inn = seller.inn || '5800015301';
-  const orgName = seller.name || 'ООО "ОМСЧИКЕН"';
+  const inn = seller.inn || '';
+  const orgName = seller.name || 'Ваша компания';
 
   const sheetData = [
     [title],
