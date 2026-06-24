@@ -85,8 +85,14 @@
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px;}
   .btn{background:linear-gradient(135deg,var(--accent),#e55a00);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(255,107,0,0.25);}
   .btn:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(255,107,0,0.4);}
-  .btn-outline{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;}
-  .btn-outline:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);}
+  .btn:active{transform:translateY(0);box-shadow:0 2px 8px rgba(255,107,0,0.3);}
+  .btn-outline{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 16px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;min-height:36px;}
+  .btn-outline:hover{border-color:rgba(255,107,0,0.4);color:var(--accent);background:rgba(255,107,0,0.04);}
+  .btn-outline:active{transform:scale(0.98);}
+  .input-group{margin-bottom:10px;}
+  .input-group label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;letter-spacing:0.3px;font-family:'Inter',sans-serif;font-weight:400;text-transform:none;}
+  .input-group input,.input-group select,.input-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+  .input-group input:focus,.input-group select:focus,.input-group textarea:focus{border-color:var(--accent);}
   .field-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
   .field-row:last-child{border-bottom:none;}
   .field-label{font-size:12px;color:var(--muted);}
