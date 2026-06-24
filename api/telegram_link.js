@@ -1,6 +1,7 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const adminHeaders = {
   'apikey': SERVICE_KEY,
@@ -41,6 +42,36 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    // Разбираем тело запроса (Vercel может отдать строкой или объектом)
+    let body = req.body;
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch(e) { body = {}; } }
+    body = body || {};
+
+    // Серверная отправка сообщения в Telegram пользователя.
+    // Токен бота остаётся на сервере — клиенту НЕ передаётся.
+    if (body.action === 'send') {
+      const text = (body.text || '').toString().slice(0, 4000);
+      if (!text) return res.status(400).json({ error: 'Пустое сообщение' });
+      if (!BOT_TOKEN) return res.status(500).json({ error: 'TELEGRAM_BOT_TOKEN не настроен' });
+
+      // Берём telegram_id привязанного аккаунта по userId
+      const lr = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${userId}&limit=1`, {
+        headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+      });
+      const linked = await lr.json();
+      const chatId = linked[0]?.telegram_id;
+      if (!chatId) return res.status(400).json({ error: 'Telegram не подключён' });
+
+      const tg = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+      });
+      const tgData = await tg.json();
+      if (!tgData.ok) return res.status(502).json({ error: 'Telegram отклонил сообщение' });
+      return res.status(200).json({ ok: true });
+    }
+
     // Генерируем код привязки
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     

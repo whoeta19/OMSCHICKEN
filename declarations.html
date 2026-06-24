@@ -1329,14 +1329,19 @@ async function cqSendTelegram() {
 ЕНС · оплата через ЛК ФНС`;
 
   try {
-    const r = await fetch('/api/telegram_link');
-    const {chat_id, token} = await r.json();
-    if (!chat_id || !token) { showToast('Telegram не подключён — зайдите в Настройки'); return; }
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({chat_id, text, parse_mode:'HTML'})
+    const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+    if (!tok) { showToast('Войдите в аккаунт'); return; }
+    const r = await fetch('/api/telegram_link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ action: 'send', text })
     });
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      showToast('❌ ' + (data.error === 'Telegram не подключён'
+        ? 'Telegram не подключён — зайдите в Настройки' : (data.error || 'Ошибка отправки')));
+      return;
+    }
     showToast('✅ Сводка отправлена в Telegram!');
   } catch(e) {
     showToast('❌ Ошибка отправки: ' + e.message);
