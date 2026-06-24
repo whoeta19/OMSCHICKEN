@@ -20,3 +20,25 @@ function toDMY(ts) {
   return String(d.getDate()).padStart(2, '0') + '.' +
     String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
 }
+
+// Парсинг периода MM.YYYY → сортируемое число (yyyy*100+mm).
+// Нельзя сравнивать MM.YYYY строкой: '01.2026' окажется раньше '12.2025'.
+function parsePeriod(str) {
+  if (!str) return 0;
+  const [mm, yyyy] = str.split('.').map(Number);
+  if (!mm || !yyyy) return 0;
+  return yyyy * 100 + mm;
+}
+
+// Экранирование строки для безопасной вставки в innerHTML.
+// Имена контрагентов/компаний приходят из выписок и ЕГРЮЛ — внешние данные,
+// без экранирования возможен XSS (имя вида <img src=x onerror=...>).
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}

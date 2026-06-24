@@ -1290,7 +1290,7 @@ async function loadCompanies() {
     const sel = document.getElementById('companySwitcher');
     if (!sel) return;
     sel.innerHTML = '<option value="">Все компании</option>' + 
-      companies.map(c=>`<option value="${c.id}" ${c.id===currentCompanyId?'selected':''}>${c.name}</option>`).join('');
+      companies.map(c=>`<option value="${escapeHtml(c.id)}" ${c.id===currentCompanyId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
     // Если компаний нет — создаём ОМСЧИКЕН автоматически
     if (companies.length === 0) {
       await createDefaultCompany();
@@ -3214,7 +3214,7 @@ function buildExcel() {
     perMap[p].count++;
   });
   const perRows = [['Период','Поступления (₽)','Расходы (₽)','Прибыль (₽)','Кол-во операций']];
-  Object.entries(perMap).sort(([a],[b])=>a.localeCompare(b)).forEach(([k,v]) =>
+  Object.entries(perMap).sort(([a],[b])=>parsePeriod(a)-parsePeriod(b)).forEach(([k,v]) =>
     perRows.push([k, v.income, v.expense, v.income-v.expense, v.count])
   );
   const ws3 = XLSX.utils.aoa_to_sheet(perRows);

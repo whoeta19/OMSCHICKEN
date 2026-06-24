@@ -498,10 +498,10 @@ function renderResult(d) {
     <div class="card">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px">
         <div>
-          <div style="font-family:Unbounded,sans-serif;font-size:15px;font-weight:900;margin-bottom:6px">${d.name}</div>
+          <div style="font-family:Unbounded,sans-serif;font-size:15px;font-weight:900;margin-bottom:6px">${escapeHtml(d.name)}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span class="status-badge ${d.isActive ? 'status-active' : 'status-dead'}">${d.isActive ? '●' : '✕'} ${d.statusText}</span>
-            <span class="status-badge" style="background:rgba(100,100,100,0.1);color:var(--muted);border:1px solid rgba(100,100,100,0.2)">${d.type}</span>
+            <span class="status-badge ${d.isActive ? 'status-active' : 'status-dead'}">${d.isActive ? '●' : '✕'} ${escapeHtml(d.statusText)}</span>
+            <span class="status-badge" style="background:rgba(100,100,100,0.1);color:var(--muted);border:1px solid rgba(100,100,100,0.2)">${escapeHtml(d.type)}</span>
           </div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
@@ -520,21 +520,21 @@ function renderResult(d) {
         </div>
       </div>
       
-      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${d.fullName || d.name}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${escapeHtml(d.fullName || d.name)}</div>
       <div class="info-grid">
         <div class="info-item"><div class="info-label">ИНН</div><div class="info-value">${d.inn}</div></div>
         <div class="info-item"><div class="info-label">КПП</div><div class="info-value">${d.kpp}</div></div>
         <div class="info-item"><div class="info-label">ОГРН</div><div class="info-value">${d.ogrn}</div></div>
-        <div class="info-item"><div class="info-label">Форма</div><div class="info-value">${d.opf || d.type}</div></div>
+        <div class="info-item"><div class="info-label">Форма</div><div class="info-value">${escapeHtml(d.opf || d.type)}</div></div>
         <div class="info-item"><div class="info-label">Дата регистрации</div><div class="info-value">${d.regDate}</div></div>
         <div class="info-item"><div class="info-label">Возраст</div><div class="info-value">${d.ageYears} лет</div></div>
-        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Юридический адрес</div><div class="info-value">${d.address}</div></div>
-        <div class="info-item"><div class="info-label">Руководитель</div><div class="info-value">${d.director}</div></div>
-        <div class="info-item"><div class="info-label">Должность</div><div class="info-value">${d.directorPost}</div></div>
-        <div class="info-item"><div class="info-label">ОКВЭД</div><div class="info-value">${d.okved}</div></div>
-        <div class="info-item"><div class="info-label">Вид деятельности</div><div class="info-value">${d.okvedName}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Юридический адрес</div><div class="info-value">${escapeHtml(d.address)}</div></div>
+        <div class="info-item"><div class="info-label">Руководитель</div><div class="info-value">${escapeHtml(d.director)}</div></div>
+        <div class="info-item"><div class="info-label">Должность</div><div class="info-value">${escapeHtml(d.directorPost)}</div></div>
+        <div class="info-item"><div class="info-label">ОКВЭД</div><div class="info-value">${escapeHtml(d.okved)}</div></div>
+        <div class="info-item"><div class="info-label">Вид деятельности</div><div class="info-value">${escapeHtml(d.okvedName)}</div></div>
         <div class="info-item"><div class="info-label">Уст. капитал</div><div class="info-value">${d.capital > 0 ? d.capital.toLocaleString('ru-RU') + ' ₽' : '—'}</div></div>
-        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Налоговый орган</div><div class="info-value">${d.nalog || '—'}</div></div>
+        <div class="info-item" style="grid-column:1/-1"><div class="info-label">Налоговый орган</div><div class="info-value">${escapeHtml(d.nalog || '—')}</div></div>
       </div>
     </div>
     
@@ -645,10 +645,10 @@ function renderHistory() {
         ${d.riskScore}
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
-        <div style="font-size:11px;color:var(--muted)">ИНН: ${d.inn} · ${new Date(d.checkedAt).toLocaleDateString('ru-RU')}</div>
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(d.name)}</div>
+        <div style="font-size:11px;color:var(--muted)">ИНН: ${escapeHtml(d.inn)} · ${new Date(d.checkedAt).toLocaleDateString('ru-RU')}</div>
       </div>
-      <span class="status-badge ${d.isActive?'status-active':'status-dead'}" style="font-size:10px">${d.statusText}</span>
+      <span class="status-badge ${d.isActive?'status-active':'status-dead'}" style="font-size:10px">${escapeHtml(d.statusText)}</span>
     </div>`).join('');
 }
 
@@ -688,9 +688,9 @@ async function loadFromTx() {
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Найдено ${sorted.length} контрагентов. Нажми для проверки.</div>
       <div class="from-tx-list">
         ${sorted.map(c=>`
-          <div class="from-tx-item" onclick="document.getElementById('searchInput').value='${c.name.replace(/'/g,"\\'")}';showPage('search',document.querySelectorAll('.tab')[0]);checkCompany()">
+          <div class="from-tx-item" onclick="document.getElementById('searchInput').value='${escapeHtml(c.name.replace(/'/g,"\\'"))}';showPage('search',document.querySelectorAll('.tab')[0]);checkCompany()">
             <div style="flex:1;min-width:0">
-              <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+              <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(c.name)}</div>
               <div style="font-size:10px;color:var(--muted)">${c.count} операций · последняя ${c.lastDate||'—'}</div>
             </div>
             <div style="font-family:Unbounded,sans-serif;font-size:11px;color:var(--accent);flex-shrink:0">${Math.abs(c.total).toLocaleString('ru-RU',{maximumFractionDigits:0})} ₽</div>
@@ -746,8 +746,8 @@ function showSuggestions(list) {
     <div onclick="selectSuggestion(${i})" style="display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s" onmouseover="this.style.background='rgba(255,107,0,0.08)'" onmouseout="this.style.background='transparent'">
       <span style="font-size:11px;color:${d.isActive?'var(--green)':'var(--red)'}">●</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
-        <div style="font-size:10px;color:var(--muted)">ИНН ${d.inn} · ${d.statusText}</div>
+        <div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(d.name)}</div>
+        <div style="font-size:10px;color:var(--muted)">ИНН ${escapeHtml(d.inn)} · ${escapeHtml(d.statusText)}</div>
       </div>
     </div>`).join('');
   box.style.display = 'block';
