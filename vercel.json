@@ -77,6 +77,10 @@
       "destination": "/companies-overview.html"
     },
     {
+      "source": "/marketplace",
+      "destination": "/marketplace.html"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     }

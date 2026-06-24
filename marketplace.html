@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Импорт отчётов Wildberries и Ozon в OMSFIN — автоматический разбор продаж, комиссий, логистики и хранения.">
+<script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<title>OMSFIN — Маркетплейсы</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<style>
+:root{--bg:#080808;--surface:#111;--surface2:#1a1a1a;--border:#222;--text:#f0f0f0;--muted:#666;--accent:#ff6b00;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--yellow:#eab308}
+body.light{--bg:#f5f5f5;--surface:#fff;--surface2:#f0f0f0;--border:#e0e0e0;--text:#111;--muted:#777}
+body.blue{--bg:#0a0f1e;--surface:#111827;--surface2:#1f2937;--border:#374151;--text:#f9fafb;--muted:#6b7280}
+body.aurora{--bg:#050510;--surface:#0d0d20;--surface2:#151530;--border:#2a2a50;--text:#e8e8ff;--muted:#7070a0;--accent:#a855f7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;font-size:14px;min-height:100vh}
+.app-bar{position:sticky;top:0;z-index:100;background:rgba(8,8,8,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px}
+body.light .app-bar{background:rgba(245,245,245,0.9)}
+body.blue .app-bar{background:rgba(10,15,30,0.9)}
+body.aurora .app-bar{background:rgba(5,5,16,0.9)}
+.back-btn{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color 0.2s}
+.back-btn:hover{color:var(--text)}
+h1{font-family:Unbounded,sans-serif;font-size:16px;font-weight:700}
+.container{max-width:900px;margin:0 auto;padding:24px 20px}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.03em}
+.badge-wb{background:rgba(204,0,68,0.15);color:#ff4d7a;border:1px solid rgba(204,0,68,0.3)}
+.badge-ozon{background:rgba(0,91,255,0.15);color:#60a5fa;border:1px solid rgba(0,91,255,0.3)}
+.badge-ok{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.2)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;position:relative}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(255,107,0,0.04)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:40px;margin-bottom:12px}
+.upload-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.upload-sub{font-size:12px;color:var(--muted)}
+.mp-tabs{display:flex;gap:8px;margin-bottom:20px}
+.mp-tab{padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);transition:all 0.2s}
+.mp-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px}
+.preview-table th{background:var(--surface2);padding:8px 10px;text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)}
+.preview-table td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.preview-table tr:last-child td{border-bottom:none}
+.amt-pos{color:var(--green);font-weight:600}
+.amt-neg{color:var(--red);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{opacity:0.85}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent)}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface2);border-radius:10px;padding:14px;text-align:center}
+.stat-val{font-size:20px;font-weight:700;margin-bottom:4px}
+.stat-label{font-size:11px;color:var(--muted)}
+.type-badge{padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.type-sale{background:rgba(34,197,94,0.12);color:var(--green)}
+.type-return{background:rgba(239,68,68,0.12);color:var(--red)}
+.type-commission{background:rgba(234,179,8,0.12);color:var(--yellow)}
+.type-logistics{background:rgba(59,130,246,0.12);color:var(--blue)}
+.type-storage{background:rgba(168,85,247,0.12);color:#a855f7}
+.type-other{background:var(--surface2);color:var(--muted)}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:340px;text-align:center}
+.toast.show{opacity:1}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.progress-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:var(--accent);transition:width 0.3s;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="app-bar">
+  <button class="back-btn" onclick="history.length>1?history.back():window.location.href='/'">← Назад</button>
+  <h1>🛒 Маркетплейсы</h1>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <span class="badge badge-wb">WB</span>
+    <span class="badge badge-ozon">OZON</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="mp-tabs">
+    <button class="mp-tab active" onclick="setTab('import')" id="tab-import">📥 Импорт отчёта</button>
+    <button class="mp-tab" onclick="setTab('history')" id="tab-history">📋 История загрузок</button>
+    <button class="mp-tab" onclick="setTab('help')" id="tab-help">❓ Как получить отчёт</button>
+  </div>
+
+  <!-- Import tab -->
+  <div id="panel-import">
+    <div class="card">
+      <div class="card-title">Загрузить отчёт маркетплейса</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
+        <div class="upload-icon">📊</div>
+        <div class="upload-title">Перетащи или нажми для загрузки</div>
+        <div class="upload-sub">Excel/CSV отчёты Wildberries или Ozon · Поддерживается несколько файлов</div>
+        <div class="progress-bar" id="progressBar" style="display:none;margin-top:16px">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div id="previewSection" style="display:none">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-title" style="margin:0">Предпросмотр</div>
+          <div id="detectedBadge"></div>
+        </div>
+        <div class="stat-row" id="summaryStats"></div>
+        <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
+          <table class="preview-table" id="previewTable">
+            <thead><tr>
+              <th>Дата</th><th>Тип</th><th>Товар / Описание</th><th>Сумма</th>
+            </tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveToOmsfin()" id="saveBtn">💾 Сохранить в OMSFIN</button>
+          <button class="btn btn-secondary" onclick="clearPreview()">✕ Отмена</button>
+          <span id="rowCount" style="align-self:center;font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History tab -->
+  <div id="panel-history" style="display:none">
+    <div class="card">
+      <div class="card-title">История импортов</div>
+      <div id="historyList">
+        <div class="empty-state"><div class="icon">📭</div><div>Пока нет загруженных отчётов</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help tab -->
+  <div id="panel-help" style="display:none">
+    <div class="card">
+      <div class="card-title">Wildberries — как скачать отчёт</div>
+      <ol style="line-height:2;color:var(--text);padding-left:20px;font-size:13px">
+        <li>Откройте <strong>Личный кабинет WB Partners</strong> → Финансы</li>
+        <li>Выберите раздел <strong>«Еженедельные отчёты»</strong> или <strong>«Детальные отчёты»</strong></li>
+        <li>Выберите нужный период и скачайте в формате <strong>Excel (.xlsx)</strong></li>
+        <li>Загрузите файл сюда — OMSFIN автоматически разберёт все строки</li>
+      </ol>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">Ozon — как скачать отчёт</div>
+      <ol style="line-height:2;color:var(--text);padding-left:20px;font-size:13px">
+        <li>Откройте <strong>Личный кабинет Ozon Seller</strong> → Финансы</li>
+        <li>Перейдите в <strong>«Отчёты»</strong> → <strong>«Финансовый отчёт»</strong></li>
+        <li>Выберите период и нажмите <strong>«Скачать»</strong> (CSV или Excel)</li>
+        <li>Загрузите файл сюда — OMSFIN разберёт продажи, комиссии, доставку</li>
+      </ol>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">Что импортируется</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;font-size:13px">
+        <div style="padding:10px;background:var(--surface2);border-radius:8px">
+          <span class="type-badge type-sale">Продажа</span>
+          <div style="margin-top:6px;color:var(--muted)">Выручка от реализации товаров</div>
+        </div>
+        <div style="padding:10px;background:var(--surface2);border-radius:8px">
+          <span class="type-badge type-return">Возврат</span>
+          <div style="margin-top:6px;color:var(--muted)">Возвраты покупателей</div>
+        </div>
+        <div style="padding:10px;background:var(--surface2);border-radius:8px">
+          <span class="type-badge type-commission">Комиссия</span>
+          <div style="margin-top:6px;color:var(--muted)">Вознаграждение маркетплейса</div>
+        </div>
+        <div style="padding:10px;background:var(--surface2);border-radius:8px">
+          <span class="type-badge type-logistics">Логистика</span>
+          <div style="margin-top:6px;color:var(--muted)">Доставка до покупателя</div>
+        </div>
+        <div style="padding:10px;background:var(--surface2);border-radius:8px">
+          <span class="type-badge type-storage">Хранение</span>
+          <div style="margin-top:6px;color:var(--muted)">Складское хранение товаров</div>
+        </div>
+        <div style="padding:10px;background:var(--surface2);border-radius:8px">
+          <span class="type-badge type-other">Прочее</span>
+          <div style="margin-top:6px;color:var(--muted)">Штрафы, реклама, прочие удержания</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+const TOKEN_KEY = 'omsfin_token';
+function getToken() { return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || ''; }
+function getCompanyId() { return localStorage.getItem('omsfin_company') || ''; }
+const IS_DEMO = !!localStorage.getItem('omsfin_demo');
+
+let parsedTxs = [];
+let currentPlatform = '';
+
+function showToast(msg, duration = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function fmt(n) {
+  return (n >= 0 ? '+' : '') + Number(n).toLocaleString('ru-RU', {maximumFractionDigits: 0}) + ' ₽';
+}
+
+function setTab(tab) {
+  ['import','history','help'].forEach(t => {
+    document.getElementById(`panel-${t}`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'history') renderHistory();
+}
+
+// ─── Drag & drop ──────────────────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
+
+async function handleFiles(files) {
+  if (!files.length) return;
+  const file = files[0];
+  document.getElementById('progressBar').style.display = 'block';
+  document.getElementById('progressFill').style.width = '30%';
+  try {
+    const buf = await file.arrayBuffer();
+    document.getElementById('progressFill').style.width = '60%';
+    const wb = XLSX.read(buf, {type: 'array', cellDates: true});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1, defval: ''});
+    document.getElementById('progressFill').style.width = '80%';
+    const platform = detectPlatform(rows, file.name);
+    if (!platform) {
+      showToast('❌ Не удалось определить маркетплейс. Поддерживаются WB и Ozon.');
+      document.getElementById('progressBar').style.display = 'none';
+      return;
+    }
+    currentPlatform = platform;
+    parsedTxs = platform === 'wb' ? parseWB(rows) : parseOzon(rows);
+    document.getElementById('progressFill').style.width = '100%';
+    setTimeout(() => { document.getElementById('progressBar').style.display = 'none'; }, 400);
+    if (!parsedTxs.length) {
+      showToast('❌ Не найдено транзакций. Проверь формат файла.');
+      return;
+    }
+    renderPreview(parsedTxs, platform);
+  } catch(e) {
+    showToast('❌ Ошибка чтения файла: ' + e.message);
+    document.getElementById('progressBar').style.display = 'none';
+  }
+}
+
+// ─── Определение платформы ────────────────────────────────────────────────────
+function detectPlatform(rows, filename) {
+  const fn = (filename || '').toLowerCase();
+  if (fn.includes('wb') || fn.includes('wildberries') || fn.includes('еженедельный')) return 'wb';
+  if (fn.includes('ozon') || fn.includes('озон')) return 'ozon';
+  // По содержимому — ищем ключевые слова в первых 10 строках
+  const head = rows.slice(0, 10).flat().join(' ').toLowerCase();
+  if (head.includes('wildberries') || head.includes('вайлдберриз') || head.includes('обоснование для оплаты') || head.includes('к перечислению продавцу')) return 'wb';
+  if (head.includes('ozon') || head.includes('озон') || head.includes('тип операции')) return 'ozon';
+  return null;
+}
+
+// ─── Парсинг WB ───────────────────────────────────────────────────────────────
+function parseWB(rows) {
+  // Ищем строку заголовков
+  let hdrIdx = -1, hdr = [];
+  for (let i = 0; i < Math.min(10, rows.length); i++) {
+    const r = rows[i].map(c => String(c||'').toLowerCase().trim());
+    if (r.some(c => c.includes('обоснование') || c.includes('перечислению') || c.includes('вознаграждение'))) {
+      hdrIdx = i; hdr = r; break;
+    }
+  }
+  if (hdrIdx < 0) return [];
+
+  // Находим нужные колонки
+  function col(keywords) {
+    for (const kw of keywords) {
+      const i = hdr.findIndex(h => h.includes(kw));
+      if (i >= 0) return i;
+    }
+    return -1;
+  }
+
+  const dateI    = col(['дата начала', 'дата']);
+  const typeI    = col(['обоснование для оплаты', 'тип начисления', 'вид']);
+  const nameI    = col(['наименование', 'артикул поставщика', 'предмет']);
+  const amtI     = col(['к перечислению продавцу', 'итоговое к перечислению', 'сумма к перечислению продавцу']);
+  const commI    = col(['вознаграждение вайлдберриз', 'итоговое вознаграждение wb', 'вознаграждение wb']);
+  const logistI  = col(['услуги по доставке', 'логистика']);
+  const storageI = col(['хранение', 'склад']);
+  const qtyI     = col(['кол-во', 'количество']);
+
+  const txs = [];
+
+  for (let i = hdrIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.every(c => !c)) continue;
+
+    const dateRaw = r[dateI] || '';
+    const date = parseDate(dateRaw);
+    if (!date) continue;
+
+    const typeRaw = String(r[typeI] || '').toLowerCase();
+    const name = String(r[nameI] || '').trim().substring(0, 200);
+    const period = dateToPeriod(date);
+
+    // Основная сумма к перечислению
+    const mainAmt = toNum(r[amtI]);
+    if (mainAmt !== 0) {
+      const { category, typeName } = classifyWBType(typeRaw, mainAmt);
+      txs.push({
+        date, period, name: name || typeName,
+        description: `WB: ${typeRaw || typeName}${qtyI >= 0 && r[qtyI] ? ' ×' + r[qtyI] : ''}`,
+        amount: mainAmt, category,
+        source: 'wb',
+        hash: `wb_${date}_${mainAmt}_${(name+typeRaw).replace(/\s/g,'').slice(0,15)}_${i}`
+      });
+    }
+
+    // Комиссия WB (отдельная строка расходов)
+    const comm = toNum(r[commI]);
+    if (comm !== 0 && commI >= 0) {
+      txs.push({
+        date, period, name: 'Wildberries',
+        description: 'WB: комиссия',
+        amount: -Math.abs(comm), category: 'marketplace_commission',
+        source: 'wb',
+        hash: `wb_comm_${date}_${comm}_${i}`
+      });
+    }
+
+    // Логистика
+    const logist = toNum(r[logistI]);
+    if (logist !== 0 && logistI >= 0) {
+      txs.push({
+        date, period, name: 'Wildberries',
+        description: 'WB: логистика',
+        amount: -Math.abs(logist), category: 'marketplace_logistics',
+        source: 'wb',
+        hash: `wb_log_${date}_${logist}_${i}`
+      });
+    }
+
+    // Хранение
+    const storage = toNum(r[storageI]);
+    if (storage !== 0 && storageI >= 0) {
+      txs.push({
+        date, period, name: 'Wildberries',
+        description: 'WB: хранение',
+        amount: -Math.abs(storage), category: 'marketplace_storage',
+        source: 'wb',
+        hash: `wb_stor_${date}_${storage}_${i}`
+      });
+    }
+  }
+
+  return txs;
+}
+
+function classifyWBType(typeRaw, amount) {
+  if (typeRaw.includes('продаж') || typeRaw.includes('реализац')) return { category: 'income', typeName: 'Продажа WB' };
+  if (typeRaw.includes('возврат')) return { category: 'marketplace_return', typeName: 'Возврат WB' };
+  if (typeRaw.includes('логистик') || typeRaw.includes('доставк')) return { category: 'marketplace_logistics', typeName: 'Логистика WB' };
+  if (typeRaw.includes('хранени') || typeRaw.includes('склад')) return { category: 'marketplace_storage', typeName: 'Хранение WB' };
+  if (typeRaw.includes('штраф') || typeRaw.includes('санкц')) return { category: 'fine', typeName: 'Штраф WB' };
+  if (typeRaw.includes('реклам') || typeRaw.includes('продвижени')) return { category: 'marketing', typeName: 'Реклама WB' };
+  if (typeRaw.includes('вознаграждени') || typeRaw.includes('комисси')) return { category: 'marketplace_commission', typeName: 'Комиссия WB' };
+  return amount >= 0 ? { category: 'income', typeName: 'WB' } : { category: 'marketplace_commission', typeName: 'WB удержание' };
+}
+
+// ─── Парсинг Ozon ─────────────────────────────────────────────────────────────
+function parseOzon(rows) {
+  // Ищем заголовок
+  let hdrIdx = -1, hdr = [];
+  for (let i = 0; i < Math.min(10, rows.length); i++) {
+    const r = rows[i].map(c => String(c||'').toLowerCase().trim());
+    if (r.some(c => c.includes('тип операции') || c.includes('услуга') || c.includes('начисление'))) {
+      hdrIdx = i; hdr = r; break;
+    }
+  }
+  if (hdrIdx < 0) return [];
+
+  function col(keywords) {
+    for (const kw of keywords) {
+      const i = hdr.findIndex(h => h.includes(kw));
+      if (i >= 0) return i;
+    }
+    return -1;
+  }
+
+  const dateI  = col(['дата']);
+  const typeI  = col(['тип операции', 'название операции', 'услуга']);
+  const nameI  = col(['наименование', 'товар', 'sku', 'артикул']);
+  const amtI   = col(['сумма', 'итого', 'начисление', 'amount']);
+
+  const txs = [];
+
+  for (let i = hdrIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.every(c => !c)) continue;
+
+    const dateRaw = r[dateI] || '';
+    const date = parseDate(dateRaw);
+    if (!date) continue;
+
+    const typeRaw = String(r[typeI] || '').trim();
+    const name = String(r[nameI] || '').trim().substring(0, 200);
+    const amount = toNum(r[amtI]);
+    if (!amount) continue;
+
+    const { category, typeName } = classifyOzonType(typeRaw, amount);
+    const period = dateToPeriod(date);
+
+    txs.push({
+      date, period,
+      name: name || typeName || 'Ozon',
+      description: `Ozon: ${typeRaw || typeName}`,
+      amount, category,
+      source: 'ozon',
+      hash: `ozon_${date}_${amount}_${(name+typeRaw).replace(/\s/g,'').slice(0,15)}_${i}`
+    });
+  }
+
+  return txs;
+}
+
+function classifyOzonType(typeRaw, amount) {
+  const t = typeRaw.toLowerCase();
+  if (t.includes('продаж') || t.includes('реализац') || t.includes('перечислен')) return { category: 'income', typeName: 'Продажа Ozon' };
+  if (t.includes('возврат')) return { category: 'marketplace_return', typeName: 'Возврат Ozon' };
+  if (t.includes('доставк') || t.includes('логистик')) return { category: 'marketplace_logistics', typeName: 'Логистика Ozon' };
+  if (t.includes('хранени') || t.includes('склад')) return { category: 'marketplace_storage', typeName: 'Хранение Ozon' };
+  if (t.includes('комисси') || t.includes('вознаграждени')) return { category: 'marketplace_commission', typeName: 'Комиссия Ozon' };
+  if (t.includes('реклам') || t.includes('продвижен')) return { category: 'marketing', typeName: 'Реклама Ozon' };
+  if (t.includes('штраф') || t.includes('санкц')) return { category: 'fine', typeName: 'Штраф Ozon' };
+  return amount >= 0 ? { category: 'income', typeName: 'Ozon' } : { category: 'marketplace_commission', typeName: 'Ozon удержание' };
+}
+
+// ─── Утилиты ──────────────────────────────────────────────────────────────────
+function toNum(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return v;
+  const s = String(v).replace(/\s/g,'').replace(',','.');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function parseDate(v) {
+  if (!v) return null;
+  // JS Date object (SheetJS cellDates)
+  if (v instanceof Date) {
+    const d = String(v.getDate()).padStart(2,'0');
+    const m = String(v.getMonth()+1).padStart(2,'0');
+    const y = v.getFullYear();
+    return `${d}.${m}.${y}`;
+  }
+  const s = String(v).trim();
+  // DD.MM.YYYY
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(s)) return s;
+  // YYYY-MM-DD
+  const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m2) return `${m2[3]}.${m2[2]}.${m2[1]}`;
+  // DD/MM/YYYY
+  const m3 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m3) return `${m3[1]}.${m3[2]}.${m3[3]}`;
+  // Excel serial number
+  if (/^\d+$/.test(s)) {
+    const d = new Date((parseInt(s) - 25569) * 86400000);
+    if (!isNaN(d.getTime())) {
+      return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear();
+    }
+  }
+  return null;
+}
+
+function dateToPeriod(date) {
+  if (!date) return '';
+  const parts = date.split('.');
+  return parts.length === 3 ? `${parts[1]}.${parts[2]}` : '';
+}
+
+function getCategoryLabel(cat) {
+  const map = {
+    'income': ['Продажа', 'type-sale'],
+    'marketplace_return': ['Возврат', 'type-return'],
+    'marketplace_commission': ['Комиссия', 'type-commission'],
+    'marketplace_logistics': ['Логистика', 'type-logistics'],
+    'marketplace_storage': ['Хранение', 'type-storage'],
+    'fine': ['Штраф', 'type-return'],
+    'marketing': ['Реклама', 'type-commission'],
+  };
+  return map[cat] || ['Прочее', 'type-other'];
+}
+
+// ─── Рендер превью ────────────────────────────────────────────────────────────
+function renderPreview(txs, platform) {
+  document.getElementById('previewSection').style.display = 'block';
+  document.getElementById('detectedBadge').innerHTML =
+    platform === 'wb' ? '<span class="badge badge-wb">Wildberries</span>' : '<span class="badge badge-ozon">Ozon</span>';
+
+  // Статистика
+  const income = txs.filter(t => t.amount > 0).reduce((s,t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.amount < 0).reduce((s,t) => s + Math.abs(t.amount), 0);
+  const net = income - expense;
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="stat-card"><div class="stat-val amt-pos">+${income.toLocaleString('ru-RU',{maximumFractionDigits:0})} ₽</div><div class="stat-label">Выручка</div></div>
+    <div class="stat-card"><div class="stat-val amt-neg">−${expense.toLocaleString('ru-RU',{maximumFractionDigits:0})} ₽</div><div class="stat-label">Удержания</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${net>=0?'var(--green)':'var(--red)'}">${net>=0?'+':''}${net.toLocaleString('ru-RU',{maximumFractionDigits:0})} ₽</div><div class="stat-label">Итого к получению</div></div>
+    <div class="stat-card"><div class="stat-val">${txs.length}</div><div class="stat-label">Строк</div></div>
+  `;
+
+  // Таблица (первые 200 строк)
+  const show = txs.slice(0, 200);
+  document.getElementById('previewBody').innerHTML = show.map(t => {
+    const [label, cls] = getCategoryLabel(t.category);
+    return `<tr>
+      <td style="white-space:nowrap">${t.date}</td>
+      <td><span class="type-badge ${cls}">${label}</span></td>
+      <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(t.description||'').replace(/"/g,'&quot;')}">${t.name || '—'}</td>
+      <td class="${t.amount>=0?'amt-pos':'amt-neg'}">${fmt(t.amount)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('rowCount').textContent = txs.length > 200 ? `Показано 200 из ${txs.length} строк` : `${txs.length} строк`;
+}
+
+function clearPreview() {
+  parsedTxs = [];
+  document.getElementById('previewSection').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+// ─── Сохранение ───────────────────────────────────────────────────────────────
+async function saveToOmsfin() {
+  if (!parsedTxs.length) return;
+  if (IS_DEMO) { showToast('🎭 Демо-режим — сохранение недоступно'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = '⏳ Сохранение...';
+  btn.disabled = true;
+
+  try {
+    const companyId = getCompanyId();
+    const token = getToken();
+    const payload = parsedTxs.map(t => companyId ? {...t, company_id: companyId} : t);
+
+    const r = await fetch('/api/transactions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      throw new Error(d.error || `Ошибка ${r.status}`);
+    }
+    const result = await r.json();
+    const saved = Array.isArray(result) ? result.length : parsedTxs.length;
+
+    // Сохраняем в историю
+    const hist = JSON.parse(localStorage.getItem('omsfin_mp_history') || '[]');
+    hist.unshift({
+      date: new Date().toLocaleDateString('ru-RU'),
+      platform: currentPlatform,
+      rows: parsedTxs.length,
+      saved,
+      income: parsedTxs.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0),
+    });
+    localStorage.setItem('omsfin_mp_history', JSON.stringify(hist.slice(0,50)));
+
+    showToast(`✅ Сохранено ${saved} операций в OMSFIN`);
+    clearPreview();
+    setTab('history');
+  } catch(e) {
+    showToast('❌ ' + e.message);
+  } finally {
+    btn.textContent = '💾 Сохранить в OMSFIN';
+    btn.disabled = false;
+  }
+}
+
+// ─── История ──────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const hist = JSON.parse(localStorage.getItem('omsfin_mp_history') || '[]');
+  const el = document.getElementById('historyList');
+  if (!hist.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>Пока нет загруженных отчётов</div></div>';
+    return;
+  }
+  el.innerHTML = hist.map(h => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="badge ${h.platform==='wb'?'badge-wb':'badge-ozon'}">${h.platform==='wb'?'WB':'Ozon'}</span>
+        <div>
+          <div style="font-size:13px">${h.date} · ${h.rows} строк · сохранено ${h.saved}</div>
+          <div style="font-size:11px;color:var(--muted)">Выручка: +${(h.income||0).toLocaleString('ru-RU',{maximumFractionDigits:0})} ₽</div>
+        </div>
+      </div>
+      <span class="badge badge-ok">✓</span>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

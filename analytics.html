@@ -421,6 +421,7 @@ async function loadData() {
     const companyId = localStorage.getItem('omsfin_company') || '';
     const url = companyId ? `/api/transactions?company_id=${companyId}` : '/api/transactions';
     const r = await fetch(url, token ? {headers:{Authorization:'Bearer '+token}} : {});
+    if (!r.ok) { document.getElementById('loadingMsg').textContent = '❌ Ошибка загрузки данных (' + r.status + ')'; return; }
     allTx = await r.json();
     if (!Array.isArray(allTx)) allTx = [];
     filteredTx = allTx;
@@ -859,6 +860,9 @@ function renderTopCategories() {
   const catNames = {
     chicken:'🛒 Закупки товаров', transport:'🚗 Транспорт', salary:'👥 Зарплата',
     bank:'🏦 Банковские расходы', food:'🍽️ Питание', office:'🏢 Офис',
+    marketplace_commission:'🏪 Комиссия МП', marketplace_logistics:'📦 Логистика МП',
+    marketplace_storage:'🏭 Хранение МП', marketplace_return:'↩️ Возвраты МП',
+    marketing:'📣 Реклама', fine:'⚠️ Штрафы',
     unknown:'❓ Прочее', personal:'🛍️ Личное'
   };
 

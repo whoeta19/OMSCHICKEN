@@ -654,6 +654,7 @@
     <div class="pill-sep" data-role="director,accountant"></div>
     <button class="pill external" data-role="director,accountant" onclick="window.location.href='/payroll'">Зарплата</button>
     <button class="pill external" data-role="director,accountant,employee" onclick="window.location.href='/docs'">Документы</button>
+    <button class="pill external" data-role="director,accountant" onclick="window.location.href='/marketplace'" style="background:rgba(255,107,0,0.1);border-color:var(--accent)">🛒 WB/Ozon</button>
     <div class="pill-more" id="pillMoreWrap">
       <button class="pill" onclick="toggleMoreMenu(event)">Ещё ↓</button>
     </div>
@@ -990,7 +991,11 @@
       <select id="addCat">
         <option value="">Автоматически</option>
         <option value="income">Доход от продаж</option>
-        <option value="chicken">Закупка сырья</option>
+        <option value="chicken">Закупка товаров</option>
+        <option value="marketplace_commission">🏪 Комиссия маркетплейса</option>
+        <option value="marketplace_logistics">📦 Логистика маркетплейса</option>
+        <option value="marketplace_storage">🏭 Хранение маркетплейса</option>
+        <option value="marketplace_return">↩️ Возврат (маркетплейс)</option>
         <option value="transport">Транспорт</option>
         <option value="food">Еда (личное)</option>
         <option value="personal">Личные расходы</option>
@@ -2480,7 +2485,7 @@ async function reclassifyTx(id, category, name, btn) {
 function renderRules() {
   const rules = Object.entries(userRules);
   document.getElementById('rulesCount').textContent = rules.length;
-  const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',cash:'💵',loan:'🤝',tax:'🏛️',transit:'🔄',unknown:'❓'};
+  const cats = {chicken:'🐔',marketplace_commission:'🏪',marketplace_logistics:'📦',marketplace_storage:'🏭',marketplace_return:'↩️',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',cash:'💵',loan:'🤝',tax:'🏛️',transit:'🔄',unknown:'❓'};
   document.getElementById('rulesList').innerHTML = rules.length ?
     `<div class="rules-list">${rules.map(([k,v])=>`
       <div class="rule-item">
@@ -3890,7 +3895,7 @@ function aiAnswer(q) {
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const cats = {chicken:'🛒 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
+  const cats = {chicken:'🛒 Закупки',marketplace_commission:'🏪 Комиссия МП',marketplace_logistics:'📦 Логистика МП',marketplace_storage:'🏭 Хранение МП',marketplace_return:'↩️ Возврат МП',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
 
   // ── Приветствие ──
   if (/^(привет|хай|здравствуй|добрый|помоги|что умеешь|что можешь|помощ|start)/.test(ql)) {
@@ -4276,6 +4281,7 @@ function showOnboardingOverlay() {
     <button onclick="window.location.href='/payroll';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">👥<span>Зарплата</span></button>
     <button onclick="window.location.href='/counterparty';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🔍<span>Контрагенты</span></button>
     <button onclick="window.location.href='/settings';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">⚙️<span>Настройки</span></button>
+    <button onclick="window.location.href='/marketplace';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🛒<span>WB/Ozon</span></button>
   </div>
 </div>
 
@@ -4292,6 +4298,7 @@ const CMD_PAGES = [
   {icon:'🧾',label:'НДС',sub:'Расчёт налога на добавленную стоимость',action:()=>location.href='/vat'},
   {icon:'📋',label:'Декларации',sub:'НДФЛ, УСН, РСВ',action:()=>location.href='/declarations'},
   {icon:'👥',label:'Зарплата',sub:'Сотрудники и начисления',action:()=>location.href='/payroll'},
+  {icon:'🛒',label:'Маркетплейсы',sub:'Импорт WB и Ozon',action:()=>location.href='/marketplace'},
   {icon:'📄',label:'Документы',sub:'Счета, накладные, акты',action:()=>location.href='/docs'},
   {icon:'📊',label:'P&L Отчёт',sub:'Прибыли и убытки за период',action:()=>openPL()},
   {icon:'⚖️',label:'Сравнить периоды',sub:'Месяц к месяцу',action:()=>openCompare()},
@@ -4617,7 +4624,7 @@ function openTxDetail(tx) {
   document.querySelectorAll('.tx-row').forEach(r=>r.classList.remove('focused'));
   const panel = document.getElementById('txDetailContent');
   const plus = tx.amount > 0;
-  const cats = {chicken:'🛒 Закупки',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
+  const cats = {chicken:'🛒 Закупки',marketplace_commission:'🏪 Комиссия МП',marketplace_logistics:'📦 Логистика МП',marketplace_storage:'🏭 Хранение МП',marketplace_return:'↩️ Возврат МП',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
   panel.innerHTML = `
     <div style="margin-bottom:16px">
       <div style="font-size:22px;font-family:'Unbounded',sans-serif;font-weight:700;color:${plus?'var(--green)':'var(--red)'};margin-bottom:4px">${plus?'+':''}${fmt(tx.amount)}</div>
