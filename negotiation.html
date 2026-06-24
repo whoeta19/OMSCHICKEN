@@ -14,6 +14,7 @@
 <title>Переговорный калькулятор — OMSFIN</title>
 <meta name="description" content="Калькулятор для переговоров: реальная стоимость отсрочки платежа, скидки, предоплаты. Помогает принять обоснованное финансовое решение.">
 <script>(function(){var t=localStorage.getItem('omsfin_token')||localStorage.getItem('omschicken_token');if(!t&&!localStorage.getItem('omsfin_demo'))window.location.replace('/login');})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <style>
   :root {
     --bg: #080808; --card: #111; --surface2: #161616; --border: rgba(255,255,255,0.08);
