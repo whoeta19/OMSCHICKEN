@@ -411,8 +411,8 @@ async function loadData() {
 }
 
 function calcKpi(txs) {
-  const income  = txs.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-  const expense = txs.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const income  = txs.filter(t=>t.amount>0 && !['transit','loan'].includes(t.category)).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = txs.filter(t=>t.amount<0 && !['transit','loan','cash'].includes(t.category)).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const profit  = income - expense;
   const margin  = income > 0 ? profit/income*100 : 0;
   return {income, expense, profit, margin};
