@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>OMSFIN — Умная бухгалтерия для бизнеса</title>
+<meta name="description" content="OMSFIN — облачная бухгалтерия для ИП и малого бизнеса. Загрузи выписку из банка, получи готовые декларации, счета и анализ расходов. Бесплатно.">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -260,7 +261,7 @@ ym(110101090,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webv
 
   <div class="hero-btns fade-up" style="transition-delay:0.3s">
     <button class="btn-primary" onclick="goToApp()" style="font-size:13px;padding:16px 32px">Попробовать бесплатно →</button>
-    <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Как это работает</button>
+    <button class="btn-secondary" onclick="startDemo()">👁 Демо без регистрации</button>
   </div>
   
   <div class="fade-up" style="transition-delay:0.35s;margin-top:16px;font-size:12px;color:var(--muted)">Без кредитной карты · Бесплатно навсегда для малого бизнеса</div>
@@ -738,6 +739,11 @@ setTimeout(() => {
 
 
 <script>
+function startDemo() {
+  localStorage.setItem('omsfin_demo', '1');
+  window.location.href = '/';
+}
+
 function goToApp() {
   var tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omsfin_refresh') || localStorage.getItem('omschicken_token') || localStorage.getItem('omschicken_refresh');
   if (tok) {

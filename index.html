@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>OMSFIN — Бухгалтерия</title>
+<meta name="description" content="OMSFIN — облачная бухгалтерия для малого бизнеса. Загружай банковские выписки, отслеживай расходы и доходы, считай налоги автоматически.">
 <script src="https://telegram.org/js/telegram-web-app.js" async></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -1326,6 +1327,7 @@ async function loadCompanies() {
   const token = localStorage.getItem(TOKEN_KEY) || '';
   try {
     const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
+    if (!r.ok) { showToast('❌ Ошибка загрузки компаний'); return; }
     const companies = await r.json();
     const sel = document.getElementById('companySwitcher');
     if (!sel) return;
@@ -1346,8 +1348,9 @@ async function createDefaultCompany() {
   const r = await fetch('/api/companies', {
     method: 'POST',
     headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body: JSON.stringify({name: seller.name || 'ООО "ОМСЧИКЕН"', inn: seller.inn || '5800015301'})
+    body: JSON.stringify({name: seller.name || 'Моя компания', inn: seller.inn || ''})
   });
+  if (!r.ok) return;
   const company = await r.json();
   if (company && company[0]) {
     currentCompanyId = company[0].id;
@@ -1381,6 +1384,7 @@ async function applyRoleAccess() {
     const r = await fetch(`/api/members?company_id=${currentCompanyId}`, {
       headers: { 'Authorization': 'Bearer ' + token }
     });
+    if (!r.ok) { currentUserRole = null; return; }
     const data = await r.json();
     if (data.error) { currentUserRole = null; return; }
 
@@ -3071,12 +3075,13 @@ async function dropOnCat(cat) {
   if (!tx) return;
   tx.category = cat;
   renderTxList();
-  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
-  await fetch('/api/transactions', {
+  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
+  const r = await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify({id, category: cat, ...(currentCompanyId?{company_id:currentCompanyId}:{})})
   });
+  if (!r.ok) { showToast('❌ Не удалось сохранить категорию'); return; }
   showToast(`✅ Категория изменена: ${cat}`);
 }
 
@@ -3086,7 +3091,7 @@ async function togglePending(id) {
   // Циклически: нет → pending_income/expense → нет
   let newStatus = null;
   if (!tx.status) newStatus = tx.amount > 0 ? 'pending_income' : 'pending_expense';
-  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
+  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
   if (!IS_DEMO) {
     await fetch('/api/transactions', {
       method: 'PATCH',
@@ -3250,13 +3255,13 @@ async function saveNote(id) {
   const input = document.getElementById('note-'+id);
   if (!input) return;
   const note = input.value.trim();
-  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
-  const companyId = currentCompanyId;
-  await fetch('/api/transactions', {
+  const token = localStorage.getItem('omschicken_token') || localStorage.getItem(TOKEN_KEY);
+  const r = await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+token},
     body: JSON.stringify({ id, note, ...(companyId ? {company_id: companyId} : {}) })
   });
+  if (!r.ok) { showToast('❌ Не удалось сохранить заметку'); return; }
   const tx = allTx.find(t=>t.id==id);
   if (tx) tx.note = note;
   renderTxList();
@@ -5033,6 +5038,7 @@ async function insert1CTxs(parsed) {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
     body: JSON.stringify(txs)
   });
+  if (!insertResp.ok) { showToast('❌ Ошибка загрузки выписки 1С'); return; }
   const insertData = await insertResp.json();
   showToast(`✅ 1С: загружено ${insertData.inserted || 0}, пропущено дублей: ${insertData.skipped || 0}`);
   await syncNow();
