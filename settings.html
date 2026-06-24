@@ -1153,7 +1153,7 @@ function copyRefLink() {
 }
 
 // ─── Вебхук для автоимпорта из банка ────────────────────────────────────────
-const WEBHOOK_DOMAIN = 'https://omschicken-u5dn.vercel.app';
+const WEBHOOK_DOMAIN = window.location.origin;
 const BANK_LABELS = { tbank: 'Т-Банк', alfa: 'Альфа-Банк', sber: 'Сбер Бизнес', other: 'Банк' };
 const BANK_INSTRUCTIONS = {
   tbank: '1. Войди в <strong style="color:var(--text)">business.tinkoff.ru</strong><br>2. Настройки → Уведомления → Webhook-уведомления<br>3. Вставь URL выше в поле «URL для уведомлений»<br>4. Выбери события: <strong style="color:var(--text)">Поступление</strong> и <strong style="color:var(--text)">Списание</strong><br>5. Сохрани — операции будут приходить автоматически',
@@ -1225,7 +1225,7 @@ function copyWebhookUrl() {
 }
 
 async function regenerateWebhookSecret() {
-  const tok = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+  const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!tok) return;
   const statusEl = document.getElementById('webhookStatus');
   const urlEl = document.getElementById('webhookUrl');
