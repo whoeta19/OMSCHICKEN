@@ -3853,20 +3853,32 @@ async function aiAsk(q) {
     const sorted = [...allTx].sort((a,b)=>parseDMY(b.date)-parseDMY(a.date)).slice(0,5);
     const recentTxs = sorted.map(t=>`${t.date} ${(t.name||'').substring(0,15)} ${t.amount>0?'+':''}${Math.round(Number(t.amount)/1000)}К`).join('; ');
 
-    const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || '';
+    // Аномалии и инсайты
+    const anomalyList = [];
+    if (income > 0 && expense / income > 0.9) anomalyList.push(`расходы ${Math.round(expense/income*100)}% от доходов — критически высоко`);
+    if (monthDelta != null && monthDelta < -30) anomalyList.push(`доходы упали на ${Math.abs(monthDelta)}% vs прошлый месяц`);
+    const profitMargin = income > 0 ? Math.round((income - expense) / income * 100) : null;
+    const cashflowWarning = (monthIncome < monthExpense) ? `расходы (${Math.round(monthExpense/1000)}К) превышают доходы (${Math.round(monthIncome/1000)}К) в этом месяце` : null;
+    const taxEstimate = income > 0 ? `НДС ~${fmtMoney(vat)}, налог на прибыль ~${fmtMoney((income-expense)*0.25)}` : null;
+
+    const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
     const resp = await fetch('/api/members?resource=ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({
         message: q,
-        history: _aiHistory.slice(-10, -1), // история без текущего вопроса
+        history: _aiHistory.slice(-10, -1),
         context: {
           period: `${curMonth}.${year}`,
           income, expense, profit: income - expense,
           monthIncome, monthExpense, monthProfit: monthIncome - monthExpense,
           prevMonthIncome: prevIncome, prevMonthExpense: prevExpense,
           monthDelta, txCount: yearTx.length,
-          vat, topCats, topClients, topSuppliers, monthTrend, recentTxs
+          vat, topCats, topClients, topSuppliers, monthTrend, recentTxs,
+          anomalies: anomalyList.length ? anomalyList.join('; ') : null,
+          taxEstimate,
+          marginPct: profitMargin,
+          cashflowWarning
         }
       })
     });

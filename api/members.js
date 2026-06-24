@@ -68,104 +68,143 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // ── resource=ai: чат с Gemini-ассистентом (без auth — контекст передаётся с фронта) ──
+  // ── resource=ai: чат с AI-ассистентом (Claude primary, Gemini fallback) ──
   if (req.query.resource === 'ai') {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Только POST запросы' });
-
-    const GEMINI_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_KEY) return res.status(500).json({ error: 'GEMINI_API_KEY не настроен' });
 
     const { message, context, history } = req.body;
     if (!message) return res.status(400).json({ error: 'Не указано сообщение' });
 
     const ctx = context || {};
-    const fmtMoney = (n) => n ? Math.round(n).toLocaleString('ru-RU') + ' ₽' : 'нет данных';
+    const fmtMoney = (n) => n != null && n !== '' ? Math.round(Number(n)).toLocaleString('ru-RU') + ' ₽' : 'нет данных';
 
-    const systemPrompt = `Ты — ОМС-Ассистент, финансовый помощник сервиса OMSFIN для малого бизнеса России.
-Отвечай ТОЛЬКО на русском. Формат: 2-4 конкретных предложения + конкретная ссылка если нужна. Используй <b>жирный</b> для важного.
+    const systemPrompt = `Ты — OMSFIN Ассистент, эксперт-финансист для малого бизнеса России. Отвечай ТОЛЬКО на русском языке.
 
-ФИНАНСОВЫЕ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (${ctx.period || 'текущий год'}):
+## Твоя роль
+Ты глубокий финансовый аналитик и налоговый консультант. Анализируй данные пользователя, выявляй аномалии, давай конкретные рекомендации с числами. Не просто отвечай на вопрос — дай инсайт, который пользователь сам не заметил.
+
+## Формат ответа
+- Используй <b>жирный</b> для ключевых цифр и выводов
+- Структурируй длинные ответы коротким списком (3-5 пунктов)
+- Давай ТОЧНЫЕ ссылки на разделы сайта когда уместно
+- Не превышай ~200 слов — лучше конкретно и по делу
+
+## ФИНАНСОВЫЕ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ (${ctx.period || 'текущий год'})
 Текущий месяц: доход ${fmtMoney(ctx.monthIncome)}, расход ${fmtMoney(ctx.monthExpense)}, прибыль ${fmtMoney(ctx.monthProfit)}
 Год: доход ${fmtMoney(ctx.income)}, расход ${fmtMoney(ctx.expense)}, прибыль ${fmtMoney(ctx.profit)}
 ${ctx.monthDelta != null ? `Динамика доходов к прошлому месяцу: ${ctx.monthDelta > 0 ? '+' : ''}${ctx.monthDelta}%` : ''}
-${ctx.monthTrend ? `Тренд доходов: ${ctx.monthTrend}` : ''}
+${ctx.monthTrend ? `Тренд: ${ctx.monthTrend}` : ''}
 НДС к уплате: ${fmtMoney(ctx.vat)} | Операций: ${ctx.txCount || 0}
-Топ расходы: ${ctx.topCats || '—'} | Топ поставщики: ${ctx.topSuppliers || '—'}
+Топ расходы по категориям: ${ctx.topCats || '—'}
+Топ поставщики/покупатели: ${ctx.topSuppliers || '—'}
 ${ctx.recentTxs ? `Последние операции: ${ctx.recentTxs}` : ''}
+${ctx.anomalies ? `\n⚠️ АНОМАЛИИ: ${ctx.anomalies}` : ''}
+${ctx.taxEstimate ? `\nНалоговая нагрузка: ${ctx.taxEstimate}` : ''}
+${ctx.marginPct != null ? `Маржинальность: ${ctx.marginPct}%` : ''}
+${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWarning}` : ''}
 
-РАЗДЕЛЫ САЙТА (давай точные ссылки когда отвечаешь на вопросы о функциях):
-- /index.html или / — главный дашборд: баланс, загрузка банковской выписки, НДС-виджет, закрытие месяца, этот чат
-- /analytics.html — аналитика: графики по месяцам, категориям, контрагентам, сравнение периодов
-- /vat.html — расчёт и планирование НДС, перенос налоговой нагрузки во времени
-- /declarations.html — декларации (НДС, 6-НДФЛ, РСВ, налог на прибыль) с экспортом в Excel
-- /docs.html — создание документов: счёт, УПД, ТОРГ-12, счёт-фактура, акт, договор поставки, доверенность, ПКО, ТТН
-- /payroll.html — зарплатный модуль: сотрудники, начисления, расчёт НДФЛ и взносов
-- /counterparty.html — финансовый радар: проверка контрагентов через ЕГРЮЛ, риск-скоринг
-- /tools.html — налоговые калькуляторы: НДС, прибыль, НДФЛ, дивиденды, взносы
-- /settings.html — настройки: <b>смена темы интерфейса (тёмная/светлая)</b>, уведомления, Telegram-бот, данные компании
+## РАЗДЕЛЫ САЙТА
+- / — главный дашборд: баланс, загрузка банковской выписки, НДС-виджет, закрытие месяца
+- /analytics — аналитика: графики по месяцам, категориям, контрагентам, сравнение периодов
+- /vat — расчёт и планирование НДС, перенос нагрузки между кварталами
+- /declarations — декларации (НДС, 6-НДФЛ, РСВ, налог на прибыль) с экспортом в Excel
+- /docs — создание документов: счёт, УПД, ТОРГ-12, счёт-фактура, акт, договор поставки, ПКО, ТТН
+- /payroll — зарплатный модуль: сотрудники, начисления, НДФЛ и взносы
+- /counterparty — финансовый радар: проверка контрагентов через ЕГРЮЛ, риск-скоринг
+- /tools — налоговые калькуляторы: НДС, прибыль, НДФЛ, дивиденды, взносы
+- /marketplace — импорт отчётов Wildberries и Ozon
+- /settings — настройки: тема интерфейса (тёмная/светлая), Telegram-бот, данные компании
 
-КАК МЕНЯТЬ ТЕМУ: зайди в /settings.html → раздел "Тема интерфейса" → кнопки "🌙 Тёмная" / "☀️ Светлая". Тема сохраняется в браузере.
+## НАЛОГИ 2026 (актуальные ставки)
+- НДС: 10% (базовые продукты питания, мясо птицы и пр.) / 22% (остальное, деликатесы)
+- НДФЛ с зарплаты: прогрессия 13% (до 2.4 млн) → 15% → 18% → 20% → 22% (свыше 50 млн)
+- НДФЛ с дивидендов: отдельная база, 13% (до 2.4 млн) / 15% (свыше) — НЕ суммируется с зарплатой
+- Налог на прибыль: 25% (8% федеральный + 17% региональный)
+- Страховые взносы: 30% до 2 979 000 ₽/год на сотрудника, 15.1% сверх базы
 
-СНИЖЕНИЕ НАЛОГОВОЙ НАГРУЗКИ (конкретные советы для пользователя):
-1. НДС: проверь все входящие счета-фактуры — каждый рубль покупок снижает НДС к уплате. Используй /vat.html для планирования платежей и переноса нагрузки между кварталами.
-2. Налог на прибыль 25%: увеличивай документально подтверждённые расходы (аренда, оборудование, обслуживание). Убыточные периоды можно учесть в следующих кварталах.
-3. Взносы: если ФОТ небольшой, проверь превышение предельной базы (2 979 000 ₽/год на сотрудника) — сверх неё ставка падает с 30% до 15.1%.
-4. Дивиденды vs зарплата: дивиденды облагаются 13-15% НДФЛ (отдельная база), без взносов — может быть выгоднее для собственника-директора.
-5. Финансовый радар (/counterparty.html): избегай контрагентов с признаками однодневок — налоговая может снять вычеты по НДС.
+## ПРИОРИТЕТНЫЕ СОВЕТЫ ПО СНИЖЕНИЮ НАЛОГОВ
+1. НДС: каждый рубль документально подтверждённых покупок снижает НДС — проверь все входящие счета-фактуры
+2. Налог на прибыль 25%: максимизируй расходы (аренда, амортизация, ремонт) — каждые 100 000 ₽ расходов экономят 25 000 ₽
+3. Взносы: отслеживай предельную базу — после 2 979 000 ₽/год ставка падает вдвое
+4. Дивиденды vs зарплата: дивиденды без взносов, только 13-15% НДФЛ отдельной базой
+5. Перенос НДС: законно перенести до 1/3 квартального НДС на следующий квартал через /vat
 
-НАЛОГИ 2026: НДС 10% (базовые продукты) / 22% (остальное), НДФЛ 13-22% прогрессия, налог на прибыль 25%, взносы 30% до 2 979 000 ₽ / 15.1% сверх.
+Если вопрос о функции — дай точную ссылку. Если видишь проблему в данных пользователя — назови её первой.`;
 
-Если вопрос о функции сайта — дай ТОЧНУЮ ссылку из списка выше. Не говори "нельзя" если функция есть на сайте.`;
+    const chatMessages = (Array.isArray(history) ? history.slice(-10) : []).map(h => ({
+      role: h.role === 'bot' ? 'assistant' : 'user',
+      content: h.text
+    }));
+    chatMessages.push({ role: 'user', content: message });
+
+    // Сначала пробуем Claude API
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+    if (ANTHROPIC_KEY) {
+      try {
+        const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-opus-4-8',
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: chatMessages
+          })
+        });
+        const claudeData = await claudeResp.json();
+        if (claudeResp.ok) {
+          const reply = claudeData.content?.[0]?.text;
+          if (reply) return res.status(200).json({ reply, model: 'claude' });
+        }
+        // Если Claude вернул ошибку — падаем на Gemini (логируем)
+        console.warn('Claude API error, falling back to Gemini:', claudeData.error?.message || claudeResp.status);
+      } catch (e) {
+        console.warn('Claude API exception, falling back to Gemini:', e.message);
+      }
+    }
+
+    // Gemini fallback
+    const GEMINI_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_KEY) return res.status(500).json({ error: 'Ни ANTHROPIC_API_KEY, ни GEMINI_API_KEY не настроены' });
 
     try {
-      // Получаем список доступных моделей — самый надёжный способ
       const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
       const listData = await listResp.json();
-      if (!listResp.ok) {
-        return res.status(500).json({ error: 'Gemini API: ' + (listData.error?.message || listResp.status) });
-      }
+      if (!listResp.ok) return res.status(500).json({ error: 'Gemini API: ' + (listData.error?.message || listResp.status) });
       const models = (listData.models || [])
         .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
         .map(m => m.name);
-      // Предпочитаем flash-модели как быстрые
       const modelName = models.find(m => m.includes('flash')) || models.find(m => m.includes('pro')) || models[0];
       if (!modelName) return res.status(500).json({ error: 'Нет доступных моделей Gemini' });
 
-      // Строим историю разговора для multi-turn
-      const chatHistory = (Array.isArray(history) ? history.slice(-8) : []).map(h => ({
+      const geminiHistory = (Array.isArray(history) ? history.slice(-8) : []).map(h => ({
         role: h.role === 'bot' ? 'model' : 'user',
         parts: [{ text: h.text }]
       }));
-
-      // contents: если есть история — multi-turn, иначе single-message
       let contents;
-      if (chatHistory.length > 0) {
+      if (geminiHistory.length > 0) {
         contents = [
           { role: 'user', parts: [{ text: systemPrompt }] },
-          { role: 'model', parts: [{ text: 'Понял контекст.' }] },
-          ...chatHistory,
+          { role: 'model', parts: [{ text: 'Понял.' }] },
+          ...geminiHistory,
           { role: 'user', parts: [{ text: message }] }
         ];
       } else {
-        contents = [
-          { role: 'user', parts: [{ text: systemPrompt + '\n\nВопрос: ' + message }] }
-        ];
+        contents = [{ role: 'user', parts: [{ text: systemPrompt + '\n\nВопрос: ' + message }] }];
       }
 
       const geminiResp = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 800, temperature: 0.7 } })
-        }
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 1000, temperature: 0.7 } }) }
       );
       const geminiData = await geminiResp.json();
       const reply = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!reply) {
-        return res.status(500).json({ error: geminiData.error?.message || 'Пустой ответ от Gemini: ' + JSON.stringify(geminiData).substring(0, 200) });
-      }
-      return res.status(200).json({ reply });
+      if (!reply) return res.status(500).json({ error: geminiData.error?.message || 'Пустой ответ от Gemini' });
+      return res.status(200).json({ reply, model: 'gemini' });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
