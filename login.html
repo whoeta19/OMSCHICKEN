@@ -309,7 +309,7 @@ const SUPABASE_KEY_FP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 function showForgot() {
   const f = document.getElementById('forgotForm');
   f.style.display = f.style.display === 'none' ? 'block' : 'none';
-  const email = document.getElementById('emailInput');
+  const email = document.getElementById('loginEmail');
   if (email?.value) document.getElementById('forgotEmail').value = email.value;
 }
 

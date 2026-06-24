@@ -633,7 +633,7 @@ function renderPieChart() {
     type: 'doughnut',
     data: {
       labels: data.map(d=>d.l),
-      datasets:[{data:data.map(d=>d.val),backgroundColor:data.map(d=>d.c),borderWidth:2,borderColor:'#141414'}]
+      datasets:[{data:data.map(d=>d.val),backgroundColor:data.map(d=>d.c),borderWidth:2,borderColor:document.body.classList.contains('light')?'#f5f5f5':'#141414'}]
     },
     options: {
       responsive:true, maintainAspectRatio:true,
