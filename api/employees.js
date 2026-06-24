@@ -92,7 +92,7 @@ export default async function handler(req, res) {
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
   const userId = await getUserId(userToken);
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
 
   const resource = req.query.resource || 'employees'; // 'employees' | 'payroll'
 
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
     // ───────────────────────── EMPLOYEES ─────────────────────────────────
     if (resource === 'employees') {
       const companyId = req.method === 'GET' ? req.query.company_id : req.body?.company_id;
-      if (!companyId) return res.status(400).json({ error: 'company_id required' });
+      if (!companyId) return res.status(400).json({ error: 'Не указана компания' });
 
       const role = await getUserRole(companyId, userId);
       if (!role || !READ_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
@@ -130,7 +130,7 @@ export default async function handler(req, res) {
       if (req.method === 'PATCH') {
         if (!WRITE_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
         const { id, ...updates } = req.body;
-        if (!id) return res.status(400).json({ error: 'id required' });
+        if (!id) return res.status(400).json({ error: 'Не указан id' });
 
         await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${id}`, {
           method: 'PATCH',
@@ -143,7 +143,7 @@ export default async function handler(req, res) {
       if (req.method === 'DELETE') {
         if (!WRITE_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
         const { id } = req.body;
-        if (!id) return res.status(400).json({ error: 'id required' });
+        if (!id) return res.status(400).json({ error: 'Не указан id' });
 
         // Мягкое удаление — переводим в неактивные, история выплат должна остаться
         await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${id}`, {
@@ -158,7 +158,7 @@ export default async function handler(req, res) {
     // ───────────────────────── PAYROLL RUNS ──────────────────────────────
     if (resource === 'payroll') {
       const companyId = req.method === 'GET' ? req.query.company_id : req.body?.company_id;
-      if (!companyId) return res.status(400).json({ error: 'company_id required' });
+      if (!companyId) return res.status(400).json({ error: 'Не указана компания' });
 
       const role = await getUserRole(companyId, userId);
       if (!role || !READ_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
@@ -235,7 +235,7 @@ export default async function handler(req, res) {
 
         if (action === 'mark_paid') {
           const { id } = req.body;
-          if (!id) return res.status(400).json({ error: 'id required' });
+          if (!id) return res.status(400).json({ error: 'Не указан id' });
 
           await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${id}`, {
             method: 'PATCH',
@@ -245,13 +245,13 @@ export default async function handler(req, res) {
           return res.status(200).json({ ok: true });
         }
 
-        return res.status(400).json({ error: 'Unknown action' });
+        return res.status(400).json({ error: 'Неизвестное действие' });
       }
 
       if (req.method === 'DELETE') {
         if (!WRITE_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
         const { id } = req.body;
-        if (!id) return res.status(400).json({ error: 'id required' });
+        if (!id) return res.status(400).json({ error: 'Не указан id' });
 
         await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${id}`, {
           method: 'DELETE',
@@ -261,7 +261,7 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(400).json({ error: 'Unknown resource' });
+    return res.status(400).json({ error: 'Неизвестный ресурс' });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }

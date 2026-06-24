@@ -1665,6 +1665,21 @@ function setMobileActive(btn) {
   document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
+function toggleMobileMore() {
+  const menu = document.getElementById('mobileMoreMenu');
+  const btn = document.getElementById('mnav-more');
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  btn.classList.toggle('active', !isOpen);
+}
+document.addEventListener('click', e => {
+  const menu = document.getElementById('mobileMoreMenu');
+  const btn = document.getElementById('mnav-more');
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+    menu.style.display = 'none';
+    btn.classList.remove('active');
+  }
+});
 // ─── Расчётные счета ────────────────────────────────────────────────────────
 
 function getAccounts() {
@@ -3111,12 +3126,14 @@ async function toggleRecurring(id) {
   if (is_recurring && !recurring_label) {
     recurring_label = prompt('Название платежа (например: Аренда склада):', tx.name) || tx.name;
   }
-  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
-  await fetch('/api/transactions', {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body: JSON.stringify({ id, is_recurring, recurring_label, ...(currentCompanyId ? {company_id: currentCompanyId} : {}) })
-  });
+  if (!IS_DEMO) {
+    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
+    await fetch('/api/transactions', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify({ id, is_recurring, recurring_label, ...(currentCompanyId ? {company_id: currentCompanyId} : {}) })
+    });
+  }
   tx.is_recurring = is_recurring;
   tx.recurring_label = recurring_label;
   renderTxList();
@@ -4243,8 +4260,21 @@ function showOnboardingOverlay() {
     <button class="mobile-nav-btn" onclick="window.location.href='/docs'">
       <span>📄</span>Документы
     </button>
+    <button class="mobile-nav-btn" onclick="toggleMobileMore()" id="mnav-more">
+      <span>⋯</span>Ещё
+    </button>
   </div>
 </nav>
+<div id="mobileMoreMenu" style="display:none;position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:998;padding:8px 0;">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);">
+    <button onclick="window.location.href='/analytics';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">📈<span>Аналитика</span></button>
+    <button onclick="window.location.href='/vat';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🧾<span>НДС</span></button>
+    <button onclick="window.location.href='/declarations';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">📑<span>Декларации</span></button>
+    <button onclick="window.location.href='/payroll';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">👥<span>Зарплата</span></button>
+    <button onclick="window.location.href='/counterparty';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🔍<span>Контрагенты</span></button>
+    <button onclick="window.location.href='/settings';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">⚙️<span>Настройки</span></button>
+  </div>
+</div>
 
 <script>
 // ══════════════════════════════════════════════════════════
