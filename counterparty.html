@@ -710,8 +710,10 @@ function exportHistoryCSV() {
 // Загружаем контрагентов из выписки
 async function loadFromTx() {
   const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  const cid = localStorage.getItem('omsfin_company') || '';
   try {
-    const r = await fetch('/api/transactions', {headers:{'Authorization':'Bearer '+token}});
+    const url = cid ? `/api/transactions?company_id=${encodeURIComponent(cid)}` : '/api/transactions';
+    const r = await fetch(url, {headers:{'Authorization':'Bearer '+token}});
     const txs = await r.json();
     
     // Собираем уникальные компании
