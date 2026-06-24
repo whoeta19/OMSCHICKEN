@@ -2151,6 +2151,10 @@ async function parseAndProcess(text, accountName) {
       (head.includes('плательщик') && head.includes('получатель') && head.includes('назначение платежа'));
   }
 
+  const _seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {};
+  const _myInn = _seller.inn || '';
+  const _myNameRe = _seller.name ? new RegExp(_seller.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi') : null;
+
   const lines = text.split('\n').filter(l => l.trim());
   const txs = [];
   let monthKey = null;
