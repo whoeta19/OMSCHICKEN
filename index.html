@@ -1329,14 +1329,27 @@ async function apiBulkUpdateCategory(ids, category, updates) {
 let currentCompanyId = localStorage.getItem('omsfin_company') || null;
 
 async function loadCompanies() {
-  const token = localStorage.getItem(TOKEN_KEY) || '';
   try {
-    const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
+    const r = await fetch('/api/companies');
     if (!r.ok) { showToast('❌ Ошибка загрузки компаний'); return; }
     const companies = await r.json();
     const sel = document.getElementById('companySwitcher');
     if (!sel) return;
-    sel.innerHTML = '<option value="">Все компании</option>' + 
+    // Если закэшированный company_id не входит в список доступных — сбрасываем
+    if (currentCompanyId && !companies.find(c => c.id === currentCompanyId)) {
+      currentCompanyId = companies[0]?.id || null;
+      if (currentCompanyId) localStorage.setItem('omsfin_company', currentCompanyId);
+      else localStorage.removeItem('omsfin_company');
+    }
+    // Если компания не выбрана, но есть хотя бы одна — берём первую
+    if (!currentCompanyId && companies.length > 0) {
+      currentCompanyId = companies[0].id;
+      localStorage.setItem('omsfin_company', currentCompanyId);
+    }
+    // Кэшируем роль из ответа (API теперь возвращает my_role)
+    const cur = companies.find(c => c.id === currentCompanyId);
+    if (cur?.my_role) currentUserRole = cur.my_role;
+    sel.innerHTML = '<option value="">Все компании</option>' +
       companies.map(c=>`<option value="${escapeHtml(c.id)}" ${c.id===currentCompanyId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
     // Если компаний нет — создаём компанию по умолчанию
     if (companies.length === 0) {
@@ -1344,6 +1357,8 @@ async function loadCompanies() {
     }
     const overviewBtn = document.getElementById('overviewBtn');
     if (overviewBtn) overviewBtn.style.display = companies.length > 1 ? 'block' : 'none';
+    // Применяем права доступа после того как company_id актуален
+    await applyRoleAccess();
   } catch(e) {}
 }
 
@@ -1841,8 +1856,7 @@ function showSkeletons() {
 }
 
 async function syncNow() {
-  loadCompanies();
-  applyRoleAccess();
+  loadCompanies(); // applyRoleAccess вызывается внутри loadCompanies после обновления company_id
   showSkeletons();
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
