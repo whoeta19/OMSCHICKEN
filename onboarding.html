@@ -269,10 +269,11 @@ function saveRequisites() {
     bank: document.getElementById('ob-bank').value,
     rs: document.getElementById('ob-rs').value,
   };
-  localStorage.setItem('omschicken_seller', JSON.stringify(seller));
-  
+  localStorage.setItem('omsfin_seller', JSON.stringify(seller));
+  localStorage.setItem('omschicken_seller', JSON.stringify(seller)); // обратная совместимость
+
   // Сохраняем в облако
-  const tok = localStorage.getItem('omschicken_token') || '';
+  const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (tok) {
     fetch('/api/company_settings', {
       method: 'POST',

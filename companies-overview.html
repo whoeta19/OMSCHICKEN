@@ -122,7 +122,7 @@
 </main>
 
 <script>
-function getToken() { return localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token') || ''; }
+function getToken() { return localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || ''; }
 function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
 
 const ROLE_NAMES = { director: 'Директор', accountant: 'Бухгалтер', employee: 'Сотрудник' };

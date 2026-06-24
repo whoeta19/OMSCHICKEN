@@ -157,8 +157,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const TOKEN_KEY = 'omschicken_token';
-function getToken() { return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omsfin_token') || ''; }
+const TOKEN_KEY = 'omsfin_token';
+function getToken() { return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || ''; }
 function getCompanyId() { return localStorage.getItem('omsfin_company') || ''; }
 
 function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }

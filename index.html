@@ -567,7 +567,7 @@
   .ai-fab{position:fixed;bottom:80px;right:16px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffaa44);border:none;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,0,0.45);z-index:300;font-size:22px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
   .ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(255,107,0,0.6);}
   @media(min-width:601px){.ai-fab{bottom:24px;}}
-  .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:370px;max-width:calc(100vw - 24px);background:#0d0d0d;border:1px solid rgba(255,107,0,0.25);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.7);z-index:400;overflow:hidden;flex-direction:column;}
+  .ai-modal{display:none;position:fixed;bottom:90px;right:16px;width:370px;max-width:calc(100vw - 24px);background:var(--surface);border:1px solid rgba(255,107,0,0.25);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,0.7);z-index:400;overflow:hidden;flex-direction:column;}
   .ai-modal.open{display:flex;}
   @media(min-width:601px){.ai-modal{bottom:88px;}}
   .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
@@ -1195,6 +1195,7 @@ function logout() {
   localStorage.removeItem('omschicken_user');
   localStorage.removeItem('omsfin_token');
   localStorage.removeItem('omsfin_refresh');
+  localStorage.removeItem('omsfin_user');
   window.location.href = '/login';
 }
 
@@ -1640,9 +1641,11 @@ function parseRadarEGRUL(raw, inn) {
 function toggleProfile() {
   const menu = document.getElementById('profileMenu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-  // Показываем email
-  const user = JSON.parse(localStorage.getItem('omschicken_user') || '{}');
+  const user = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
   document.getElementById('profileEmail').textContent = user.email || 'Пользователь';
+  // Показываем инициалы в кнопке
+  const btn = document.getElementById('profileBtn');
+  if (btn && user.email) btn.textContent = user.email[0].toUpperCase();
 }
 
 // Закрываем при клике вне
@@ -4101,6 +4104,10 @@ document.getElementById('addDate').value = new Date().toISOString().split('T')[0
 
 // Инициализация: синхронизируем данные, после загрузки проверяем нужен ли онбординг
 (async function init() {
+  // Показываем инициал пользователя в кнопке профиля
+  const _u = JSON.parse(localStorage.getItem('omsfin_user') || localStorage.getItem('omschicken_user') || '{}');
+  const _btn = document.getElementById('profileBtn');
+  if (_btn && _u.email) _btn.textContent = _u.email[0].toUpperCase();
   await syncNow();
   // Если транзакций нет и пользователь ещё не прошёл онбординг — показываем welcome-экран
   if (!localStorage.getItem('omsfin_onboarded') && allTx.length === 0) {

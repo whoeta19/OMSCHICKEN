@@ -288,7 +288,7 @@ function toggleDone(id, e) {
 
 async function remindTg(event, e) {
   e.stopPropagation();
-  const token = localStorage.getItem('omschicken_token') || '';
+  const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!token) { showToast('⚠️ Нужна авторизация'); return; }
   const d = new Date(event.date);
   const dateStr = d.toLocaleDateString('ru-RU', {day:'numeric',month:'long'});
