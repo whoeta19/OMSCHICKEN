@@ -957,6 +957,9 @@
       <option value="salary">Зарплата</option>
       <option value="bank">Банк</option>
       <option value="office">Офис</option>
+      <option value="cash">Наличные</option>
+      <option value="loan">Займы</option>
+      <option value="transit">Внутренний перевод</option>
     </select>
     <span id="reclassifyCount" style="font-size:12px;color:var(--muted)"></span>
   </div>
@@ -988,6 +991,9 @@
         <option value="salary">Зарплата</option>
         <option value="office">Офис/Аренда</option>
         <option value="bank">Банк/Кредиты</option>
+        <option value="cash">Наличные</option>
+        <option value="loan">Займы</option>
+        <option value="transit">Внутренний перевод</option>
       </select>
     </div>
   </div>
@@ -1192,13 +1198,28 @@ function classify(name, description, amount) {
   for (const [keyword, category] of Object.entries(userRules)) {
     if (text.includes(keyword.toLowerCase())) return category;
   }
-  if (/яндекс.?еда|yandex.*eda|eda\.|лавка|lavka|вкусвилл|vkusvill|al capone|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino|pizzasushiwok|chaihona|чайхона/.test(text)) return 'food';
-  if (/яндекс.?такси|yandex.*taxi|yandex.*go|fasten|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|shell|топливо|бензин|rnazk|rosneft|смартлогистика|грузоперевозк|набокин/.test(text)) return 'transport';
-  if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike|lacoste|vnukovo|krc|симутин|подотчет/.test(text)) return 'personal';
-  if (/агросфера|агро|птица|курятина|куры|мясо|птицефабрик|мясное дело|тихонов|мясокомбинат|chicken|бройлер/.test(text)) return 'chicken';
-  if (/зарплата|зп\b|аванс|выплата сотрудник|выдача зарплаты|выплата зарплаты/.test(text)) return 'salary';
-  if (/аренда|коворкинг|офис|склад|петрова/.test(text)) return 'office';
-  if (/овердрафт|погашение|задолженность по договору|плата за использованный|плата за активный|плата за обслуживание|обслуживание счета|комиссия за вывод|кредит/.test(text)) return 'bank';
+  // Внутренние переводы и депозиты — не влияют на P&L
+  if (/овернайт|депозит.*перевод|внутренний перевод на депозит|перевод собственных средств/.test(text)) return 'transit';
+  // Займы полученные/выданные
+  if (/беспроцентного займа|договор займа|выдача займа|возврат займа|предоставление денежных средств по договору/.test(text)) return 'loan';
+  // Снятие наличных
+  if (/снятие наличных|выдача наличных|снятие.*атм|atm|банкомат/.test(text)) return 'cash';
+  // Банковские комиссии и обслуживание
+  if (/плата за обслуживание счета|комиссия за снятие|плата за пакет|плата за услугу|оповещение об операциях|sms.?банк|уточнение реквизитов|овердрафт|погашение|задолженность по договору|плата за использованный|плата за активный|комиссия за вывод/.test(text)) return 'bank';
+  // Аренда
+  if (/аренда|субаренда|коворкинг|офис|склад|петрова/.test(text)) return 'office';
+  // Зарплата
+  if (/зарплата|зп\b|выплата сотрудник|выдача зарплаты|выплата зарплаты/.test(text)) return 'salary';
+  // Закупка товара
+  if (/агросфера|агро|птица знает|птицефабрик|мясное дело|тихонов|мясокомбинат|chicken|бройлер|тушка|курятина|куры|мясо/.test(text)) return 'chicken';
+  // Транспорт и доставка
+  if (/яндекс.?такси|yandex.*taxi|yandex.*go|yandex.*4121|такси|uber|ситимобил|азс|лукойл|газпромнефть|роснефть|gazpromneft|shell|топливо|бензин|rnazk|rosneft|смартлогистика|грузоперевозк|набокин|доставка груза|транспортные услуги|межгород|пензапрокат|алексеев.*доставк|доставк.*алексеев/.test(text)) return 'transport';
+  // Доставка еды Яндекс
+  if (/yandex.*4215.*dostavka|yandex.*dostavka/.test(text)) return 'transport';
+  // Еда и рестораны
+  if (/яндекс.?еда|yandex.*eda|yandex.*5411.*eda|yandex.*5814.*eda|лавка|lavka|вкусвилл|vkusvill|frenk|ресторан|кафе|столовая|burger|pizza|суши|sushi|макдоналдс|kfc|subway|domino|chaihona|чайхона|chaykhonavest/.test(text)) return 'food';
+  // Личные и прочие расходы
+  if (/wildberries|wb\*|озон|ozon|авито|lamoda|спортмастер|dns|м\.видео|мвидео|икеа|ikea|zara|h&m|adidas|nike|lacoste|vnukovo|krc|симутин|подотчет|auchan|окей|lenta|перекрёсток|билет|tutu|kupibilet|unitiki|agroserver|reg\.ru|контур/.test(text)) return 'personal';
   return 'unknown';
 }
 
@@ -1426,7 +1447,7 @@ function renderSuggestions() {
   
   // Банк — большие расходы
   const bankTotal = allTx.filter(t=>t.category==='bank'&&t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const totalExpense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const totalExpense = allTx.filter(t=>t.amount<0 && !['transit','loan','cash'].includes(t.category)).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   if (bankTotal > totalExpense * 0.4) {
     suggestions.push({
       type: 'advice',
@@ -2261,6 +2282,20 @@ async function parseAndProcess(text, accountName) {
     if (skippedCount > 0) showDuplicatesBanner(insertedCount, skippedCount, monthKey);
     // Показать баннер авто-разметки если есть нераспознанные
     if (unknownCount > 0) showAutoclassifyBanner();
+    // Предупреждения бухгалтера по загруженным операциям
+    const warnings = [];
+    const cashOps = txs.filter(t => t.category === 'cash');
+    if (cashOps.length > 0) {
+      const cashSum = cashOps.reduce((s,t) => s + Math.abs(t.amount), 0);
+      warnings.push(`💵 Снятие наличных: ${fmt(-cashSum)} — нужны авансовые отчёты с чеками`);
+    }
+    const loanOps = txs.filter(t => t.category === 'loan');
+    if (loanOps.length > 0) warnings.push(`🤝 Обнаружены займы (${loanOps.length} оп.) — проверьте договор и срок возврата`);
+    const transitOps = txs.filter(t => t.category === 'transit');
+    if (transitOps.length > 0) warnings.push(`🔄 ${transitOps.length} внутренних переводов/депозитов исключены из P&L`);
+    const bigPersonal = txs.filter(t => t.category === 'personal' && Math.abs(t.amount) > 50000);
+    if (bigPersonal.length > 0) warnings.push(`⚠️ Крупные личные расходы по карте (${bigPersonal.length} оп.) — нужно обоснование или авансовый отчёт`);
+    warnings.forEach((w, i) => setTimeout(() => showToast(w), 3500 + i * 2000));
   } catch(e) {
     wrap.classList.remove('active');
     showToast('❌ Ошибка: ' + e.message);
@@ -2274,7 +2309,8 @@ function renderReclassify() {
   const cats = [
     {k:'chicken',l:'🐔 Курятина'},{k:'transport',l:'🚗 Транспорт'},{k:'food',l:'🍽️ Еда'},
     {k:'personal',l:'🛍️ Личное'},{k:'salary',l:'👥 Зарплата'},{k:'office',l:'🏢 Офис'},
-    {k:'bank',l:'🏦 Банк'},{k:'unknown',l:'❓ Прочее'}
+    {k:'bank',l:'🏦 Банк'},{k:'cash',l:'💵 Наличные'},{k:'loan',l:'🤝 Займы'},
+    {k:'transit',l:'🔄 Транзит'},{k:'unknown',l:'❓ Прочее'}
   ];
   document.getElementById('reclassifyList').innerHTML = filtered.slice(0,50).map(tx => `
     <div class="reclassify-row">
@@ -2319,7 +2355,7 @@ async function reclassifyTx(id, category, name, btn) {
 function renderRules() {
   const rules = Object.entries(userRules);
   document.getElementById('rulesCount').textContent = rules.length;
-  const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',unknown:'❓'};
+  const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',cash:'💵',loan:'🤝',transit:'🔄',unknown:'❓'};
   document.getElementById('rulesList').innerHTML = rules.length ?
     `<div class="rules-list">${rules.map(([k,v])=>`
       <div class="rule-item">
@@ -2487,8 +2523,8 @@ async function clearLastUpload() {
 
 function _origRenderAll() {
   try {
-    const income = allTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
-    const expense = allTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+    const income = allTx.filter(t=>t.amount>0 && !['transit','loan'].includes(t.category)).reduce((s,t)=>s+Number(t.amount),0);
+    const expense = allTx.filter(t=>t.amount<0 && !['transit','loan','cash'].includes(t.category)).reduce((s,t)=>s+Math.abs(t.amount),0);
     const personal = allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0);
     document.getElementById('statIncome').textContent = fmt(income);
     document.getElementById('statExpense').textContent = fmt(expense);
@@ -3124,7 +3160,7 @@ async function saveNote(id) {
 }
 
 function getCatBadge(cat) {
-  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🐔 Курятина'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],unknown:['cat-unknown','❓ Прочее']};
+  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🐔 Курятина'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],cash:['cat-bank','💵 Наличные'],loan:['cat-bank','🤝 Займы'],transit:['cat-unknown','🔄 Транзит'],unknown:['cat-unknown','❓ Прочее']};
   const[cls,lbl] = m[cat]||m.unknown;
   return `<span class="cat-badge ${cls}">${lbl}</span>`;
 }
@@ -3726,7 +3762,7 @@ function aiAnswer(q) {
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',unknown:'❓ Прочее'};
+  const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',transit:'🔄 Транзит',unknown:'❓ Прочее'};
 
   // ── Приветствие ──
   if (/^(привет|хай|здравствуй|добрый|помоги|что умеешь|что можешь|помощ|start)/.test(ql)) {
@@ -4212,7 +4248,7 @@ function detectAnomalies() {
       return s + allTx.filter(t=>t.period===p&&t.category===cat&&t.amount<0).reduce((ss,t)=>ss+Math.abs(t.amount),0);
     },0) / prevPeriods.length;
     if (prevAvg > 0 && cur > prevAvg * 2.2) {
-      const catLabels = {chicken:'Курятина',transport:'Транспорт',food:'Питание',salary:'Зарплата',bank:'Банк',office:'Офис',unknown:'Прочее'};
+      const catLabels = {chicken:'Курятина',transport:'Транспорт',food:'Питание',salary:'Зарплата',bank:'Банк',office:'Офис',cash:'Наличные',loan:'Займы',transit:'Транзит',unknown:'Прочее'};
       anomalies.push({cat:catLabels[cat]||cat, cur, prevAvg, ratio:(cur/prevAvg).toFixed(1)});
     }
   });
@@ -4426,7 +4462,7 @@ function openTxDetail(tx) {
   document.querySelectorAll('.tx-row').forEach(r=>r.classList.remove('focused'));
   const panel = document.getElementById('txDetailContent');
   const plus = tx.amount > 0;
-  const cats = {chicken:'🐔 Курятина',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',unknown:'❓ Прочее'};
+  const cats = {chicken:'🐔 Курятина',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',transit:'🔄 Транзит',unknown:'❓ Прочее'};
   panel.innerHTML = `
     <div style="margin-bottom:16px">
       <div style="font-size:22px;font-family:'Unbounded',sans-serif;font-weight:700;color:${plus?'var(--green)':'var(--red)'};margin-bottom:4px">${plus?'+':''}${fmt(tx.amount)}</div>
