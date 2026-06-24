@@ -897,7 +897,7 @@ async function loadCurrency() {
   if (_currencyData) return _currencyData;
   try {
     const r = await fetch('/api/lookup?provider=currency');
-    _currencyData = await r.json();
+    if (!r.ok) { _currencyData = {}; } else { _currencyData = await r.json(); }
     return _currencyData;
   } catch(e) { return null; }
 }

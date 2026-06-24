@@ -358,6 +358,7 @@ async function loadData() {
     const cid = localStorage.getItem('omsfin_company') || '';
     const url = cid ? `/api/transactions?company_id=${encodeURIComponent(cid)}` : '/api/transactions';
     const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!r.ok) { showToast("❌ Ошибка загрузки данных"); return; }
     allTx = await r.json();
     if (!Array.isArray(allTx)) allTx = [];
     filteredTx = allTx;

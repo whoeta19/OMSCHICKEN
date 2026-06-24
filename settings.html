@@ -1069,6 +1069,7 @@ async function checkTelegramStatus() {
   if (!tok) { if(st) st.style.display='none'; document.getElementById('tgNotLinked').style.display='block'; return; }
   try {
     const r = await fetch('/api/telegram_link?nc='+Date.now(), {headers:{'Authorization':'Bearer '+tok}});
+    if (!r.ok) { if(st) st.textContent="Ошибка"; return; }
     const d = await r.json();
     if(st) st.style.display='none';
     if (d.linked) { document.getElementById('tgLinked').style.display='block'; document.getElementById('tgId').textContent='ID: '+d.telegram_id; }

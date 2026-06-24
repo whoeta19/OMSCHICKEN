@@ -716,6 +716,7 @@ async function loadFromTx() {
   try {
     const url = cid ? `/api/transactions?company_id=${encodeURIComponent(cid)}` : '/api/transactions';
     const r = await fetch(url, {headers:{'Authorization':'Bearer '+token}});
+    if (!r.ok) { console.warn("Ошибка загрузки транзакций", r.status); return; }
     const txs = await r.json();
     
     // Собираем уникальные компании
