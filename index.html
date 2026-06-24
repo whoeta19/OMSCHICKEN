@@ -3111,7 +3111,7 @@ async function toggleRecurring(id) {
   if (is_recurring && !recurring_label) {
     recurring_label = prompt('Название платежа (например: Аренда склада):', tx.name) || tx.name;
   }
-  const token = localStorage.getItem('omschicken_token') || localStorage.getItem('omsfin_token');
+  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
   await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -3255,7 +3255,7 @@ async function saveNote(id) {
   const input = document.getElementById('note-'+id);
   if (!input) return;
   const note = input.value.trim();
-  const token = localStorage.getItem('omschicken_token') || localStorage.getItem(TOKEN_KEY);
+  const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
   const r = await fetch('/api/transactions', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+token},
