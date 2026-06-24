@@ -14,6 +14,7 @@
 <title>Склад — OMSFIN</title>
 <meta name="description" content="Складской учёт: остатки товаров, движение по складу, уведомления о минимальном запасе, история операций приёмки и списания.">
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
+<script src="/js/auth.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -262,7 +263,6 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
 <div id="toast"></div>
 
 <script>
-const TOKEN_KEY = 'omsfin_token';
 let items = [];      // [{id,name,category,unit,qty,minQty,price,salePrice}]
 let movements = [];  // [{id,itemId,type,qty,price,date,note}]
 let currentFilter = 'all';

@@ -14,6 +14,7 @@
 <title>OMSFIN — Декларации</title>
 <meta name="description" content="Формирование налоговых деклараций: НДС, УСН, 6-НДФЛ, налог на прибыль, РСВ. Экспорт в Excel для загрузки в налоговую.">
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
+<script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 <style>
@@ -167,6 +168,18 @@
   .cq-total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;margin-top:4px;}
   .cq-total-label{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);}
   .cq-total-amount{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;color:#fff;}
+  @media print {
+    header, .bottom-nav, nav, .pill-nav, .no-print,
+    .modal-overlay, footer, .fab, #syncBtn { display: none !important; }
+    body { background: #fff !important; color: #000 !important; font-family: Arial, sans-serif; padding-bottom: 0 !important; }
+    .card, .section, .cq-block { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+    a { color: #000 !important; text-decoration: none !important; }
+    button:not(.print-btn) { display: none !important; }
+    select, input { border: 1px solid #ccc !important; background: #fff !important; color: #000 !important; }
+    .tab-btn { display: none !important; }
+    .tab-panel { display: block !important; }
+    @page { margin: 15mm; }
+  }
 </style>
 <script src="/utils.js"></script>
 <script src="/nav.js"></script>
@@ -311,6 +324,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" onclick="exportUSNExcel()">📊 Скачать Excel для ФНС</button>
         <button class="btn-outline" onclick="openFNS()">🌐 Открыть кабинет ФНС</button>
+        <button class="btn-outline print-btn" onclick="window.print()">🖨️ Печать</button>
       </div>
     </div>
   </div>
@@ -397,6 +411,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" onclick="exportNDSExcel()">📊 Скачать Excel для ФНС</button>
         <button class="btn-outline" onclick="openFNS()">🌐 Открыть кабинет ФНС</button>
+        <button class="btn-outline print-btn" onclick="window.print()">🖨️ Печать</button>
       </div>
     </div>
   </div>
@@ -477,6 +492,7 @@
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
       <button class="btn" onclick="exportNDFLExcel()">📊 Скачать Excel для ФНС</button>
+      <button class="btn-outline print-btn" style="margin-top:8px" onclick="window.print()">🖨️ Печать</button>
     </div>
   </div>
 
@@ -519,6 +535,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn-outline" onclick="fillProfitFromTx()" title="Заполнить доходы и расходы из транзакций выписки">📥 Заполнить из выписки</button>
         <button class="btn" onclick="exportProfitExcel()">📊 Скачать Excel для ФНС</button>
+        <button class="btn-outline print-btn" onclick="window.print()">🖨️ Печать</button>
       </div>
     </div>
   </div>
@@ -561,6 +578,7 @@
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
       <button class="btn" onclick="exportRSVExcel()">📊 Скачать Excel для ФНС</button>
+      <button class="btn-outline print-btn" style="margin-top:8px" onclick="window.print()">🖨️ Печать</button>
     </div>
   </div>
 
@@ -636,6 +654,7 @@
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
       <button class="btn" onclick="exportEFSExcel()">📊 Скачать Excel для СФР</button>
+      <button class="btn-outline print-btn" style="margin-top:8px" onclick="window.print()">🖨️ Печать</button>
     </div>
   </div>
 

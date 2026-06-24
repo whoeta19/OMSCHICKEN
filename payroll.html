@@ -14,6 +14,7 @@
 <title>OMSFIN — Зарплата</title>
 <meta name="description" content="Зарплатный модуль: расчёт НДФЛ по прогрессивной шкале 2026, страховые взносы, история начислений, расчётные листки для сотрудников.">
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
+<script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
@@ -159,8 +160,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const TOKEN_KEY = 'omsfin_token';
-function getToken() { return localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || ''; }
 function getCompanyId() { return localStorage.getItem('omsfin_company') || ''; }
 
 function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
