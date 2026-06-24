@@ -131,12 +131,16 @@
     .btn{min-height:44px;}
     .tabs{-webkit-overflow-scrolling:touch;overflow-x:auto;}
   }
+  .toast{position:fixed;bottom:20px;right:16px;left:16px;max-width:480px;margin:0 auto;background:rgba(15,15,15,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,107,0,0.3);border-radius:14px;padding:13px 18px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);z-index:9999;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  body.light .toast{background:rgba(255,255,255,0.97);border-color:rgba(255,107,0,0.25);color:#1a1a1a;box-shadow:0 8px 32px rgba(0,0,0,0.12);}
 </style>
 <script src="/utils.js"></script>
 <script src="/nav.js"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<div class="toast" id="toast"></div>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
@@ -193,6 +197,16 @@
 
 </main>
 <script>
+function showToast(msg, dur=3500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), dur);
+}
+window.onerror=function(m){if(/Script error|ResizeObserver/.test(m))return false;showToast('⚠️ '+String(m).substring(0,70));return false;};
+window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||String(e.reason);if(/Failed to fetch|NetworkError|AbortError/.test(m))showToast('📡 Нет сети — проверьте соединение');else if(m&&m.length<80)showToast('⚠️ '+m);});
+
 let checkHistory = JSON.parse(localStorage.getItem('omsfin_cp_history') || '[]');
 
 
@@ -672,7 +686,7 @@ function renderHistory() {
 }
 
 function exportHistoryCSV() {
-  if (!checkHistory.length) { alert('История проверок пуста'); return; }
+  if (!checkHistory.length) { showToast('⚠️ История проверок пуста'); return; }
   const cols = ['Дата проверки','Наименование','ИНН','ОГРН','Статус','Риск-балл','Юр.адрес','Дата регистрации'];
   const rows = checkHistory.map(d => [
     new Date(d.checkedAt).toLocaleDateString('ru-RU'),
@@ -690,6 +704,7 @@ function exportHistoryCSV() {
   a.href = URL.createObjectURL(blob);
   a.download = `kontragenty_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+  showToast(`✅ Экспортировано ${checkHistory.length} контрагентов`);
 }
 
 // Загружаем контрагентов из выписки

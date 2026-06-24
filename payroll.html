@@ -163,12 +163,15 @@ function getCompanyId() { return localStorage.getItem('omsfin_company') || ''; }
 
 function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ru-RU') + ' ₽'; }
 
-function showToast(msg) {
+function showToast(msg, dur=3000) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 3000);
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.style.display = 'none', dur);
 }
+window.onerror=function(m){if(/Script error|ResizeObserver/.test(m))return false;showToast('⚠️ '+String(m).substring(0,70));return false;};
+window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||String(e.reason);if(/Failed to fetch|NetworkError|AbortError/.test(m))showToast('📡 Нет сети — проверьте соединение');else if(m&&m.length<80)showToast('⚠️ '+m);});
 
 let employees = [];
 

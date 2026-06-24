@@ -92,15 +92,20 @@
   .preview-img{max-height:80px;max-width:200px;border-radius:6px;margin-top:8px;}
   .toast{position:fixed;bottom:20px;right:16px;left:16px;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;font-size:13px;transform:translateY(100px);opacity:0;transition:all 0.3s;z-index:999;}
   .toast.show{transform:translateY(0);opacity:1;}
-  .theme-btns{display:flex;gap:8px;margin-top:8px;}
+  .theme-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;}
   .toggle-wrap{display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0;}
   .toggle-wrap input{display:none;}
   .toggle-track{width:44px;height:24px;background:rgba(128,128,128,0.3);border:1px solid rgba(128,128,128,0.25);border-radius:12px;position:relative;transition:background 0.2s,border-color 0.2s;flex-shrink:0;}
   .toggle-wrap input:checked + .toggle-track{background:var(--accent);border-color:var(--accent);}
   .toggle-thumb{position:absolute;left:3px;top:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);}
   .toggle-wrap input:checked + .toggle-track .toggle-thumb{left:23px;}
-  .theme-btn{flex:1;padding:10px;border:2px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:12px;transition:all 0.2s;background:var(--surface2);}
-  .theme-btn.active{border-color:var(--accent);color:var(--accent);}
+  .theme-btn{padding:10px 6px 12px;border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;font-size:11px;transition:all 0.2s;background:var(--surface2);display:flex;flex-direction:column;align-items:center;gap:6px;min-height:80px;justify-content:center;}
+  .theme-btn:hover{border-color:rgba(255,107,0,0.4);transform:translateY(-1px);}
+  .theme-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.06);box-shadow:0 0 0 3px rgba(255,107,0,0.12);}
+  .theme-btn .preview{display:flex;gap:3px;margin-bottom:2px;}
+  .theme-btn .preview span{width:10px;height:10px;border-radius:50%;}
+  .theme-btn .theme-label{font-weight:500;font-size:12px;}
+  .accent-dot{width:26px!important;height:26px!important;min-height:26px;}
   .notif-day{display:flex;align-items:center;gap:8px;}
   .notif-day input[type=number]{width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:13px;outline:none;}
 
@@ -122,6 +127,7 @@
     /* Цвета акцента — уменьшить кружки */
     #accentColors{gap:6px;}
     /* Тема — 2 колонки */
+    .theme-btns{grid-template-columns:1fr 1fr!important;}
     .theme-grid{grid-template-columns:1fr 1fr!important;}
   }
 </style>
@@ -143,10 +149,38 @@
     <div class="input-group">
       <label>Тема интерфейса</label>
       <div class="theme-btns">
-        <div class="theme-btn" id="theme-dark" onclick="setTheme('dark',this)">🌙 Тёмная</div>
-        <div class="theme-btn" id="theme-light" onclick="setTheme('light',this)">☀️ Светлая</div>
-        <div class="theme-btn" id="theme-blue" onclick="setTheme('blue',this)">🌊 Синяя</div>
-        <div class="theme-btn" id="theme-aurora" onclick="setTheme('aurora',this)">🌌 Аврора</div>
+        <div class="theme-btn" id="theme-dark" onclick="setTheme('dark',this)">
+          <div class="preview">
+            <span style="background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.15)"></span>
+            <span style="background:#ff6b00"></span>
+            <span style="background:#22c55e"></span>
+          </div>
+          <div class="theme-label">🌙 Тёмная</div>
+        </div>
+        <div class="theme-btn" id="theme-light" onclick="setTheme('light',this)">
+          <div class="preview">
+            <span style="background:#f2f0eb;border:1.5px solid rgba(0,0,0,0.1)"></span>
+            <span style="background:#ff6b00"></span>
+            <span style="background:#16a34a"></span>
+          </div>
+          <div class="theme-label">☀️ Светлая</div>
+        </div>
+        <div class="theme-btn" id="theme-blue" onclick="setTheme('blue',this)">
+          <div class="preview">
+            <span style="background:#060d1f;border:1.5px solid rgba(96,165,250,0.3)"></span>
+            <span style="background:#60a5fa"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          <div class="theme-label">🌊 Синяя</div>
+        </div>
+        <div class="theme-btn" id="theme-aurora" onclick="setTheme('aurora',this)">
+          <div class="preview">
+            <span style="background:#0e0b1a;border:1.5px solid rgba(167,139,250,0.3)"></span>
+            <span style="background:#a78bfa"></span>
+            <span style="background:#34d399"></span>
+          </div>
+          <div class="theme-label">🌌 Аврора</div>
+        </div>
       </div>
     </div>
     <div class="input-group" style="margin-top:10px">
@@ -164,13 +198,16 @@
     </div>
     <div class="input-group">
       <label>Акцентный цвет</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-        <div onclick="setAccent('#ff6b00',this)" style="width:20px;height:20px;border-radius:50%;background:#ff6b00;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div onclick="setAccent('#22c55e',this)" style="width:20px;height:20px;border-radius:50%;background:#22c55e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div onclick="setAccent('#818cf8',this)" style="width:20px;height:20px;border-radius:50%;background:#818cf8;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div onclick="setAccent('#f43f5e',this)" style="width:20px;height:20px;border-radius:50%;background:#f43f5e;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div onclick="setAccent('#0ea5e9',this)" style="width:20px;height:20px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
-        <div onclick="setAccent('#a855f7',this)" style="width:20px;height:20px;border-radius:50%;background:#a855f7;cursor:pointer;border:2px solid transparent;transition:transform 0.15s,border-color 0.15s" class="accent-dot" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'"></div>
+      <div id="accentColors" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center">
+        <div onclick="setAccent('#ff6b00',this)" title="Оранжевый (по умолчанию)" style="width:28px;height:28px;border-radius:50%;background:#ff6b00;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#e53935',this)" title="Красный" style="width:28px;height:28px;border-radius:50%;background:#e53935;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#f43f5e',this)" title="Розовый" style="width:28px;height:28px;border-radius:50%;background:#f43f5e;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#22c55e',this)" title="Зелёный" style="width:28px;height:28px;border-radius:50%;background:#22c55e;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#0ea5e9',this)" title="Голубой" style="width:28px;height:28px;border-radius:50%;background:#0ea5e9;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#6366f1',this)" title="Индиго" style="width:28px;height:28px;border-radius:50%;background:#6366f1;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#a855f7',this)" title="Фиолетовый" style="width:28px;height:28px;border-radius:50%;background:#a855f7;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#ec4899',this)" title="Пурпурный" style="width:28px;height:28px;border-radius:50%;background:#ec4899;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
+        <div onclick="setAccent('#f59e0b',this)" title="Жёлтый" style="width:28px;height:28px;border-radius:50%;background:#f59e0b;cursor:pointer;border:3px solid transparent;transition:transform 0.15s,border-color 0.15s,box-shadow 0.15s" class="accent-dot"></div>
       </div>
     </div>
   </div>
@@ -541,10 +578,17 @@ function updateAutoThemeStatus() {
 // Акцентный цвет
 function setAccent(color, el) {
   document.body.style.setProperty('--accent', color);
-  document.querySelectorAll('.accent-dot').forEach(d => d.style.border = '2px solid transparent');
-  el.style.border = '2px solid var(--text,#fff)';
+  document.querySelectorAll('.accent-dot').forEach(d => {
+    d.style.border = '3px solid transparent';
+    d.style.boxShadow = '';
+    d.style.transform = '';
+  });
+  el.style.border = '3px solid var(--text,#fff)';
+  el.style.boxShadow = '0 0 0 3px ' + color + '66';
+  el.style.transform = 'scale(1.15)';
   settings.accent = color;
   localStorage.setItem('omsfin_settings', JSON.stringify(settings));
+  showToast('🎨 Цвет акцента обновлён');
 }
 
 // Инициализация темы и цвета
@@ -959,12 +1003,15 @@ async function doChangePassword() {
   }
 }
 
-function showToast(msg) {
+function showToast(msg, dur=3000) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), dur);
 }
+window.onerror=function(m){if(/Script error|ResizeObserver/.test(m))return false;showToast('⚠️ '+String(m).substring(0,70));return false;};
+window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||String(e.reason);if(/Failed to fetch|NetworkError|AbortError/.test(m))showToast('📡 Нет сети — проверьте соединение');else if(m&&m.length<80)showToast('⚠️ '+m);});
 
 // Автообновление токена
 (function() {
