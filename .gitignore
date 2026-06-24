@@ -1,1 +1,10 @@
 .vercel
+
+# секреты — никогда не коммитим
+.env
+.env.local
+.env.*.local
+
+# зависимости
+node_modules/
+package-lock.json
