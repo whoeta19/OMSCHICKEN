@@ -2099,6 +2099,13 @@ async function parseAndProcess(text, accountName) {
     return false;
   }
 
+  function isBankSber(t) {
+    const head = t.substring(0, 800).toLowerCase();
+    return head.includes('сбербанк') || head.includes('sberbank') ||
+      head.includes('дата проведения') ||
+      (head.includes('плательщик') && head.includes('получатель') && head.includes('назначение платежа'));
+  }
+
   const lines = text.split('\n').filter(l => l.trim());
   const txs = [];
   let monthKey = null;
@@ -2201,6 +2208,81 @@ async function parseAndProcess(text, accountName) {
         ? (senderInn !== myInn ? senderInn : receiverInn)
         : (receiverInn !== myInn ? receiverInn : senderInn);
       txs.push({name: name || 'Операция', amount, date:dateStr, description, category, period:monthKey, is_personal:['personal','food'].includes(category), inn: counterpartyInn || null});
+    }
+  } else if (isBankSber(text)) {
+    // Сбер Бизнес Онлайн — два формата выгрузки:
+    // 1) полный: "Дата проведения";"Дата операции";"Вид";"Сумма";"Плательщик";"ИНН плательщика";...;"Получатель";"ИНН получателя";...;"Назначение платежа"
+    // 2) краткий: "Дата";"Контрагент";"Назначение";"Расход";"Приход"
+    const myInn = '5800015301';
+
+    // Ищем строку заголовка
+    let hdrRow = -1;
+    for (let i = 0; i < Math.min(10, lines.length); i++) {
+      const l = lines[i].toLowerCase();
+      if (l.includes('дата') && (l.includes('вид') || l.includes('назначение') || l.includes('расход'))) {
+        hdrRow = i; break;
+      }
+    }
+    const hdr = hdrRow >= 0 ? lines[hdrRow].split(';').map(h => h.replace(/"/g,'').trim().toLowerCase()) : [];
+
+    // Определяем индексы колонок
+    const findH = (...names) => { for (const n of names) { const i = hdr.findIndex(h=>h.includes(n)); if (i>=0) return i; } return -1; };
+    const dateIdx   = findH('дата проведения','дата операции','дата');
+    const vidIdx    = findH('вид');
+    const amtIdx    = findH('сумма');
+    const debitIdx  = findH('расход','дебет');
+    const creditIdx = findH('приход','кредит');
+    const payerIdx  = findH('плательщик');
+    const payerInnIdx = hdr.findIndex((h,i)=>h.includes('инн') && i > 0 && (hdr[i-1]||'').includes('плательщик'));
+    const recvIdx   = findH('получатель');
+    const recvInnIdx  = hdr.findIndex((h,i)=>h.includes('инн') && i > 0 && (hdr[i-1]||'').includes('получатель'));
+    const descIdx   = findH('назначение');
+
+    const start = hdrRow >= 0 ? hdrRow + 1 : 1;
+    for (let i = start; i < lines.length; i++) {
+      const cols = lines[i].split(';').map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"').trim());
+      if (cols.length < 3) continue;
+
+      const dateStr = cols[dateIdx >= 0 ? dateIdx : 0] || '';
+      if (!dateStr.match(/\d{2}\.\d{2}\.\d{4}/)) continue;
+      if (!monthKey) { const p = dateStr.split('.'); monthKey = p[1]+'.'+p[2]; }
+
+      let amount = 0;
+      if (vidIdx >= 0 && amtIdx >= 0) {
+        // Полный формат: колонка "Вид" = Дебет/Кредит + колонка "Сумма"
+        const vid = (cols[vidIdx]||'').toLowerCase();
+        const abs = parseFloat((cols[amtIdx]||'0').replace(/\s/g,'').replace(',','.')) || 0;
+        if (abs === 0) continue;
+        amount = vid.includes('кредит') || vid.includes('приход') ? abs : -abs;
+      } else if (debitIdx >= 0 && creditIdx >= 0) {
+        // Краткий формат: отдельные колонки расход/приход
+        const out = parseFloat((cols[debitIdx]||'0').replace(/[^0-9,.-]/g,'').replace(',','.')) || 0;
+        const inp = parseFloat((cols[creditIdx]||'0').replace(/[^0-9,.-]/g,'').replace(',','.')) || 0;
+        amount = inp > 0 ? inp : -out;
+        if (amount === 0) continue;
+      } else continue;
+
+      const description = descIdx >= 0 ? (cols[descIdx]||'').substring(0,100) : '';
+      const payer    = payerIdx >= 0   ? (cols[payerIdx]||'').trim() : '';
+      const payerInn = payerInnIdx >= 0 ? (cols[payerInnIdx]||'').trim() : '';
+      const recv     = recvIdx >= 0    ? (cols[recvIdx]||'').trim() : '';
+      const recvInn  = recvInnIdx >= 0  ? (cols[recvInnIdx]||'').trim() : '';
+
+      let name = amount > 0
+        ? (payerInn && payerInn !== myInn ? payer : recv)
+        : (recvInn  && recvInn  !== myInn ? recv  : payer);
+      name = (name || description.substring(0,60)).replace(/ООО "ОМСЧИКЕН"|ООО ОМСЧИКЕН|ПАО СБЕРБАНК|ПАО "Сбербанк"/gi,'').trim();
+
+      const category = classify(name, description, amount);
+      const counterpartyInn = amount > 0
+        ? (payerInn && payerInn !== myInn ? payerInn : recvInn)
+        : (recvInn  && recvInn  !== myInn ? recvInn  : payerInn);
+      txs.push({
+        name: name || description.substring(0,40) || 'Операция',
+        amount, date: dateStr, description, category, period: monthKey,
+        is_personal: ['personal','food'].includes(category),
+        inn: counterpartyInn || null
+      });
     }
   } else {
     // Т-Банк (по умолчанию)

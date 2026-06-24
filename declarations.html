@@ -336,8 +336,14 @@
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Раздел 1. НДС к уплате</div>
 
     <div class="field-row">
-      <div class="field-label">Выручка с НДС (строка 010)</div>
+      <div class="field-label">Выручка с НДС (строка 010) — 10%</div>
       <div class="field-value green" id="ndsSales">—</div>
+    </div>
+    <div class="field-row" style="align-items:center">
+      <div class="field-label">Выручка от прочих продаж (22%) <span style="font-size:10px;color:var(--muted)">— введите вручную</span></div>
+      <input type="number" id="ndsSales22Manual" placeholder="0" min="0" step="0.01"
+        oninput="renderNDS()"
+        style="width:130px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:13px;outline:none;text-align:right">
     </div>
     <div class="field-row">
       <div class="field-label">НДС начисленный 10% — продажи курятины</div>
@@ -436,13 +442,17 @@
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px">
     <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:14px">Раздел 2. Сводные данные</div>
+    <div id="ndfl_from_tx_banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;font-size:12px;color:#22c55e"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="input-group"><label>Ставка налога (%)</label><input type="number" value="13" id="ndfl_rate"></div>
       <div class="input-group"><label>Кол-во физлиц получивших доход</label><input type="number" id="ndfl_persons" placeholder="0"></div>
       <div class="input-group"><label>Сумма начисленного дохода</label><input type="number" id="ndfl_income" placeholder="0"></div>
       <div class="input-group"><label>Сумма вычетов</label><input type="number" id="ndfl_deduct" placeholder="0" value="0"></div>
     </div>
-    <button class="btn" onclick="calcNdfl()" style="margin-top:12px">Рассчитать</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn" onclick="calcNdfl()">Рассчитать</button>
+      <button class="btn-outline" onclick="fillNdflFromTx()" title="Заполнить ФОТ из зарплатных транзакций выписки">📥 Заполнить из выписки</button>
+    </div>
     <div id="ndfl_result" style="display:none;margin-top:14px;padding:14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налоговая база</span><span id="ndfl_base" style="font-weight:600"></span></div>
       <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--muted)">НДФЛ к уплате</span><span id="ndfl_pay" style="font-weight:700;color:var(--accent);font-size:15px"></span></div>
@@ -731,9 +741,10 @@ function renderNDS() {
   const totalPurch10 = purchases10.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const totalPurch20 = purchases20.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
 
-  // НДС с продаж (курятина — 10%, остальное — 22%)
+  // НДС с продаж — 10% автоматически из выписки, 22% вводится вручную
+  const sales22Manual = parseFloat(document.getElementById('ndsSales22Manual')?.value) || 0;
   const vatCharged10 = totalSales * 10/110;
-  const vatCharged22 = 0; // при необходимости можно разделить доходы по ставкам
+  const vatCharged22 = sales22Manual * 22/122;
   const vatCharged = vatCharged10 + vatCharged22;
 
   // Вычеты по покупкам
@@ -870,12 +881,15 @@ function exportNDSExcel() {
   const totalPurch10 = purchases10.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
   const totalPurch20 = purchases20.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
 
+  const sales22Manual = parseFloat(document.getElementById('ndsSales22Manual')?.value) || 0;
   const vatCharged10 = Math.round(totalSales * 10/110);
   const salesBase10 = Math.round(totalSales - vatCharged10);
+  const vatCharged22 = Math.round(sales22Manual * 22/122);
+  const salesBase22 = Math.round(sales22Manual - vatCharged22);
   const vatDeduct10 = Math.round(totalPurch10 * 10/110);
   const vatDeduct20 = Math.round(totalPurch20 * 20/120);
   const vatDeduct = vatDeduct10 + vatDeduct20;
-  const vatCharged = vatCharged10;
+  const vatCharged = vatCharged10 + vatCharged22;
   const diff = vatCharged - vatDeduct;
   const toPay = Math.max(0, diff);
   const toRefund = Math.max(0, -diff);
@@ -885,6 +899,10 @@ function exportNDSExcel() {
     ['', 'РАЗДЕЛ 3. РАСЧЁТ СУММЫ НАЛОГА', ''],
     ['020', 'Реализация по ставке 10% (налоговая база без НДС)', salesBase10],
     ['020', 'НДС начисленный 10% (продажи курятины)', vatCharged10],
+    ...(sales22Manual > 0 ? [
+      ['030', 'Реализация по ставке 22% (налоговая база без НДС)', salesBase22],
+      ['030', 'НДС начисленный 22% (прочие продажи)', vatCharged22],
+    ] : []),
     ['118', 'Общая сумма НДС исчисленная (стр.118)', vatCharged],
     ['', '', ''],
     ['', 'КНИГА ПОКУПОК (ВЫЧЕТЫ)', ''],
@@ -1097,6 +1115,59 @@ function showPage(name,btn){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 
 loadData();
+
+// Прогрессивная шкала НДФЛ 2026 (нарастающим итогом с начала года)
+function calcProgressiveNDFL(income) {
+  if (income <= 2400000)  return Math.round(income * 0.13);
+  if (income <= 5000000)  return 312000 + Math.round((income - 2400000) * 0.15);
+  if (income <= 20000000) return 702000 + Math.round((income - 5000000) * 0.18);
+  if (income <= 50000000) return 3402000 + Math.round((income - 20000000) * 0.20);
+  return 9402000 + Math.round((income - 50000000) * 0.22);
+}
+
+function fillNdflFromTx() {
+  // Собираем зарплатные выплаты из выписки за выбранный квартал
+  const qMonths = [];
+  for (let m = (quarter - 1) * 3 + 1; m <= quarter * 3; m++) {
+    qMonths.push(String(m).padStart(2,'0') + '.' + year);
+  }
+  const salaryTx = allTx.filter(t =>
+    t.category === 'salary' && t.amount < 0 &&
+    (!t.period || qMonths.includes(t.period))
+  );
+
+  if (salaryTx.length === 0) {
+    // Нет фильтра по кварталу — берём все зарплаты
+    const allSalary = allTx.filter(t => t.category === 'salary' && t.amount < 0);
+    if (allSalary.length === 0) {
+      showBanner('ndfl_from_tx_banner', '⚠️ В выписке нет операций с категорией «Зарплата». Загрузите выписку и разметьте операции.', '#ef4444');
+      return;
+    }
+    const fot = Math.round(allSalary.reduce((s,t)=>s+Math.abs(t.amount),0));
+    document.getElementById('ndfl_income').value = fot;
+    const ndfl = calcProgressiveNDFL(fot);
+    document.getElementById('ndfl_sum').value = ndfl;
+    showBanner('ndfl_from_tx_banner', `✅ Заполнено из всей выписки: ФОТ ${fmt(-fot)}, НДФЛ ~${fmt(-ndfl)} (прогрессивная шкала). Уточните кол-во сотрудников.`, '#22c55e');
+    calcNdfl();
+    return;
+  }
+
+  const fot = Math.round(salaryTx.reduce((s,t)=>s+Math.abs(t.amount),0));
+  const ndfl = calcProgressiveNDFL(fot);
+  document.getElementById('ndfl_income').value = fot;
+  document.getElementById('ndfl_sum').value = ndfl;
+  const qNames = ['','I кв.','II кв.','III кв.','IV кв.'];
+  showBanner('ndfl_from_tx_banner', `✅ Заполнено из выписки (${qNames[quarter]} ${year}): ФОТ ${fmt(-fot)}, НДФЛ ~${fmt(-ndfl)}. Уточните кол-во сотрудников.`, '#22c55e');
+  calcNdfl();
+}
+
+function showBanner(id, msg, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = '';
+  el.style.color = color;
+  el.innerHTML = msg;
+}
 
 function calcNdfl() {
   const income = parseFloat(document.getElementById('ndfl_income').value) || 0;
