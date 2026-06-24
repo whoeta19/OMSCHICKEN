@@ -342,6 +342,7 @@ export default async function handler(req, res) {
           {command: 'expenses', description: 'Топ расходов'},
           {command: 'last',     description: 'Последние операции'},
           {command: 'balance',  description: 'Баланс'},
+          {command: 'salary',   description: 'Зарплата и НДФЛ за месяц'},
           {command: 'help',     description: 'Список команд'},
         ]})
       }).catch(() => {});
@@ -396,7 +397,8 @@ export default async function handler(req, res) {
         '/top — Топ покупателей\n' +
         '/expenses — Топ расходов\n' +
         '/last — Последние операции\n' +
-        '/balance — Баланс\n\n' +
+        '/balance — Баланс\n' +
+        '/salary — Зарплата и НДФЛ\n\n' +
         '📷 Отправь <b>фото чека</b> — добавлю операцию\n' +
         '✏️ Или напиши: <i>«потратил 3000 на бензин»</i>',
         appKeyboard()
@@ -571,6 +573,45 @@ export default async function handler(req, res) {
         `${profit>=0?'✅':'❌'} Итого: <b>${profit>=0?'+':''}${profit>=0?fmt(profit):'-'+fmt(profit)}</b>`,
         periodButtons('stats')
       );
+      return res.status(200).json({ok: true});
+    }
+
+    // /salary — зарплатная сводка
+    if (text === '/salary' || text.includes('зарплат') || text.includes('ндфл') || text.includes('сотрудник')) {
+      const salaryTxs = txs.filter(t => t.category === 'salary' && t.amount < 0);
+      const fot = salaryTxs.reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
+
+      // Прогрессивный НДФЛ 2026 (начисление с начала года — берём за текущий месяц как оценку)
+      function ndflProg(income) {
+        if (income <= 2400000)  return Math.round(income * 0.13);
+        if (income <= 5000000)  return 312000 + Math.round((income - 2400000) * 0.15);
+        if (income <= 20000000) return 702000 + Math.round((income - 5000000) * 0.18);
+        if (income <= 50000000) return 3402000 + Math.round((income - 20000000) * 0.20);
+        return 9402000 + Math.round((income - 50000000) * 0.22);
+      }
+
+      const ndfl = ndflProg(fot);
+      const vznosy = fot <= 2979000 ? Math.round(fot * 0.30) : Math.round(2979000 * 0.30 + (fot - 2979000) * 0.151);
+      const total = fot + vznosy;
+
+      if (!salaryTxs.length) {
+        await sendMessage(chatId,
+          `💼 <b>Зарплата за ${period}</b>\n\nОпераций с категорией «Зарплата» не найдено.\nЗагрузите выписку и разметьте операции в OMSFIN.`,
+          appKeyboard([[{text: '💼 Открыть OMSFIN', url: APP_URL}]])
+        );
+      } else {
+        await sendMessage(chatId,
+          `💼 <b>Зарплата за ${period}</b>\n\n` +
+          `👷 Выплат сотрудникам: <b>${salaryTxs.length}</b>\n` +
+          `💰 ФОТ (начислено): <b>${fmt(fot)}</b>\n` +
+          `📑 НДФЛ (~13-22%): <b>~${fmt(ndfl)}</b>\n` +
+          `🛡 Взносы (30%): <b>~${fmt(vznosy)}</b>\n` +
+          `━━━━━━━━━━━━\n` +
+          `💳 Итого расходов: <b>${fmt(total)}</b>\n\n` +
+          `⚠️ НДФЛ рассчитан по прогрессивной шкале 2026 как оценка. Уточните у бухгалтера.`,
+          appKeyboard([[{text: '📑 Зарплатный модуль', url: `${APP_URL}/declarations`}]])
+        );
+      }
       return res.status(200).json({ok: true});
     }
 

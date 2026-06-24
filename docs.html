@@ -657,6 +657,14 @@ function selectDoc(type, el) {
   document.getElementById('sverka-form').style.display = type === 'sverka' ? 'block' : 'none';
   document.getElementById('ksf-form').style.display = type === 'ksf' ? 'block' : 'none';
   if (type === 'sverka' && !document.querySelector('#svRowsWrap input.sv-date')) addSvRow();
+  if (type === 'ksf') {
+    const sf = document.getElementById('ksfSeller');
+    const si = document.getElementById('ksfSellerInn');
+    const sk = document.getElementById('ksfSellerKpp');
+    if (sf && !sf.value) sf.value = S.name || '';
+    if (si && !si.value) si.value = S.inn || '';
+    if (sk && !sk.value) sk.value = S.kpp || '';
+  }
 }
 
 function ppAmountWords(n) {

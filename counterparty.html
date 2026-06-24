@@ -167,7 +167,10 @@
 <!-- ИСТОРИЯ -->
 <div class="page" id="page-history">
   <div style="margin-bottom:16px;margin-top:4px">
-    <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900;margin-bottom:6px">🕐 История проверок</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900">🕐 История проверок</div>
+      <button class="btn-outline" onclick="exportHistoryCSV()" style="font-size:12px;padding:6px 12px">📥 Скачать CSV</button>
+    </div>
   </div>
   <div id="historyList"></div>
 </div>
@@ -650,6 +653,27 @@ function renderHistory() {
       </div>
       <span class="status-badge ${d.isActive?'status-active':'status-dead'}" style="font-size:10px">${escapeHtml(d.statusText)}</span>
     </div>`).join('');
+}
+
+function exportHistoryCSV() {
+  if (!checkHistory.length) { alert('История проверок пуста'); return; }
+  const cols = ['Дата проверки','Наименование','ИНН','ОГРН','Статус','Риск-балл','Регион','Дата регистрации'];
+  const rows = checkHistory.map(d => [
+    new Date(d.checkedAt).toLocaleDateString('ru-RU'),
+    d.name || '',
+    d.inn || '',
+    d.ogrn || '',
+    d.statusText || '',
+    d.riskScore ?? '',
+    d.region || '',
+    d.regDate || '',
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(';'));
+  const csv = '﻿' + [cols.join(';'), ...rows].join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kontragenty_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
 }
 
 // Загружаем контрагентов из выписки

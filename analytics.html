@@ -492,12 +492,30 @@ function renderYoY() {
   el.style.display = '';
   const rows = years.map(yr => {
     const kpi = calcKpi(byYear[yr]);
-    return `<div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
-      <div style="font-weight:600;color:var(--accent)">${yr}</div>
-      <div style="color:var(--green)">${fmtShort(kpi.income)}</div>
-      <div style="color:var(--red)">${fmtShort(kpi.expense)}</div>
-      <div style="color:${kpi.profit>=0?'var(--green)':'var(--red)'};font-weight:600">${fmtShort(kpi.profit)}</div>
-      <div style="color:var(--muted)">${kpi.margin.toFixed(1)}%</div>
+    // Топ-1 покупатель и поставщик за год
+    const incMap = {}, expMap = {};
+    byYear[yr].filter(t=>t.amount>0&&!['transit','loan'].includes(t.category)).forEach(t=>{
+      const k = t.name||'—'; incMap[k]=(incMap[k]||0)+Number(t.amount);
+    });
+    byYear[yr].filter(t=>t.amount<0&&!['transit','loan','cash'].includes(t.category)).forEach(t=>{
+      const k = t.name||'—'; expMap[k]=(expMap[k]||0)+Math.abs(Number(t.amount));
+    });
+    const topInc = Object.entries(incMap).sort(([,a],[,b])=>b-a)[0];
+    const topExp = Object.entries(expMap).sort(([,a],[,b])=>b-a)[0];
+    const shorten = s => s && s.length > 18 ? s.substring(0,17)+'…' : (s||'—');
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;gap:8px;align-items:center;font-size:13px;margin-bottom:4px">
+        <div style="font-weight:600;color:var(--accent)">${yr}</div>
+        <div style="color:var(--green)">${fmtShort(kpi.income)}</div>
+        <div style="color:var(--red)">${fmtShort(kpi.expense)}</div>
+        <div style="color:${kpi.profit>=0?'var(--green)':'var(--red)'};font-weight:600">${fmtShort(kpi.profit)}</div>
+        <div style="color:var(--muted)">${kpi.margin.toFixed(1)}%</div>
+      </div>
+      <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:4px;font-size:10px;color:var(--muted)">
+        <div></div>
+        <div title="${topInc?topInc[0]:''}">📥 ${topInc?shorten(topInc[0]):'—'}</div>
+        <div title="${topExp?topExp[0]:''}">📤 ${topExp?shorten(topExp[0]):'—'}</div>
+      </div>
     </div>`;
   });
   el.innerHTML = `<div class="chart-card" style="margin-top:14px">

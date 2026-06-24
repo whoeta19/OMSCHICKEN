@@ -496,9 +496,13 @@
       <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налог начисленный (25%)</span><span id="profit_tax" style="font-weight:600;color:var(--red)">0 ₽</span></div>
       <div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">К доплате</span><span id="profit_pay" style="font-weight:700;color:var(--accent);font-size:15px">0 ₽</span></div>
     </div>
+    <div id="profit_from_tx_banner"></div>
     <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px">⚠️ Это предварительный расчёт. Перед подачей проверь у бухгалтера.</div>
-      <button class="btn" onclick="exportProfitExcel()">📊 Скачать Excel для ФНС</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-outline" onclick="fillProfitFromTx()" title="Заполнить доходы и расходы из транзакций выписки">📥 Заполнить из выписки</button>
+        <button class="btn" onclick="exportProfitExcel()">📊 Скачать Excel для ФНС</button>
+      </div>
     </div>
   </div>
 
@@ -1224,6 +1228,34 @@ function fillRsvFromTx() {
   const qNames = ['','I кв.','II кв.','III кв.','IV кв.'];
   showBanner('rsv_from_tx_banner',
     `✅ ФОТ заполнен из выписки${isQuarter ? ` (${qNames[quarter]} ${year})` : ' (все периоды)'}: ${fmt(fot)} ₽. Укажите кол-во застрахованных лиц вручную.`,
+    '#22c55e'
+  );
+}
+
+function fillProfitFromTx() {
+  const SKIP = ['transit','loan','cash','tax'];
+  // Определяем период: квартал = накопленный итог с начала года
+  const qEnd = quarter * 3;
+  const qMonths = [];
+  for (let m = 1; m <= qEnd; m++) qMonths.push(`${String(m).padStart(2,'0')}.${year}`);
+
+  const src = allTx.filter(t => t.period && qMonths.includes(t.period));
+
+  if (!src.length) {
+    showBanner('profit_from_tx_banner', '⚠️ Нет транзакций за выбранный период. Загрузите выписку.', '#ef4444');
+    return;
+  }
+
+  const income = Math.round(src.filter(t => t.amount > 0 && !SKIP.includes(t.category)).reduce((s,t)=>s+Number(t.amount), 0));
+  const expense = Math.round(src.filter(t => t.amount < 0 && !SKIP.includes(t.category)).reduce((s,t)=>s+Math.abs(Number(t.amount)), 0));
+
+  document.getElementById('profit_income').value = income;
+  document.getElementById('profit_expense').value = expense;
+  calcProfit();
+
+  const qNames = ['','I квартал','Полугодие','9 месяцев','Год'];
+  showBanner('profit_from_tx_banner',
+    `✅ Заполнено из выписки (${qNames[quarter]} ${year}): доходы ${fmt(income)}, расходы ${fmt(expense)}. Проверьте и скорректируйте при наличии внереализационных позиций.`,
     '#22c55e'
   );
 }
