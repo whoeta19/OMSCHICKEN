@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>OMSFIN — Настройки</title>
+<meta name="description" content="Настройки OMSFIN: реквизиты компании, логотип и подпись для документов, управление командой, смена пароля, Telegram-уведомления.">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
@@ -506,6 +507,10 @@
       </div>
       <button class="btn-danger" onclick="logout()">Выйти</button>
     </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Опасная зона</div>
+      <button class="btn-outline" onclick="deleteAccount()" style="color:var(--red);border-color:var(--red);font-size:12px">🗑 Удалить аккаунт</button>
+    </div>
   </div>
 
 </main>
@@ -949,6 +954,28 @@ function logout() {
   localStorage.removeItem('omsfin_refresh');
   localStorage.removeItem('omsfin_user');
   window.location.href = '/login';
+}
+
+async function deleteAccount() {
+  if (!confirm('Удалить аккаунт безвозвратно? Все данные будут удалены. Это действие нельзя отменить.')) return;
+  if (!confirm('Подтверди ещё раз — удалить аккаунт и все данные?')) return;
+  const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  if (!tok) { showToast('❌ Нет активной сессии'); return; }
+  try {
+    const r = await fetch('/api/companies?action=delete_account', {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + tok }
+    });
+    const d = await r.json();
+    if (d.ok || r.ok) {
+      ['omsfin_token','omsfin_refresh','omsfin_user','omsfin_company','omsfin_seller',
+       'omsfin_settings','omsfin_onboarded','omschicken_token','omschicken_refresh'].forEach(k => localStorage.removeItem(k));
+      alert('Аккаунт удалён. До свидания!');
+      window.location.href = '/landing';
+    } else {
+      showToast('❌ ' + (d.error || 'Ошибка удаления'));
+    }
+  } catch(e) { showToast('❌ Ошибка соединения'); }
 }
 
 function changePassword() {

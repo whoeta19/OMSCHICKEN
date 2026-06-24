@@ -12,7 +12,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>Переговорный калькулятор — OMSFIN</title>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<meta name="description" content="Калькулятор для переговоров: реальная стоимость отсрочки платежа, скидки, предоплаты. Помогает принять обоснованное финансовое решение.">
+<script>(function(){var t=localStorage.getItem('omsfin_token')||localStorage.getItem('omschicken_token');if(!t&&!localStorage.getItem('omsfin_demo'))window.location.replace('/login');})()</script>
 <style>
   :root {
     --bg: #080808; --card: #111; --surface2: #161616; --border: rgba(255,255,255,0.08);
@@ -111,7 +112,7 @@
 <body>
 
 <div class="topbar">
-  <button class="back-btn" onclick="history.back()">← Назад</button>
+  <button class="back-btn" onclick="history.length>1?history.back():window.location.href='/'">← Назад</button>
   <div class="topbar-title">🤝 Переговорный калькулятор</div>
   <div class="topbar-sub">Оцени реальную стоимость уступок</div>
 </div>

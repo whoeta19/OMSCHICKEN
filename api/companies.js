@@ -72,6 +72,28 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
+      const action = req.query.action;
+
+      // Удаление аккаунта (152-ФЗ право на забвение)
+      if (action === 'delete_account') {
+        if (!userToken) return res.status(401).json({ error: 'Не авторизован' });
+        const ur = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
+        });
+        const ud = await ur.json();
+        const userId = ud.id;
+        if (!userId) return res.status(401).json({ error: 'Пользователь не найден' });
+
+        const svcH = { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY, 'Content-Type': 'application/json' };
+        // Удаляем данные пользователя
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}`, { method: 'DELETE', headers: svcH });
+        await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}`, { method: 'DELETE', headers: svcH });
+        await fetch(`${SUPABASE_URL}/rest/v1/audit_log?user_id=eq.${userId}`, { method: 'DELETE', headers: svcH });
+        // Удаляем самого пользователя из Auth
+        await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, { method: 'DELETE', headers: svcH });
+        return res.status(200).json({ ok: true });
+      }
+
       const { id } = req.body;
       await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${id}`, {
         method: 'DELETE',
