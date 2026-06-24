@@ -334,20 +334,37 @@
     </div>
     
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Раздел 1. НДС к уплате</div>
-    
+
     <div class="field-row">
       <div class="field-label">Выручка с НДС (строка 010)</div>
       <div class="field-value green" id="ndsSales">—</div>
     </div>
     <div class="field-row">
-      <div class="field-label">НДС начисленный 10% (строка 020)</div>
+      <div class="field-label">НДС начисленный 10% — продажи курятины</div>
+      <div class="field-value red" id="ndsCharged10">—</div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">НДС начисленный 22% — прочие продажи</div>
+      <div class="field-value red" id="ndsCharged22">—</div>
+    </div>
+    <div class="field-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+      <div class="field-label" style="font-weight:600">Итого НДС начисленный (стр. 118)</div>
       <div class="field-value red" id="ndsCharged">—</div>
     </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Вычеты (книга покупок)</div>
     <div class="field-row">
-      <div class="field-label">НДС к вычету (строка 120)</div>
-      <div class="field-value green" id="ndsDeduct">—</div>
+      <div class="field-label">Вычет НДС 10% — закупка курятины</div>
+      <div class="field-value green" id="ndsDeduct10">—</div>
     </div>
     <div class="field-row">
+      <div class="field-label">Вычет НДС 20% — аренда, транспорт, услуги</div>
+      <div class="field-value green" id="ndsDeduct20">—</div>
+    </div>
+    <div class="field-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+      <div class="field-label" style="font-weight:600">Итого вычет (стр. 190)</div>
+      <div class="field-value green" id="ndsDeduct">—</div>
+    </div>
+    <div class="field-row" style="margin-top:8px">
       <div class="field-label" style="font-weight:600">НДС к уплате (строка 200)</div>
       <div class="field-value accent" id="ndsToPay">—</div>
     </div>
@@ -703,17 +720,35 @@ function renderNDS() {
   const qNames = ['I','II','III','IV'];
   document.getElementById('ndsQuarter').innerHTML = `НДС · ${qNames[quarter-1]} квартал`;
   document.getElementById('ndsYear').textContent = year;
-  
+
   const sales = allTx.filter(t=>t.amount>0&&t.category==='income');
-  const purchases = allTx.filter(t=>t.amount<0&&t.category==='chicken');
+  // Закупки курятины — НДС 10%
+  const purchases10 = allTx.filter(t=>t.amount<0&&t.category==='chicken');
+  // Аренда, транспорт, банковские услуги — НДС 20%
+  const purchases20 = allTx.filter(t=>t.amount<0&&['office','transport'].includes(t.category));
+
   const totalSales = sales.reduce((s,t)=>s+Number(t.amount),0);
-  const totalPurchases = purchases.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const vatCharged = totalSales * 10/110;
-  const vatDeduct = totalPurchases * 10/110;
+  const totalPurch10 = purchases10.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const totalPurch20 = purchases20.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+
+  // НДС с продаж (курятина — 10%, остальное — 22%)
+  const vatCharged10 = totalSales * 10/110;
+  const vatCharged22 = 0; // при необходимости можно разделить доходы по ставкам
+  const vatCharged = vatCharged10 + vatCharged22;
+
+  // Вычеты по покупкам
+  const vatDeduct10 = totalPurch10 * 10/110;
+  const vatDeduct20 = totalPurch20 * 20/120;
+  const vatDeduct = vatDeduct10 + vatDeduct20;
+
   const vatToPay = Math.max(0, vatCharged - vatDeduct);
-  
+
   document.getElementById('ndsSales').textContent = fmt(totalSales);
+  if (document.getElementById('ndsCharged10')) document.getElementById('ndsCharged10').textContent = fmt(vatCharged10);
+  if (document.getElementById('ndsCharged22')) document.getElementById('ndsCharged22').textContent = fmt(vatCharged22);
   document.getElementById('ndsCharged').textContent = fmt(vatCharged);
+  if (document.getElementById('ndsDeduct10')) document.getElementById('ndsDeduct10').textContent = fmt(vatDeduct10);
+  if (document.getElementById('ndsDeduct20')) document.getElementById('ndsDeduct20').textContent = fmt(vatDeduct20);
   document.getElementById('ndsDeduct').textContent = fmt(vatDeduct);
   document.getElementById('ndsToPay').textContent = fmt(vatToPay);
   
@@ -828,12 +863,19 @@ function exportDeclarationExcel(filename, title, rows, markQuarterly) {
 // ─── НДС: раздел 3 (строки 010-118, 120-190) + раздел 1 (200/210) ──────────────
 function exportNDSExcel() {
   const sales = allTx.filter(t=>t.amount>0&&t.category==='income');
-  const purchases = allTx.filter(t=>t.amount<0&&t.category==='chicken');
+  const purchases10 = allTx.filter(t=>t.amount<0&&t.category==='chicken');
+  const purchases20 = allTx.filter(t=>t.amount<0&&['office','transport'].includes(t.category));
+
   const totalSales = sales.reduce((s,t)=>s+Number(t.amount),0);
-  const totalPurchases = purchases.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const vatCharged = Math.round(totalSales * 10/110);
-  const salesBaseNoVat = Math.round(totalSales - vatCharged);
-  const vatDeduct = Math.round(totalPurchases * 10/110);
+  const totalPurch10 = purchases10.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const totalPurch20 = purchases20.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+
+  const vatCharged10 = Math.round(totalSales * 10/110);
+  const salesBase10 = Math.round(totalSales - vatCharged10);
+  const vatDeduct10 = Math.round(totalPurch10 * 10/110);
+  const vatDeduct20 = Math.round(totalPurch20 * 20/120);
+  const vatDeduct = vatDeduct10 + vatDeduct20;
+  const vatCharged = vatCharged10;
   const diff = vatCharged - vatDeduct;
   const toPay = Math.max(0, diff);
   const toRefund = Math.max(0, -diff);
@@ -841,17 +883,20 @@ function exportNDSExcel() {
 
   const rows = [
     ['', 'РАЗДЕЛ 3. РАСЧЁТ СУММЫ НАЛОГА', ''],
-    ['020', 'Реализация (налоговая база по ставке 10%)', salesBaseNoVat],
-    ['020', 'Сумма НДС начисленная (10%)', vatCharged],
-    ['118', 'Общая сумма НДС, исчисленная с учётом восстановленных сумм', vatCharged],
-    ['120', 'Сумма НДС к вычету (приобретение товаров/работ/услуг)', vatDeduct],
-    ['190', 'Общая сумма НДС, подлежащая вычету', vatDeduct],
+    ['020', 'Реализация по ставке 10% (налоговая база без НДС)', salesBase10],
+    ['020', 'НДС начисленный 10% (продажи курятины)', vatCharged10],
+    ['118', 'Общая сумма НДС исчисленная (стр.118)', vatCharged],
+    ['', '', ''],
+    ['', 'КНИГА ПОКУПОК (ВЫЧЕТЫ)', ''],
+    ['120', 'Вычет НДС 10% — закупка курятины (стр.120)', vatDeduct10],
+    ['120', 'Вычет НДС 20% — аренда, транспорт, услуги (стр.120)', vatDeduct20],
+    ['190', 'Общая сумма НДС к вычету (стр.190)', vatDeduct],
     ['', '', ''],
     ['', 'РАЗДЕЛ 1. ИТОГОВАЯ СУММА НАЛОГА', ''],
-    ['200', 'Сумма налога к уплате в бюджет (стр.118 − стр.190, если > 0)', toPay],
-    ['210', 'Сумма налога к возмещению из бюджета (если стр.190 > стр.118)', toRefund],
+    ['200', 'НДС к уплате в бюджет (стр.118 − стр.190, если > 0)', toPay],
+    ['210', 'НДС к возмещению (если стр.190 > стр.118)', toRefund],
     ['', '', ''],
-    ['', 'График уплаты — равными частями до 25-го числа каждого из 3 месяцев следующего квартала', ''],
+    ['', 'График уплаты — по ⅓ до 25-го числа каждого из 3 месяцев квартала', ''],
     ['', '1-й платёж', Math.round(toPay/3)],
     ['', '2-й платёж', Math.round(toPay/3)],
     ['', '3-й платёж', toPay - 2*Math.round(toPay/3)],

@@ -231,6 +231,11 @@
       <div class="doc-type-name">Платёжное поручение</div>
       <div class="doc-type-desc">Форма 0401060</div>
     </div>
+    <div class="doc-type-btn" id="btn-ksf" onclick="selectDoc('ksf',this)">
+      <div class="doc-type-icon">🔄</div>
+      <div class="doc-type-name">Корр. счёт-фактура</div>
+      <div class="doc-type-desc">При возврате/изменении</div>
+    </div>
   </div>
 
   <!-- Форма акта сверки -->
@@ -277,6 +282,73 @@
     <div style="display:flex;gap:8px;margin-bottom:20px">
       <button class="btn" onclick="generateSverka()">📋 Сформировать акт</button>
     </div>
+  </div>
+
+  <!-- Форма корректировочного счёта-фактуры -->
+  <div id="ksf-form" style="display:none">
+    <div class="card">
+      <div class="section-title">Корректировочный счёт-фактура</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Оформляется при изменении цены или количества товара после отгрузки, а также при возврате товара покупателем.</div>
+      <div class="input-row">
+        <div class="input-group"><label>Номер КСФ</label><input type="text" id="ksfNum" placeholder="1"></div>
+        <div class="input-group"><label>Дата КСФ</label><input type="date" id="ksfDate"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-group"><label>К счёт-фактуре №</label><input type="text" id="ksfOrigNum" placeholder="15"></div>
+        <div class="input-group"><label>Дата исходного СФ</label><input type="date" id="ksfOrigDate"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Стороны</div>
+      <div class="input-group"><label>Продавец</label><input type="text" id="ksfSeller" placeholder='ООО "ОМСЧИКЕН"'></div>
+      <div class="input-row">
+        <div class="input-group"><label>ИНН продавца</label><input type="text" id="ksfSellerInn" placeholder="5800015301"></div>
+        <div class="input-group"><label>КПП продавца</label><input type="text" id="ksfSellerKpp" placeholder="580001001"></div>
+      </div>
+      <div class="input-group" style="margin-top:10px"><label>Покупатель</label><input type="text" id="ksfBuyer" placeholder='ООО "Покупатель"'></div>
+      <div class="input-row">
+        <div class="input-group"><label>ИНН покупателя</label><input type="text" id="ksfBuyerInn" placeholder=""></div>
+        <div class="input-group"><label>КПП покупателя</label><input type="text" id="ksfBuyerKpp" placeholder=""></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Товар/услуга</div>
+      <div class="input-group"><label>Наименование товара</label><input type="text" id="ksfGoods" placeholder="Тушка ЦБ 1 сорт охл."></div>
+      <div class="input-row">
+        <div class="input-group"><label>Ед. изм.</label><input type="text" id="ksfUnit" placeholder="кг" style="width:80px"></div>
+        <div class="input-group"><label>Ставка НДС</label>
+          <select id="ksfVatRate" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="0">Без НДС</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:8px 0 6px;text-transform:uppercase;letter-spacing:0.5px">До изменения</div>
+      <div class="input-row">
+        <div class="input-group"><label>Кол-во</label><input type="number" id="ksfQtyBefore" placeholder="12000" step="0.001" oninput="ksfCalc()"></div>
+        <div class="input-group"><label>Цена без НДС</label><input type="number" id="ksfPriceBefore" placeholder="183.50" step="0.01" oninput="ksfCalc()"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:8px 0 6px;text-transform:uppercase;letter-spacing:0.5px">После изменения</div>
+      <div class="input-row">
+        <div class="input-group"><label>Кол-во</label><input type="number" id="ksfQtyAfter" placeholder="10623" step="0.001" oninput="ksfCalc()"></div>
+        <div class="input-group"><label>Цена без НДС</label><input type="number" id="ksfPriceAfter" placeholder="183.50" step="0.01" oninput="ksfCalc()"></div>
+      </div>
+      <div id="ksfCalcResult" style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px;display:none"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Основание корректировки</div>
+      <div class="input-group"><label>Причина</label>
+        <select id="ksfReason" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
+          <option value="return">Возврат товара покупателем</option>
+          <option value="price">Изменение цены по соглашению сторон</option>
+          <option value="qty">Уточнение количества/объёма</option>
+          <option value="defect">Выявлен брак/недостача</option>
+        </select>
+      </div>
+      <div class="input-group"><label>Номер соглашения/акта</label><input type="text" id="ksfAgreement" placeholder="Акт возврата №3 от 16.09.2025"></div>
+    </div>
+    <button class="btn" onclick="generateKSF()" style="width:100%;margin-bottom:8px">🖨️ Сформировать КСФ</button>
   </div>
 
   <!-- Форма платёжного поручения -->
@@ -583,6 +655,7 @@ function selectDoc(type, el) {
   el.classList.add('active');
   document.getElementById('pp-form').style.display = type === 'pp' ? 'block' : 'none';
   document.getElementById('sverka-form').style.display = type === 'sverka' ? 'block' : 'none';
+  document.getElementById('ksf-form').style.display = type === 'ksf' ? 'block' : 'none';
   if (type === 'sverka' && !document.querySelector('#svRowsWrap input.sv-date')) addSvRow();
 }
 
@@ -1695,6 +1768,121 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 document.getElementById('docDate').value = new Date().toISOString().split('T')[0];
 document.getElementById('ppDate').value = new Date().toISOString().split('T')[0];
+document.getElementById('ksfDate').value = new Date().toISOString().split('T')[0];
+
+// ─── Корректировочный счёт-фактура ────────────────────────────────────────────
+function ksfCalc() {
+  const qBefore = parseFloat(document.getElementById('ksfQtyBefore').value) || 0;
+  const pBefore = parseFloat(document.getElementById('ksfPriceBefore').value) || 0;
+  const qAfter  = parseFloat(document.getElementById('ksfQtyAfter').value)  || 0;
+  const pAfter  = parseFloat(document.getElementById('ksfPriceAfter').value)  || 0;
+  const rate    = parseFloat(document.getElementById('ksfVatRate').value) || 10;
+  if (!qBefore || !pBefore) return;
+  const sumBefore = qBefore * pBefore;
+  const vatBefore = sumBefore * rate / 100;
+  const sumAfter  = qAfter  * pAfter;
+  const vatAfter  = sumAfter  * rate / 100;
+  const diffSum = sumAfter - sumBefore;
+  const diffVat = vatAfter  - vatBefore;
+  const result = document.getElementById('ksfCalcResult');
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px;margin-bottom:6px;color:var(--muted)">
+      <div></div><div style="text-align:right">До</div><div style="text-align:right">После</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px;margin-bottom:4px">
+      <div>Стоимость без НДС</div><div style="text-align:right">${fmtN(sumBefore)} ₽</div><div style="text-align:right">${fmtN(sumAfter)} ₽</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px;margin-bottom:4px">
+      <div>НДС ${rate}%</div><div style="text-align:right">${fmtN(vatBefore)} ₽</div><div style="text-align:right">${fmtN(vatAfter)} ₽</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:12px;font-weight:600;padding-top:6px;border-top:1px solid var(--border)">
+      <div>Итого с НДС</div><div style="text-align:right">${fmtN(sumBefore+vatBefore)} ₽</div><div style="text-align:right">${fmtN(sumAfter+vatAfter)} ₽</div>
+    </div>
+    <div style="margin-top:8px;padding:8px;border-radius:6px;background:${diffSum<0?'rgba(239,68,68,0.1)':'rgba(34,197,94,0.1)'};font-size:12px;font-weight:600;color:${diffSum<0?'var(--red)':'var(--green)'}">
+      ${diffSum<0?'Уменьшение':'Увеличение'}: ${fmtN(Math.abs(diffSum))} ₽ · НДС к ${diffVat<0?'вычету':'доначислению'}: ${fmtN(Math.abs(diffVat))} ₽
+    </div>`;
+}
+
+function generateKSF() {
+  const num = document.getElementById('ksfNum').value || '1';
+  const date = document.getElementById('ksfDate').value;
+  const origNum = document.getElementById('ksfOrigNum').value;
+  const origDate = document.getElementById('ksfOrigDate').value;
+  const seller = document.getElementById('ksfSeller').value || 'ООО "ОМСЧИКЕН"';
+  const sellerInn = document.getElementById('ksfSellerInn').value;
+  const sellerKpp = document.getElementById('ksfSellerKpp').value;
+  const buyer = document.getElementById('ksfBuyer').value;
+  const buyerInn = document.getElementById('ksfBuyerInn').value;
+  const buyerKpp = document.getElementById('ksfBuyerKpp').value;
+  const goods = document.getElementById('ksfGoods').value || 'Товар';
+  const unit = document.getElementById('ksfUnit').value || 'шт';
+  const rate = parseFloat(document.getElementById('ksfVatRate').value) || 10;
+  const reason = document.getElementById('ksfReason');
+  const reasonText = reason.options[reason.selectedIndex].text;
+  const agreement = document.getElementById('ksfAgreement').value;
+  const qBefore = parseFloat(document.getElementById('ksfQtyBefore').value) || 0;
+  const pBefore = parseFloat(document.getElementById('ksfPriceBefore').value) || 0;
+  const qAfter  = parseFloat(document.getElementById('ksfQtyAfter').value)  || 0;
+  const pAfter  = parseFloat(document.getElementById('ksfPriceAfter').value)  || 0;
+  if (!origNum) { showToast('Укажи номер исходного счёта-фактуры'); return; }
+  if (!qBefore || !pBefore) { showToast('Заполни данные "До изменения"'); return; }
+
+  const sumBefore = qBefore * pBefore;
+  const vatBefore = Math.round(sumBefore * rate / 100 * 100)/100;
+  const sumAfter  = qAfter  * pAfter;
+  const vatAfter  = Math.round(sumAfter  * rate / 100 * 100)/100;
+  const diffSum = sumAfter - sumBefore;
+  const diffVat = vatAfter  - vatBefore;
+  const formatDate = d => d ? d.split('-').reverse().join('.') : '__.__.____';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>КСФ № ${num}</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#000}
+    h2{font-size:13px;text-align:center;margin-bottom:4px}
+    .sub{text-align:center;font-size:10px;color:#555;margin-bottom:14px}
+    table{width:100%;border-collapse:collapse;margin-bottom:10px}
+    td,th{border:1px solid #999;padding:4px 6px;font-size:10px}
+    th{background:#f0f0f0;font-weight:600;text-align:center}
+    .info{margin-bottom:8px}
+    .bold{font-weight:600}
+    .right{text-align:right}
+    .center{text-align:center}
+    .diff-row td{background:#fff3cd;font-weight:600}
+    @media print{body{margin:10px}}
+  </style></head><body>
+  <h2>КОРРЕКТИРОВОЧНЫЙ СЧЁТ-ФАКТУРА № ${num} от ${formatDate(date)}</h2>
+  <div class="sub">к счёту-фактуре № ${origNum} от ${formatDate(origDate)}</div>
+  <div class="info"><span class="bold">Продавец:</span> ${seller} · ИНН/КПП: ${sellerInn}/${sellerKpp}</div>
+  <div class="info"><span class="bold">Покупатель:</span> ${buyer} · ИНН/КПП: ${buyerInn}/${buyerKpp}</div>
+  <div class="info"><span class="bold">Основание:</span> ${reasonText}${agreement ? ' · ' + agreement : ''}</div>
+  <table>
+    <tr><th>Товар</th><th>Ед.</th><th>Показатель</th><th>Кол-во</th><th>Цена</th><th>Стоимость</th><th>НДС ${rate}%</th><th>Итого с НДС</th></tr>
+    <tr><td rowspan="3">${goods}</td><td rowspan="3" class="center">${unit}</td>
+      <td>А (до)</td><td class="right">${fmtN(qBefore)}</td><td class="right">${fmtN(pBefore)}</td>
+      <td class="right">${fmtN(sumBefore)}</td><td class="right">${fmtN(vatBefore)}</td><td class="right">${fmtN(sumBefore+vatBefore)}</td></tr>
+    <tr><td>Б (после)</td><td class="right">${fmtN(qAfter)}</td><td class="right">${fmtN(pAfter)}</td>
+      <td class="right">${fmtN(sumAfter)}</td><td class="right">${fmtN(vatAfter)}</td><td class="right">${fmtN(sumAfter+vatAfter)}</td></tr>
+    <tr class="diff-row"><td>${diffSum<0?'В (уменьш.)':'Г (увелич.)'}</td><td class="right">${fmtN(Math.abs(qAfter-qBefore))}</td><td></td>
+      <td class="right">${fmtN(Math.abs(diffSum))}</td><td class="right">${fmtN(Math.abs(diffVat))}</td><td class="right">${fmtN(Math.abs(diffSum+diffVat))}</td></tr>
+  </table>
+  <div style="margin-top:16px;display:flex;justify-content:space-between">
+    <div><div class="bold">Продавец</div><div style="margin-top:30px;border-top:1px solid #000;width:200px;font-size:9px">подпись / ФИО</div></div>
+    <div><div class="bold">Главный бухгалтер</div><div style="margin-top:30px;border-top:1px solid #000;width:200px;font-size:9px">подпись / ФИО</div></div>
+  </div>
+  <script>window.onload=()=>window.print()<\/script>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+
+  history.unshift({ id: Date.now(), type: 'ksf', name: `КСФ №${num} к СФ №${origNum}`, date: formatDate(date), buyer, amount: diffSum+diffVat });
+  localStorage.setItem('omsfin_docs', JSON.stringify(history));
+  renderHistory();
+  showToast('✅ КСФ сформирован и открыт для печати');
+}
 document.getElementById('ppNum').value = String(history.length+1).padStart(3,'0');
 document.getElementById('docNum').value = String(history.length+1).padStart(3,'0');
 renderHistory();

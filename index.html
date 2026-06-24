@@ -993,6 +993,7 @@
         <option value="bank">Банк/Кредиты</option>
         <option value="cash">Наличные</option>
         <option value="loan">Займы</option>
+        <option value="tax">Налоги/Взносы</option>
         <option value="transit">Внутренний перевод</option>
       </select>
     </div>
@@ -1204,6 +1205,8 @@ function classify(name, description, amount) {
   if (/беспроцентного займа|договор займа|выдача займа|возврат займа|предоставление денежных средств по договору/.test(text)) return 'loan';
   // Снятие наличных
   if (/снятие наличных|выдача наличных|снятие.*атм|atm|банкомат/.test(text)) return 'cash';
+  // Налоги и взносы в бюджет
+  if (/уплата налога|налог на прибыль|ндс.*бюджет|бюджет.*ндс|усн.*налог|налог.*усн|страховые взносы|взносы.*сфр|сфр.*взносы|фнс|ффомс|ндфл.*перечисл|перечисл.*ндфл|единый налоговый|енс|кбк.*182|182.*кбк/.test(text)) return 'tax';
   // Банковские комиссии и обслуживание
   if (/плата за обслуживание счета|комиссия за снятие|плата за пакет|плата за услугу|оповещение об операциях|sms.?банк|уточнение реквизитов|овердрафт|погашение|задолженность по договору|плата за использованный|плата за активный|комиссия за вывод/.test(text)) return 'bank';
   // Аренда
@@ -2310,7 +2313,7 @@ function renderReclassify() {
     {k:'chicken',l:'🐔 Курятина'},{k:'transport',l:'🚗 Транспорт'},{k:'food',l:'🍽️ Еда'},
     {k:'personal',l:'🛍️ Личное'},{k:'salary',l:'👥 Зарплата'},{k:'office',l:'🏢 Офис'},
     {k:'bank',l:'🏦 Банк'},{k:'cash',l:'💵 Наличные'},{k:'loan',l:'🤝 Займы'},
-    {k:'transit',l:'🔄 Транзит'},{k:'unknown',l:'❓ Прочее'}
+    {k:'tax',l:'🏛️ Налоги'},{k:'transit',l:'🔄 Транзит'},{k:'unknown',l:'❓ Прочее'}
   ];
   document.getElementById('reclassifyList').innerHTML = filtered.slice(0,50).map(tx => `
     <div class="reclassify-row">
@@ -2355,7 +2358,7 @@ async function reclassifyTx(id, category, name, btn) {
 function renderRules() {
   const rules = Object.entries(userRules);
   document.getElementById('rulesCount').textContent = rules.length;
-  const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',cash:'💵',loan:'🤝',transit:'🔄',unknown:'❓'};
+  const cats = {chicken:'🐔',transport:'🚗',food:'🍽️',personal:'🛍️',salary:'👥',office:'🏢',bank:'🏦',cash:'💵',loan:'🤝',tax:'🏛️',transit:'🔄',unknown:'❓'};
   document.getElementById('rulesList').innerHTML = rules.length ?
     `<div class="rules-list">${rules.map(([k,v])=>`
       <div class="rule-item">
@@ -3160,7 +3163,7 @@ async function saveNote(id) {
 }
 
 function getCatBadge(cat) {
-  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🐔 Курятина'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],cash:['cat-bank','💵 Наличные'],loan:['cat-bank','🤝 Займы'],transit:['cat-unknown','🔄 Транзит'],unknown:['cat-unknown','❓ Прочее']};
+  const m={income:['cat-income','💰 Доход'],chicken:['cat-chicken','🐔 Курятина'],transport:['cat-transport','🚗 Транспорт'],food:['cat-food','🍽️ Еда'],personal:['cat-personal','🛍️ Личное'],salary:['cat-salary','👥 Зарплата'],office:['cat-office','🏢 Офис'],bank:['cat-bank','🏦 Банк'],cash:['cat-bank','💵 Наличные'],loan:['cat-bank','🤝 Займы'],tax:['cat-bank','🏛️ Налоги'],transit:['cat-unknown','🔄 Транзит'],unknown:['cat-unknown','❓ Прочее']};
   const[cls,lbl] = m[cat]||m.unknown;
   return `<span class="cat-badge ${cls}">${lbl}</span>`;
 }
@@ -3762,7 +3765,7 @@ function aiAnswer(q) {
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
-  const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',transit:'🔄 Транзит',unknown:'❓ Прочее'};
+  const cats = {chicken:'🐔 Закупки',transport:'🚗 Транспорт',salary:'👥 Зарплата',office:'🏢 Офис',bank:'🏦 Банк',personal:'🛍️ Личное',food:'🍽️ Питание',income:'💰 Доход',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
 
   // ── Приветствие ──
   if (/^(привет|хай|здравствуй|добрый|помоги|что умеешь|что можешь|помощ|start)/.test(ql)) {
@@ -4248,7 +4251,7 @@ function detectAnomalies() {
       return s + allTx.filter(t=>t.period===p&&t.category===cat&&t.amount<0).reduce((ss,t)=>ss+Math.abs(t.amount),0);
     },0) / prevPeriods.length;
     if (prevAvg > 0 && cur > prevAvg * 2.2) {
-      const catLabels = {chicken:'Курятина',transport:'Транспорт',food:'Питание',salary:'Зарплата',bank:'Банк',office:'Офис',cash:'Наличные',loan:'Займы',transit:'Транзит',unknown:'Прочее'};
+      const catLabels = {chicken:'Курятина',transport:'Транспорт',food:'Питание',salary:'Зарплата',bank:'Банк',office:'Офис',cash:'Наличные',loan:'Займы',tax:'Налоги',transit:'Транзит',unknown:'Прочее'};
       anomalies.push({cat:catLabels[cat]||cat, cur, prevAvg, ratio:(cur/prevAvg).toFixed(1)});
     }
   });
@@ -4462,7 +4465,7 @@ function openTxDetail(tx) {
   document.querySelectorAll('.tx-row').forEach(r=>r.classList.remove('focused'));
   const panel = document.getElementById('txDetailContent');
   const plus = tx.amount > 0;
-  const cats = {chicken:'🐔 Курятина',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',transit:'🔄 Транзит',unknown:'❓ Прочее'};
+  const cats = {chicken:'🐔 Курятина',transport:'🚗 Транспорт',food:'🍽️ Еда',personal:'🛍️ Личное',salary:'👥 Зарплата',bank:'🏦 Банк',income:'💰 Доход',office:'🏢 Офис',cash:'💵 Наличные',loan:'🤝 Займы',tax:'🏛️ Налоги',transit:'🔄 Транзит',unknown:'❓ Прочее'};
   panel.innerHTML = `
     <div style="margin-bottom:16px">
       <div style="font-size:22px;font-family:'Unbounded',sans-serif;font-weight:700;color:${plus?'var(--green)':'var(--red)'};margin-bottom:4px">${plus?'+':''}${fmt(tx.amount)}</div>

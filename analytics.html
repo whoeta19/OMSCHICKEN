@@ -293,6 +293,9 @@
       </div>
     </div>
 
+    <div id="salaryWarning"></div>
+    <div id="yoySection"></div>
+
   </div>
 </main>
 
@@ -469,6 +472,57 @@ function renderAll() {
   renderTopCategories();
   renderBudget(filteredTx);
   renderDebtCards(filteredTx);
+  renderYoY();
+  checkSalaryWarning();
+}
+
+function renderYoY() {
+  const el = document.getElementById('yoySection');
+  if (!el) return;
+  // Группируем все транзакции по году
+  const byYear = {};
+  allTx.filter(t=>t.period).forEach(t => {
+    const yr = t.period.split('.')[1];
+    if (!yr) return;
+    if (!byYear[yr]) byYear[yr] = [];
+    byYear[yr].push(t);
+  });
+  const years = Object.keys(byYear).sort();
+  if (years.length < 2) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const rows = years.map(yr => {
+    const kpi = calcKpi(byYear[yr]);
+    return `<div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <div style="font-weight:600;color:var(--accent)">${yr}</div>
+      <div style="color:var(--green)">${fmtShort(kpi.income)}</div>
+      <div style="color:var(--red)">${fmtShort(kpi.expense)}</div>
+      <div style="color:${kpi.profit>=0?'var(--green)':'var(--red)'};font-weight:600">${fmtShort(kpi.profit)}</div>
+      <div style="color:var(--muted)">${kpi.margin.toFixed(1)}%</div>
+    </div>`;
+  });
+  el.innerHTML = `<div class="chart-card" style="margin-top:14px">
+    <div class="section-title">📅 Год к году</div>
+    <div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">
+      <div>Год</div><div>Доход</div><div>Расход</div><div>Прибыль</div><div>Маржа</div>
+    </div>
+    ${rows.join('')}
+  </div>`;
+}
+
+function checkSalaryWarning() {
+  const el = document.getElementById('salaryWarning');
+  if (!el) return;
+  if (currentPeriod === 'all') { el.style.display = 'none'; return; }
+  const hasSalary = filteredTx.some(t => t.category === 'salary');
+  const hasPersonnel = filteredTx.some(t => t.category === 'salary' || (t.description||'').toLowerCase().includes('сотрудник'));
+  if (!hasSalary) {
+    el.style.display = '';
+    el.innerHTML = `<div style="padding:10px 14px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;font-size:12px;color:#f87171;margin-bottom:12px">
+      ⚠️ В периоде <b>${currentPeriod}</b> нет зарплатных операций. Если выплаты идут наличными или с другого счёта — проверьте, отражены ли они в учёте и уплачен ли НДФЛ.
+    </div>`;
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 function getDayData(txs) {
