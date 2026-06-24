@@ -619,6 +619,12 @@ function renderResult(d) {
     ${renderTxHistory(d.name, d.inn)}`;
 }
 
+function parseDMY(str) {
+  if (!str) return 0;
+  const [dd,mm,yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm-1, dd).getTime();
+}
+
 function getTxHistoryForCounterparty(name, inn) {
   // Пробуем взять из localStorage (данные синхронизированные с главной)
   const cached = localStorage.getItem('omsfin_tx_cache');

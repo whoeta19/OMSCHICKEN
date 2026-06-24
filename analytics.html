@@ -749,6 +749,12 @@ function renderBalanceChart() {
   });
 }
 
+function parseDMY(str) {
+  if (!str) return 0;
+  const [dd,mm,yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm-1, dd).getTime();
+}
+
 function parseDMYts(str) {
   if (!str) return 0;
   const [dd,mm,yyyy] = str.split('.').map(Number);
