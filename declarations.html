@@ -1133,7 +1133,7 @@ function fillNdflFromTx() {
   }
   const salaryTx = allTx.filter(t =>
     t.category === 'salary' && t.amount < 0 &&
-    (!t.period || qMonths.includes(t.period))
+    t.period && qMonths.includes(t.period)
   );
 
   if (salaryTx.length === 0) {
@@ -1147,7 +1147,7 @@ function fillNdflFromTx() {
     document.getElementById('ndfl_income').value = fot;
     const ndfl = calcProgressiveNDFL(fot);
     document.getElementById('ndfl_sum').value = ndfl;
-    showBanner('ndfl_from_tx_banner', `✅ Заполнено из всей выписки: ФОТ ${fmt(-fot)}, НДФЛ ~${fmt(-ndfl)} (прогрессивная шкала). Уточните кол-во сотрудников.`, '#22c55e');
+    showBanner('ndfl_from_tx_banner', `✅ Заполнено из всей выписки: ФОТ ${fmt(fot)}, НДФЛ ~${fmt(ndfl)} (прогрессивная шкала). Уточните кол-во сотрудников.`, '#22c55e');
     calcNdfl();
     return;
   }
@@ -1157,7 +1157,7 @@ function fillNdflFromTx() {
   document.getElementById('ndfl_income').value = fot;
   document.getElementById('ndfl_sum').value = ndfl;
   const qNames = ['','I кв.','II кв.','III кв.','IV кв.'];
-  showBanner('ndfl_from_tx_banner', `✅ Заполнено из выписки (${qNames[quarter]} ${year}): ФОТ ${fmt(-fot)}, НДФЛ ~${fmt(-ndfl)}. Уточните кол-во сотрудников.`, '#22c55e');
+  showBanner('ndfl_from_tx_banner', `✅ Заполнено из выписки (${qNames[quarter]} ${year}): ФОТ ${fmt(fot)}, НДФЛ ~${fmt(ndfl)}. Уточните кол-во сотрудников.`, '#22c55e');
   calcNdfl();
 }
 
