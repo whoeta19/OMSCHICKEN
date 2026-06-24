@@ -398,18 +398,6 @@ export default async function handler(req, res) {
     return await handleBankWebhook(req, res);
   }
 
-  // Импорт из МойСклад API — возвращает транзакции для предпросмотра/вставки
-  if (req.query.source === 'moysklad' && req.method === 'POST') {
-    return await handleMoySklad(req, res, userId, companyId);
-  }
-
-  // Парсинг 1С выписки — возвращает массив транзакций без сохранения
-  if (req.query.source === '1c' && req.method === 'POST') {
-    const xmlBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-    const parsed = parse1CXML(xmlBody);
-    return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
-  }
-
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
 
@@ -434,6 +422,19 @@ export default async function handler(req, res) {
   const companyId = req.method === 'GET'
     ? req.query.company_id
     : extractCompanyId(req.body);
+
+  // Импорт из МойСклад API (требует авторизации — userId должен быть определён)
+  if (req.query.source === 'moysklad' && req.method === 'POST') {
+    if (!userId) return res.status(401).json({ error: 'Не авторизован' });
+    return await handleMoySklad(req, res, userId, companyId);
+  }
+
+  // Парсинг 1С выписки — возвращает массив транзакций без сохранения (не требует auth)
+  if (req.query.source === '1c' && req.method === 'POST') {
+    const xmlBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    const parsed = parse1CXML(xmlBody);
+    return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
+  }
 
   // Если указана компания — проверяем, что пользователь в ней состоит, и какая у него роль.
   // Без company_id (старые клиенты / одиночный режим без команды) — пускаем по user_id, как раньше.
