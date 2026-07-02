@@ -2156,7 +2156,13 @@ async function parseAndProcess(text, accountName) {
     return false;
   }
 
+  function isBankTBank(t) {
+    const head = t.substring(0, 500).toLowerCase();
+    return head.includes('тбанк') || head.includes('тинькофф') || head.includes('tbank') || head.includes('операционный день');
+  }
+
   function isBankSber(t) {
+    if (isBankTBank(t)) return false; // Т-Банк тоже содержит "плательщик/назначение" — не путать
     const head = t.substring(0, 800).toLowerCase();
     return head.includes('сбербанк') || head.includes('sberbank') ||
       head.includes('дата проведения') ||
@@ -2363,7 +2369,7 @@ async function parseAndProcess(text, accountName) {
       txs.push({name, amount, date:dateStr, description, category, period:monthKey, is_personal:['personal','food'].includes(category)});
     }
   }
-    if (txs.length===0) { showToast('❌ Не удалось прочитать файл'); return; }
+    if (txs.length===0) { showToast('❌ Не удалось прочитать файл. Убедитесь, что это выписка Т-Банка, ВТБ, Альфа-Банка или Сбера в формате CSV'); return; }
 
   // Считаем сколько операций распознано автоматически через правила
   const autoClassified = txs.filter(t => t.category !== 'unknown').length;
