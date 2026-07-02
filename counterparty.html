@@ -14,6 +14,7 @@
 <title>OMSFIN — Анализ контрагентов</title>
 <meta name="description" content="Проверка контрагентов по ИНН: данные из ЕГРЮЛ, риск-скоринг по 7 факторам, история платежей, флаги массового адреса и смены директора.">
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
+<script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
@@ -211,6 +212,20 @@ window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||Stri
 
 let checkHistory = JSON.parse(localStorage.getItem('omsfin_cp_history') || '[]');
 
+// ─── Кэш запросов к ЕГРЮЛ/Dadata (TTL 7 дней) ──────────────────────────────
+function getCachedLookup(inn) {
+  try {
+    const raw = localStorage.getItem('omsfin_lookup_' + inn);
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > 7 * 24 * 60 * 60 * 1000) { localStorage.removeItem('omsfin_lookup_' + inn); return null; }
+    return data;
+  } catch(e) { return null; }
+}
+function setCachedLookup(inn, data) {
+  try { localStorage.setItem('omsfin_lookup_' + inn, JSON.stringify({ data, ts: Date.now() })); } catch(e) {}
+}
+
 
 async function checkCompany() {
   const query = document.getElementById('searchInput').value.trim();
@@ -276,25 +291,34 @@ function selectSuggestion(i) {
 }
 
 async function fetchFromEGRUL(inn) {
+  // Проверяем кэш — не делаем лишних запросов к ЕГРЮЛ/Dadata
+  const cached = getCachedLookup(inn);
+  if (cached) return cached;
+
+  let result = null;
+
   // Сначала пробуем ЕГРЮЛ
   try {
     const r = await fetch(`/api/lookup?provider=egrul&inn=${encodeURIComponent(inn)}`);
     if (r.ok) {
       const d = await r.json();
-      if (d.data) return parseEGRUL(d.data, inn);
+      if (d.data) result = parseEGRUL(d.data, inn);
     }
   } catch(e) {}
 
   // Fallback — Dadata через серверный прокси (избегаем CORS и проблем с токеном)
-  try {
-    const r = await fetch(`/api/lookup?provider=dadata&action=findById&inn=${encodeURIComponent(inn)}`);
-    if (r.ok) {
-      const d = await r.json();
-      if (d.suggestions?.length) return parseDadata(d.suggestions[0]);
-    }
-  } catch(e) {}
+  if (!result) {
+    try {
+      const r = await fetch(`/api/lookup?provider=dadata&action=findById&inn=${encodeURIComponent(inn)}`);
+      if (r.ok) {
+        const d = await r.json();
+        if (d.suggestions?.length) result = parseDadata(d.suggestions[0]);
+      }
+    } catch(e) {}
+  }
 
-  return null;
+  if (result) setCachedLookup(inn, result);
+  return result;
 }
 
 function parseEGRUL(raw, inn) {
@@ -390,6 +414,8 @@ async function searchByName(name) {
       const d = await r.json();
       if (d.suggestions?.length) {
         _lastSuggestions = d.suggestions.map(s => parseDadata(s));
+        // Кэшируем каждый результат по ИНН
+        _lastSuggestions.forEach(s => { if (s?.inn) setCachedLookup(s.inn, s); });
         return _lastSuggestions;
       }
     }
@@ -593,6 +619,12 @@ function renderResult(d) {
     ${renderTxHistory(d.name, d.inn)}`;
 }
 
+function parseDMY(str) {
+  if (!str) return 0;
+  const [dd,mm,yyyy] = str.split('.').map(Number);
+  return new Date(yyyy, mm-1, dd).getTime();
+}
+
 function getTxHistoryForCounterparty(name, inn) {
   // Пробуем взять из localStorage (данные синхронизированные с главной)
   const cached = localStorage.getItem('omsfin_tx_cache');
@@ -784,6 +816,8 @@ document.getElementById('searchInput').addEventListener('input', async function(
       const dd = await r.json();
       if (!dd.suggestions?.length) { hideSuggestions(); return; }
       _lastSuggestions = dd.suggestions.map(s => parseDadata(s));
+      // Кэшируем каждый результат автодополнения по ИНН
+      _lastSuggestions.forEach(s => { if (s?.inn) setCachedLookup(s.inn, s); });
       showSuggestions(_lastSuggestions);
     } catch(e) { hideSuggestions(); }
   }, 300);
