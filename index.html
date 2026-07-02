@@ -1333,9 +1333,23 @@ async function loadCompanies() {
     const r = await fetch('/api/companies', {headers:{'Authorization':'Bearer '+token}});
     if (!r.ok) { showToast('❌ Ошибка загрузки компаний'); return; }
     const companies = await r.json();
+    if (!Array.isArray(companies)) return;
+    // Сбрасываем устаревший company_id если его нет в списке доступных
+    if (currentCompanyId && !companies.find(c => c.id === currentCompanyId)) {
+      currentCompanyId = companies[0]?.id || null;
+      if (currentCompanyId) localStorage.setItem('omsfin_company', currentCompanyId);
+      else localStorage.removeItem('omsfin_company');
+    }
+    if (!currentCompanyId && companies.length > 0) {
+      currentCompanyId = companies[0].id;
+      localStorage.setItem('omsfin_company', currentCompanyId);
+    }
+    // Кэшируем роль
+    const curCompany = companies.find(c => c.id === currentCompanyId);
+    if (curCompany?.my_role) currentUserRole = curCompany.my_role;
     const sel = document.getElementById('companySwitcher');
     if (!sel) return;
-    sel.innerHTML = '<option value="">Все компании</option>' + 
+    sel.innerHTML = '<option value="">Все компании</option>' +
       companies.map(c=>`<option value="${escapeHtml(c.id)}" ${c.id===currentCompanyId?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
     // Если компаний нет — создаём компанию по умолчанию
     if (companies.length === 0) {
