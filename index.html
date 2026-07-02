@@ -1840,8 +1840,7 @@ function showSkeletons() {
 }
 
 async function syncNow() {
-  loadCompanies();
-  applyRoleAccess();
+  await loadCompanies(); // applyRoleAccess вызывается внутри loadCompanies после обновления company_id
   showSkeletons();
   const btn = document.getElementById('syncBtn');
   const dot = document.getElementById('syncDot');
