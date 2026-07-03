@@ -405,17 +405,21 @@ export default async function handler(req, res) {
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
 
-  // Получаем user_id из токена
+  // Получаем user_id из токена. Обращение к Supabase из serverless-функции
+  // иногда падает разовым сетевым сбоем (не связанным с валидностью токена) —
+  // пробуем дважды, прежде чем считать пользователя неавторизованным.
   let userId = null, authReason = userToken ? '' : 'нет токена';
   if (userToken) {
-    try {
-      const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
-      });
-      const userData = await userR.json();
-      userId = userData.id || null;
-      if (!userId) authReason = userData.error_code || userData.msg || userData.error || ('auth ' + userR.status);
-    } catch(e) { console.error(e); authReason = 'auth недоступен'; }
+    for (let attempt = 0; attempt < 2 && !userId; attempt++) {
+      try {
+        const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
+        });
+        const userData = await userR.json();
+        userId = userData.id || null;
+        if (!userId) authReason = userData.error_code || userData.msg || userData.error || ('auth ' + userR.status);
+      } catch(e) { console.error(e); authReason = 'auth недоступен'; }
+    }
   }
 
   // company_id приходит по-разному в зависимости от метода и формы тела запроса
