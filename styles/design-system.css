@@ -1,0 +1,138 @@
+/* OMSFIN Design System — единые токены и эффекты.
+   Подключать ПОСЛЕ локального <style> страницы не нужно — токены в :root,
+   локальные правила страниц продолжают работать. Тёмная тема — основная. */
+
+:root {
+  /* Фон: 3 уровня глубины */
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: #222222;
+
+  /* Текст: 3 уровня */
+  --text: #f0f0f0;
+  --text-2: #a3a3a3;
+  --muted: #666666;
+
+  /* Акцент */
+  --accent: #ff6b00;
+  --accent-hover: #ff8534;
+  --accent-dim: rgba(255, 107, 0, 0.12);
+
+  /* Семантика */
+  --green: #22c55e;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --yellow: #eab308;
+
+  /* Радиусы */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+
+  /* Тени: 3 уровня */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  /* Spacing-шкала */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Типографика */
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-display: 'Unbounded', sans-serif;
+}
+
+/* ── Эффект 1: Glassmorphism ─────────────────────────────────────────── */
+.glass {
+  background: rgba(20, 20, 20, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* ── Эффект 2: Hover lift ────────────────────────────────────────────── */
+.lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+/* ── Эффект 3: Scroll reveal (класс вешает js/effects.js) ────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Эффект 5: Skeleton loading ──────────────────────────────────────── */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface2);
+  border-radius: var(--r-sm);
+  min-height: 14px;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: oms-shimmer 1.4s infinite;
+}
+@keyframes oms-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* ── Микровзаимодействия (Фаза 4, база здесь) ────────────────────────── */
+button:active, .btn:active { transform: scale(0.98); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent) !important; }
+
+/* ── Доступность: отключаем всё для prefers-reduced-motion ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
+
+/* ── Пустые состояния (единый вид на всех страницах) ─────────────────── */
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: var(--sp-6) var(--sp-4);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.empty::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--sp-3);
+  border-radius: 50%;
+  background: var(--accent-dim);
+  opacity: 0.7;
+}
+
+/* ── Чекбоксы: плавная галочка ────────────────────────────────────────── */
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  transition: transform 0.15s ease;
+}
+input[type="checkbox"]:checked { transform: scale(1.05); }

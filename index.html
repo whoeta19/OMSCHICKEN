@@ -15,7 +15,8 @@
 <title>OMSFIN — Бухгалтерия</title>
 <meta name="description" content="OMSFIN — облачная бухгалтерия для малого бизнеса. Загружай банковские выписки, отслеживай расходы и доходы, считай налоги автоматически.">
 <script src="https://telegram.org/js/telegram-web-app.js" async></script>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/design-system.css">
 <style>
   :root{
     --bg:#080808;
@@ -35,8 +36,6 @@
   body .chart-card canvas,body canvas{transition:none;}
   body.light{--bg:#f2f0eb;--surface:#ffffff;--surface2:#f7f6f2;--border:rgba(0,0,0,0.09);--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#7a7060;--shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);}
   body.blue{--bg:#060d1f;--surface:#0c1830;--surface2:#112040;--border:rgba(96,165,250,0.13);--green:#34d399;--red:#f87171;--text:#e8f0fe;--muted:#4a6fa5;--shadow:0 4px 24px rgba(0,0,0,0.4);}
-  body.light{font-family:'Nunito',sans-serif!important;}
-  body.light .logo,.body.light .stat-value,.body.light .section-title,.body.light .hero-stat-value{font-family:'Nunito',sans-serif!important;}
   /* ── Светлая тема: фикс хардкоженных rgba(255,255,255,...) ── */
   body.light .stat-label{color:rgba(0,0,0,0.45)!important;}
   body.light .tx-date,body.light .tx-desc{color:rgba(0,0,0,0.45)!important;}
@@ -75,17 +74,6 @@
   body.light .bottom-nav a.active{color:var(--accent)!important;}
   body.light .skeleton{background:linear-gradient(90deg,rgba(0,0,0,0.06) 25%,rgba(0,0,0,0.03) 50%,rgba(0,0,0,0.06) 75%)!important;background-size:200% 100%!important;}
   /* ── Аврора: градиентные акценты ── */
-  body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
-  body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
-  body.aurora .hero-stat{background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(167,139,250,0.03))!important;border:1px solid rgba(167,139,250,0.15)!important;}
-  body.aurora .hero-stat::before{background:radial-gradient(circle at 0% 50%,rgba(167,139,250,0.12),transparent 60%)!important;}
-  body.aurora .progress-fill{background:linear-gradient(90deg,#a78bfa,#c4b5fd)!important;}
-  body.aurora .ai-fab{background:linear-gradient(135deg,#a78bfa,#7c3aed)!important;box-shadow:0 4px 20px rgba(167,139,250,0.45)!important;}
-  body.aurora header{border-bottom:1px solid rgba(167,139,250,0.1);}
-  body.aurora .stat-card:hover{border-color:rgba(167,139,250,0.3)!important;box-shadow:0 4px 16px rgba(167,139,250,0.15)!important;}
-  body.aurora .section-title{color:var(--accent);}
-  body.aurora .logo span{color:var(--accent);}
-  body.aurora{--bg:#0e0b1a;--surface:#150f2a;--surface2:#1d1535;--border:rgba(167,139,250,0.14);--green:#34d399;--red:#f87171;--text:#f0eaff;--muted:#8b7db5;--shadow:0 4px 24px rgba(139,92,246,0.15);}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
   
@@ -183,15 +171,25 @@
   .skeleton-row{height:56px;margin-bottom:6px;border-radius:10px;}
 
   .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .bento-top{margin-bottom:14px;}
+  .bento-top .bento-hero{margin-bottom:12px;}
+  .bento-top .bento-stats{margin-bottom:0;}
+  @media(min-width:900px){
+    .bento-top{display:grid;grid-template-columns:2fr 1fr;gap:12px;align-items:stretch;}
+    .bento-top .bento-hero{margin-bottom:0;display:flex;flex-direction:column;justify-content:center;}
+    .bento-top .bento-stats{grid-template-columns:1fr;gap:12px;}
+  }
   .stat-card{
-    background:var(--surface);
-    border:1px solid var(--border);
+    background:rgba(20,20,20,0.55);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.07);
     border-radius:16px;padding:16px;
-    transition:all 0.25s;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     position:relative;overflow:hidden;
     box-shadow:var(--shadow);
   }
-  .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.1);}
+  .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-2px);box-shadow:var(--shadow-2);}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:400;}
   .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
   .stat-value.green{color:var(--green);}
@@ -606,9 +604,11 @@
   .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--text);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
 </style>
 <script src="/utils.js"></script>
+<script src="/js/effects.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 </head>
 <body>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -724,19 +724,20 @@
   <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
   <div id="anomalyBlock" style="margin-bottom:0"></div>
 
-  <!-- ─── Главная метрика ─── -->
-  <div class="hero-stat" style="margin-bottom:12px">
+  <!-- ─── Bento: главная метрика + три метрики ─── -->
+  <div class="bento-top">
+  <div class="hero-stat bento-hero">
     <div class="hero-stat-label">Прибыль за период</div>
     <div class="hero-stat-value" id="statProfit">0 ₽</div>
     <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
   </div>
 
-  <!-- ─── Три метрики ─── -->
-  <div class="stats-row" style="margin-bottom:14px">
-    <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
-    <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
-    <div class="stat-card"><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
+  <div class="stats-row bento-stats">
+    <div class="stat-card" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
+    <div class="stat-card" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
+    <div class="stat-card" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
+  </div><!-- /bento-top -->
 
   <!-- ─── Умная лента инсайтов ─── -->
   <div id="insightsFeed" style="display:none;margin-bottom:12px"></div>
@@ -2499,9 +2500,15 @@ function _origRenderAll() {
     const income = allTx.filter(t=>t.amount>0 && !['transit','loan'].includes(t.category)).reduce((s,t)=>s+Number(t.amount),0);
     const expense = allTx.filter(t=>t.amount<0 && !['transit','loan','cash'].includes(t.category)).reduce((s,t)=>s+Math.abs(t.amount),0);
     const personal = allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0);
-    document.getElementById('statIncome').textContent = fmt(income);
-    document.getElementById('statExpense').textContent = fmt(expense);
-    document.getElementById('statPersonal').textContent = fmt(personal);
+    if (window.OMSFX) {
+      OMSFX.animateNumber(document.getElementById('statIncome'), income);
+      OMSFX.animateNumber(document.getElementById('statExpense'), expense);
+      OMSFX.animateNumber(document.getElementById('statPersonal'), personal);
+    } else {
+      document.getElementById('statIncome').textContent = fmt(income);
+      document.getElementById('statExpense').textContent = fmt(expense);
+      document.getElementById('statPersonal').textContent = fmt(personal);
+    }
     const profit = income - expense;
     const profitEl = document.getElementById('statProfit');
     const profitSub = document.getElementById('statProfitSub');
@@ -4110,34 +4117,34 @@ function showOnboardingOverlay() {
 <nav class="mobile-nav">
   <div class="mobile-nav-items">
     <button class="mobile-nav-btn active" id="mnav-dashboard" onclick="showPage('dashboard',this);setMobileActive(this)">
-      <span>📊</span>Главная
+      <span><i data-lucide="layout-dashboard" style="width:20px;height:20px"></i></span>Главная
     </button>
     <button class="mobile-nav-btn" id="mnav-transactions" onclick="showPage('transactions',this);setMobileActive(this)">
-      <span>📋</span>Операции
+      <span><i data-lucide="list" style="width:20px;height:20px"></i></span>Операции
     </button>
     <button class="mobile-nav-btn" id="mnav-taxes" onclick="showPage('taxes',this);setMobileActive(this)">
-      <span>🗓️</span>Налоги
+      <span><i data-lucide="calendar-days" style="width:20px;height:20px"></i></span>Налоги
     </button>
     <button class="mobile-nav-btn" id="mnav-add" onclick="showPage('add',this);setMobileActive(this)">
-      <span>➕</span>Добавить
+      <span><i data-lucide="plus-circle" style="width:20px;height:20px"></i></span>Добавить
     </button>
     <button class="mobile-nav-btn" onclick="window.location.href='/docs'">
-      <span>📄</span>Документы
+      <span><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы
     </button>
     <button class="mobile-nav-btn" onclick="toggleMobileMore()" id="mnav-more">
-      <span>⋯</span>Ещё
+      <span><i data-lucide="more-horizontal" style="width:20px;height:20px"></i></span>Ещё
     </button>
   </div>
 </nav>
 <div id="mobileMoreMenu" style="display:none;position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:998;padding:8px 0;">
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);">
-    <button onclick="window.location.href='/analytics';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">📈<span>Аналитика</span></button>
-    <button onclick="window.location.href='/vat';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🧾<span>НДС</span></button>
-    <button onclick="window.location.href='/declarations';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">📑<span>Декларации</span></button>
-    <button onclick="window.location.href='/payroll';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">👥<span>Зарплата</span></button>
-    <button onclick="window.location.href='/counterparty';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">🔍<span>Контрагенты</span></button>
-    <button onclick="window.location.href='/settings';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">⚙️<span>Настройки</span></button>
-    <button onclick="window.location.href='/marketplace';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">📦<span>WB/Ozon</span></button>
+    <button onclick="window.location.href='/analytics';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="trending-up" style="width:18px;height:18px"></i><span>Аналитика</span></button>
+    <button onclick="window.location.href='/vat';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="receipt" style="width:18px;height:18px"></i><span>НДС</span></button>
+    <button onclick="window.location.href='/declarations';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="files" style="width:18px;height:18px"></i><span>Декларации</span></button>
+    <button onclick="window.location.href='/payroll';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="users" style="width:18px;height:18px"></i><span>Зарплата</span></button>
+    <button onclick="window.location.href='/counterparty';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="search-check" style="width:18px;height:18px"></i><span>Контрагенты</span></button>
+    <button onclick="window.location.href='/settings';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="settings" style="width:18px;height:18px"></i><span>Настройки</span></button>
+    <button onclick="window.location.href='/marketplace';toggleMobileMore()" style="background:var(--surface);border:none;padding:14px 8px;color:var(--text);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><i data-lucide="package" style="width:18px;height:18px"></i><span>WB/Ozon</span></button>
   </div>
 </div>
 

@@ -16,7 +16,8 @@
 <script src="/utils.js"></script>
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
 <script src="/js/auth.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/design-system.css">
 <style>
   :root{--bg:#080808;--surface:#0f0f0f;--surface2:#161616;--border:rgba(255,255,255,0.07);--accent:#ff6b00;--accent2:#ffaa44;--green:#22c55e;--red:#ef4444;--text:#f5f5f5;--muted:#666;}
   /* Плавный переход между темами */
@@ -24,8 +25,6 @@
   body .chart-card canvas,body canvas{transition:none;}
   body.light{--bg:#f2f0eb;--surface:#ffffff;--surface2:#f7f6f2;--border:rgba(0,0,0,0.09);--green:#16a34a;--red:#dc2626;--text:#1a1a1a;--muted:#7a7060;--shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);}
   body.blue{--bg:#060d1f;--surface:#0c1830;--surface2:#112040;--border:rgba(96,165,250,0.13);--green:#34d399;--red:#f87171;--text:#e8f0fe;--muted:#4a6fa5;--shadow:0 4px 24px rgba(0,0,0,0.4);}
-  body.light{font-family:'Nunito',sans-serif!important;}
-  body.light .logo,.body.light .stat-value,.body.light .section-title,.body.light .hero-stat-value{font-family:'Nunito',sans-serif!important;}
   /* ── Светлая тема: фикс хардкоженных rgba(255,255,255,...) ── */
   body.light .stat-label{color:rgba(0,0,0,0.45)!important;}
   body.light .tx-date,body.light .tx-desc{color:rgba(0,0,0,0.45)!important;}
@@ -47,17 +46,6 @@
   body.light .tx-row:hover{background:rgba(0,0,0,0.02)!important;}
   body.light .modal,.body.light .ai-modal{box-shadow:0 20px 60px rgba(0,0,0,0.15)!important;}
   /* ── Аврора: градиентные акценты ── */
-  body.aurora .btn{background:var(--accent)!important;box-shadow:0 4px 15px rgba(167,139,250,0.3)!important;}
-  body.aurora .btn:hover{box-shadow:0 8px 25px rgba(167,139,250,0.5)!important;}
-  body.aurora .hero-stat{background:linear-gradient(135deg,rgba(167,139,250,0.1),rgba(167,139,250,0.03))!important;border:1px solid rgba(167,139,250,0.15)!important;}
-  body.aurora .hero-stat::before{background:radial-gradient(circle at 0% 50%,rgba(167,139,250,0.12),transparent 60%)!important;}
-  body.aurora .progress-fill{background:linear-gradient(90deg,#a78bfa,#c4b5fd)!important;}
-  body.aurora .ai-fab{background:linear-gradient(135deg,#a78bfa,#7c3aed)!important;box-shadow:0 4px 20px rgba(167,139,250,0.45)!important;}
-  body.aurora header{border-bottom:1px solid rgba(167,139,250,0.1);}
-  body.aurora .stat-card:hover{border-color:rgba(167,139,250,0.3)!important;box-shadow:0 4px 16px rgba(167,139,250,0.15)!important;}
-  body.aurora .section-title{color:var(--accent);}
-  body.aurora .logo span{color:var(--accent);}
-  body.aurora{--bg:#0e0b1a;--surface:#150f2a;--surface2:#1d1535;--border:rgba(167,139,250,0.14);--green:#34d399;--red:#f87171;--text:#f0eaff;--muted:#8b7db5;--shadow:0 4px 24px rgba(139,92,246,0.15);}
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:40px;}
   .logo{font-family:'Unbounded',sans-serif;font-weight:900;font-size:16px;}
@@ -94,7 +82,7 @@
 </style>
 </head>
 <body>
-<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
+<script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
 <header>
   <div class="logo">OMS<span>FIN</span></div>
   <a href="/" style="color:var(--muted);font-size:12px;text-decoration:none">← На главную</a>
