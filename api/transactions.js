@@ -440,6 +440,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
   }
 
+  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
+
   // Если указана компания — проверяем, что пользователь в ней состоит, и какая у него роль.
   // Без company_id (старые клиенты / одиночный режим без команды) — пускаем по user_id, как раньше.
   let role = null;
