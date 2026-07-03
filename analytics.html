@@ -418,10 +418,21 @@ async function loadData() {
   document.getElementById('loadingMsg').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
-    const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
-    const companyId = localStorage.getItem('omsfin_company') || '';
+    // Проверяем company_id: сбрасываем если недействителен
+    let companyId = localStorage.getItem('omsfin_company') || '';
+    if (companyId) {
+      const cr = await fetch('/api/companies');
+      if (cr.ok) {
+        const companies = await cr.json();
+        if (Array.isArray(companies) && !companies.find(c => c.id === companyId)) {
+          companyId = companies[0]?.id || '';
+          if (companyId) localStorage.setItem('omsfin_company', companyId);
+          else localStorage.removeItem('omsfin_company');
+        }
+      }
+    }
     const url = companyId ? `/api/transactions?company_id=${companyId}` : '/api/transactions';
-    const r = await fetch(url, token ? {headers:{Authorization:'Bearer '+token}} : {});
+    const r = await fetch(url);
     if (!r.ok) { document.getElementById('loadingMsg').textContent = '❌ Ошибка загрузки данных (' + r.status + ')'; return; }
     allTx = await r.json();
     if (!Array.isArray(allTx)) allTx = [];

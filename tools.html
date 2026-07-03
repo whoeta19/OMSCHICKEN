@@ -521,6 +521,7 @@ function showTool(name, btn) {
   document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tool-'+name).classList.add('active');
   btn.classList.add('active');
+  if (name === 'currency') initCurrencyTool();
 }
 
 function fmtPct(n){return n.toFixed(1)+'%';}
@@ -988,12 +989,6 @@ function calcBreakeven() {
     </div>` : ''}`;
 }
 
-// Загружаем при открытии инструмента
-const _origShowTool = showTool;
-function showTool(name, btn) {
-  _origShowTool(name, btn);
-  if (name === 'currency') initCurrencyTool();
-}
 
 let _toastTid;
 function showToast(msg, dur=3000) {
