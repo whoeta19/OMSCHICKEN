@@ -424,6 +424,8 @@
     </div>
   </div>
 
+  <!-- Форма для типов без спец-макета (счёт, УПД, ТОРГ-12, СФ, акт, договор, доверенность, ПКО, ТТН) -->
+  <div id="generic-form">
   <!-- Реквизиты контрагента -->
   <div class="card">
     <div class="section-title">Реквизиты контрагента</div>
@@ -497,6 +499,7 @@
   <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
     <button class="btn-outline" onclick="generateDoc()" style="padding:11px 22px;font-size:13px">Сформировать документ</button>
   </div>
+  </div><!-- /generic-form -->
 
   <div class="preview-wrap" id="previewWrap">
     <div class="preview-btn-row">
@@ -654,13 +657,34 @@ function loadImg(input, key, previewId) {
   reader.readAsDataURL(file);
 }
 
+// Шаг 2 мастера: показываем форму нужного типа, остальные скрываем,
+// плавно вводим её в поле зрения (reveal) — выбор типа документа ощущается
+// как переход к следующему шагу, а не как ещё один блок в бесконечной простыне.
 function selectDoc(type, el) {
   currentDoc = type;
   document.querySelectorAll('.doc-type-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('pp-form').style.display = type === 'pp' ? 'block' : 'none';
-  document.getElementById('sverka-form').style.display = type === 'sverka' ? 'block' : 'none';
-  document.getElementById('ksf-form').style.display = type === 'ksf' ? 'block' : 'none';
+
+  const forms = {
+    pp: document.getElementById('pp-form'),
+    sverka: document.getElementById('sverka-form'),
+    ksf: document.getElementById('ksf-form'),
+    generic: document.getElementById('generic-form'),
+  };
+  const activeKey = (type === 'pp' || type === 'sverka' || type === 'ksf') ? type : 'generic';
+
+  Object.entries(forms).forEach(([key, form]) => {
+    if (!form) return;
+    if (key === activeKey) {
+      form.style.display = key === 'generic' ? '' : 'block';
+      form.classList.add('reveal');
+      form.classList.remove('revealed');
+      requestAnimationFrame(() => requestAnimationFrame(() => form.classList.add('revealed')));
+    } else {
+      form.style.display = 'none';
+    }
+  });
+
   if (type === 'sverka' && !document.querySelector('#svRowsWrap input.sv-date')) addSvRow();
   if (type === 'ksf') {
     const sf = document.getElementById('ksfSeller');
