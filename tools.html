@@ -61,7 +61,7 @@
   .tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
   .tool-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 14px;cursor:pointer;transition:all 0.25s;text-align:left;position:relative;overflow:hidden;}
   .tool-btn:hover{border-color:rgba(255,107,0,0.4);background:rgba(255,107,0,0.04);transform:translateY(-1px);}
-  .tool-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.08);}
+  .tool-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.08);box-shadow:0 0 0 3px rgba(255,107,0,0.12);}
 
   .tool-icon{font-size:26px;margin-bottom:10px;display:block;}
   .tool-name{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;margin-bottom:4px;line-height:1.3;}
@@ -168,7 +168,7 @@
     <div class="tool-btn" onclick="showTool('penalty',this)">
       <div class="tool-icon">⚠️</div>
       <div class="tool-name">Пени и штрафы</div>
-      <div class="tool-desc">Сколько должен за просрочку</div>
+      <div class="tool-desc">Расчёт пеней за просрочку</div>
     </div>
     <div class="tool-btn" onclick="showTool('taxsys',this)">
       <div class="tool-icon">⚖️</div>
@@ -183,7 +183,7 @@
     <div class="tool-btn" onclick="showTool('breakeven',this)">
       <div class="tool-icon">📐</div>
       <div class="tool-name">Точка безубыточности</div>
-      <div class="tool-desc">Сколько нужно продать, чтобы не уйти в минус</div>
+      <div class="tool-desc">Сколько продавать, чтобы не уйти в минус</div>
     </div>
     <div class="tool-btn" onclick="window.location.href='/counterparty'">
       <div class="tool-icon">🔍</div>

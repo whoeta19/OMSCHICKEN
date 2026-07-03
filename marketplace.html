@@ -77,7 +77,7 @@ h1{font-family:Unbounded,sans-serif;font-size:16px;font-weight:700}
 
 <div class="app-bar">
   <button class="back-btn" onclick="history.length>1?history.back():window.location.href='/'">← Назад</button>
-  <h1>🛒 Маркетплейсы</h1>
+  <h1>Маркетплейсы</h1>
   <div style="margin-left:auto;display:flex;gap:8px">
     <span class="badge badge-wb">WB</span>
     <span class="badge badge-ozon">OZON</span>
@@ -88,9 +88,9 @@ h1{font-family:Unbounded,sans-serif;font-size:16px;font-weight:700}
 
   <!-- Tabs -->
   <div class="mp-tabs">
-    <button class="mp-tab active" onclick="setTab('import')" id="tab-import">📥 Импорт отчёта</button>
-    <button class="mp-tab" onclick="setTab('history')" id="tab-history">📋 История загрузок</button>
-    <button class="mp-tab" onclick="setTab('help')" id="tab-help">❓ Как получить отчёт</button>
+    <button class="mp-tab active" onclick="setTab('import')" id="tab-import">Импорт отчёта</button>
+    <button class="mp-tab" onclick="setTab('history')" id="tab-history">История загрузок</button>
+    <button class="mp-tab" onclick="setTab('help')" id="tab-help">Как получить отчёт</button>
   </div>
 
   <!-- Import tab -->
@@ -100,7 +100,7 @@ h1{font-family:Unbounded,sans-serif;font-size:16px;font-weight:700}
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" multiple>
         <div class="upload-icon">📊</div>
-        <div class="upload-title">Перетащи или нажми для загрузки</div>
+        <div class="upload-title">Перетащите файл или нажмите для загрузки</div>
         <div class="upload-sub">Excel/CSV отчёты Wildberries или Ozon · Поддерживается несколько файлов</div>
         <div class="progress-bar" id="progressBar" style="display:none;margin-top:16px">
           <div class="progress-fill" id="progressFill" style="width:0%"></div>
