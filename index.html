@@ -1142,10 +1142,14 @@ function exitDemo() {
   window.location.href = '/login';
 }
 
+// ВАЖНО: refresh-токен Supabase одноразовый. Если несколько параллельных запросов
+// одновременно запустят обновление — второй запрос с тем же refresh-токеном
+// аннулирует сессию целиком (защита от кражи токена), и все запросы навсегда 401.
+// Поэтому обновление — single-flight: одна попытка, остальные ждут её результат.
+let _refreshPromise = null;
 async function getValidToken() {
   const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
-  const refresh = localStorage.getItem(REFRESH_KEY) || localStorage.getItem('omschicken_refresh');
-  
+
   // Проверяем срок токена
   if (token) {
     try {
@@ -1153,24 +1157,29 @@ async function getValidToken() {
       if (payload.exp - Math.floor(Date.now()/1000) > 300) return token;
     } catch(e) { console.error(e); }
   }
-  
-  // Обновляем
-  if (!refresh) { window.location.href = '/login'; return null; }
-  try {
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
-      body: JSON.stringify({refresh_token: refresh})
-    });
-    const data = await r.json();
-    if (data.access_token) {
-      localStorage.setItem(TOKEN_KEY, data.access_token);
-      localStorage.setItem(REFRESH_KEY, data.refresh_token);
-      return data.access_token;
-    }
-  } catch(e) { console.error(e); }
-  window.location.href = '/login';
-  return null;
+
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = (async () => {
+    const refresh = localStorage.getItem(REFRESH_KEY) || localStorage.getItem('omschicken_refresh');
+    if (!refresh) { window.location.href = '/login'; return null; }
+    try {
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
+        body: JSON.stringify({refresh_token: refresh})
+      });
+      const data = await r.json();
+      if (data.access_token) {
+        localStorage.setItem(TOKEN_KEY, data.access_token);
+        localStorage.setItem(REFRESH_KEY, data.refresh_token);
+        return data.access_token;
+      }
+    } catch(e) { console.error(e); }
+    window.location.href = '/login';
+    return null;
+  })();
+  try { return await _refreshPromise; }
+  finally { _refreshPromise = null; }
 }
 
 // Перехватываем все запросы к нашему API — автоматически добавляем токен
@@ -1986,8 +1995,16 @@ async function parseAndProcess(text, accountName) {
     return head.includes('тбанк') || head.includes('тинькофф') || head.includes('tbank') || head.includes('операционный день');
   }
 
+  // Формат "Кредит/Дебет" (Зенит, МКБ и др.): первая строка — заголовок
+  // "Номер счёта;Тип операции (пополнение/списание);Дата проведения;..."
+  function isBankKreditDebet(t) {
+    const first = t.split('\n')[0].toLowerCase();
+    return first.includes('номер сч') && first.includes('тип операции');
+  }
+
   function isBankSber(t) {
     if (isBankTBank(t)) return false; // Т-Банк тоже содержит "плательщик/назначение" — не путать
+    if (isBankKreditDebet(t)) return false; // формат Кредит/Дебет тоже содержит "Дата проведения"
     const head = t.substring(0, 800).toLowerCase();
     return head.includes('сбербанк') || head.includes('sberbank') ||
       head.includes('дата проведения') ||
@@ -2099,6 +2116,33 @@ async function parseAndProcess(text, accountName) {
         : (receiverInn !== _myInn ? receiverInn : senderInn);
       txs.push({name: name || 'Операция', amount, date:dateStr, description, category, period:monthKey, is_personal:['personal','food'].includes(category), inn: counterpartyInn || null});
     }
+  } else if (isBankKreditDebet(text)) {
+    // Зенит/МКБ и похожие: col1=Кредит|Дебет, col2=дата, col5=сумма (без знака),
+    // col8=назначение, col23=ИНН контрагента, col24=наименование контрагента
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseLine(lines[i], ';');
+      if (cols.length < 9) continue;
+      const type = (cols[1] || '').toLowerCase();
+      if (type !== 'кредит' && type !== 'дебет') continue;
+      const dateStr = (cols[2] || '').match(/\d{2}\.\d{2}\.\d{4}/)?.[0] || '';
+      if (!dateStr) continue;
+      const absAmount = parseFloat((cols[5] || '0').replace(/\s/g, '').replace(',', '.'));
+      if (isNaN(absAmount) || absAmount === 0) continue;
+      const amount = type === 'дебет' ? -absAmount : absAmount;
+      if (!monthKey) { const p = dateStr.split('.'); monthKey = p[1] + '.' + p[2]; }
+      const description = (cols[8] || cols[7] || '').substring(0, 100);
+      let name = (cols[24] || '').trim();
+      const counterpartyInn = (cols[23] || '').trim();
+      if (!name) {
+        // Фолбэк: берём контрагента из полей плательщика/получателя
+        const payer = (cols[12] || '').trim(), payerInn = (cols[10] || '').trim();
+        const recv = (cols[19] || '').trim();
+        name = amount > 0 ? (payerInn !== _myInn ? payer : recv) : recv;
+      }
+      name = (_myNameRe ? name.replace(_myNameRe, '') : name).replace(/^["\s]+|["\s]+$/g, '') || description.substring(0, 60);
+      const category = classify(name, description, amount);
+      txs.push({name: name || 'Операция', amount, date: dateStr, description, category, period: monthKey, is_personal: ['personal','food'].includes(category), inn: counterpartyInn || null});
+    }
   } else if (isBankSber(text)) {
     // Сбер Бизнес Онлайн — два формата выгрузки:
     // 1) полный: "Дата проведения";"Дата операции";"Вид";"Сумма";"Плательщик";"ИНН плательщика";...;"Получатель";"ИНН получателя";...;"Назначение платежа"
@@ -2194,7 +2238,14 @@ async function parseAndProcess(text, accountName) {
       txs.push({name, amount, date:dateStr, description, category, period:monthKey, is_personal:['personal','food'].includes(category)});
     }
   }
-    if (txs.length===0) { showToast('❌ Не удалось прочитать файл. Убедитесь, что это выписка Т-Банка, ВТБ, Альфа-Банка или Сбера в формате CSV'); return; }
+    if (txs.length===0) {
+      // Различаем "формат не распознан" и "выписка распознана, но пустая"
+      const recognized = isBankAlfa(text) || isBankVTB(text) || isBankTBank(text) || isBankSber(text) || isBankKreditDebet(text);
+      showToast(recognized
+        ? 'ℹ️ Выписка распознана, но операций за период в ней нет'
+        : '❌ Не удалось распознать формат. Поддерживаются: Т-Банк, ВТБ, Альфа-Банк, Сбер, Зенит/МКБ (CSV)');
+      return;
+    }
 
   // Считаем сколько операций распознано автоматически через правила
   const autoClassified = txs.filter(t => t.category !== 'unknown').length;

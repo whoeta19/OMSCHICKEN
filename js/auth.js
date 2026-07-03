@@ -4,31 +4,40 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const TOKEN_KEY = 'omsfin_token';
 const REFRESH_KEY = 'omsfin_refresh';
 
+// ВАЖНО: refresh-токен Supabase одноразовый — параллельное обновление с одним
+// и тем же refresh-токеном аннулирует сессию (все запросы навсегда 401).
+// Обновление single-flight: одна попытка, параллельные вызовы ждут её результат.
+let _refreshPromise = null;
 async function getValidToken() {
   const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token');
-  const refresh = localStorage.getItem(REFRESH_KEY) || localStorage.getItem('omschicken_refresh');
   if (token) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.exp - Math.floor(Date.now()/1000) > 300) return token;
     } catch(e) { console.error(e); }
   }
-  if (!refresh) { window.location.href = '/login'; return null; }
-  try {
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
-      body: JSON.stringify({refresh_token: refresh})
-    });
-    const data = await r.json();
-    if (data.access_token) {
-      localStorage.setItem(TOKEN_KEY, data.access_token);
-      localStorage.setItem(REFRESH_KEY, data.refresh_token);
-      return data.access_token;
-    }
-  } catch(e) { console.error(e); }
-  window.location.href = '/login';
-  return null;
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = (async () => {
+    const refresh = localStorage.getItem(REFRESH_KEY) || localStorage.getItem('omschicken_refresh');
+    if (!refresh) { window.location.href = '/login'; return null; }
+    try {
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {'apikey': SUPABASE_ANON, 'Content-Type': 'application/json'},
+        body: JSON.stringify({refresh_token: refresh})
+      });
+      const data = await r.json();
+      if (data.access_token) {
+        localStorage.setItem(TOKEN_KEY, data.access_token);
+        localStorage.setItem(REFRESH_KEY, data.refresh_token);
+        return data.access_token;
+      }
+    } catch(e) { console.error(e); }
+    window.location.href = '/login';
+    return null;
+  })();
+  try { return await _refreshPromise; }
+  finally { _refreshPromise = null; }
 }
 
 function getToken() {
