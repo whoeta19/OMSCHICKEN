@@ -1350,10 +1350,22 @@ async function apiBulkUpdateCategory(ids, category, updates) {
 // Мультикомпания
 let currentCompanyId = localStorage.getItem('omsfin_company') || null;
 
-async function loadCompanies() {
+async function loadCompanies(_attempt) {
+  _attempt = _attempt || 0;
   try {
     const r = await fetch('/api/companies');
-    if (!r.ok) { showToast('❌ Ошибка загрузки компаний'); return; }
+    if (!r.ok) {
+      // Разовый сбой сервера при обращении к Supabase — не сразу сдаёмся,
+      // а пробуем ещё пару раз с паузой, прежде чем показать ошибку.
+      if (_attempt < 2) {
+        await new Promise(res => setTimeout(res, 700 * (_attempt + 1)));
+        return loadCompanies(_attempt + 1);
+      }
+      let reason = '';
+      try { reason = (await r.json())?.reason || ''; } catch(e) {}
+      showToast('❌ Не удалось загрузить компании' + (reason ? ' (' + reason + ')' : '') + ' — обновите страницу');
+      return;
+    }
     const companies = await r.json();
     if (!Array.isArray(companies)) return;
     // Сбрасываем устаревший company_id если его нет в списке доступных
