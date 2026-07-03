@@ -705,7 +705,7 @@
     <div style="font-family:Unbounded,sans-serif;font-size:15px;font-weight:900;margin-bottom:6px">👋 Добро пожаловать в OMSFIN</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Начни с загрузки банковской выписки — и за 10 секунд получишь полную картину финансов.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="document.getElementById('fileInput').click()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 16px;font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;cursor:pointer">📂 Загрузить выписку</button>
+      <button onclick="document.getElementById('fileInput').click()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 16px;font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;cursor:pointer" class="magnetic">📂 Загрузить выписку</button>
       <button onclick="window.location.href='/onboarding'" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:12px;cursor:pointer">⚙️ Настроить кабинет</button>
       <button onclick="document.getElementById('welcomeBanner').style.display='none';localStorage.setItem('omsfin_onboarded','1')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:9px 6px">Скрыть</button>
     </div>
@@ -726,16 +726,16 @@
 
   <!-- ─── Bento: главная метрика + три метрики ─── -->
   <div class="bento-top">
-  <div class="hero-stat bento-hero">
+  <div class="hero-stat bento-hero grad-anim spotlight">
     <div class="hero-stat-label">Прибыль за период</div>
     <div class="hero-stat-value" id="statProfit">0 ₽</div>
     <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
   </div>
 
   <div class="stats-row bento-stats">
-    <div class="stat-card" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
-    <div class="stat-card" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
-    <div class="stat-card" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
+    <div class="stat-card spotlight" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
+    <div class="stat-card spotlight" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
+    <div class="stat-card spotlight" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
   </div><!-- /bento-top -->
 

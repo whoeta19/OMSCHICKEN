@@ -136,3 +136,36 @@ input[type="checkbox"] {
   transition: transform 0.15s ease;
 }
 input[type="checkbox"]:checked { transform: scale(1.05); }
+
+/* ── Эффект: Spotlight — свет следует за курсором по карточке ─────────── */
+@media (pointer: fine) {
+  .spotlight { position: relative; }
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(255, 107, 0, 0.10), transparent 60%);
+  }
+  .spotlight:hover::before { opacity: 1; }
+}
+
+/* ── Эффект: живой градиент (акцентная карточка) ─────────────────────── */
+.grad-anim {
+  background: linear-gradient(120deg,
+    rgba(255,107,0,0.16), rgba(255,133,52,0.05), rgba(255,107,0,0.12), rgba(255,80,0,0.05));
+  background-size: 300% 300%;
+  animation: oms-grad 9s ease infinite;
+}
+@keyframes oms-grad {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Эффект: магнитная кнопка (JS в effects.js) ──────────────────────── */
+.magnetic { transition: transform 0.18s cubic-bezier(0.3, 1, 0.4, 1); will-change: transform; }
