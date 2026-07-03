@@ -14,6 +14,7 @@
 <title>OMSFIN — Документы</title>
 <meta name="description" content="Генератор первичных документов: счёт, УПД, ТОРГ-12, счёт-фактура, акт, договор поставки, доверенность, ПКО, ТТН. Автозаполнение по реквизитам компании.">
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script>(function(){var t=localStorage.getItem('omsfin_token')||localStorage.getItem('omschicken_token');if(!t&&!localStorage.getItem('omsfin_demo'))window.location.replace('/login');})()</script>
 <script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -170,10 +171,10 @@
   </div>
 </header>
 <div class="tabs">
-  <button class="tab active" onclick="showPage('create',this)">📄 Создать</button>
-  <button class="tab" onclick="showPage('history',this)">📋 История</button>
-  <button class="tab" onclick="showPage('templates',this)">⭐ Шаблоны</button>
-  <button class="tab" onclick="showPage('settings',this)">⚙️ Настройки</button>
+  <button class="tab active" onclick="showPage('create',this)"><i data-lucide="file-plus-2" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Создать</button>
+  <button class="tab" onclick="showPage('history',this)"><i data-lucide="history" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>История</button>
+  <button class="tab" onclick="showPage('templates',this)"><i data-lucide="star" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Шаблоны</button>
+  <button class="tab" onclick="showPage('settings',this)"><i data-lucide="settings" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Настройки</button>
 </div>
 <main>
 
