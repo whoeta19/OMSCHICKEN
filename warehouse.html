@@ -44,7 +44,7 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
 /* Статистика */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);padding:14px 16px;}
-.stat-num{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:900;margin-bottom:2px;}
+.stat-num{font-family:'Unbounded',sans-serif;font-size:22px;font-weight:900;margin-bottom:2px;font-variant-numeric:tabular-nums;}
 .stat-label{font-size:11px;color:var(--muted);}
 .stat-card.warn .stat-num{color:var(--yellow);}
 .stat-card.good .stat-num{color:var(--green);}
@@ -138,7 +138,7 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
 </header>
 
 <div class="main">
-  <h1>📦 Склад</h1>
+  <h1>Склад</h1>
   <div class="subtitle">Остатки товаров, движение запасов, контроль минимума</div>
 
   <div class="stats-row">
@@ -150,9 +150,9 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
 
   <div class="toolbar">
     <button class="btn" onclick="openItemModal()">+ Добавить товар</button>
-    <button class="btn-outline" onclick="openMoveModal('in')">📥 Приход</button>
-    <button class="btn-outline" onclick="openMoveModal('out')">📤 Расход</button>
-    <button class="btn-outline" onclick="openMoveModal('adj')">🔧 Инвентаризация</button>
+    <button class="btn-outline" onclick="openMoveModal('in')">Приход</button>
+    <button class="btn-outline" onclick="openMoveModal('out')">Расход</button>
+    <button class="btn-outline" onclick="openMoveModal('adj')">Инвентаризация</button>
     <input class="search-inp" placeholder="🔍 Поиск товара..." oninput="render()" id="searchInp">
   </div>
 
@@ -494,7 +494,7 @@ function deleteItem() {
 
 // ─── Модал: движение ─────────────────────────────────────────────
 function openMoveModal(type, preItemId) {
-  const titles = {in:'📥 Приход товара', out:'📤 Расход товара', adj:'🔧 Инвентаризация (скорректировать остаток)'};
+  const titles = {in:'Приход товара', out:'Расход товара', adj:'Инвентаризация (скорректировать остаток)'};
   document.getElementById('moveModalTitle').textContent = titles[type] || type;
   document.getElementById('moveType').value = type;
   document.getElementById('moveQty').value = '';
