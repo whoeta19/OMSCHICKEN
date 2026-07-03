@@ -303,7 +303,7 @@ async function saveData() {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ warehouse_items: items, warehouse_movements: movements })
     });
-  } catch(e) {} finally { _saving = false; }
+  } catch(e) { console.error(e); } finally { _saving = false; }
 }
 
 // ─── Вспомогательные ─────────────────────────────────────────────

@@ -223,7 +223,7 @@ function getCachedLookup(inn) {
   } catch(e) { return null; }
 }
 function setCachedLookup(inn, data) {
-  try { localStorage.setItem('omsfin_lookup_' + inn, JSON.stringify({ data, ts: Date.now() })); } catch(e) {}
+  try { localStorage.setItem('omsfin_lookup_' + inn, JSON.stringify({ data, ts: Date.now() })); } catch(e) { console.error(e); }
 }
 
 
@@ -304,7 +304,7 @@ async function fetchFromEGRUL(inn) {
       const d = await r.json();
       if (d.data) result = parseEGRUL(d.data, inn);
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 
   // Fallback — Dadata через серверный прокси (избегаем CORS и проблем с токеном)
   if (!result) {
@@ -314,7 +314,7 @@ async function fetchFromEGRUL(inn) {
         const d = await r.json();
         if (d.suggestions?.length) result = parseDadata(d.suggestions[0]);
       }
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
 
   if (result) setCachedLookup(inn, result);
@@ -419,7 +419,7 @@ async function searchByName(name) {
         return _lastSuggestions;
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
   return null;
 }
 
@@ -629,7 +629,7 @@ function getTxHistoryForCounterparty(name, inn) {
   // Пробуем взять из localStorage (данные синхронизированные с главной)
   const cached = localStorage.getItem('omsfin_tx_cache');
   let txs = [];
-  try { txs = JSON.parse(cached || '[]'); } catch(e) {}
+  try { txs = JSON.parse(cached || '[]'); } catch(e) { console.error(e); }
 
   if (!txs.length) return null;
 

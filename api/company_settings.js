@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       userId = d.id || null;
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
 
   if (!userId) return res.status(401).json({ error: 'Не авторизован' });

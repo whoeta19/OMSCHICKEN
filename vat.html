@@ -576,7 +576,7 @@ loadData();
         localStorage.setItem('omsfin_token', data.access_token);
         localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   setInterval(refresh, 45 * 60 * 1000);
 })();

@@ -725,7 +725,7 @@ async function saveToCloud(key, value) {
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
       body: JSON.stringify({[key]: value})
     });
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 function initImagePreviews() {
@@ -1010,7 +1010,7 @@ async function doChangePassword() {
         localStorage.setItem('omsfin_refresh', rd.refresh_token);
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 
   try {
     const r = await fetch('/api/change_password', {
@@ -1060,7 +1060,7 @@ window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||Stri
         localStorage.setItem('omsfin_token', data.access_token);
         localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   setInterval(refresh, 45 * 60 * 1000);
 })();
@@ -1130,7 +1130,7 @@ function testMsToken() {
     document.getElementById('refStats').textContent = count > 0
       ? `🎉 По твоей ссылке зарегистрировались: ${count} чел. · Бонус: +${count} мес. Pro`
       : 'Пока никто не зарегистрировался. Поделись ссылкой!';
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 })();
 
 function copyRefLink() {

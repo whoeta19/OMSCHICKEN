@@ -215,7 +215,9 @@ async function loadEmployees() {
   }
 }
 
+let _empBusy = false;
 async function addEmployee() {
+  if (_empBusy) return;
   const companyId = getCompanyId();
   if (!companyId) { showToast('Сначала выбери компанию'); return; }
 
@@ -224,8 +226,10 @@ async function addEmployee() {
   const salary = parseFloat(document.getElementById('newEmpSalary').value);
 
   if (!full_name) { showToast('Введи ФИО сотрудника'); return; }
-  if (!salary || salary <= 0) { showToast('Введи оклад'); return; }
+  if (!salary || salary <= 0 || isNaN(salary)) { showToast('Введи корректный оклад'); return; }
 
+  _empBusy = true;
+  const _btn = event?.target; if (_btn) { _btn.disabled = true; _btn.style.opacity = '0.5'; }
   try {
     const r = await fetch('/api/employees?resource=employees', {
       method: 'POST',
@@ -241,7 +245,11 @@ async function addEmployee() {
     showToast('✅ Сотрудник добавлен');
     loadEmployees();
   } catch (e) {
+    console.error(e);
     showToast('❌ Ошибка добавления');
+  } finally {
+    _empBusy = false;
+    if (_btn) { _btn.disabled = false; _btn.style.opacity = ''; }
   }
 }
 
@@ -264,7 +272,9 @@ async function removeEmployee(id) {
   }
 }
 
+let _calcBusy = false;
 async function calculatePayroll() {
+  if (_calcBusy) return;
   const companyId = getCompanyId();
   if (!companyId) { showToast('Сначала выбери компанию'); return; }
 
@@ -273,6 +283,8 @@ async function calculatePayroll() {
   const [yyyy, mm] = monthInput.split('-');
   const period = `${mm}.${yyyy}`;
 
+  _calcBusy = true;
+  const _btn = event?.target; if (_btn) { _btn.disabled = true; _btn.textContent = '⏳ Начисляем...'; }
   try {
     const r = await fetch('/api/employees?resource=payroll', {
       method: 'POST',
@@ -299,7 +311,11 @@ async function calculatePayroll() {
     showToast(`✅ Начислено за ${period}`);
     loadHistory();
   } catch (e) {
+    console.error(e);
     showToast('❌ Ошибка начисления');
+  } finally {
+    _calcBusy = false;
+    if (_btn) { _btn.disabled = false; _btn.textContent = 'Начислить за этот месяц'; }
   }
 }
 

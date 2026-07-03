@@ -912,7 +912,7 @@ function exportDeclarationExcel(filename, title, rows, markQuarterly) {
       const exports = JSON.parse(localStorage.getItem('omsfin_decl_exports') || '{}');
       exports[quarterKey] = true;
       localStorage.setItem('omsfin_decl_exports', JSON.stringify(exports));
-    } catch (e) {}
+    } catch(e) { console.error(e); }
   }
 }
 

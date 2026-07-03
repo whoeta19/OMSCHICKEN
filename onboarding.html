@@ -225,7 +225,7 @@ const TOTAL_STEPS = 5; // 0-4
     }
     // Если уже проходил онбординг — сразу на главную
     if (localStorage.getItem('omsfin_onboarded')) window.location.href = '/';
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 })();
 const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
@@ -281,7 +281,7 @@ function saveRequisites() {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
       body: JSON.stringify({seller})
-    });
+    }).catch(e => console.error('Не удалось сохранить реквизиты в облако:', e));
   }
   nextStep();
 }

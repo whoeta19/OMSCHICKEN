@@ -26,7 +26,7 @@ async function handleEgrul(req, res) {
       const data = await r.json();
       return res.status(200).json({ source: 'egrul', data });
     }
-  } catch (e) {}
+  } catch(e) { console.error(e); }
 
   try {
     // Запасной — API СБИС
@@ -37,7 +37,7 @@ async function handleEgrul(req, res) {
       const data = await r.json();
       return res.status(200).json({ source: 'sber', data });
     }
-  } catch (e) {}
+  } catch(e) { console.error(e); }
 
   try {
     // Ещё один запасной — открытый API
@@ -48,7 +48,7 @@ async function handleEgrul(req, res) {
       const data = await r.json();
       return res.status(200).json({ source: 'rusprofile', data });
     }
-  } catch (e) {}
+  } catch(e) { console.error(e); }
 
   return res.status(404).json({ error: 'Not found' });
 }

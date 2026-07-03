@@ -1920,7 +1920,7 @@ if (prefill) {
     const d = JSON.parse(prefill);
     if (d.buyer) document.getElementById('buyerName').value = d.buyer;
     localStorage.removeItem('omsfin_doc_prefill');
-  } catch(e){}
+  } catch(e) { console.error(e); }
 }
 
 // ─── Акт сверки ───────────────────────────────────────────────────────────────
