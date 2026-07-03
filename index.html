@@ -171,6 +171,14 @@
   .skeleton-row{height:56px;margin-bottom:6px;border-radius:10px;}
 
   .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+  .bento-top{margin-bottom:14px;}
+  .bento-top .bento-hero{margin-bottom:12px;}
+  .bento-top .bento-stats{margin-bottom:0;}
+  @media(min-width:900px){
+    .bento-top{display:grid;grid-template-columns:2fr 1fr;gap:12px;align-items:stretch;}
+    .bento-top .bento-hero{margin-bottom:0;display:flex;flex-direction:column;justify-content:center;}
+    .bento-top .bento-stats{grid-template-columns:1fr;gap:12px;}
+  }
   .stat-card{
     background:rgba(20,20,20,0.55);
     backdrop-filter:blur(12px);
@@ -715,19 +723,20 @@
   <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
   <div id="anomalyBlock" style="margin-bottom:0"></div>
 
-  <!-- ─── Главная метрика ─── -->
-  <div class="hero-stat" style="margin-bottom:12px">
+  <!-- ─── Bento: главная метрика + три метрики ─── -->
+  <div class="bento-top">
+  <div class="hero-stat bento-hero">
     <div class="hero-stat-label">Прибыль за период</div>
     <div class="hero-stat-value" id="statProfit">0 ₽</div>
     <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
   </div>
 
-  <!-- ─── Три метрики ─── -->
-  <div class="stats-row" style="margin-bottom:14px">
+  <div class="stats-row bento-stats">
     <div class="stat-card" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
     <div class="stat-card" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
     <div class="stat-card" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
+  </div><!-- /bento-top -->
 
   <!-- ─── Умная лента инсайтов ─── -->
   <div id="insightsFeed" style="display:none;margin-bottom:12px"></div>
