@@ -72,3 +72,44 @@ if (typeof window !== 'undefined' && typeof window.showToast !== 'function') {
     t._hideTimer = setTimeout(function () { t.classList.remove('show'); }, 3000);
   };
 }
+
+// ═══ Деньги: единое форматирование (только отсюда!) ═══════════════════
+const _omsNf0 = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+const _omsNf2 = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// fmtMoney(1234567.8) -> '1 234 568 ₽' (знак суммы СОХРАНЯЕТСЯ)
+function fmtMoney(rub) { return _omsNf0.format(Math.round(Number(rub) || 0)) + ' ₽'; }
+function fmtMoney2(rub) { return _omsNf2.format(Number(rub) || 0) + ' ₽'; }
+
+// ═══ Московское время: налоговые дедлайны считаем ТОЛЬКО по МСК ═══════
+// new Date() у пользователя во Владивостоке даст «дедлайн прошёл» на 7 часов
+// раньше реального срока. mskNow() возвращает Date, чьи «локальные» поля
+// (getDate/getMonth/...) соответствуют московскому времени.
+function mskNow() {
+  const now = new Date();
+  const mskString = now.toLocaleString('en-US', { timeZone: 'Europe/Moscow' });
+  return new Date(mskString);
+}
+
+// ═══ safeFetch: таймаут + response.ok + единая обработка ошибок ════════
+// Использование: const data = await safeFetch('/api/...', opts)
+//   -> при не-2xx или таймауте бросает Error с человеческим message
+//   -> возвращает распарсенный JSON
+async function safeFetch(url, opts = {}, timeoutMs = 15000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { ...opts, signal: ctrl.signal });
+    if (!r.ok) {
+      let msg = 'Ошибка ' + r.status;
+      try { const d = await r.json(); msg = d.error || d.msg || msg; } catch (e) {}
+      throw new Error(msg);
+    }
+    const ct = r.headers.get('content-type') || '';
+    return ct.includes('json') ? r.json() : r.text();
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('Сервер не ответил за ' + Math.round(timeoutMs / 1000) + ' сек — попробуйте ещё раз');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}

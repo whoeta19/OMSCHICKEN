@@ -141,6 +141,7 @@
   }
 </style>
 <script src="/utils.js"></script>
+<script src="/js/calc.js"></script>
 <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script src="/nav.js"></script>
 </head>
@@ -629,8 +630,8 @@ function calcTaxShift() {
     });
     const sales = periodTx.filter(t => t.amount > 0 && t.category === 'income').reduce((s,t) => s + Number(t.amount), 0);
     const purchases = periodTx.filter(t => t.amount < 0 && t.category === 'chicken').reduce((s,t) => s + Math.abs(Number(t.amount)), 0);
-    const vatOut = sales * 10 / 110;
-    const vatIn = purchases * 10 / 110;
+    const vatOut = OMSCALC.vatFromGross(sales, 10);
+    const vatIn = OMSCALC.vatFromGross(purchases, 10);
     return { vatOut, vatIn };
   }
 

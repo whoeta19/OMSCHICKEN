@@ -604,6 +604,7 @@
   .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--text);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
 </style>
 <script src="/utils.js"></script>
+<script src="/js/calc.js"></script>
 <script src="/js/effects.js"></script>
 <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 </head>
@@ -1995,45 +1996,8 @@ function extractDate(str) {
 }
 
 async function parseAndProcess(text, accountName) {
-  // Определяем банк по структуре
-  function isBankVTB(t) {
-    const lines2 = t.split('\n');
-    for (let i = 1; i < Math.min(4, lines2.length); i++) {
-      const parts = lines2[i].split(';');
-      if (parts.length > 10 && parts[0] !== '' && parts[1] === '' && parts[2] && parts[2].match(/\d{2}\.\d{2}\.\d{4}/)) return true;
-    }
-    return false;
-  }
-
-  function isBankAlfa(t) {
-    const lines2 = t.split('\n');
-    for (let i = 0; i < Math.min(5, lines2.length); i++) {
-      const l = lines2[i].toLowerCase();
-      if (l.includes('d_c') && l.includes('sum_rur')) return true;
-    }
-    return false;
-  }
-
-  function isBankTBank(t) {
-    const head = t.substring(0, 500).toLowerCase();
-    return head.includes('тбанк') || head.includes('тинькофф') || head.includes('tbank') || head.includes('операционный день');
-  }
-
-  // Формат "Кредит/Дебет" (Зенит, МКБ и др.): первая строка — заголовок
-  // "Номер счёта;Тип операции (пополнение/списание);Дата проведения;..."
-  function isBankKreditDebet(t) {
-    const first = t.split('\n')[0].toLowerCase();
-    return first.includes('номер сч') && first.includes('тип операции');
-  }
-
-  function isBankSber(t) {
-    if (isBankTBank(t)) return false; // Т-Банк тоже содержит "плательщик/назначение" — не путать
-    if (isBankKreditDebet(t)) return false; // формат Кредит/Дебет тоже содержит "Дата проведения"
-    const head = t.substring(0, 800).toLowerCase();
-    return head.includes('сбербанк') || head.includes('sberbank') ||
-      head.includes('дата проведения') ||
-      (head.includes('плательщик') && head.includes('получатель') && head.includes('назначение платежа'));
-  }
+  // Детекторы форматов банков — единые, из /js/calc.js (покрыты тестами tests/run.js)
+  const { isBankVTB, isBankAlfa, isBankTBank, isBankKreditDebet, isBankSber } = window.OMSCALC;
 
   const _seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {};
   const _myInn = _seller.inn || '';
@@ -4695,7 +4659,7 @@ function renderInsights() {
   }
 
   // 3. НДС vs остаток на счёте
-  const vatAmount = curTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0) * 0.10 / 1.10;
+  const vatAmount = OMSCALC.vatFromGross(curTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0), 10);
   const balance = allTx.slice(0,1).length ? (() => {
     let b = 0; allTx.forEach(t=>{ b += t.amount; }); return b;
   })() : 0;
