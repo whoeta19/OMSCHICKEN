@@ -1021,28 +1021,8 @@ function showToast(msg, dur=3000) {
 window.onerror=function(m){if(/Script error|ResizeObserver/.test(m))return false;showToast('⚠️ '+String(m).substring(0,70));return false;};
 window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||String(e.reason);if(/Failed to fetch|NetworkError|AbortError/.test(m))showToast('📡 Нет сети — проверьте соединение');else if(m&&m.length<80)showToast('⚠️ '+m);});
 
-// Автообновление токена
-(function() {
-  const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
-  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
-  async function refresh() {
-    const r = localStorage.getItem('omsfin_refresh');
-    if (!r) return;
-    try {
-      const res = await fetch(`${SURL}/auth/v1/token?grant_type=refresh_token`, {
-        method: 'POST',
-        headers: {'apikey': SKEY, 'Content-Type': 'application/json'},
-        body: JSON.stringify({refresh_token: r})
-      });
-      const data = await res.json();
-      if (data.access_token) {
-        localStorage.setItem('omsfin_token', data.access_token);
-        localStorage.setItem('omsfin_refresh', data.refresh_token);
-      }
-    } catch(e) { console.error(e); }
-  }
-  setInterval(refresh, 45 * 60 * 1000);
-})();
+// Обновление токена делает js/auth.js (single-flight) — локальный дубль удалён,
+// два параллельных refresh с одним одноразовым токеном аннулировали сессию (вечные 401)
 
 async function checkTelegramStatus() {
   const st = document.getElementById('tgStatus');
