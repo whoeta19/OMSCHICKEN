@@ -14,6 +14,7 @@
 <title>OMSFIN — Зарплата</title>
 <meta name="description" content="Зарплатный модуль: расчёт НДФЛ по прогрессивной шкале 2026, страховые взносы, история начислений, расчётные листки для сотрудников.">
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script src="/js/effects.js"></script>
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
 <script src="/js/auth.js"></script>
@@ -459,11 +460,11 @@ function printPayslip(run, empName) {
   Страховые взносы уплачиваются работодателем в бюджет ПФР/ФСС и не удерживаются из зарплаты.
 </div>
 <nav class="bottom-nav">
-  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
-  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
-  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
-  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
-  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+  <a href="/" class="active"><span class="bn-icon"><i data-lucide="home" style="width:20px;height:20px"></i></span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon"><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon"><i data-lucide="clipboard-list" style="width:20px;height:20px"></i></span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon"><i data-lucide="settings" style="width:20px;height:20px"></i></span>Настройки</a>
 </nav>
 </body></html>`;
 

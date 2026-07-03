@@ -14,6 +14,7 @@
 <title>OMSFIN — Все компании</title>
 <meta name="description" content="Сводный дашборд по нескольким компаниям. Финансовые показатели всех организаций в одном экране — для бухгалтеров и агентств.">
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
 <script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -52,26 +53,34 @@
   .logo span{color:var(--accent);}
   header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border)}
   main{max-width:1080px;margin:0 auto;padding:24px 16px}
-  .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .overview-hero{background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02));border:1px solid rgba(255,107,0,0.2);border-radius:16px;padding:22px 24px;margin-bottom:16px}
+  .overview-hero-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px}
+  .overview-hero-value{font-family:'Unbounded',sans-serif;font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}
+  .overview-hero-sub{font-size:13px;color:var(--text-2,#a3a3a3);margin-top:8px}
+  .summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
   .summary-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
   .summary-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
-  .summary-value{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700}
+  .summary-value{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
   .summary-value.green{color:var(--green)}
   .summary-value.red{color:var(--red)}
   .summary-value.accent{color:var(--accent)}
   .period-label{font-size:12px;color:var(--muted);margin-bottom:16px}
   .company-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;transition:all 0.2s}
   .company-card:hover{border-color:rgba(255,107,0,0.3)}
-  .company-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .company-card.burning{border-color:rgba(239,68,68,0.35)}
+  .company-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
   .company-name{font-size:15px;font-weight:600}
   .company-inn{font-size:11px;color:var(--muted);margin-top:2px}
+  .company-badges{display:flex;gap:6px;align-items:center;flex-shrink:0}
   .role-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(255,107,0,0.12);color:var(--accent);font-weight:600;text-transform:uppercase}
+  .burn-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(239,68,68,0.14);color:var(--red);font-weight:600;white-space:nowrap}
   .company-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .stat-mini{background:var(--surface2);border-radius:10px;padding:10px 12px}
   .stat-mini-label{font-size:10px;color:var(--muted);margin-bottom:4px}
-  .stat-mini-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700}
+  .stat-mini-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
   .empty{text-align:center;padding:60px 20px;color:var(--muted)}
-  .empty-icon{font-size:36px;margin-bottom:12px}
+  .empty-icon{margin-bottom:12px;color:var(--muted);display:flex;justify-content:center}
+  .empty-icon svg{width:36px;height:36px}
   .loading{text-align:center;padding:60px;color:var(--muted)}
 
   .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px);}
@@ -91,11 +100,14 @@
 <main>
   <div class="period-label" id="periodLabel"></div>
 
+  <!-- Герой: суммарная прибыль по всем компаниям -->
+  <div class="overview-hero" id="overviewHero" style="display:none">
+    <div class="overview-hero-label">Общая прибыль за месяц</div>
+    <div class="overview-hero-value" id="sumProfit">0 ₽</div>
+    <div class="overview-hero-sub" id="overviewHeroSub"></div>
+  </div>
+
   <div class="summary-row" id="summaryRow" style="display:none">
-    <div class="summary-card">
-      <div class="summary-label">Компаний</div>
-      <div class="summary-value" id="sumCompanies">0</div>
-    </div>
     <div class="summary-card">
       <div class="summary-label">Общий доход</div>
       <div class="summary-value green" id="sumIncome">0 ₽</div>
@@ -110,7 +122,7 @@
     </div>
   </div>
 
-  <div id="companiesList"><div class="loading">Загрузка...</div></div>
+  <div id="companiesList"><div class="loading">Загрузка…</div></div>
 </main>
 
 <script>
@@ -129,45 +141,61 @@ async function loadOverview() {
     });
     const data = await r.json();
     if (data.error) {
-      document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>${data.error}</div>`;
+      document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon"><i data-lucide="triangle-alert"></i></div>${data.error}</div>`;
+      if (window.lucide) lucide.createIcons();
       return;
     }
 
     const companies = data.companies || [];
     if (!companies.length) {
-      document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon">🏢</div>Нет доступных компаний</div>`;
+      document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon"><i data-lucide="building-2"></i></div>Нет доступных компаний</div>`;
+      if (window.lucide) lucide.createIcons();
       return;
     }
 
     const totalIncome = companies.reduce((s, c) => s + c.income, 0);
     const totalExpense = companies.reduce((s, c) => s + c.expense, 0);
     const totalVat = companies.reduce((s, c) => s + c.vatToPay, 0);
+    const totalProfit = companies.reduce((s, c) => s + c.profit, 0);
+    const burning = companies.filter(c => c.profit < 0);
+
+    document.getElementById('overviewHero').style.display = 'block';
+    const heroVal = document.getElementById('sumProfit');
+    heroVal.textContent = (totalProfit >= 0 ? '+' : '') + fmt(totalProfit);
+    heroVal.style.color = totalProfit >= 0 ? 'var(--text)' : 'var(--red)';
+    document.getElementById('overviewHeroSub').textContent = companies.length + ' ' +
+      (companies.length === 1 ? 'компания' : companies.length < 5 ? 'компании' : 'компаний') +
+      (burning.length ? ` · ${burning.length} в минусе` : '');
 
     document.getElementById('summaryRow').style.display = 'grid';
-    document.getElementById('sumCompanies').textContent = companies.length;
     document.getElementById('sumIncome').textContent = fmt(totalIncome);
     document.getElementById('sumExpense').textContent = fmt(totalExpense);
     document.getElementById('sumVat').textContent = fmt(totalVat);
 
     document.getElementById('companiesList').innerHTML = companies.map(c => `
-      <div class="company-card" onclick="openCompany('${c.id}')">
+      <div class="company-card${c.profit < 0 ? ' burning' : ''}" onclick="openCompany('${c.id}')">
         <div class="company-head">
           <div>
             <div class="company-name">${c.name}</div>
             <div class="company-inn">ИНН ${c.inn || '—'}</div>
           </div>
-          <span class="role-badge">${ROLE_NAMES[c.role] || c.role}</span>
+          <div class="company-badges">
+            ${c.profit < 0 ? '<span class="burn-badge">В минусе</span>' : ''}
+            <span class="role-badge">${ROLE_NAMES[c.role] || c.role}</span>
+          </div>
         </div>
         <div class="company-stats">
           <div class="stat-mini"><div class="stat-mini-label">Доход</div><div class="stat-mini-value" style="color:var(--green)">${fmt(c.income)}</div></div>
           <div class="stat-mini"><div class="stat-mini-label">Расход</div><div class="stat-mini-value" style="color:var(--red)">${fmt(c.expense)}</div></div>
-          <div class="stat-mini"><div class="stat-mini-label">Прибыль</div><div class="stat-mini-value">${fmt(c.profit)}</div></div>
+          <div class="stat-mini"><div class="stat-mini-label">Прибыль</div><div class="stat-mini-value" style="color:${c.profit < 0 ? 'var(--red)' : 'var(--text)'}">${fmt(c.profit)}</div></div>
           <div class="stat-mini"><div class="stat-mini-label">НДС к уплате</div><div class="stat-mini-value" style="color:var(--accent)">${fmt(c.vatToPay)}</div></div>
         </div>
       </div>
     `).join('');
   } catch (e) {
-    document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon">❌</div>Ошибка загрузки</div>`;
+    console.error(e);
+    document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon"><i data-lucide="circle-x"></i></div>Не получилось загрузить компании — попробуйте обновить страницу</div>`;
+    if (window.lucide) lucide.createIcons();
   }
 }
 
@@ -179,11 +207,11 @@ function openCompany(id) {
 loadOverview();
 </script>
 <nav class="bottom-nav">
-  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
-  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
-  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
-  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
-  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+  <a href="/" class="active"><span class="bn-icon"><i data-lucide="home" style="width:20px;height:20px"></i></span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon"><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon"><i data-lucide="clipboard-list" style="width:20px;height:20px"></i></span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon"><i data-lucide="settings" style="width:20px;height:20px"></i></span>Настройки</a>
 </nav>
 </body>
 </html>

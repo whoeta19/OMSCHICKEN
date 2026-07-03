@@ -148,6 +148,7 @@
   body.light .toast{background:rgba(255,255,255,0.97);border-color:rgba(255,107,0,0.25);color:#1a1a1a;box-shadow:0 8px 32px rgba(0,0,0,0.12);}
 </style>
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
@@ -445,7 +446,32 @@ function setDelta(id, cur, prev) {
   el.className = 'stat-delta ' + (pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat');
 }
 
+// Единая сетка и тултипы для всех графиков Chart.js — иначе каждый график
+// настраивает шрифт/грид/тултип по-своему и они визуально расходятся.
+let _chartDefaultsSet = false;
+function setChartDefaults() {
+  if (_chartDefaultsSet || typeof Chart === 'undefined') return;
+  _chartDefaultsSet = true;
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = chartColors().ticks;
+  Chart.defaults.plugins.tooltip.backgroundColor = document.body.classList.contains('light') ? 'rgba(255,255,255,0.97)' : 'rgba(20,20,20,0.97)';
+  Chart.defaults.plugins.tooltip.titleColor = document.body.classList.contains('light') ? '#1a1a1a' : '#f5f5f5';
+  Chart.defaults.plugins.tooltip.bodyColor = document.body.classList.contains('light') ? '#1a1a1a' : '#f5f5f5';
+  Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,107,0,0.35)';
+  Chart.defaults.plugins.tooltip.borderWidth = 1;
+  Chart.defaults.plugins.tooltip.cornerRadius = 8;
+  Chart.defaults.plugins.tooltip.padding = 10;
+  Chart.defaults.plugins.tooltip.titleFont = { family: "'Unbounded', sans-serif", size: 11, weight: '700' };
+  Chart.defaults.plugins.tooltip.bodyFont = { family: "'Inter', sans-serif", size: 12 };
+  Chart.defaults.plugins.tooltip.displayColors = true;
+  Chart.defaults.plugins.tooltip.boxPadding = 4;
+  Chart.defaults.elements.line.borderWidth = 2;
+  Chart.defaults.scale.grid.color = chartColors().grid;
+}
+
 function renderAll() {
+  setChartDefaults();
   const kpi = calcKpi(filteredTx);
   const prev = compareMode && compareTx.length ? calcKpi(compareTx) : null;
 
@@ -1034,11 +1060,11 @@ function renderDebtCards(txs) {
 loadData();
 </script>
 <nav class="bottom-nav">
-  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
-  <a href="/analytics.html" class="active"><span class="bn-icon">📊</span>Аналитика</a>
-  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
-  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
-  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+  <a href="/"><span class="bn-icon"><i data-lucide="home" style="width:20px;height:20px"></i></span>Главная</a>
+  <a href="/analytics.html" class="active"><span class="bn-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon"><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon"><i data-lucide="clipboard-list" style="width:20px;height:20px"></i></span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon"><i data-lucide="settings" style="width:20px;height:20px"></i></span>Настройки</a>
 </nav>
 </body>
 </html>

@@ -14,6 +14,7 @@
 <title>OMSFIN — Документы</title>
 <meta name="description" content="Генератор первичных документов: счёт, УПД, ТОРГ-12, счёт-фактура, акт, договор поставки, доверенность, ПКО, ТТН. Автозаполнение по реквизитам компании.">
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script>(function(){var t=localStorage.getItem('omsfin_token')||localStorage.getItem('omschicken_token');if(!t&&!localStorage.getItem('omsfin_demo'))window.location.replace('/login');})()</script>
 <script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -170,10 +171,10 @@
   </div>
 </header>
 <div class="tabs">
-  <button class="tab active" onclick="showPage('create',this)">📄 Создать</button>
-  <button class="tab" onclick="showPage('history',this)">📋 История</button>
-  <button class="tab" onclick="showPage('templates',this)">⭐ Шаблоны</button>
-  <button class="tab" onclick="showPage('settings',this)">⚙️ Настройки</button>
+  <button class="tab active" onclick="showPage('create',this)"><i data-lucide="file-plus-2" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Создать</button>
+  <button class="tab" onclick="showPage('history',this)"><i data-lucide="history" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>История</button>
+  <button class="tab" onclick="showPage('templates',this)"><i data-lucide="star" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Шаблоны</button>
+  <button class="tab" onclick="showPage('settings',this)"><i data-lucide="settings" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Настройки</button>
 </div>
 <main>
 
@@ -424,6 +425,8 @@
     </div>
   </div>
 
+  <!-- Форма для типов без спец-макета (счёт, УПД, ТОРГ-12, СФ, акт, договор, доверенность, ПКО, ТТН) -->
+  <div id="generic-form">
   <!-- Реквизиты контрагента -->
   <div class="card">
     <div class="section-title">Реквизиты контрагента</div>
@@ -497,6 +500,7 @@
   <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
     <button class="btn-outline" onclick="generateDoc()" style="padding:11px 22px;font-size:13px">Сформировать документ</button>
   </div>
+  </div><!-- /generic-form -->
 
   <div class="preview-wrap" id="previewWrap">
     <div class="preview-btn-row">
@@ -654,13 +658,34 @@ function loadImg(input, key, previewId) {
   reader.readAsDataURL(file);
 }
 
+// Шаг 2 мастера: показываем форму нужного типа, остальные скрываем,
+// плавно вводим её в поле зрения (reveal) — выбор типа документа ощущается
+// как переход к следующему шагу, а не как ещё один блок в бесконечной простыне.
 function selectDoc(type, el) {
   currentDoc = type;
   document.querySelectorAll('.doc-type-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('pp-form').style.display = type === 'pp' ? 'block' : 'none';
-  document.getElementById('sverka-form').style.display = type === 'sverka' ? 'block' : 'none';
-  document.getElementById('ksf-form').style.display = type === 'ksf' ? 'block' : 'none';
+
+  const forms = {
+    pp: document.getElementById('pp-form'),
+    sverka: document.getElementById('sverka-form'),
+    ksf: document.getElementById('ksf-form'),
+    generic: document.getElementById('generic-form'),
+  };
+  const activeKey = (type === 'pp' || type === 'sverka' || type === 'ksf') ? type : 'generic';
+
+  Object.entries(forms).forEach(([key, form]) => {
+    if (!form) return;
+    if (key === activeKey) {
+      form.style.display = key === 'generic' ? '' : 'block';
+      form.classList.add('reveal');
+      form.classList.remove('revealed');
+      requestAnimationFrame(() => requestAnimationFrame(() => form.classList.add('revealed')));
+    } else {
+      form.style.display = 'none';
+    }
+  });
+
   if (type === 'sverka' && !document.querySelector('#svRowsWrap input.sv-date')) addSvRow();
   if (type === 'ksf') {
     const sf = document.getElementById('ksfSeller');
@@ -849,11 +874,11 @@ ${v('ppKbk') ? `<table style="width:100%;border-collapse:collapse;font-size:9pt;
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ПП №${v('ppNum')}</title>
 <style>body{margin:0;background:#fff}@media print{body{margin:0}}</style></head>
 <body onload="window.print()">${html}<nav class="bottom-nav">
-  <a href="/"><span class="bn-icon">🏠</span>Главная</a>
-  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
-  <a href="/docs.html" class="active"><span class="bn-icon">📄</span>Документы</a>
-  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
-  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+  <a href="/"><span class="bn-icon"><i data-lucide="home" style="width:20px;height:20px"></i></span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></span>Аналитика</a>
+  <a href="/docs.html" class="active"><span class="bn-icon"><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon"><i data-lucide="clipboard-list" style="width:20px;height:20px"></i></span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon"><i data-lucide="settings" style="width:20px;height:20px"></i></span>Настройки</a>
 </nav>
 </body></html>`);
   win.document.close();

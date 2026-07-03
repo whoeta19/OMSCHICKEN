@@ -63,7 +63,8 @@
   .tool-btn:hover{border-color:rgba(255,107,0,0.4);background:rgba(255,107,0,0.04);transform:translateY(-1px);}
   .tool-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.08);box-shadow:0 0 0 3px rgba(255,107,0,0.12);}
 
-  .tool-icon{font-size:26px;margin-bottom:10px;display:block;}
+  .tool-icon{margin-bottom:10px;display:block;color:var(--accent);}
+  .tool-icon svg{width:24px;height:24px;}
   .tool-name{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;margin-bottom:4px;line-height:1.3;}
   .tool-desc{font-size:11px;color:var(--muted);line-height:1.4;}
   .tool-panel{display:none;}
@@ -131,6 +132,7 @@
   }
 </style>
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
@@ -146,47 +148,47 @@
 
   <div class="tools-grid">
     <div class="tool-btn active" onclick="showTool('salary',this)">
-      <div class="tool-icon">👥</div>
+      <div class="tool-icon"><i data-lucide="users"></i></div>
       <div class="tool-name">Зарплата</div>
       <div class="tool-desc">НДФЛ и страховые взносы</div>
     </div>
     <div class="tool-btn" onclick="showTool('deal',this)">
-      <div class="tool-icon">📦</div>
+      <div class="tool-icon"><i data-lucide="package"></i></div>
       <div class="tool-name">Рентабельность</div>
       <div class="tool-desc">Прибыль с одной сделки</div>
     </div>
     <div class="tool-btn" onclick="showTool('kp',this)">
-      <div class="tool-icon">📄</div>
+      <div class="tool-icon"><i data-lucide="file-text"></i></div>
       <div class="tool-name">Генератор КП</div>
       <div class="tool-desc">Красивое коммерческое предложение</div>
     </div>
     <div class="tool-btn" onclick="showTool('enp',this)">
-      <div class="tool-icon">🏦</div>
+      <div class="tool-icon"><i data-lucide="landmark"></i></div>
       <div class="tool-name">График ЕНП</div>
       <div class="tool-desc">Когда и сколько платить в бюджет</div>
     </div>
     <div class="tool-btn" onclick="showTool('penalty',this)">
-      <div class="tool-icon">⚠️</div>
+      <div class="tool-icon"><i data-lucide="alert-triangle"></i></div>
       <div class="tool-name">Пени и штрафы</div>
       <div class="tool-desc">Расчёт пеней за просрочку</div>
     </div>
     <div class="tool-btn" onclick="showTool('taxsys',this)">
-      <div class="tool-icon">⚖️</div>
+      <div class="tool-icon"><i data-lucide="scale"></i></div>
       <div class="tool-name">Выбор системы</div>
       <div class="tool-desc">УСН 6% vs 15% vs ОСНО — что выгоднее</div>
     </div>
     <div class="tool-btn" onclick="showTool('currency',this)">
-      <div class="tool-icon">💱</div>
+      <div class="tool-icon"><i data-lucide="repeat"></i></div>
       <div class="tool-name">Конвертер валют</div>
       <div class="tool-desc">Курсы ЦБ РФ, перевод в рубли</div>
     </div>
     <div class="tool-btn" onclick="showTool('breakeven',this)">
-      <div class="tool-icon">📐</div>
+      <div class="tool-icon"><i data-lucide="ruler"></i></div>
       <div class="tool-name">Точка безубыточности</div>
       <div class="tool-desc">Сколько продавать, чтобы не уйти в минус</div>
     </div>
     <div class="tool-btn" onclick="window.location.href='/counterparty'">
-      <div class="tool-icon">🔍</div>
+      <div class="tool-icon"><i data-lucide="search-check"></i></div>
       <div class="tool-name">Проверка контрагента</div>
       <div class="tool-desc">Данные ЕГРЮЛ, риски, руководитель</div>
     </div>
@@ -665,11 +667,11 @@ function printKP() {
   const content = document.getElementById('kpOutput').innerHTML;
   const win = window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;font-size:11pt;padding:20mm;color:#000;margin:0}table{width:100%;border-collapse:collapse}@media print{@page{margin:15mm}}</style></head><body>${content}<nav class="bottom-nav">
-  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
-  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
-  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
-  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
-  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+  <a href="/" class="active"><span class="bn-icon"><i data-lucide="home" style="width:20px;height:20px"></i></span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon"><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon"><i data-lucide="clipboard-list" style="width:20px;height:20px"></i></span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon"><i data-lucide="settings" style="width:20px;height:20px"></i></span>Настройки</a>
 </nav>
 </body></html>`);
   win.document.close();

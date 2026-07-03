@@ -141,6 +141,7 @@
   }
 </style>
 <script src="/utils.js"></script>
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script src="/nav.js"></script>
 </head>
 <body>
@@ -157,10 +158,10 @@
   </div>
 </header>
 <div class="tabs">
-  <button class="tab active" onclick="showPage('summary',this)">📊 Сводка НДС</button>
+  <button class="tab active" onclick="showPage('summary',this)"><i data-lucide="receipt" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Сводка НДС</button>
   <button class="tab" onclick="showPage('sales',this)">Книга продаж</button>
   <button class="tab" onclick="showPage('purchases',this)">Книга покупок</button>
-  <button class="tab" onclick="showPage('calc',this)">🧮 Калькулятор</button>
+  <button class="tab" onclick="showPage('calc',this)"><i data-lucide="calculator" style="width:15px;height:15px;vertical-align:-3px;margin-right:4px"></i>Калькулятор</button>
 </div>
 <main>
 
@@ -678,11 +679,11 @@ document.getElementById('shiftDate').value = new Date().toISOString().split('T')
 
 </script>
 <nav class="bottom-nav">
-  <a href="/" class="active"><span class="bn-icon">🏠</span>Главная</a>
-  <a href="/analytics.html"><span class="bn-icon">📊</span>Аналитика</a>
-  <a href="/docs.html"><span class="bn-icon">📄</span>Документы</a>
-  <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
-  <a href="/settings.html"><span class="bn-icon">⚙️</span>Настройки</a>
+  <a href="/" class="active"><span class="bn-icon"><i data-lucide="home" style="width:20px;height:20px"></i></span>Главная</a>
+  <a href="/analytics.html"><span class="bn-icon"><i data-lucide="bar-chart-3" style="width:20px;height:20px"></i></span>Аналитика</a>
+  <a href="/docs.html"><span class="bn-icon"><i data-lucide="file-text" style="width:20px;height:20px"></i></span>Документы</a>
+  <a href="/declarations.html"><span class="bn-icon"><i data-lucide="clipboard-list" style="width:20px;height:20px"></i></span>Декларации</a>
+  <a href="/settings.html"><span class="bn-icon"><i data-lucide="settings" style="width:20px;height:20px"></i></span>Настройки</a>
 </nav>
 </body>
 </html>
