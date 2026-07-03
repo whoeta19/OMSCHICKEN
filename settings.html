@@ -165,14 +165,6 @@
           </div>
           <div class="theme-label">🌊 Синяя</div>
         </div>
-        <div class="theme-btn" id="theme-aurora" onclick="setTheme('aurora',this)">
-          <div class="preview">
-            <span style="background:#0e0b1a;border:1.5px solid rgba(167,139,250,0.3)"></span>
-            <span style="background:#a78bfa"></span>
-            <span style="background:#34d399"></span>
-          </div>
-          <div class="theme-label">🌌 Аврора</div>
-        </div>
       </div>
     </div>
     <div class="input-group" style="margin-top:10px">
@@ -517,11 +509,10 @@ if (user.email) document.getElementById('userEmail').textContent = user.email;
 
 // Применяем тему
 function applyTheme(theme) {
-  document.body.classList.remove('light', 'blue', 'aurora');
+  document.body.classList.remove('light', 'blue');
   if (theme === 'light') document.body.classList.add('light');
   if (theme === 'blue') document.body.classList.add('blue');
-  if (theme === 'aurora') document.body.classList.add('aurora');
-  ['dark','light','blue','aurora'].forEach(t => {
+  ['dark','light','blue'].forEach(t => {
     const el = document.getElementById('theme-'+t);
     if (el) el.classList.toggle('active', t === (theme||'dark'));
   });

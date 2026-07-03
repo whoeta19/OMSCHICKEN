@@ -172,14 +172,16 @@
 
   .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
   .stat-card{
-    background:var(--surface);
-    border:1px solid var(--border);
+    background:rgba(20,20,20,0.55);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.07);
     border-radius:16px;padding:16px;
-    transition:all 0.25s;
+    transition:transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     position:relative;overflow:hidden;
     box-shadow:var(--shadow);
   }
-  .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.1);}
+  .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-2px);box-shadow:var(--shadow-2);}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:400;}
   .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
   .stat-value.green{color:var(--green);}
@@ -594,6 +596,7 @@
   .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--text);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
 </style>
 <script src="/utils.js"></script>
+<script src="/js/effects.js"></script>
 </head>
 <body>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
@@ -721,9 +724,9 @@
 
   <!-- ─── Три метрики ─── -->
   <div class="stats-row" style="margin-bottom:14px">
-    <div class="stat-card"><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
-    <div class="stat-card"><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
-    <div class="stat-card"><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
+    <div class="stat-card" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
+    <div class="stat-card" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
+    <div class="stat-card" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
   </div>
 
   <!-- ─── Умная лента инсайтов ─── -->
@@ -2487,9 +2490,15 @@ function _origRenderAll() {
     const income = allTx.filter(t=>t.amount>0 && !['transit','loan'].includes(t.category)).reduce((s,t)=>s+Number(t.amount),0);
     const expense = allTx.filter(t=>t.amount<0 && !['transit','loan','cash'].includes(t.category)).reduce((s,t)=>s+Math.abs(t.amount),0);
     const personal = allTx.filter(t=>t.is_personal).reduce((s,t)=>s+Math.abs(t.amount),0);
-    document.getElementById('statIncome').textContent = fmt(income);
-    document.getElementById('statExpense').textContent = fmt(expense);
-    document.getElementById('statPersonal').textContent = fmt(personal);
+    if (window.OMSFX) {
+      OMSFX.animateNumber(document.getElementById('statIncome'), income);
+      OMSFX.animateNumber(document.getElementById('statExpense'), expense);
+      OMSFX.animateNumber(document.getElementById('statPersonal'), personal);
+    } else {
+      document.getElementById('statIncome').textContent = fmt(income);
+      document.getElementById('statExpense').textContent = fmt(expense);
+      document.getElementById('statPersonal').textContent = fmt(personal);
+    }
     const profit = income - expense;
     const profitEl = document.getElementById('statProfit');
     const profitSub = document.getElementById('statProfitSub');
