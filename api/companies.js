@@ -8,13 +8,23 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Healthcheck — проверка конфигурации без авторизации
+  // Healthcheck — проверка конфигурации и реальной связи с Supabase (без авторизации)
   if (req.method === 'GET' && req.query.action === 'health') {
+    let auth_reachable = null, auth_status = null;
+    if (SUPABASE_URL && SUPABASE_KEY) {
+      try {
+        const hr = await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { 'apikey': SUPABASE_KEY } });
+        auth_status = hr.status;
+        auth_reachable = hr.ok;
+      } catch (e) { auth_reachable = false; auth_status = String(e.message).slice(0, 80); }
+    }
     return res.status(200).json({
       ok: true,
       supabase_url: !!SUPABASE_URL,
       service_key: !!SERVICE_KEY,
-      anon_key: !!SUPABASE_KEY
+      anon_key: !!SUPABASE_KEY,
+      auth_reachable,
+      auth_status
     });
   }
 
@@ -26,7 +36,7 @@ export default async function handler(req, res) {
   const userToken = authHeader.replace('Bearer ', '').trim();
   
   // Получаем user_id из токена (нужен для фильтрации компаний по членству)
-  let userId = null;
+  let userId = null, authReason = userToken ? '' : 'нет токена';
   if (userToken) {
     try {
       const ur = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -34,9 +44,10 @@ export default async function handler(req, res) {
       });
       const ud = await ur.json();
       userId = ud.id || null;
-    } catch(e) { console.error(e); }
+      if (!userId) authReason = ud.error_code || ud.msg || ud.error || ('auth ' + ur.status);
+    } catch(e) { console.error(e); authReason = 'auth недоступен'; }
   }
-  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
+  if (!userId) return res.status(401).json({ error: 'Не авторизован', reason: authReason });
 
   const svcHeaders = {
     'apikey': SERVICE_KEY,

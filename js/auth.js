@@ -56,13 +56,21 @@ window.fetch = async function(url, opts = {}) {
       const newTok = await getValidToken();
       if (newTok) {
         opts.headers = {...(opts.headers||{}), 'Authorization': 'Bearer ' + newTok};
-        return _origFetch(url, opts);
+        const r2 = await _origFetch(url, opts);
+        if (r2.status !== 401) return r2;
       }
+      // Сессия мертва — чистим токены и выходим на логин с пояснением
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+      localStorage.removeItem('omschicken_token');
+      localStorage.removeItem('omschicken_refresh');
+      window.location.href = '/login?expired=1';
     }
     return r;
   }
   return _origFetch(url, opts);
 };
 
-// Refresh every 30 min proactively
-setInterval(async () => { localStorage.removeItem(TOKEN_KEY); await getValidToken(); }, 30 * 60 * 1000);
+// Превентивная проверка каждые 5 минут: getValidToken обновит токен сам,
+// только когда до истечения <5 минут — без принудительного сброса (межвкладочная гонка)
+setInterval(() => { getValidToken(); }, 5 * 60 * 1000);

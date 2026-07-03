@@ -1194,16 +1194,23 @@ window.fetch = async function(url, opts = {}) {
       const newTok = await getValidToken();
       if (newTok) {
         opts.headers = {...(opts.headers||{}), 'Authorization': 'Bearer ' + newTok};
-        return _origFetch(url, opts);
+        const r2 = await _origFetch(url, opts);
+        if (r2.status !== 401) return r2;
       }
+      // Сессия мертва (аннулирована на сервере) — токены бесполезны, выходим на логин
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+      localStorage.removeItem('omschicken_token');
+      localStorage.removeItem('omschicken_refresh');
+      window.location.href = '/login?expired=1';
     }
     return r;
   }
   return _origFetch(url, opts);
 };
 
-// Превентивное обновление каждые 30 минут
-setInterval(async () => { localStorage.removeItem(TOKEN_KEY); await getValidToken(); }, 30 * 60 * 1000);
+// Превентивная проверка каждые 5 минут: getValidToken обновит сам при близком истечении
+setInterval(() => { getValidToken(); }, 5 * 60 * 1000);
 
 function logout() {
   localStorage.removeItem('omschicken_token');
