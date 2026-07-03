@@ -171,7 +171,7 @@
   .skeleton-row{height:56px;margin-bottom:6px;border-radius:10px;}
 
   .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
-  .bento-top{margin-bottom:14px;}
+  .bento-top{margin-bottom:24px;}
   .bento-top .bento-hero{margin-bottom:12px;}
   .bento-top .bento-stats{margin-bottom:0;}
   @media(min-width:900px){
@@ -191,7 +191,7 @@
   }
   .stat-card:hover{border-color:rgba(255,107,0,0.25);transform:translateY(-2px);box-shadow:var(--shadow-2);}
   .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:400;}
-  .stat-value{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
+  .stat-value{font-family:'Unbounded',sans-serif;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
   .stat-value.green{color:var(--green);}
   .stat-value.red{color:var(--red);}
   .stat-value.orange{color:#ffaa44;}
@@ -411,7 +411,7 @@
     .section-title{font-size:10px;margin-bottom:10px;}
 
     /* Герой-карточка на мобильном */
-    .hero-stat-value{font-size:18px;}
+    .hero-stat-value{font-size:26px;}
 
     /* Три stat-card в строку не влезают — делаем 2+1 */
     .stats-row{grid-template-columns:1fr 1fr 1fr!important;gap:6px;}
@@ -459,7 +459,7 @@
   .hero-stat{
     background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.03));
     border:1px solid rgba(255,107,0,0.2);
-    border-radius:16px;padding:20px;margin-bottom:12px;
+    border-radius:16px;padding:28px;margin-bottom:12px;
     position:relative;overflow:hidden;
   }
   .hero-stat::before{
@@ -467,11 +467,11 @@
     width:120px;height:120px;border-radius:50%;
     background:rgba(255,107,0,0.06);
   }
-  .hero-stat-label{font-size:10px;color:rgba(255,107,0,0.6);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;font-weight:500;}
-  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:900;color:var(--text);}
+  .hero-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;font-weight:500;}
+  .hero-stat-value{font-family:'Unbounded',sans-serif;font-size:38px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1.1;}
   .hero-stat-value.positive{color:var(--green);}
   .hero-stat-value.negative{color:var(--red);}
-  .hero-stat-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+  .hero-stat-sub{font-size:12px;color:var(--muted);margin-top:8px;}
 
   .section-header{
     display:flex;align-items:center;justify-content:space-between;
@@ -705,39 +705,34 @@
     <div style="font-family:Unbounded,sans-serif;font-size:15px;font-weight:900;margin-bottom:6px">👋 Добро пожаловать в OMSFIN</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Начни с загрузки банковской выписки — и за 10 секунд получишь полную картину финансов.</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="document.getElementById('fileInput').click()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 16px;font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;cursor:pointer" class="magnetic">📂 Загрузить выписку</button>
+      <button onclick="document.getElementById('fileInput').click()" style="background:var(--accent);color:#000;border:none;border-radius:10px;padding:12px 22px;font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 18px rgba(255,107,0,0.35)" class="magnetic">Загрузить выписку</button>
       <button onclick="window.location.href='/onboarding'" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:12px;cursor:pointer">⚙️ Настроить кабинет</button>
       <button onclick="document.getElementById('welcomeBanner').style.display='none';localStorage.setItem('omsfin_onboarded','1')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:9px 6px">Скрыть</button>
     </div>
   </div>
-
-  <!-- ─── Счета: остатки по расчётным счетам ─── -->
-  <div id="accountsWidget" style="margin-bottom:14px"></div>
-
-  <!-- ─── Склад: предупреждения об остатках ─── -->
-  <div id="warehouseWidget" style="margin-bottom:14px"></div>
-
-  <!-- ─── Налоговый календарь: ближайшие дедлайны ─── -->
-  <div id="calWidget" style="margin-bottom:14px"></div>
-
-  <!-- ─── Аномалии (появляются только когда есть) ─── -->
-  <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
-  <div id="anomalyBlock" style="margin-bottom:0"></div>
 
   <!-- ─── Bento: главная метрика + три метрики ─── -->
   <div class="bento-top">
   <div class="hero-stat bento-hero grad-anim spotlight">
     <div class="hero-stat-label">Прибыль за период</div>
     <div class="hero-stat-value" id="statProfit">0 ₽</div>
-    <div class="hero-stat-sub" id="statProfitSub">Загрузи выписку для расчёта</div>
+    <div class="hero-stat-sub" id="statProfitSub">Загрузите выписку — прибыль посчитается сама</div>
   </div>
 
   <div class="stats-row bento-stats">
-    <div class="stat-card spotlight" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statIncomeTrend"></div></div>
-    <div class="stat-card spotlight" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statExpenseTrend"></div></div>
-    <div class="stat-card spotlight" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:3px" id="statVatDeadline"></div></div>
+    <div class="stat-card spotlight" data-reveal><div class="stat-label">Доход</div><div class="stat-value green" id="statIncome">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:6px" id="statIncomeTrend"></div></div>
+    <div class="stat-card spotlight" data-reveal><div class="stat-label">Расход</div><div class="stat-value red" id="statExpense">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:6px" id="statExpenseTrend"></div></div>
+    <div class="stat-card spotlight" data-reveal><div class="stat-label">НДС к уплате</div><div class="stat-value orange" id="statPersonal">0 ₽</div><div style="font-size:10px;color:var(--muted);margin-top:6px" id="statVatDeadline"></div></div>
   </div>
   </div><!-- /bento-top -->
+
+  <!-- ─── Требует внимания: дедлайны, аномалии, склад, счета ─── -->
+  <div id="calWidget" style="margin-top:24px;margin-bottom:14px"></div>
+  <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
+  <div id="anomalyBlock" style="margin-bottom:14px"></div>
+  <div id="accountsWidget" style="margin-bottom:14px"></div>
+  <div id="warehouseWidget" style="margin-bottom:14px"></div>
+
 
   <!-- ─── Умная лента инсайтов ─── -->
   <div id="insightsFeed" style="display:none;margin-bottom:12px"></div>
@@ -783,7 +778,7 @@
   <!-- ─── Финансовые цели ─── -->
   <div id="goalsCard" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">🎯 Цели месяца</div>
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Цели месяца</div>
       <button onclick="openGoalsModal()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:3px 9px;color:var(--muted);font-size:10px;cursor:pointer">✏️ Изменить</button>
     </div>
     <div id="goalsList" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -835,7 +830,7 @@
       </div>
       <button class="btn-outline" onclick="showPage('transactions',document.querySelector('.pill[onclick*=\"transactions\"]'))" style="font-size:10px;padding:4px 10px">Все →</button>
     </div>
-    <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
+    <div id="recentList"><div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузите банковскую выписку или добавьте операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div></div>
   </div>
 
   <!-- ─── Прогноз кэшфлоу (скрыт до появления данных) ─── -->
@@ -917,7 +912,7 @@
 
 <div class="page" id="page-budget">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div class="section-title" style="margin-bottom:0">💰 Бюджет месяца</div>
+    <div class="section-title" style="margin-bottom:0">Бюджет месяца</div>
     <div style="display:flex;gap:8px;align-items:center">
       <select id="budgetPeriodSel" onchange="renderBudget()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);font-size:12px;outline:none"></select>
       <button onclick="addBudgetItem()" style="background:var(--accent);border:none;border-radius:8px;padding:6px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer">+ Категория</button>
@@ -928,7 +923,7 @@
   <div id="budgetList"></div>
 </div>
 <div class="page" id="page-recurring">
-  <div class="section-title">🔁 Регулярные платежи</div>
+  <div class="section-title">Регулярные платежи</div>
   <div id="recurringUpcoming" style="margin-bottom:12px"></div>
   <div id="recurringStats" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap"></div>
   <div id="recurringList"></div>
@@ -973,7 +968,7 @@
   </div>
   <div id="reclassifyList"></div>
   <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-    <div class="section-title"><span>📚 Мои правила (<span id="rulesCount">0</span>)</span></div>
+    <div class="section-title"><span>Мои правила (<span id="rulesCount">0</span>)</span></div>
     <div id="rulesList"></div>
   </div>
 </div>
@@ -1783,7 +1778,7 @@ function renderAccountsWidget() {
   const allBalance = allTx.reduce((s, t) => s + Number(t.amount), 0);
   el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <span style="font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">🏦 Расчётные счета</span>
+      <span style="font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Расчётные счета</span>
       ${currentAccountFilter !== 'all' ? `<button onclick="filterByAccount('all')" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer">Сбросить фильтр</button>` : ''}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -2579,7 +2574,7 @@ function _origRenderAll() {
       } else {
         profitEl.textContent = '0 ₽';
         profitEl.className = 'hero-stat-value';
-        if (profitSub) profitSub.textContent = 'Загрузи выписку для расчёта';
+        if (profitSub) profitSub.textContent = 'Загрузите выписку — прибыль посчитается сама';
       }
     }
   } catch(e) { console.error('renderAll stats:', e); }
@@ -2588,7 +2583,7 @@ function _origRenderAll() {
     const recent = allTx.slice(0,20);
     document.getElementById('recentList').innerHTML = recent.length
       ? recent.map(txHTML).join('')
-      : `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`;
+      : `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Нет операций</div><div class="empty-state-sub">Загрузите банковскую выписку или добавьте операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`;
   } catch(e) { console.error('recentList:', e); }
   try { renderTxList(); } catch(e) { console.error('renderTxList:', e); }
   try { renderSuggestions(); } catch(e) { console.error('renderSuggestions:', e); }
@@ -2956,7 +2951,7 @@ function renderTxList() {
   );
   document.getElementById('txCount').textContent = filtered.length+' операций';
   const emptyTx = allTx.length === 0
-    ? `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Операций нет</div><div class="empty-state-sub">Загрузи банковскую выписку или добавь операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`
+    ? `<div class="empty-state"><div class="empty-state-icon">📂</div><div class="empty-state-title">Операций нет</div><div class="empty-state-sub">Загрузите банковскую выписку или добавьте операцию вручную</div><button class="empty-state-btn" onclick="document.getElementById('fileInput').click()">Загрузить выписку</button></div>`
     : `<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-title">Ничего не найдено</div><div class="empty-state-sub">Попробуй изменить фильтр или поисковый запрос</div></div>`;
   document.getElementById('txList').innerHTML = filtered.length ? filtered.map(txHTML).join('') : emptyTx;
 }
@@ -5402,7 +5397,7 @@ setTimeout(function() {
 
   el.innerHTML = `<div style="background:var(--surface);border:1px solid rgba(234,179,8,0.3);border-radius:14px;padding:14px 16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <span style="font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:0.5px">⚠️ Склад: мало товара</span>
+      <span style="font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:0.5px">Склад: мало товара</span>
       <a href="/warehouse" style="font-size:11px;color:var(--accent);text-decoration:none;">Склад →</a>
     </div>
     ${rows}${more}
@@ -5466,7 +5461,7 @@ setTimeout(function() {
   }).join('');
   el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <span style="font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">📅 Ближайшие дедлайны</span>
+      <span style="font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Ближайшие дедлайны</span>
       <a href="/calendar" style="font-size:11px;color:var(--accent);text-decoration:none;">Все →</a>
     </div>
     ${items}
