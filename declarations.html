@@ -671,7 +671,8 @@
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
 let allTx = [];
-const now = new Date();
+// Налоговые сроки — всегда по московскому времени, не по поясу пользователя
+const now = mskNow();
 const quarter = Math.floor(now.getMonth() / 3) + 1;
 const year = now.getFullYear();
 

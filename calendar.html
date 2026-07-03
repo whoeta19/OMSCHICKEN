@@ -265,7 +265,8 @@ const TAG_LABELS = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взнос
 
 let doneIds = JSON.parse(localStorage.getItem('omsfin_cal_done') || '[]');
 let currentFilter = 'all';
-const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+// Дедлайны — по Москве (mskNow из utils.js), не по локальному поясу
+const TODAY = mskNow(); TODAY.setHours(0,0,0,0);
 
 function getStatus(dateStr) {
   const d = new Date(dateStr); d.setHours(0,0,0,0);

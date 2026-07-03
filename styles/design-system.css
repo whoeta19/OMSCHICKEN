@@ -169,3 +169,15 @@ input[type="checkbox"]:checked { transform: scale(1.05); }
 
 /* ── Эффект: магнитная кнопка (JS в effects.js) ──────────────────────── */
 .magnetic { transition: transform 0.18s cubic-bezier(0.3, 1, 0.4, 1); will-change: transform; }
+
+/* ── Тап-цели: на тач-устройствах интерактивные элементы не меньше 44px ── */
+@media (pointer: coarse) {
+  button, .btn, .btn-outline, .tab, .filter-btn, .pill,
+  .settings-nav a, .mp-tab, select, input[type="checkbox"] + * {
+    min-height: 44px;
+  }
+  .tab, .filter-btn, .pill, .settings-nav a, .mp-tab {
+    display: inline-flex;
+    align-items: center;
+  }
+}

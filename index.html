@@ -5443,7 +5443,7 @@ setTimeout(function() {
   const TAG_COLORS = {usn:'#60a5fa',nds:'#f87171',ndfl:'#fbbf24',vznosy:'#4ade80',profit:'#c084fc',salary:'#fb923c'};
   const TAG_LABELS = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взносы',profit:'Прибыль',salary:'Зарплата'};
   const done = JSON.parse(localStorage.getItem('omsfin_cal_done') || '[]');
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = mskNow(); today.setHours(0,0,0,0); // дедлайны по Москве
   const upcoming = CAL_EVENTS.filter(e => {
     const d = new Date(e.date); d.setHours(0,0,0,0);
     return d >= today && !done.includes(e.id);

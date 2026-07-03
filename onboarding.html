@@ -287,11 +287,11 @@ function saveRequisites() {
   // Сохраняем в облако
   const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (tok) {
-    fetch('/api/company_settings', {
+    safeFetch('/api/company_settings', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
       body: JSON.stringify({seller})
-    }).catch(e => console.error('Не удалось сохранить реквизиты в облако:', e));
+    }).catch(e => { console.error(e); showToast('Реквизиты сохранены локально, но не в облако: ' + e.message); });
   }
   nextStep();
 }
