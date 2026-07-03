@@ -337,7 +337,7 @@ let filteredTx = [];
 let currentPeriod = 'all';
 
 function renderPeriodFilter() {
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b)).reverse();
   const sel = document.getElementById('periodSelect');
   if (!sel) return;
   sel.innerHTML = '<option value="all">Все периоды</option>' + 
@@ -576,7 +576,7 @@ loadData();
         localStorage.setItem('omsfin_token', data.access_token);
         localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   setInterval(refresh, 45 * 60 * 1000);
 })();

@@ -11,7 +11,7 @@ async function getValidToken() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.exp - Math.floor(Date.now()/1000) > 300) return token;
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   if (!refresh) { window.location.href = '/login'; return null; }
   try {
@@ -26,7 +26,7 @@ async function getValidToken() {
       localStorage.setItem(REFRESH_KEY, data.refresh_token);
       return data.access_token;
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
   window.location.href = '/login';
   return null;
 }

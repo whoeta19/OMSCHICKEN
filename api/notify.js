@@ -305,7 +305,7 @@ export default async function handler(req, res) {
                 </div>`
               );
             }
-          } catch(e) {}
+          } catch(e) { console.error(e); }
         }
       }
     }
@@ -386,7 +386,7 @@ export default async function handler(req, res) {
             });
           }
         }
-      } catch(e) {}
+      } catch(e) { console.error(e); }
     }
 
     return res.status(200).json({

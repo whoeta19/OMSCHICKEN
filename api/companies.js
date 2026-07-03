@@ -8,6 +8,20 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  // Healthcheck — проверка конфигурации без авторизации
+  if (req.method === 'GET' && req.query.action === 'health') {
+    return res.status(200).json({
+      ok: true,
+      supabase_url: !!SUPABASE_URL,
+      service_key: !!SERVICE_KEY,
+      anon_key: !!SUPABASE_KEY
+    });
+  }
+
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return res.status(503).json({ error: 'Сервис временно недоступен: не настроены переменные окружения (SUPABASE_URL / SUPABASE_SERVICE_KEY)' });
+  }
+
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.replace('Bearer ', '').trim();
   
@@ -20,7 +34,7 @@ export default async function handler(req, res) {
       });
       const ud = await ur.json();
       userId = ud.id || null;
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   if (!userId) return res.status(401).json({ error: 'Не авторизован' });
 

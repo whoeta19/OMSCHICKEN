@@ -1093,7 +1093,7 @@ async function syncUserSettings() {
       const merged = { ...data.goals, ...localGoals };
       localStorage.setItem('omsfin_goals', JSON.stringify(merged));
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 async function saveUserSettings() {
@@ -1106,7 +1106,7 @@ async function saveUserSettings() {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       body: JSON.stringify({ rules: userRules, goals })
     });
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 // Ключи хранилища
@@ -1150,7 +1150,7 @@ async function getValidToken() {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.exp - Math.floor(Date.now()/1000) > 300) return token;
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   
   // Обновляем
@@ -1167,7 +1167,7 @@ async function getValidToken() {
       localStorage.setItem(REFRESH_KEY, data.refresh_token);
       return data.access_token;
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
   window.location.href = '/login';
   return null;
 }
@@ -1359,7 +1359,7 @@ async function loadCompanies() {
     if (overviewBtn) overviewBtn.style.display = companies.length > 1 ? 'block' : 'none';
     // Применяем права доступа после того как company_id актуален
     await applyRoleAccess();
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 async function createDefaultCompany() {
@@ -1566,7 +1566,7 @@ function getRadarCache() {
 }
 
 function saveRadarCache(cache) {
-  try { localStorage.setItem(RADAR_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
+  try { localStorage.setItem(RADAR_CACHE_KEY, JSON.stringify(cache)); } catch(e) { console.error(e); }
 }
 
 async function scanCounterpartyRadar() {
@@ -1871,7 +1871,7 @@ async function syncNow() {
     if (dot) dot.className = 'sync-dot';
     if (btn) btn.innerHTML = '<span class="sync-dot"></span>Синхронизировано';
     // Кешируем для страницы контрагентов
-    try { localStorage.setItem('omsfin_tx_cache', JSON.stringify(allTx.slice(0, 2000))); } catch(e) {}
+    try { localStorage.setItem('omsfin_tx_cache', JSON.stringify(allTx.slice(0, 2000))); } catch(e) { console.error(e); }
     // Применяем фильтр контрагента если пришли со страницы проверки
     const cpFilter = localStorage.getItem('omsfin_cp_filter');
     if (cpFilter) { localStorage.removeItem('omsfin_cp_filter'); setTimeout(()=>{ showPage('transactions', null); const el = document.getElementById('txSearch'); if(el){el.value=cpFilter;renderTxList();} }, 300); }
@@ -2509,7 +2509,7 @@ function _origRenderAll() {
       if (allTx.length) {
         profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
         profitEl.className = 'hero-stat-value ' + (profit >= 0 ? 'positive' : 'negative');
-        const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort();
+        const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
         if (profitSub) profitSub.textContent = periods.length ? `За ${periods.length > 1 ? periods[0] + ' — ' + periods[periods.length-1] : periods[0]}` : 'Все операции';
       } else {
         profitEl.textContent = '0 ₽';
@@ -2529,7 +2529,7 @@ function _origRenderAll() {
   try { renderSuggestions(); } catch(e) { console.error('renderSuggestions:', e); }
   try { renderMonthCloser(); } catch(e) { console.error('renderMonthCloser:', e); }
   try { initHome(); } catch(e) { console.error('initHome:', e); }
-  try { scanCounterpartyRadar(); } catch(e) {}
+  try { scanCounterpartyRadar(); } catch(e) { console.error(e); }
   try { renderCashflowForecast(window._cfDays || 30); } catch(e) { console.error('cfForecast:', e); }
   try { renderHealthScore(); } catch(e) { console.error('healthScore:', e); }
   try { renderGoals(); } catch(e) { console.error('renderGoals:', e); }
@@ -2783,11 +2783,11 @@ function renderMonthCloser() {
     const docs = JSON.parse(localStorage.getItem('omsfin_docs') || '[]');
     const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
     docsThisMonth = docs.filter(d => (d.date || '').startsWith(ym)).length;
-  } catch (e) {}
+  } catch(e) { console.error(e); }
 
   // Excel-выгрузки деклараций за квартал — отмечаем флагом в localStorage при экспорте
   let declExported = {};
-  try { declExported = JSON.parse(localStorage.getItem('omsfin_decl_exports') || '{}'); } catch (e) {}
+  try { declExported = JSON.parse(localStorage.getItem('omsfin_decl_exports') || '{}'); } catch(e) { console.error(e); }
   const quarterKey = Math.floor(month0 / 3) + 1 + 'q' + now.getFullYear();
 
   const items = [
@@ -3274,7 +3274,7 @@ function showPage(name,btn){
   if(name==='reclassify') { renderReclassify(); showAutoclassifyBanner(); }
   if(name==='recurring') renderRecurring();
   if(name==='taxes') { renderUSN(); renderForecast(); renderTaxCalendar(); }
-  if(name==='budget') { try { initBudgetPeriodSel(); renderBudget(); } catch(e){} }
+  if(name==='budget') { try { initBudgetPeriodSel(); renderBudget(); } catch(e) { console.error(e); } }
 }
 
 function toggleMoreMenu(e) {
@@ -3588,7 +3588,7 @@ function _aiWeakPoint() {
     const tot = Object.values(byC).reduce((a,b)=>a+b,0)||1;
     const top = Math.max(...Object.values(byC),0)/tot;
     if (top > 0.7) return `⚠️ <b>Концентрация:</b> один клиент даёт более ${Math.round(top*100)}% выручки.`;
-  } catch(e) {}
+  } catch(e) { console.error(e); }
   return null;
 }
 
@@ -4252,7 +4252,7 @@ function detectAnomalies() {
   if (!curTx.length) { block.innerHTML=''; return; }
 
   // Считаем среднее по категориям за предыдущие 3 периода
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
   const prevPeriods = periods.filter(p=>p!==curMonth).slice(-3);
   if (!prevPeriods.length) { block.innerHTML=''; return; }
 
@@ -4376,7 +4376,7 @@ function openPL() {
   const totalExp = Object.values(bycat).reduce((a,b)=>a+b,0);
   const profit = income - totalExp;
   const catNames = {chicken:'Закупки товаров',transport:'Транспорт и логистика',salary:'Фонд оплаты труда',bank:'Банковские расходы',food:'Питание',office:'Офис и прочее',unknown:'Прочие расходы'};
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
   const period = periods.length ? (periods[0]+(periods.length>1?' — '+periods[periods.length-1]:'')) : 'Все периоды';
 
   content.innerHTML = `
@@ -4414,7 +4414,7 @@ function printPL() {
 function openCompare() {
   const modal = document.getElementById('compareModal');
   modal.style.display = 'flex';
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b)).reverse();
   const s1 = document.getElementById('cmpPeriod1');
   const s2 = document.getElementById('cmpPeriod2');
   s1.innerHTML = s2.innerHTML = periods.map((p,i)=>`<option value="${p}">${p}</option>`).join('');
@@ -4683,10 +4683,10 @@ function renderInsights() {
 
 function renderAll() {
   _origRenderAll();
-  try { detectAnomalies(); } catch(e) {}
-  try { renderBreakeven(); } catch(e) {}
+  try { detectAnomalies(); } catch(e) { console.error(e); }
+  try { renderBreakeven(); } catch(e) { console.error(e); }
   try { renderInsights(); } catch(e) { console.error('insights:', e); }
-  try { renderAccountsWidget(); } catch(e) {}
+  try { renderAccountsWidget(); } catch(e) { console.error(e); }
 }
 
 // Запуск таймера

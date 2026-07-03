@@ -36,7 +36,7 @@
         localStorage.setItem('omsfin_token', data.access_token);
         localStorage.setItem('omsfin_refresh', data.refresh_token);
       }
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
   setInterval(refresh, 45 * 60 * 1000);
 })();
@@ -885,7 +885,7 @@ function renderTopCategories() {
   };
 
   // Текущий и предыдущий периоды из filteredTx
-  const periods = [...new Set(filteredTx.map(t=>t.period).filter(Boolean))].sort();
+  const periods = [...new Set(filteredTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
   const curPeriod = periods[periods.length - 1];
   const prevPeriod = periods[periods.length - 2];
 
@@ -947,7 +947,7 @@ function renderBudget(txs) {
   const list = document.getElementById('budgetList');
   if (!list) return;
   const budgets = getBudgets();
-  const periods = [...new Set(txs.map(t=>t.period).filter(Boolean))].sort();
+  const periods = [...new Set(txs.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
   const curPeriod = periods[periods.length - 1] || '';
   const curTx = txs.filter(t => t.period === curPeriod && t.amount < 0);
 

@@ -46,7 +46,7 @@ async function notifyBigTx(userId, tx) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chat_id: chatId, text, parse_mode: 'HTML'})
     });
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 }
 
 // Записывает значимое действие в audit_log — не блокирует основной запрос при ошибке
@@ -198,7 +198,7 @@ async function handleMoySklad(req, res, userId, companyId) {
           ...(companyId ? {company_id: companyId} : {})
         });
       }
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
 
   return res.status(200).json({ ok: true, count: txs.length, transactions: txs });
@@ -365,7 +365,7 @@ async function handleBankWebhook(req, res) {
         body: JSON.stringify({ chat_id: tgRows[0].telegram_id, text: msg, parse_mode: 'HTML' })
       });
     }
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 
   return res.status(200).json({ ok: true, inserted: 1, hash: tx.hash });
 }
@@ -391,6 +391,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return res.status(503).json({ error: 'Сервис временно недоступен: не настроены переменные окружения (SUPABASE_URL / SUPABASE_SERVICE_KEY)' });
+  }
+
   // ─── Вебхук от банка (?action=webhook&secret=XXX&user_id=YYY) ──────────────
   // Банк (Т-Банк, ВТБ и др.) шлёт POST без Bearer токена.
   // Аутентификация — через секрет в query, который пользователь скопировал из настроек.
@@ -410,7 +414,7 @@ export default async function handler(req, res) {
       });
       const userData = await userR.json();
       userId = userData.id || null;
-    } catch(e) {}
+    } catch(e) { console.error(e); }
   }
 
   // company_id приходит по-разному в зависимости от метода и формы тела запроса
@@ -435,6 +439,8 @@ export default async function handler(req, res) {
     const parsed = parse1CXML(xmlBody);
     return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
   }
+
+  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
 
   // Если указана компания — проверяем, что пользователь в ней состоит, и какая у него роль.
   // Без company_id (старые клиенты / одиночный режим без команды) — пускаем по user_id, как раньше.

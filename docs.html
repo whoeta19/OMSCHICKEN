@@ -13,6 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>OMSFIN — Документы</title>
 <meta name="description" content="Генератор первичных документов: счёт, УПД, ТОРГ-12, счёт-фактура, акт, договор поставки, доверенность, ПКО, ТТН. Автозаполнение по реквизитам компании.">
+<script src="/utils.js"></script>
 <script>(function(){var t=localStorage.getItem('omsfin_token')||localStorage.getItem('omschicken_token');if(!t&&!localStorage.getItem('omsfin_demo'))window.location.replace('/login');})()</script>
 <script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -1738,8 +1739,8 @@ function renderHistory() {
   });
 
   filtered.sort((a, b) => {
-    if (filterSort === 'date_desc') return b.date.localeCompare(a.date);
-    if (filterSort === 'date_asc') return a.date.localeCompare(b.date);
+    if (filterSort === 'date_desc') return parseDMY(b.date) - parseDMY(a.date);
+    if (filterSort === 'date_asc') return parseDMY(a.date) - parseDMY(b.date);
     const aAmt = parseFloat((a.total||'').replace(/[^\d.]/g,'')) || 0;
     const bAmt = parseFloat((b.total||'').replace(/[^\d.]/g,'')) || 0;
     if (filterSort === 'sum_desc') return bAmt - aAmt;
@@ -1919,7 +1920,7 @@ if (prefill) {
     const d = JSON.parse(prefill);
     if (d.buyer) document.getElementById('buyerName').value = d.buyer;
     localStorage.removeItem('omsfin_doc_prefill');
-  } catch(e){}
+  } catch(e) { console.error(e); }
 }
 
 // ─── Акт сверки ───────────────────────────────────────────────────────────────

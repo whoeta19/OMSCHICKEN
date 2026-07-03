@@ -13,6 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>OMSFIN — Добро пожаловать</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="/utils.js"></script>
 <script src="/js/auth.js"></script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -35,6 +36,7 @@
   .input-group input{width:100%;background:#161616;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:11px 14px;color:#f5f5f5;font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:all 0.2s;}
   .input-group input:focus{border-color:rgba(255,107,0,0.5);box-shadow:0 0 0 3px rgba(255,107,0,0.08);}
   .input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:420px){.input-row{grid-template-columns:1fr;}.wrap{padding:16px 14px;}}
   .btn{width:100%;background:linear-gradient(135deg,#ff6b00,#e55a00);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:8px;box-shadow:0 4px 20px rgba(255,107,0,0.3);}
   .btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(255,107,0,0.4);}
   .btn-skip{width:100%;background:none;border:none;color:#444;font-size:12px;cursor:pointer;padding:10px;margin-top:4px;transition:all 0.2s;}
@@ -224,7 +226,7 @@ const TOTAL_STEPS = 5; // 0-4
     }
     // Если уже проходил онбординг — сразу на главную
     if (localStorage.getItem('omsfin_onboarded')) window.location.href = '/';
-  } catch(e) {}
+  } catch(e) { console.error(e); }
 })();
 const SURL = 'https://sqyppamdxahvvkoxovpu.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
@@ -280,7 +282,7 @@ function saveRequisites() {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
       body: JSON.stringify({seller})
-    });
+    }).catch(e => console.error('Не удалось сохранить реквизиты в облако:', e));
   }
   nextStep();
 }
