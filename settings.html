@@ -60,7 +60,11 @@
   .logo span{color:var(--accent);}
   main{padding:18px 20px;max-width:700px;margin:0 auto;}
   .section-title{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;margin-bottom:12px;color:var(--accent);}
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;scroll-margin-top:70px;}
+  .settings-nav{position:sticky;top:0;z-index:50;display:flex;gap:4px;overflow-x:auto;padding:10px 20px;margin:0 -20px 8px;background:rgba(8,8,8,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;}
+  .settings-nav a{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all 0.15s;}
+  .settings-nav a:hover{color:var(--text);border-color:var(--border);}
+  .settings-nav a.active{color:var(--accent);border-color:rgba(255,107,0,0.35);background:rgba(255,107,0,0.07);}
   .input-group{margin-bottom:12px;}
   .input-group label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
   .input-group input,.input-group select,.input-group textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
@@ -133,11 +137,19 @@
     <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
   </div>
 </header>
+<nav class="settings-nav">
+  <a href="#sec-theme">Оформление</a>
+  <a href="#sec-company">Компания</a>
+  <a href="#sec-team">Команда</a>
+  <a href="#sec-notify">Уведомления</a>
+  <a href="#sec-ms">Интеграции</a>
+  <a href="#sec-account">Аккаунт</a>
+</nav>
 <main>
 
   <!-- Тема -->
-  <div class="card">
-    <div class="section-title">🎨 Оформление</div>
+  <div class="card" id="sec-theme">
+    <div class="section-title">Оформление</div>
     <div class="input-group">
       <label>Тема интерфейса</label>
       <div class="theme-btns">
@@ -197,8 +209,8 @@
   </div>
 
   <!-- Реквизиты -->
-  <div class="card">
-    <div class="section-title">🏢 Реквизиты компании</div>
+  <div class="card" id="sec-company">
+    <div class="section-title">Реквизиты компании</div>
     <div class="input-row">
       <div class="input-group"><label>Название</label><input type="text" id="sName" placeholder='ООО "Моя компания"'></div>
       <div class="input-group"><label>ИНН</label><input type="text" id="sInn" placeholder="ИНН организации"></div>
@@ -224,12 +236,12 @@
       <div class="input-group"><label>БИК</label><input type="text" id="sBik" placeholder="044525411"></div>
       <div class="input-group"><label>Корр. счёт</label><input type="text" id="sKs" placeholder="30101810145250000974"></div>
     </div>
-    <button class="btn" onclick="saveRequisites()">💾 Сохранить реквизиты</button>
+    <button class="btn" onclick="saveRequisites()">Сохранить реквизиты</button>
   </div>
 
   <!-- Команда -->
-  <div class="card">
-    <div class="section-title">👥 Команда</div>
+  <div class="card" id="sec-team">
+    <div class="section-title">Команда</div>
     <div id="teamLoading" style="font-size:13px;color:var(--muted)">Загрузка...</div>
     <div id="teamContent" style="display:none">
 
@@ -264,14 +276,14 @@
 
   <!-- Журнал действий -->
   <div class="card" id="auditLogCard" style="display:none">
-    <div class="section-title">📜 Журнал действий</div>
+    <div class="section-title">Журнал действий</div>
     <div id="auditLogContent" style="font-size:13px;color:var(--muted)">Загрузка...</div>
   </div>
 
   <!-- Логотип и печать -->
-  <div class="card">
+  <div class="card" id="sec-logo">
 
-    <div class="section-title">🖼️ Логотип и печать</div>
+    <div class="section-title">Логотип и печать</div>
     <div class="input-row">
       <div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Логотип компании</div>
@@ -310,8 +322,8 @@
   </div>
 
   <!-- Уведомления -->
-  <div class="card">
-    <div class="section-title">🔔 Уведомления</div>
+  <div class="card" id="sec-notify">
+    <div class="section-title">Уведомления</div>
     <div class="toggle-row">
       <div>
         <div class="toggle-label">НДС — напоминание об оплате</div>
@@ -360,13 +372,13 @@
         style="width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;">
       <span style="font-size:12px;color:var(--muted)">₽</span>
     </div>
-    <button class="btn" onclick="saveNotifications()" style="margin-top:12px">💾 Сохранить уведомления</button>
+    <button class="btn" onclick="saveNotifications()" style="margin-top:12px">Сохранить уведомления</button>
     <div style="font-size:11px;color:var(--muted);margin-top:8px">* Уведомления показываются при открытии приложения</div>
   </div>
 
   <!-- Email уведомления -->
-  <div class="card">
-    <div class="section-title">📧 Email уведомления</div>
+  <div class="card" id="sec-email">
+    <div class="section-title">Email-уведомления</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
       При критических дедлайнах (≤3 дня) — дополнительное напоминание на почту. Email берётся из твоего аккаунта.
     </div>
@@ -379,9 +391,9 @@
   </div>
 
   <!-- Telegram -->
-  <div class="card">
-    <div class="section-title">✈️ Telegram уведомления</div>
-    <div id="tgStatus" style="font-size:13px;color:var(--muted);margin-bottom:12px">⏳ Проверяем статус...</div>
+  <div class="card" id="sec-tg">
+    <div class="section-title">Telegram-уведомления</div>
+    <div id="tgStatus" style="font-size:13px;color:var(--muted);margin-bottom:12px">Проверяем статус…</div>
     <div id="tgLinked" style="display:none">
       <div style="display:flex;align-items:center;gap:10px;padding:12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;margin-bottom:12px">
         <span style="font-size:20px">✅</span>
@@ -397,24 +409,24 @@
         <span style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:4px 10px;font-size:11px">/top — топ</span>
         <span style="background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.2);border-radius:8px;padding:4px 10px;font-size:11px">/last — операции</span>
       </div>
-      <a href="https://t.me/omsfin_bot" target="_blank" class="btn" style="display:inline-block;text-decoration:none">✈️ Открыть бота</a>
+      <a href="https://t.me/omsfin_bot" target="_blank" class="btn" style="display:inline-block;text-decoration:none">Открыть бота</a>
     </div>
     <div id="tgNotLinked" style="display:none">
       <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Привяжи Telegram чтобы получать уведомления о НДС, зарплате и финансовые отчёты прямо в мессенджере.</p>
-      <button class="btn" onclick="linkTelegram()">✈️ Привязать Telegram</button>
+      <button class="btn" onclick="linkTelegram()">Привязать Telegram</button>
       <div id="tgCodeBlock" style="display:none;margin-top:12px;padding:14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Твой код привязки:</div>
         <div id="tgCode" style="font-family:Unbounded,sans-serif;font-size:24px;font-weight:900;color:var(--accent);letter-spacing:4px;margin-bottom:12px"></div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Отправь этот код боту или нажми кнопку:</div>
-        <a id="tgLink" href="" target="_blank" class="btn" style="display:inline-block;text-decoration:none">✈️ Открыть бота и привязать</a>
+        <a id="tgLink" href="" target="_blank" class="btn" style="display:inline-block;text-decoration:none">Открыть бота и привязать</a>
       </div>
     </div>
   </div>
 
 
   <!-- МойСклад интеграция -->
-  <div class="card">
-    <div class="section-title">🏪 МойСклад</div>
+  <div class="card" id="sec-ms">
+    <div class="section-title">МойСклад</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Импортируй платежи напрямую из МойСклад без выписки банка.</p>
     <div class="input-group">
       <label>API токен МойСклад</label>
@@ -422,15 +434,15 @@
         style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:monospace">
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-outline" onclick="saveMsToken()">💾 Сохранить токен</button>
+      <button class="btn-outline" onclick="saveMsToken()">Сохранить токен</button>
       <button class="btn-outline" onclick="testMsToken()" id="msBtnTest">🔗 Проверить соединение</button>
     </div>
     <div id="msStatus" style="font-size:12px;margin-top:8px"></div>
   </div>
 
   <!-- Автоимпорт из банка (вебхук) -->
-  <div class="card">
-    <div class="section-title">🏦 Автоимпорт из банка</div>
+  <div class="card" id="sec-webhook">
+    <div class="section-title">Автоимпорт из банка</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
       Настрой вебхук в интернет-банке — и операции будут поступать автоматически без ручной загрузки выписок.
       Поддерживаются <strong style="color:var(--text)">Т-Банк, Альфа-Банк, Сбер Бизнес</strong> и любой банк с HTTP-уведомлениями.
@@ -465,8 +477,8 @@
   </div>
 
   <!-- Реферальная программа -->
-  <div class="card">
-    <div class="section-title">🎁 Реферальная программа</div>
+  <div class="card" id="sec-ref">
+    <div class="section-title">Реферальная программа</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
       Приглашай друзей — получай бесплатные месяцы Pro. За каждого зарегистрировавшегося по твоей ссылке — <strong style="color:var(--text)">+1 месяц Pro</strong> тебе и другу.
     </div>
@@ -478,8 +490,8 @@
   </div>
 
   <!-- Аккаунт -->
-  <div class="card">
-    <div class="section-title">👤 Аккаунт</div>
+  <div class="card" id="sec-account">
+    <div class="section-title">Аккаунт</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="userEmail">—</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-outline" onclick="changePassword()">🔒 Сменить пароль</button>
@@ -490,9 +502,10 @@
       </div>
       <button class="btn-danger" onclick="logout()">Выйти</button>
     </div>
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Опасная зона</div>
-      <button class="btn-outline" onclick="deleteAccount()" style="color:var(--red);border-color:var(--red);font-size:12px">🗑 Удалить аккаунт</button>
+    <div style="margin-top:20px;padding:14px 16px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05);border-radius:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:4px">Опасная зона</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Аккаунт и все данные будут удалены безвозвратно (право на забвение, 152-ФЗ)</div>
+      <button class="btn-outline" onclick="deleteAccount()" style="color:var(--red);border-color:rgba(239,68,68,0.5);font-size:12px">Удалить аккаунт</button>
     </div>
   </div>
 
@@ -1030,12 +1043,12 @@ async function checkTelegramStatus() {
   if (!tok) { if(st) st.style.display='none'; document.getElementById('tgNotLinked').style.display='block'; return; }
   try {
     const r = await fetch('/api/telegram_link?nc='+Date.now(), {headers:{'Authorization':'Bearer '+tok}});
-    if (!r.ok) { if(st) st.textContent="Ошибка"; return; }
+    if (!r.ok) { if(st) st.textContent = "Не получилось проверить привязку — обновите страницу или попробуйте позже"; return; }
     const d = await r.json();
     if(st) st.style.display='none';
     if (d.linked) { document.getElementById('tgLinked').style.display='block'; document.getElementById('tgId').textContent='ID: '+d.telegram_id; }
     else { document.getElementById('tgNotLinked').style.display='block'; }
-  } catch(e) { if(st) st.textContent='Ошибка'; }
+  } catch(e) { console.error(e); if(st) st.textContent = 'Не получилось проверить привязку — обновите страницу или попробуйте позже'; }
 }
 checkTelegramStatus();
 
@@ -1044,7 +1057,7 @@ async function linkTelegram() {
   const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!tok) { showToast('Войдите в аккаунт'); return; }
   const btn = document.querySelector('#tgNotLinked .btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Получаем код...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Получаем код…'; }
   try {
     const r = await fetch('/api/telegram_link', {
       method: 'POST',
@@ -1059,7 +1072,7 @@ async function linkTelegram() {
   } catch(e) {
     showToast('❌ Ошибка: ' + e.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✈️ Привязать Telegram'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Привязать Telegram'; }
   }
 }
 
@@ -1233,5 +1246,23 @@ async function testEmail() {
   <a href="/declarations.html"><span class="bn-icon">📋</span>Декларации</a>
   <a href="/settings.html" class="active"><span class="bn-icon">⚙️</span>Настройки</a>
 </nav>
+<script>
+// Подсветка активного якоря настроек при скролле
+(function(){
+  var links=document.querySelectorAll('.settings-nav a');
+  if(!links.length||!('IntersectionObserver'in window))return;
+  var map={};
+  links.forEach(function(a){var id=a.getAttribute('href').slice(1);map[id]=a;});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(a){a.classList.remove('active')});
+        var a=map[e.target.id];if(a)a.classList.add('active');
+      }
+    });
+  },{rootMargin:'-20% 0px -70% 0px'});
+  Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el)io.observe(el);});
+})();
+</script>
 </body>
 </html>
