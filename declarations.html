@@ -224,43 +224,50 @@
 <!-- Обзор -->
 <div class="page active" id="page-overview">
   <div class="section-title">Декларации и отчётность</div>
+
+  <!-- Герой: ближайший дедлайн -->
+  <div id="deadlineHero" style="background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02));border:1px solid rgba(255,107,0,0.2);border-radius:16px;padding:22px 24px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">НДС — до сдачи</div>
+    <div id="deadlineHeroDays" style="font-family:'Unbounded',sans-serif;font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1">—</div>
+    <div id="deadlineHeroSub" style="font-size:13px;color:var(--text-2,#a3a3a3);margin-top:8px">Считаем сроки…</div>
+  </div>
   
   <div class="decl-card" onclick="showPage('nds',document.querySelectorAll('.tab')[2])">
-    <div class="decl-icon">🧾</div>
+    <div class="decl-icon" style="font-family:Unbounded,sans-serif;font-size:13px;font-weight:900;color:var(--accent)">НДС</div>
     <div class="decl-info">
       <div class="decl-name">Декларация по НДС</div>
       <div class="decl-desc">Квартальная · НДС 10% с продаж товаров</div>
-      <div class="decl-deadline" id="vatDeadline">⏰ Срок: рассчитывается...</div>
+      <div class="decl-deadline" id="vatDeadline">Срок: рассчитывается…</div>
     </div>
     <div id="vatStatus" class="status-badge status-draft">Черновик</div>
   </div>
   
   <div class="decl-card" onclick="showPage('usn',document.querySelectorAll('.tab')[1])">
-    <div class="decl-icon">📊</div>
+    <div class="decl-icon" style="font-family:Unbounded,sans-serif;font-size:13px;font-weight:900;color:var(--accent)">УСН</div>
     <div class="decl-info">
       <div class="decl-name">Декларация по УСН</div>
       <div class="decl-desc">Годовая · Доходы минус расходы</div>
-      <div class="decl-deadline">⏰ Срок: 31 марта следующего года</div>
+      <div class="decl-deadline">Срок: 31 марта следующего года</div>
     </div>
     <div class="status-badge status-draft">Черновик</div>
   </div>
   
   <div class="decl-card">
-    <div class="decl-icon">👥</div>
+    <div class="decl-icon" style="font-family:Unbounded,sans-serif;font-size:11px;font-weight:900;color:var(--accent)">НДФЛ</div>
     <div class="decl-info">
       <div class="decl-name">Отчёт 6-НДФЛ</div>
       <div class="decl-desc">Квартальный · По сотрудникам</div>
-      <div class="decl-deadline">⏰ Срок: 25-е число следующего месяца</div>
+      <div class="decl-deadline">Срок: 25-е число следующего месяца</div>
     </div>
     <div class="status-badge status-pending">Скоро</div>
   </div>
 
   <div class="decl-card">
-    <div class="decl-icon">📁</div>
+    <div class="decl-icon" style="font-family:Unbounded,sans-serif;font-size:13px;font-weight:900;color:var(--accent)">БУХ</div>
     <div class="decl-info">
       <div class="decl-name">Бухгалтерская отчётность</div>
       <div class="decl-desc">Годовая · Баланс и отчёт о прибылях</div>
-      <div class="decl-deadline">⏰ Срок: 31 марта следующего года</div>
+      <div class="decl-deadline">Срок: 31 марта следующего года</div>
     </div>
     <div class="status-badge status-draft">Черновик</div>
   </div>
@@ -824,8 +831,17 @@ function renderNDS() {
 function updateDeadlines() {
   const quarterEnd = new Date(year, quarter*3, 25);
   const daysLeft = Math.ceil((quarterEnd - now) / (1000*60*60*24));
-  document.getElementById('vatDeadline').textContent = `⏰ До сдачи НДС: ${daysLeft} дней (25 ${getMonthName(quarter*3)})`;
+  document.getElementById('vatDeadline').textContent = `До сдачи НДС: ${daysLeft} дн. (25 ${getMonthName(quarter*3)})`;
   if (daysLeft <= 7) document.getElementById('vatStatus').className = 'status-badge status-pending';
+  // Герой сверху
+  const hd = document.getElementById('deadlineHeroDays');
+  const hs = document.getElementById('deadlineHeroSub');
+  if (hd) {
+    const word = daysLeft % 10 === 1 && daysLeft % 100 !== 11 ? 'день' : [2,3,4].includes(daysLeft % 10) && ![12,13,14].includes(daysLeft % 100) ? 'дня' : 'дней';
+    hd.textContent = daysLeft + ' ' + word;
+    hd.style.color = daysLeft <= 7 ? 'var(--red)' : 'var(--text)';
+    if (hs) hs.textContent = 'Декларация по НДС — сдать до 25 ' + getMonthName(quarter*3);
+  }
 }
 
 function renderCalendar() {

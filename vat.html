@@ -158,20 +158,23 @@
 </header>
 <div class="tabs">
   <button class="tab active" onclick="showPage('summary',this)">📊 Сводка НДС</button>
-  <button class="tab" onclick="showPage('sales',this)">📈 Книга продаж</button>
-  <button class="tab" onclick="showPage('purchases',this)">📉 Книга покупок</button>
+  <button class="tab" onclick="showPage('sales',this)">Книга продаж</button>
+  <button class="tab" onclick="showPage('purchases',this)">Книга покупок</button>
   <button class="tab" onclick="showPage('calc',this)">🧮 Калькулятор</button>
 </div>
 <main>
 
 <!-- Сводка НДС -->
 <div class="page active" id="page-summary">
-  <div id="summaryContent"><div style="text-align:center;padding:40px;color:var(--muted)">⏳ Загружаю данные...</div></div>
+  <div id="summaryContent">
+    <div class="skeleton" style="height:110px;margin-bottom:14px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="skeleton" style="height:70px"></div><div class="skeleton" style="height:70px"></div></div>
+  </div>
 </div>
 
 <!-- Книга продаж -->
 <div class="page" id="page-sales">
-  <div class="section-title">📈 Книга продаж</div>
+  <div class="section-title">Книга продаж</div>
   <div class="info-box" style="margin-bottom:12px;font-size:12px">
     Все входящие платежи от покупателей. НДС 10% включён в сумму.
   </div>
@@ -186,7 +189,7 @@
 
 <!-- Книга покупок -->
 <div class="page" id="page-purchases">
-  <div class="section-title">📉 Книга покупок</div>
+  <div class="section-title">Книга покупок</div>
   <div class="info-box" style="margin-bottom:12px;font-size:12px">
     Закупки товаров у поставщиков. НДС 10% к вычету.
   </div>
@@ -201,7 +204,7 @@
 
 <!-- Калькулятор НДС -->
 <div class="page" id="page-calc">
-  <div class="section-title">🧮 Калькулятор НДС</div>
+  <div class="section-title">Калькулятор НДС</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
     
     <div class="stat-card" style="padding:20px">
@@ -385,16 +388,11 @@ function renderSummary() {
   // НДС к уплате
   const vatToPay = vatSales - vatPurchases;
 
-  const statusClass = vatToPay > 0 ? 'danger' : 'success';
-  const statusText = vatToPay > 0 
-    ? `⚠️ К уплате в бюджет: ${fmt(vatToPay)}`
-    : `✅ Переплата НДС: ${fmt(Math.abs(vatToPay))} (возврат или зачёт)`;
-
   document.getElementById('summaryContent').innerHTML = `
-    <div class="section-title">📊 Сводка НДС за период</div>
-    
-    <div class="info-box ${statusClass}" style="font-size:14px;font-weight:500;margin-bottom:16px">
-      ${statusText}
+    <div style="background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02));border:1px solid rgba(255,107,0,0.2);border-radius:16px;padding:22px 24px;margin-bottom:20px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">${vatToPay > 0 ? 'НДС к уплате за период' : 'Переплата НДС за период'}</div>
+      <div style="font-family:'Unbounded',sans-serif;font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1;color:${vatToPay > 0 ? 'var(--text)' : 'var(--green)'}">${fmt(Math.abs(vatToPay))}</div>
+      <div style="font-size:13px;color:var(--text-2,#a3a3a3);margin-top:8px">${vatToPay > 0 ? 'Заплатите до 25-го числа месяца после квартала' : 'Можно вернуть или зачесть в следующем периоде'}</div>
     </div>
 
     <div class="stats-row">
@@ -407,11 +405,6 @@ function renderSummary() {
         <div class="stat-label">НДС к вычету (входящий)</div>
         <div class="stat-value green">${fmt(vatPurchases)}</div>
         <div class="stat-sub">С закупок ${fmt(totalPurchases)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">НДС к уплате</div>
-        <div class="stat-value ${vatToPay > 0 ? 'red' : 'green'}">${fmt(vatToPay)}</div>
-        <div class="stat-sub">${vatToPay > 0 ? 'Задолженность перед ФНС' : 'Переплата'}</div>
       </div>
     </div>
 
@@ -434,7 +427,7 @@ function renderSummary() {
     </div>
 
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
-      <div class="section-title">🧮 Расчёт НДС</div>
+      <div class="section-title">Расчёт НДС</div>
       <table style="width:100%;font-size:13px">
         <tr>
           <td style="padding:8px 0;color:var(--muted)">Выручка (с НДС)</td>
