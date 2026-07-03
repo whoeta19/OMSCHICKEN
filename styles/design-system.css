@@ -110,3 +110,29 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent) !importa
   }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ── Пустые состояния (единый вид на всех страницах) ─────────────────── */
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: var(--sp-6) var(--sp-4);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.empty::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto var(--sp-3);
+  border-radius: 50%;
+  background: var(--accent-dim);
+  opacity: 0.7;
+}
+
+/* ── Чекбоксы: плавная галочка ────────────────────────────────────────── */
+input[type="checkbox"] {
+  accent-color: var(--accent);
+  transition: transform 0.15s ease;
+}
+input[type="checkbox"]:checked { transform: scale(1.05); }
