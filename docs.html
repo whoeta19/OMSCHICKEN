@@ -79,8 +79,10 @@
   .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px;}
   .doc-types{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
   .doc-type-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all 0.2s;text-align:center;}
-  .doc-type-btn:hover,.doc-type-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.05);}
+  .doc-type-btn:hover{border-color:rgba(255,107,0,0.4);}
+  .doc-type-btn.active{border-color:var(--accent);background:rgba(255,107,0,0.07);box-shadow:0 0 0 3px rgba(255,107,0,0.12);}
   .doc-type-icon{font-size:24px;margin-bottom:6px;}
+  .doc-type-mono{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:900;color:var(--accent);letter-spacing:0.5px;line-height:24px;}
   .doc-type-name{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:700;line-height:1.3;}
   .doc-type-desc{font-size:9px;color:var(--muted);margin-top:3px;}
   .items-table{width:100%;border-collapse:collapse;margin:8px 0;}
@@ -177,65 +179,65 @@
 
 <!-- СОЗДАНИЕ -->
 <div class="page active" id="page-create">
-  <div class="section-title">Тип документа</div>
+  <div class="section-title">Какой документ создать?</div>
   <div class="doc-types">
     <div class="doc-type-btn active" id="btn-schet" onclick="selectDoc('schet',this)">
-      <div class="doc-type-icon">🧾</div>
+      <div class="doc-type-icon doc-type-mono">СЧТ</div>
       <div class="doc-type-name">Счёт на оплату</div>
       <div class="doc-type-desc">Форма свободная</div>
     </div>
     <div class="doc-type-btn" id="btn-upd" onclick="selectDoc('upd',this)">
-      <div class="doc-type-icon">📋</div>
+      <div class="doc-type-icon doc-type-mono">УПД</div>
       <div class="doc-type-name">УПД</div>
       <div class="doc-type-desc">Универсальный передаточный</div>
     </div>
     <div class="doc-type-btn" id="btn-torg12" onclick="selectDoc('torg12',this)">
-      <div class="doc-type-icon">📦</div>
+      <div class="doc-type-icon doc-type-mono">Т-12</div>
       <div class="doc-type-name">ТОРГ-12</div>
       <div class="doc-type-desc">Товарная накладная</div>
     </div>
     <div class="doc-type-btn" id="btn-sf" onclick="selectDoc('sf',this)">
-      <div class="doc-type-icon">💰</div>
+      <div class="doc-type-icon doc-type-mono">СФ</div>
       <div class="doc-type-name">Счёт-фактура</div>
       <div class="doc-type-desc">Для НДС</div>
     </div>
     <div class="doc-type-btn" id="btn-akt" onclick="selectDoc('akt',this)">
-      <div class="doc-type-icon">✅</div>
+      <div class="doc-type-icon doc-type-mono">АКТ</div>
       <div class="doc-type-name">Акт об услугах</div>
       <div class="doc-type-desc">Выполненных работ</div>
     </div>
     <div class="doc-type-btn" id="btn-dog" onclick="selectDoc('dog',this)">
-      <div class="doc-type-icon">📝</div>
+      <div class="doc-type-icon doc-type-mono">ДОГ</div>
       <div class="doc-type-name">Договор</div>
       <div class="doc-type-desc">Поставки/услуг</div>
     </div>
     <div class="doc-type-btn" id="btn-dover" onclick="selectDoc('dover',this)">
-      <div class="doc-type-icon">📜</div>
+      <div class="doc-type-icon doc-type-mono">ДОВ</div>
       <div class="doc-type-name">Доверенность М-2</div>
       <div class="doc-type-desc">На получение ТМЦ</div>
     </div>
     <div class="doc-type-btn" id="btn-ko1" onclick="selectDoc('ko1',this)">
-      <div class="doc-type-icon">💵</div>
+      <div class="doc-type-icon doc-type-mono">ПКО</div>
       <div class="doc-type-name">ПКО (КО-1)</div>
       <div class="doc-type-desc">Приходный ордер</div>
     </div>
     <div class="doc-type-btn" id="btn-ttn" onclick="selectDoc('ttn',this)">
-      <div class="doc-type-icon">🚛</div>
+      <div class="doc-type-icon doc-type-mono">ТТН</div>
       <div class="doc-type-name">ТТН</div>
       <div class="doc-type-desc">Товарно-транспортная</div>
     </div>
     <div class="doc-type-btn" id="btn-sverka" onclick="selectDoc('sverka',this)">
-      <div class="doc-type-icon">⚖️</div>
+      <div class="doc-type-icon doc-type-mono">СВР</div>
       <div class="doc-type-name">Акт сверки</div>
       <div class="doc-type-desc">Взаиморасчёты</div>
     </div>
     <div class="doc-type-btn" id="btn-pp" onclick="selectDoc('pp',this)">
-      <div class="doc-type-icon">🏦</div>
+      <div class="doc-type-icon doc-type-mono">ПП</div>
       <div class="doc-type-name">Платёжное поручение</div>
       <div class="doc-type-desc">Форма 0401060</div>
     </div>
     <div class="doc-type-btn" id="btn-ksf" onclick="selectDoc('ksf',this)">
-      <div class="doc-type-icon">🔄</div>
+      <div class="doc-type-icon doc-type-mono">КСФ</div>
       <div class="doc-type-name">Корр. счёт-фактура</div>
       <div class="doc-type-desc">При возврате/изменении</div>
     </div>
@@ -493,14 +495,14 @@
   </div>
 
   <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-    <button class="btn" onclick="generateDoc()">👁️ Сформировать</button>
+    <button class="btn-outline" onclick="generateDoc()" style="padding:11px 22px;font-size:13px">Сформировать документ</button>
   </div>
 
   <div class="preview-wrap" id="previewWrap">
     <div class="preview-btn-row">
-      <button class="btn" onclick="printDoc()">🖨️ Печать / PDF</button>
-      <button class="btn-outline" onclick="saveHistory()">💾 В историю</button>
-      <button class="btn-outline" onclick="saveTemplate()" style="color:var(--accent);border-color:var(--accent)">⭐ Шаблон</button>
+      <button class="btn" onclick="printDoc()" style="padding:12px 24px;font-size:12px;box-shadow:0 4px 18px rgba(255,107,0,0.35)">Скачать PDF / Печать</button>
+      <button class="btn-outline" onclick="saveHistory()">В историю</button>
+      <button class="btn-outline" onclick="saveTemplate()">Сохранить как шаблон</button>
     </div>
     <div class="doc-print" id="docPreview"></div>
   </div>
