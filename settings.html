@@ -951,7 +951,7 @@ async function deleteAccount() {
     if (d.ok || r.ok) {
       ['omsfin_token','omsfin_refresh','omsfin_user','omsfin_company','omsfin_seller',
        'omsfin_settings','omsfin_onboarded','omschicken_token','omschicken_refresh'].forEach(k => localStorage.removeItem(k));
-      alert('Аккаунт удалён. До свидания!');
+      showToast('Аккаунт удалён. До свидания!');
       window.location.href = '/landing';
     } else {
       showToast('❌ ' + (d.error || 'Ошибка удаления'));

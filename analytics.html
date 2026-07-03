@@ -184,7 +184,15 @@
   </div>
 </header>
 <main>
-  <div id="loadingMsg" class="loading">⏳ Загружаю данные...</div>
+  <div id="loadingMsg" class="loading">
+    <div class="skeleton" style="height:90px;margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="skeleton" style="height:64px"></div>
+      <div class="skeleton" style="height:64px"></div>
+      <div class="skeleton" style="height:64px"></div>
+    </div>
+    <div class="skeleton" style="height:220px"></div>
+  </div>
   <div id="content" style="display:none">
 
     <!-- Планка сравнения -->
