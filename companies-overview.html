@@ -141,7 +141,7 @@ async function loadOverview() {
     });
     const data = await r.json();
     if (data.error) {
-      document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon"><i data-lucide="triangle-alert"></i></div>${data.error}</div>`;
+      document.getElementById('companiesList').innerHTML = `<div class="empty"><div class="empty-icon"><i data-lucide="triangle-alert"></i></div>${escapeHtml(data.error)}</div>`;
       if (window.lucide) lucide.createIcons();
       return;
     }
@@ -176,7 +176,7 @@ async function loadOverview() {
       <div class="company-card${c.profit < 0 ? ' burning' : ''}" onclick="openCompany('${c.id}')">
         <div class="company-head">
           <div>
-            <div class="company-name">${c.name}</div>
+            <div class="company-name">${escapeHtml(c.name)}</div>
             <div class="company-inn">ИНН ${c.inn || '—'}</div>
           </div>
           <div class="company-badges">

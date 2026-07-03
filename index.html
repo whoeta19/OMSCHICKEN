@@ -604,6 +604,7 @@
   .cf-bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--text);font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:9}
 </style>
 <script src="/utils.js"></script>
+<script src="/js/calc.js"></script>
 <script src="/js/effects.js"></script>
 <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 </head>
@@ -1995,45 +1996,8 @@ function extractDate(str) {
 }
 
 async function parseAndProcess(text, accountName) {
-  // Определяем банк по структуре
-  function isBankVTB(t) {
-    const lines2 = t.split('\n');
-    for (let i = 1; i < Math.min(4, lines2.length); i++) {
-      const parts = lines2[i].split(';');
-      if (parts.length > 10 && parts[0] !== '' && parts[1] === '' && parts[2] && parts[2].match(/\d{2}\.\d{2}\.\d{4}/)) return true;
-    }
-    return false;
-  }
-
-  function isBankAlfa(t) {
-    const lines2 = t.split('\n');
-    for (let i = 0; i < Math.min(5, lines2.length); i++) {
-      const l = lines2[i].toLowerCase();
-      if (l.includes('d_c') && l.includes('sum_rur')) return true;
-    }
-    return false;
-  }
-
-  function isBankTBank(t) {
-    const head = t.substring(0, 500).toLowerCase();
-    return head.includes('тбанк') || head.includes('тинькофф') || head.includes('tbank') || head.includes('операционный день');
-  }
-
-  // Формат "Кредит/Дебет" (Зенит, МКБ и др.): первая строка — заголовок
-  // "Номер счёта;Тип операции (пополнение/списание);Дата проведения;..."
-  function isBankKreditDebet(t) {
-    const first = t.split('\n')[0].toLowerCase();
-    return first.includes('номер сч') && first.includes('тип операции');
-  }
-
-  function isBankSber(t) {
-    if (isBankTBank(t)) return false; // Т-Банк тоже содержит "плательщик/назначение" — не путать
-    if (isBankKreditDebet(t)) return false; // формат Кредит/Дебет тоже содержит "Дата проведения"
-    const head = t.substring(0, 800).toLowerCase();
-    return head.includes('сбербанк') || head.includes('sberbank') ||
-      head.includes('дата проведения') ||
-      (head.includes('плательщик') && head.includes('получатель') && head.includes('назначение платежа'));
-  }
+  // Детекторы форматов банков — единые, из /js/calc.js (покрыты тестами tests/run.js)
+  const { isBankVTB, isBankAlfa, isBankTBank, isBankKreditDebet, isBankSber } = window.OMSCALC;
 
   const _seller = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {};
   const _myInn = _seller.inn || '';
@@ -2522,10 +2486,17 @@ function _fieldErr(id, msg) {
   showToast('⚠️ ' + msg);
 }
 
-function addManual() {
+let _addBusy = false;
+async function addManual() {
+  if (_addBusy) return;
   const name = document.getElementById('addName').value.trim();
   let amount = parseFloat(document.getElementById('addAmount').value);
-  const date = document.getElementById('addDate').value || new Date().toISOString().split('T')[0];
+  // <input type="date"> отдаёт YYYY-MM-DD, а сервер и вся БД работают с DD.MM.YYYY
+  const rawDate = document.getElementById('addDate').value; // YYYY-MM-DD или ''
+  const isoDate = rawDate || new Date().toISOString().split('T')[0];
+  const [yyyy, mm, dd] = isoDate.split('-');
+  const date = `${dd}.${mm}.${yyyy}`;
+  const period = `${mm}.${yyyy}`;
   const desc = document.getElementById('addDesc').value.trim();
   const manualCat = document.getElementById('addCat').value;
   if (!name) { _fieldErr('addName', 'Укажи контрагента'); return; }
@@ -2534,14 +2505,28 @@ function addManual() {
   // Применяем знак из кнопки Расход/Доход — берём абсолютное значение и умножаем
   amount = Math.abs(amount) * _addTypeSign;
   const cat = manualCat || classify(name, desc, amount);
-  const tx = {name, amount, date, description:desc, category:cat, is_personal:['personal','food'].includes(cat)};
-  apiPost([tx]).then(()=>syncNow()).catch(e=>showToast('❌ '+e.message));
-  document.getElementById('addResult').innerHTML = `<div class="info-box success">✅ Сохранено: <strong>${name}</strong> — ${getCatBadge(cat)}</div>`;
-  document.getElementById('addName').value = '';
-  document.getElementById('addAmount').value = '';
-  document.getElementById('addDesc').value = '';
-  document.getElementById('addCat').value = '';
-  setAddType('expense'); // сбросить в режим расхода
+  const tx = {name, amount, date, period, description:desc, category:cat, is_personal:['personal','food'].includes(cat)};
+
+  // Успех показываем только ПОСЛЕ ответа сервера; на время запроса кнопка заблокирована,
+  // при ошибке поля не очищаются — данные не теряются.
+  _addBusy = true;
+  const btn = event?.target?.closest?.('button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Сохраняем…'; }
+  try {
+    await apiPost([tx]);
+    document.getElementById('addResult').innerHTML = `<div class="info-box success">✅ Сохранено: <strong>${escapeHtml(name)}</strong> — ${getCatBadge(cat)}</div>`;
+    document.getElementById('addName').value = '';
+    document.getElementById('addAmount').value = '';
+    document.getElementById('addDesc').value = '';
+    document.getElementById('addCat').value = '';
+    setAddType('expense'); // сбросить в режим расхода
+    syncNow();
+  } catch(e) {
+    showToast('❌ Не удалось сохранить: ' + (e.message || 'ошибка сети') + ' — данные в форме сохранены');
+  } finally {
+    _addBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Сохранить'; }
+  }
 }
 
 async function clearAll() {
@@ -4674,7 +4659,7 @@ function renderInsights() {
   }
 
   // 3. НДС vs остаток на счёте
-  const vatAmount = curTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0) * 0.10 / 1.10;
+  const vatAmount = OMSCALC.vatFromGross(curTx.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0), 10);
   const balance = allTx.slice(0,1).length ? (() => {
     let b = 0; allTx.forEach(t=>{ b += t.amount; }); return b;
   })() : 0;
@@ -5458,7 +5443,7 @@ setTimeout(function() {
   const TAG_COLORS = {usn:'#60a5fa',nds:'#f87171',ndfl:'#fbbf24',vznosy:'#4ade80',profit:'#c084fc',salary:'#fb923c'};
   const TAG_LABELS = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взносы',profit:'Прибыль',salary:'Зарплата'};
   const done = JSON.parse(localStorage.getItem('omsfin_cal_done') || '[]');
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = mskNow(); today.setHours(0,0,0,0); // дедлайны по Москве
   const upcoming = CAL_EVENTS.filter(e => {
     const d = new Date(e.date); d.setHours(0,0,0,0);
     return d >= today && !done.includes(e.id);

@@ -132,6 +132,7 @@
   }
 </style>
 <script src="/utils.js"></script>
+<script src="/js/calc.js"></script>
 <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 </head>
 <body>
@@ -769,18 +770,9 @@ function progressiveSalaryNdfl(yearlyBase) {
   return ndfl;
 }
 
-// НДФЛ с дивидендов — отдельная двухступенчатая шкала 2026: 13% до 2.4 млн/год, 15% сверх (своя база, не складывается с зарплатой)
-function dividendNdfl(yearlyDividends) {
-  if (yearlyDividends <= 2400000) return yearlyDividends * 0.13;
-  return 2400000 * 0.13 + (yearlyDividends - 2400000) * 0.15;
-}
-
-// Страховые взносы — единый тариф 2026: 30% до базы 2 979 000 ₽/год, 15.1% сверх
-function yearlyContributions(yearlySalary) {
-  const LIMIT = 2979000;
-  if (yearlySalary <= LIMIT) return yearlySalary * 0.30;
-  return LIMIT * 0.30 + (yearlySalary - LIMIT) * 0.151;
-}
+// НДФЛ с дивидендов и взносы — единые формулы из /js/calc.js (в копейках, покрыты тестами)
+function dividendNdfl(yearlyDividends) { return OMSCALC.ndflDividends(yearlyDividends); }
+function yearlyContributions(yearlySalary) { return OMSCALC.insuranceContributions(yearlySalary); }
 
 function calcTaxSys() {
   const income = parseFloat(document.getElementById('tsIncome').value) || 0;

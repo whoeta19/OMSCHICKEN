@@ -170,6 +170,7 @@
   }
 </style>
 <script src="/utils.js"></script>
+<script src="/js/calc.js"></script>
 <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" defer onload="lucide.createIcons()"></script>
 <script src="/nav.js"></script>
 </head>
@@ -670,7 +671,8 @@
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxeXBwYW1keGFodnZrb3hvdnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjQ2MzgsImV4cCI6MjA5NTc0MDYzOH0.tezDMDqlkzlWG0t8zBFyb3tJylFCeySgPByVKLkdlsM';
 
 let allTx = [];
-const now = new Date();
+// Налоговые сроки — всегда по московскому времени, не по поясу пользователя
+const now = mskNow();
 const quarter = Math.floor(now.getMonth() / 3) + 1;
 const year = now.getFullYear();
 
@@ -1097,13 +1099,9 @@ function exportProfitExcel() {
 function exportRSVExcel() {
   const fot = Math.round(parseFloat(document.getElementById('rsv_fot')?.value) || 0);
   const persons = Math.round(parseFloat(document.getElementById('rsv_persons')?.value) || 0);
-  const LIMIT = 2979000;
   const safePersons = persons > 0 ? persons : 1;
-  const perPerson = fot / safePersons;
-  let total = 0;
-  if (perPerson <= LIMIT) total = fot * 0.30;
-  else total = safePersons * LIMIT * 0.30 + (fot - safePersons * LIMIT) * 0.151;
-  total = Math.round(Math.max(0, total));
+  // Единая формула взносов из /js/calc.js (копейки, тесты в tests/run.js)
+  const total = Math.round(Math.max(0, OMSCALC.insuranceContributionsFot(fot, safePersons)));
   const qNames = ['', 'I квартал', 'Полугодие', '9 месяцев', 'Год'];
 
   const rows = [
@@ -1309,15 +1307,8 @@ function fillProfitFromTx() {
 function calcRsv() {
   const fot = parseFloat(document.getElementById('rsv_fot').value) || 0;
   const persons = parseFloat(document.getElementById('rsv_persons').value) || 1;
-  const LIMIT = 2979000; // единая предельная база 2026
-  const perPerson = persons > 0 ? fot / persons : fot;
-  let total = 0;
-  if (perPerson <= LIMIT) {
-    total = fot * 0.30;
-  } else {
-    total = persons * LIMIT * 0.30 + (fot - persons * LIMIT) * 0.151;
-  }
-  total = Math.round(Math.max(0, total));
+  // Единая формула взносов из /js/calc.js (копейки, тесты в tests/run.js)
+  const total = Math.round(Math.max(0, OMSCALC.insuranceContributionsFot(fot, persons > 0 ? persons : 1)));
   // Условная раскладка по видам страхования для отображения (ОПС/ОМС/ОСС из общего тарифа)
   const ops = Math.round(total * (22/30));
   const oms = Math.round(total * (5.1/30));

@@ -149,7 +149,7 @@ if (tgApp) {
     if (!initData) return;
     try {
       const r = await fetch(`/api/telegram?action=tg-auth&initData=${encodeURIComponent(initData)}`);
-      const data = await r.json();
+      const data = await r.json().catch(() => ({}));
       if (data.action_link) {
         // Magic link — обмениваем на сессию
         const url = new URL(data.action_link);
@@ -226,7 +226,7 @@ async function login() {
       headers: {'apikey': SUPABASE_KEY, 'Content-Type': 'application/json'},
       body: JSON.stringify({ email, password })
     });
-    const data = await r.json();
+    const data = await r.json().catch(() => ({}));
     if (data.access_token) {
       localStorage.setItem('omsfin_token', data.access_token);
       localStorage.setItem('omsfin_refresh', data.refresh_token);
@@ -272,7 +272,7 @@ async function register() {
         data: { company_name: company }
       })
     });
-    const data = await r.json();
+    const data = await r.json().catch(() => ({}));
 
     if (data.user || data.access_token) {
       if (data.access_token) {

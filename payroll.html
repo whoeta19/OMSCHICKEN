@@ -187,7 +187,7 @@ async function loadEmployees() {
       headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     const data = await r.json();
-    if (data.error) { document.getElementById('empList').innerHTML = `<div class="empty">❌ ${data.error}</div>`; return; }
+    if (data.error) { document.getElementById('empList').innerHTML = `<div class="empty">❌ ${escapeHtml(data.error)}</div>`; return; }
 
     employees = (data || []).filter(e => e.is_active !== false);
     document.getElementById('empCount').textContent = employees.length + ' чел.';
@@ -200,7 +200,7 @@ async function loadEmployees() {
     document.getElementById('empList').innerHTML = employees.map(e => `
       <div class="emp-row">
         <div>
-          <div class="emp-name">${e.full_name}</div>
+          <div class="emp-name">${escapeHtml(e.full_name)}</div>
           <div class="emp-pos">${e.position || 'Без должности'}</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
@@ -353,7 +353,7 @@ async function loadHistory() {
       headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     const data = await r.json();
-    if (data.error) { document.getElementById('historyList').innerHTML = `<div class="empty">❌ ${data.error}</div>`; return; }
+    if (data.error) { document.getElementById('historyList').innerHTML = `<div class="empty">❌ ${escapeHtml(data.error)}</div>`; return; }
 
     if (!data.length) {
       document.getElementById('historyList').innerHTML = '<div class="empty">Начислите зарплату за месяц — итоги появятся здесь</div>';
@@ -382,7 +382,7 @@ async function loadHistory() {
     document.getElementById('historyList').innerHTML = data.map(run => `
       <div class="run-row">
         <div>
-          <div style="font-weight:500">${empById[run.employee_id] || 'Сотрудник'} · ${run.period}</div>
+          <div style="font-weight:500">${escapeHtml(empById[run.employee_id] || 'Сотрудник')} · ${run.period}</div>
           <div style="font-size:11px;color:var(--muted)">Начислено ${fmt(run.salary_gross)} · НДФЛ ${fmt(run.ndfl)} · К выплате ${fmt(run.salary_net)}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">

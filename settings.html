@@ -769,7 +769,7 @@ async function loadTeam() {
     document.getElementById('teamMembersList').innerHTML = members.map(m => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
         <div>
-          <div style="font-size:13px">${m.email || 'Без email'}${m.is_me ? ' <span style="color:var(--muted)">(вы)</span>' : ''}</div>
+          <div style="font-size:13px">${escapeHtml(m.email || 'Без email')}${m.is_me ? ' <span style="color:var(--muted)">(вы)</span>' : ''}</div>
           <div style="font-size:11px;color:var(--muted)">${ROLE_NAMES[m.role] || m.role}</div>
         </div>
         ${myRole === 'director' && !m.is_me ? `
@@ -823,7 +823,7 @@ async function loadAuditLog(myRole) {
         <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px">
           <div>
             <div style="color:var(--text)">${l.action_label} ${extra}</div>
-            <div style="color:var(--muted);font-size:11px;margin-top:2px">${l.user_email || 'неизвестно'}</div>
+            <div style="color:var(--muted);font-size:11px;margin-top:2px">${escapeHtml(l.user_email || 'неизвестно')}</div>
           </div>
           <div style="color:var(--muted);font-size:11px;white-space:nowrap;margin-left:12px">${date}</div>
         </div>
