@@ -135,8 +135,13 @@ body.light .filter-btn.active{background:var(--accent);color:#fff;}
 </header>
 
 <div class="main">
-  <h1>📅 Налоговый календарь 2026</h1>
-  <div class="subtitle">Все дедлайны по уплате налогов и сдаче отчётности. Отмечай выполненные — они сохраняются.</div>
+  <h1>Налоговый календарь 2026</h1>
+  <div class="subtitle">Все дедлайны по налогам и отчётности. Отмечайте выполненные — они сохраняются.</div>
+
+  <div id="next3" style="display:none;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px">Ближайшие дедлайны</div>
+    <div id="next3Cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div>
+  </div>
 
   <div class="filters">
     <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">Все</button>
@@ -146,7 +151,7 @@ body.light .filter-btn.active{background:var(--accent);color:#fff;}
     <button class="filter-btn" data-filter="vznosy" onclick="setFilter('vznosy',this)">Взносы</button>
     <button class="filter-btn" data-filter="profit" onclick="setFilter('profit',this)">Прибыль</button>
     <button class="filter-btn" data-filter="salary" onclick="setFilter('salary',this)">Зарплата</button>
-    <button class="filter-btn" data-filter="upcoming" onclick="setFilter('upcoming',this)">⚡ Ближайшие</button>
+    <button class="filter-btn" data-filter="upcoming" onclick="setFilter('upcoming',this)">Ближайшие</button>
   </div>
 
   <div class="stats-row">
@@ -279,6 +284,7 @@ function setFilter(f, btn) {
 }
 
 function toggleDone(id, e) {
+  setTimeout(renderNext3, 0);
   e.stopPropagation();
   if (doneIds.includes(id)) {
     doneIds = doneIds.filter(x => x !== id);
@@ -308,6 +314,29 @@ async function remindTg(event, e) {
   } catch(err) {
     showToast('⚠️ Telegram не подключён');
   }
+}
+
+function renderNext3() {
+  const upcoming = EVENTS
+    .map(e => ({...e, d: new Date(e.date)}))
+    .filter(e => e.d >= TODAY && !doneIds.includes(e.id))
+    .sort((a,b) => a.d - b.d)
+    .slice(0, 3);
+  const wrap = document.getElementById('next3');
+  const cards = document.getElementById('next3Cards');
+  if (!upcoming.length || !wrap) return;
+  const MONTHS_R = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  cards.innerHTML = upcoming.map((e, i) => {
+    const diff = Math.round((e.d - TODAY) / 86400000);
+    const word = diff % 10 === 1 && diff % 100 !== 11 ? 'день' : [2,3,4].includes(diff % 10) && ![12,13,14].includes(diff % 100) ? 'дня' : 'дней';
+    const urgent = diff <= 14;
+    return `<div style="background:${i===0 ? 'linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02))' : 'var(--surface)'};border:1px solid ${urgent ? 'rgba(239,68,68,0.35)' : i===0 ? 'rgba(255,107,0,0.2)' : 'var(--border)'};border-radius:14px;padding:16px 18px">
+      <div style="font-family:'Unbounded',sans-serif;font-size:${i===0 ? '26px' : '20px'};font-weight:900;font-variant-numeric:tabular-nums;color:${urgent ? 'var(--red)' : 'var(--text)'};line-height:1.1">${diff === 0 ? 'сегодня' : diff + ' ' + word}</div>
+      <div style="font-size:12px;font-weight:600;margin-top:8px;line-height:1.4">${e.title}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${e.d.getDate()} ${MONTHS_R[e.d.getMonth()]}</div>
+    </div>`;
+  }).join('');
+  wrap.style.display = 'block';
 }
 
 function render() {
@@ -398,6 +427,7 @@ function showToast(msg) {
 // Автоскролл к ближайшему событию при загрузке
 window.addEventListener('DOMContentLoaded', () => {
   render();
+  renderNext3();
   // Небольшой скролл к текущему месяцу
   setTimeout(() => {
     const now = new Date();
