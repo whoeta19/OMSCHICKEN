@@ -52,19 +52,17 @@ window.fetch = async function(url, opts = {}) {
     if (tok) opts = {...opts, headers: {...(opts.headers||{}), 'Authorization': 'Bearer ' + tok}};
     const r = await _origFetch(url, opts);
     if (r.status === 401) {
+      // 401 бывает и от разового сбоя сервера при обращении к Supabase, не
+      // только от истёкшего токена — поэтому не разлогиниваем сразу.
+      // Один раз обновляем токен и повторяем запрос; если снова не вышло —
+      // отдаём ответ вызывающему коду, а не рвём сессию: другой параллельный
+      // запрос на той же странице вполне может отработать нормально.
       localStorage.removeItem(TOKEN_KEY);
       const newTok = await getValidToken();
       if (newTok) {
         opts.headers = {...(opts.headers||{}), 'Authorization': 'Bearer ' + newTok};
-        const r2 = await _origFetch(url, opts);
-        if (r2.status !== 401) return r2;
+        return _origFetch(url, opts);
       }
-      // Сессия мертва — чистим токены и выходим на логин с пояснением
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_KEY);
-      localStorage.removeItem('omschicken_token');
-      localStorage.removeItem('omschicken_refresh');
-      window.location.href = '/login?expired=1';
     }
     return r;
   }
