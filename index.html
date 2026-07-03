@@ -2522,10 +2522,17 @@ function _fieldErr(id, msg) {
   showToast('⚠️ ' + msg);
 }
 
-function addManual() {
+let _addBusy = false;
+async function addManual() {
+  if (_addBusy) return;
   const name = document.getElementById('addName').value.trim();
   let amount = parseFloat(document.getElementById('addAmount').value);
-  const date = document.getElementById('addDate').value || new Date().toISOString().split('T')[0];
+  // <input type="date"> отдаёт YYYY-MM-DD, а сервер и вся БД работают с DD.MM.YYYY
+  const rawDate = document.getElementById('addDate').value; // YYYY-MM-DD или ''
+  const isoDate = rawDate || new Date().toISOString().split('T')[0];
+  const [yyyy, mm, dd] = isoDate.split('-');
+  const date = `${dd}.${mm}.${yyyy}`;
+  const period = `${mm}.${yyyy}`;
   const desc = document.getElementById('addDesc').value.trim();
   const manualCat = document.getElementById('addCat').value;
   if (!name) { _fieldErr('addName', 'Укажи контрагента'); return; }
@@ -2534,14 +2541,28 @@ function addManual() {
   // Применяем знак из кнопки Расход/Доход — берём абсолютное значение и умножаем
   amount = Math.abs(amount) * _addTypeSign;
   const cat = manualCat || classify(name, desc, amount);
-  const tx = {name, amount, date, description:desc, category:cat, is_personal:['personal','food'].includes(cat)};
-  apiPost([tx]).then(()=>syncNow()).catch(e=>showToast('❌ '+e.message));
-  document.getElementById('addResult').innerHTML = `<div class="info-box success">✅ Сохранено: <strong>${name}</strong> — ${getCatBadge(cat)}</div>`;
-  document.getElementById('addName').value = '';
-  document.getElementById('addAmount').value = '';
-  document.getElementById('addDesc').value = '';
-  document.getElementById('addCat').value = '';
-  setAddType('expense'); // сбросить в режим расхода
+  const tx = {name, amount, date, period, description:desc, category:cat, is_personal:['personal','food'].includes(cat)};
+
+  // Успех показываем только ПОСЛЕ ответа сервера; на время запроса кнопка заблокирована,
+  // при ошибке поля не очищаются — данные не теряются.
+  _addBusy = true;
+  const btn = event?.target?.closest?.('button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Сохраняем…'; }
+  try {
+    await apiPost([tx]);
+    document.getElementById('addResult').innerHTML = `<div class="info-box success">✅ Сохранено: <strong>${escapeHtml(name)}</strong> — ${getCatBadge(cat)}</div>`;
+    document.getElementById('addName').value = '';
+    document.getElementById('addAmount').value = '';
+    document.getElementById('addDesc').value = '';
+    document.getElementById('addCat').value = '';
+    setAddType('expense'); // сбросить в режим расхода
+    syncNow();
+  } catch(e) {
+    showToast('❌ Не удалось сохранить: ' + (e.message || 'ошибка сети') + ' — данные в форме сохранены');
+  } finally {
+    _addBusy = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Сохранить'; }
+  }
 }
 
 async function clearAll() {
