@@ -374,5 +374,17 @@ function enterDemo() {
 }
 
 </script>
+<script>
+// Пояснение, если выкинуло из-за истёкшей/аннулированной сессии
+if (new URLSearchParams(location.search).get('expired')) {
+  document.addEventListener('DOMContentLoaded', function(){
+    var d=document.createElement('div');
+    d.style.cssText='max-width:360px;margin:0 auto 14px;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text,#f0f0f0);text-align:center';
+    d.textContent='Сессия истекла — войди заново, и всё заработает';
+    var form=document.querySelector('.card,.wrap,form')||document.body.firstElementChild;
+    form.parentNode.insertBefore(d, form);
+  });
+}
+</script>
 </body>
 </html>

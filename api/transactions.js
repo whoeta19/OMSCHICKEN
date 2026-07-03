@@ -406,7 +406,7 @@ export default async function handler(req, res) {
   const userToken = authHeader.replace('Bearer ', '').trim();
 
   // Получаем user_id из токена
-  let userId = null;
+  let userId = null, authReason = userToken ? '' : 'нет токена';
   if (userToken) {
     try {
       const userR = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -414,7 +414,8 @@ export default async function handler(req, res) {
       });
       const userData = await userR.json();
       userId = userData.id || null;
-    } catch(e) { console.error(e); }
+      if (!userId) authReason = userData.error_code || userData.msg || userData.error || ('auth ' + userR.status);
+    } catch(e) { console.error(e); authReason = 'auth недоступен'; }
   }
 
   // company_id приходит по-разному в зависимости от метода и формы тела запроса
@@ -440,7 +441,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, count: parsed.length, transactions: parsed });
   }
 
-  if (!userId) return res.status(401).json({ error: 'Не авторизован' });
+  if (!userId) return res.status(401).json({ error: 'Не авторизован', reason: authReason });
 
   // Если указана компания — проверяем, что пользователь в ней состоит, и какая у него роль.
   // Без company_id (старые клиенты / одиночный режим без команды) — пускаем по user_id, как раньше.
