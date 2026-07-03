@@ -391,6 +391,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    return res.status(503).json({ error: 'Сервис временно недоступен: не настроены переменные окружения (SUPABASE_URL / SUPABASE_SERVICE_KEY)' });
+  }
+
   // ─── Вебхук от банка (?action=webhook&secret=XXX&user_id=YYY) ──────────────
   // Банк (Т-Банк, ВТБ и др.) шлёт POST без Bearer токена.
   // Аутентификация — через секрет в query, который пользователь скопировал из настроек.
