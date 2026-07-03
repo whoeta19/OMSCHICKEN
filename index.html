@@ -2509,7 +2509,7 @@ function _origRenderAll() {
       if (allTx.length) {
         profitEl.textContent = (profit >= 0 ? '+' : '') + fmt(profit);
         profitEl.className = 'hero-stat-value ' + (profit >= 0 ? 'positive' : 'negative');
-        const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort();
+        const periods = [...new Set(allTx.map(t => t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
         if (profitSub) profitSub.textContent = periods.length ? `За ${periods.length > 1 ? periods[0] + ' — ' + periods[periods.length-1] : periods[0]}` : 'Все операции';
       } else {
         profitEl.textContent = '0 ₽';
@@ -4252,7 +4252,7 @@ function detectAnomalies() {
   if (!curTx.length) { block.innerHTML=''; return; }
 
   // Считаем среднее по категориям за предыдущие 3 периода
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
   const prevPeriods = periods.filter(p=>p!==curMonth).slice(-3);
   if (!prevPeriods.length) { block.innerHTML=''; return; }
 
@@ -4376,7 +4376,7 @@ function openPL() {
   const totalExp = Object.values(bycat).reduce((a,b)=>a+b,0);
   const profit = income - totalExp;
   const catNames = {chicken:'Закупки товаров',transport:'Транспорт и логистика',salary:'Фонд оплаты труда',bank:'Банковские расходы',food:'Питание',office:'Офис и прочее',unknown:'Прочие расходы'};
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
   const period = periods.length ? (periods[0]+(periods.length>1?' — '+periods[periods.length-1]:'')) : 'Все периоды';
 
   content.innerHTML = `
@@ -4414,7 +4414,7 @@ function printPL() {
 function openCompare() {
   const modal = document.getElementById('compareModal');
   modal.style.display = 'flex';
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b)).reverse();
   const s1 = document.getElementById('cmpPeriod1');
   const s2 = document.getElementById('cmpPeriod2');
   s1.innerHTML = s2.innerHTML = periods.map((p,i)=>`<option value="${p}">${p}</option>`).join('');

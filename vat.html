@@ -337,7 +337,7 @@ let filteredTx = [];
 let currentPeriod = 'all';
 
 function renderPeriodFilter() {
-  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort().reverse();
+  const periods = [...new Set(allTx.map(t=>t.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b)).reverse();
   const sel = document.getElementById('periodSelect');
   if (!sel) return;
   sel.innerHTML = '<option value="all">Все периоды</option>' + 

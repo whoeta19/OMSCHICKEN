@@ -13,6 +13,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <title>Переговорный калькулятор — OMSFIN</title>
 <meta name="description" content="Калькулятор для переговоров: реальная стоимость отсрочки платежа, скидки, предоплаты. Помогает принять обоснованное финансовое решение.">
+<script src="/utils.js"></script>
 <script>(function(){var t=localStorage.getItem('omsfin_token')||localStorage.getItem('omschicken_token');if(!t&&!localStorage.getItem('omsfin_demo'))window.location.replace('/login');})()</script>
 <script src="/js/auth.js"></script>
 <script>(function(){var s=JSON.parse(localStorage.getItem("omsfin_settings")||"{}");var t=s.autoTheme?(new Date().getHours()>=7&&new Date().getHours()<21?"light":"dark"):s.theme;if(t&&["light","blue","aurora"].includes(t))document.body.classList.add(t);if(s.accent)document.body.style.setProperty("--accent",s.accent);})()</script>
