@@ -1195,19 +1195,19 @@ window.fetch = async function(url, opts = {}) {
     if (tok) opts = {...opts, headers: {...(opts.headers||{}), 'Authorization': 'Bearer ' + tok}};
     const r = await _origFetch(url, opts);
     if (r.status === 401) {
+      // 401 может быть как от истёкшего токена, так и от разового сбоя сервера
+      // при обращении к Supabase — поэтому НЕ разлогиниваем сразу, а один раз
+      // пробуем обновить токен и повторить запрос. Если он снова не пройдёт —
+      // просто возвращаем ответ вызывающему коду (он покажет свою ошибку),
+      // не стирая сессию: параллельный запрос на той же странице может
+      // отработать нормально, и разлогинивать пользователя из-за одного
+      // случайного сбоя нельзя.
       localStorage.removeItem(TOKEN_KEY);
       const newTok = await getValidToken();
       if (newTok) {
         opts.headers = {...(opts.headers||{}), 'Authorization': 'Bearer ' + newTok};
-        const r2 = await _origFetch(url, opts);
-        if (r2.status !== 401) return r2;
+        return _origFetch(url, opts);
       }
-      // Сессия мертва (аннулирована на сервере) — токены бесполезны, выходим на логин
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_KEY);
-      localStorage.removeItem('omschicken_token');
-      localStorage.removeItem('omschicken_refresh');
-      window.location.href = '/login?expired=1';
     }
     return r;
   }
