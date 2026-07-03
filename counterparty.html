@@ -137,30 +137,30 @@
   <button class="btn-outline" onclick="window.location.href='/'">← Назад</button>
 </header>
 <div class="tabs">
-  <button class="tab active" onclick="showPage('search',this)">🔍 Проверить</button>
-  <button class="tab" onclick="showPage('fromtx',this)">📋 Из выписки</button>
-  <button class="tab" onclick="showPage('history',this)">🕐 История</button>
+  <button class="tab active" onclick="showPage('search',this)">Проверить</button>
+  <button class="tab" onclick="showPage('fromtx',this)">Из выписки</button>
+  <button class="tab" onclick="showPage('history',this)">История</button>
 </div>
 <main>
 
 <!-- ПОИСК -->
 <div class="page active" id="page-search">
   <div style="margin-bottom:20px;margin-top:4px">
-    <div style="font-family:Unbounded,sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">🔍 Анализ контрагента</div>
-    <div style="font-size:13px;color:var(--muted)">Проверь партнёра перед сделкой — статус, руководитель, риски</div>
+    <div style="font-family:Unbounded,sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">Проверка контрагента</div>
+    <div style="font-size:13px;color:var(--muted)">Проверьте партнёра до сделки — статус, руководитель, риски</div>
   </div>
   <div class="search-box">
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Введи ИНН или название компании</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Введите ИНН или название компании</div>
     <div class="search-row">
       <input type="text" class="search-input" id="searchInput" placeholder="ИНН или название компании" maxlength="100"
         onkeydown="if(event.key==='Enter')checkCompany()">
       <button class="btn" onclick="checkCompany()">Проверить →</button>
     </div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--muted)">Попробуй:</span>
+      <span style="font-size:11px;color:var(--muted)">Например:</span>
       <span onclick="document.getElementById('searchInput').value='7707083893';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Сбербанк</span>
-      <span onclick="document.getElementById('searchInput').value='7736207543';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Газпром</span>
-      <span onclick="document.getElementById('searchInput').value='7707083893';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Сбербанк</span>
+      <span onclick="document.getElementById('searchInput').value='7736050003';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Газпром</span>
+      <span onclick="document.getElementById('searchInput').value='7736207543';checkCompany()" style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline">Яндекс</span>
     </div>
   </div>
   <div id="searchResult"></div>
@@ -169,17 +169,17 @@
 <!-- ИЗ ВЫПИСКИ -->
 <div class="page" id="page-fromtx">
   <div style="margin-bottom:16px;margin-top:4px">
-    <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900;margin-bottom:6px">📋 Контрагенты из выписки</div>
-    <div style="font-size:13px;color:var(--muted)">Все компании с которыми работаешь</div>
+    <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900;margin-bottom:6px">Контрагенты из выписки</div>
+    <div style="font-size:13px;color:var(--muted)">Все компании, с которыми вы работаете</div>
   </div>
-  <div id="fromTxList"><div class="loading">⏳ Загружаем операции...</div></div>
+  <div id="fromTxList"><div class="loading">Загружаем операции…</div></div>
 </div>
 
 <!-- ИСТОРИЯ -->
 <div class="page" id="page-history">
   <div style="margin-bottom:16px;margin-top:4px">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900">🕐 История проверок</div>
+      <div style="font-family:Unbounded,sans-serif;font-size:18px;font-weight:900">История проверок</div>
       <button class="btn-outline" onclick="exportHistoryCSV()" style="font-size:12px;padding:6px 12px">📥 Скачать CSV</button>
     </div>
   </div>

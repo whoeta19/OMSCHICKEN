@@ -14,6 +14,7 @@
 <title>OMSFIN — Зарплата</title>
 <meta name="description" content="Зарплатный модуль: расчёт НДФЛ по прогрессивной шкале 2026, страховые взносы, история начислений, расчётные листки для сотрудников.">
 <script src="/utils.js"></script>
+<script src="/js/effects.js"></script>
 <script>(function(){var t=localStorage.getItem("omsfin_token")||localStorage.getItem("omschicken_token");if(!t&&!localStorage.getItem("omsfin_demo"))window.location.replace("/login");})()</script>
 <script src="/js/auth.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -111,10 +112,17 @@
 </header>
 
 <main>
+  <!-- Герой: ФОТ последнего начисленного месяца -->
+  <div id="payrollHero" style="display:none;background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02));border:1px solid rgba(255,107,0,0.2);border-radius:16px;padding:22px 24px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px" id="payrollHeroLabel">ФОТ за месяц</div>
+    <div style="font-family:'Unbounded',sans-serif;font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1" id="payrollHeroTotal">—</div>
+    <div style="font-size:13px;color:var(--text-2,#a3a3a3);margin-top:8px" id="payrollHeroSub"></div>
+  </div>
+
   <!-- Сотрудники -->
   <div class="card">
     <div class="section-title">
-      <span>👥 Сотрудники</span>
+      <span>Сотрудники</span>
       <span id="empCount" style="color:var(--text)"></span>
     </div>
     <div id="empList"></div>
@@ -125,23 +133,25 @@
         <div class="input-group" style="margin-bottom:0"><input type="text" id="newEmpPos" placeholder="Должность"></div>
         <div class="input-group" style="margin-bottom:0"><input type="number" id="newEmpSalary" placeholder="Оклад ₽"></div>
       </div>
-      <button class="btn btn-sm" onclick="addEmployee()">+ Добавить сотрудника</button>
+      <button class="btn-outline" onclick="addEmployee()">+ Добавить сотрудника</button>
     </div>
   </div>
 
   <!-- Начисление за месяц -->
   <div class="card">
-    <div class="section-title"><span>🧮 Начисление за период</span></div>
+    <div class="section-title"><span>Начисление за период</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">За какой месяц</div>
     <div class="period-picker">
       <input type="month" id="payrollPeriod">
       <button class="btn" onclick="calculatePayroll()">Начислить за этот месяц</button>
     </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px">НДФЛ по прогрессивной шкале и взносы 30% посчитаются автоматически</div>
     <div id="calcResult"></div>
   </div>
 
   <!-- История выплат -->
   <div class="card">
-    <div class="section-title"><span>📋 История начислений</span></div>
+    <div class="section-title"><span>История начислений</span></div>
     <div id="historyList"><div class="empty">Загрузка...</div></div>
   </div>
 </main>
@@ -345,12 +355,28 @@ async function loadHistory() {
     if (data.error) { document.getElementById('historyList').innerHTML = `<div class="empty">❌ ${data.error}</div>`; return; }
 
     if (!data.length) {
-      document.getElementById('historyList').innerHTML = '<div class="empty">Пока нет начислений</div>';
+      document.getElementById('historyList').innerHTML = '<div class="empty">Начислите зарплату за месяц — итоги появятся здесь</div>';
       return;
     }
 
     const empById = {};
     allEmps.forEach(e => empById[e.id] = e.full_name);
+
+    // Герой: итоги последнего начисленного периода
+    try {
+      const periods = [...new Set(data.map(r => r.period).filter(Boolean))].sort((a,b)=>parsePeriod(a)-parsePeriod(b));
+      const lastP = periods[periods.length - 1];
+      if (lastP) {
+        const runs = data.filter(r => r.period === lastP);
+        const g = runs.reduce((s,r)=>s+Number(r.salary_gross||0),0);
+        const n = runs.reduce((s,r)=>s+Number(r.ndfl||0),0);
+        const c = runs.reduce((s,r)=>s+Number(r.contributions||0),0);
+        document.getElementById('payrollHeroLabel').textContent = 'ФОТ за ' + lastP;
+        if (window.OMSFX) OMSFX.animateNumber(document.getElementById('payrollHeroTotal'), g); else document.getElementById('payrollHeroTotal').textContent = fmt(g);
+        document.getElementById('payrollHeroSub').textContent = 'НДФЛ ' + fmt(n) + ' · Взносы ' + fmt(c) + ' · ' + runs.length + ' сотр.';
+        document.getElementById('payrollHero').style.display = 'block';
+      }
+    } catch(e) { console.error(e); }
 
     document.getElementById('historyList').innerHTML = data.map(run => `
       <div class="run-row">
@@ -361,7 +387,7 @@ async function loadHistory() {
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="run-status ${run.status}">${run.status === 'paid' ? 'Выплачено' : 'Запланировано'}</span>
           ${run.status !== 'paid' ? `<button class="btn-outline" onclick="markPaid('${run.id}')">Отметить выплату</button>` : ''}
-          <button class="btn-outline" onclick='printPayslip(${JSON.stringify(run)}, ${JSON.stringify(empById[run.employee_id] || 'Сотрудник')})'>🖨 Листок</button>
+          <button class="btn-outline" onclick='printPayslip(${JSON.stringify(run)}, ${JSON.stringify(empById[run.employee_id] || 'Сотрудник')})'>Листок</button>
         </div>
       </div>
     `).join('');
