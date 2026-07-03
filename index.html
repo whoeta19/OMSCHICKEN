@@ -726,12 +726,22 @@
   </div>
   </div><!-- /bento-top -->
 
-  <!-- ─── Требует внимания: дедлайны, аномалии, склад, счета ─── -->
-  <div id="calWidget" style="margin-top:24px;margin-bottom:14px"></div>
-  <div id="duplicatesBanner" style="display:none;margin-bottom:12px"></div>
-  <div id="anomalyBlock" style="margin-bottom:14px"></div>
-  <div id="accountsWidget" style="margin-bottom:14px"></div>
-  <div id="warehouseWidget" style="margin-bottom:14px"></div>
+  <div id="duplicatesBanner" style="display:none;margin-top:24px;margin-bottom:12px"></div>
+
+  <!-- ─── Требует внимания: свёрнутая строка бейджей, разворачивается по клику ─── -->
+  <div id="attentionZone" style="display:none;margin-top:24px;margin-bottom:14px">
+    <div id="attentionBar" onclick="toggleAttentionZone()" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;transition:border-color 0.15s">
+      <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-right:2px">Требует внимания</span>
+      <span id="attentionBadges" style="display:flex;gap:6px;flex-wrap:wrap;flex:1"></span>
+      <span id="attentionChevron" style="color:var(--muted);font-size:11px;transition:transform 0.2s">▾</span>
+    </div>
+    <div id="attentionDetails" style="display:none;margin-top:10px">
+      <div id="calWidget" style="margin-bottom:14px"></div>
+      <div id="anomalyBlock" style="margin-bottom:14px"></div>
+      <div id="accountsWidget" style="margin-bottom:14px"></div>
+      <div id="warehouseWidget" style="margin-bottom:14px"></div>
+    </div>
+  </div>
 
 
   <!-- ─── Умная лента инсайтов ─── -->
@@ -5466,6 +5476,51 @@ setTimeout(function() {
     </div>
     ${items}
   </div>`;
+})();
+
+// ─── Свёрнутая зона "Требует внимания": бейджи-сводка вместо 4 полных виджетов ───
+function toggleAttentionZone() {
+  const details = document.getElementById('attentionDetails');
+  const chevron = document.getElementById('attentionChevron');
+  if (!details) return;
+  const open = details.style.display !== 'none';
+  details.style.display = open ? 'none' : 'block';
+  if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+(function watchAttentionWidgets() {
+  const zone = document.getElementById('attentionZone');
+  const badgesEl = document.getElementById('attentionBadges');
+  const details = document.getElementById('attentionDetails');
+  if (!zone || !badgesEl || !details) return;
+
+  const SOURCES = [
+    { id: 'calWidget', label: 'Дедлайны', color: 'var(--accent)' },
+    { id: 'anomalyBlock', label: 'Аномалии', color: 'var(--red)' },
+    { id: 'accountsWidget', label: 'Счета', color: '#60a5fa' },
+    { id: 'warehouseWidget', label: 'Склад', color: '#eab308' },
+  ];
+
+  function refresh() {
+    const active = SOURCES.filter(s => {
+      const el = document.getElementById(s.id);
+      return el && el.innerHTML.trim().length > 0;
+    });
+    if (!active.length) { zone.style.display = 'none'; return; }
+    zone.style.display = 'block';
+    badgesEl.innerHTML = active.map(s =>
+      `<span style="font-size:11px;padding:3px 10px;border-radius:20px;background:${s.color}18;color:${s.color};font-weight:600;white-space:nowrap">${s.label}</span>`
+    ).join('');
+  }
+
+  const observer = new MutationObserver(() => refresh());
+  SOURCES.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el) observer.observe(el, { childList: true, subtree: true, characterData: true });
+  });
+  refresh();
+  setTimeout(refresh, 500);
+  setTimeout(refresh, 1500);
 })();
 </script>
 
