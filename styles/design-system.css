@@ -1,183 +1,275 @@
-/* OMSFIN Design System — единые токены и эффекты.
-   Подключать ПОСЛЕ локального <style> страницы не нужно — токены в :root,
-   локальные правила страниц продолжают работать. Тёмная тема — основная. */
+/* ─── OMSFIN Design System ──────────────────────────────────────────────────
+   Единый источник истины для всех CSS-токенов.
+   Подключать ПЕРВЫМ тегом <link> перед page-specific стилями.
+   ──────────────────────────────────────────────────────────────────────── */
 
+/* ── Тёмная тема (по умолчанию) ── */
 :root {
-  /* Фон: 3 уровня глубины */
-  --bg: #080808;
-  --surface: #111111;
-  --surface2: #1a1a1a;
-  --border: #222222;
+  /* Фон */
+  --bg:        #080808;
+  --surface:   #0f0f0f;
+  --surface2:  #161616;
+  --surface3:  #1e1e1e;
 
-  /* Текст: 3 уровня */
-  --text: #f0f0f0;
-  --text-2: #a3a3a3;
-  --muted: #666666;
+  /* Границы и тени */
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --shadow:    none;
+  --shadow-2:  0 4px 24px rgba(0,0,0,0.5);
+
+  /* Текст */
+  --text:      #f5f5f5;
+  --text-2:    #b0b0b0;
+  --muted:     #5a5a5a;
 
   /* Акцент */
-  --accent: #ff6b00;
-  --accent-hover: #ff8534;
-  --accent-dim: rgba(255, 107, 0, 0.12);
+  --accent:    #ff6b00;
+  --accent2:   #ffaa44;
+  --accent-bg: rgba(255,107,0,0.10);
+  --accent-border: rgba(255,107,0,0.25);
 
-  /* Семантика */
-  --green: #22c55e;
-  --red: #ef4444;
-  --blue: #3b82f6;
-  --yellow: #eab308;
+  /* Семафоры */
+  --green:     #22c55e;
+  --green-bg:  rgba(34,197,94,0.10);
+  --red:       #ef4444;
+  --red-bg:    rgba(239,68,68,0.10);
+  --yellow:    #eab308;
+  --yellow-bg: rgba(234,179,8,0.10);
+  --blue:      #60a5fa;
+  --blue-bg:   rgba(96,165,250,0.10);
 
-  /* Радиусы */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-
-  /* Тени: 3 уровня */
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.55);
-
-  /* Spacing-шкала */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 24px;
-  --sp-6: 32px;
+  /* Скругления */
+  --radius-sm: 8px;
+  --radius:    12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --card-radius: var(--radius-lg);
 
   /* Типографика */
-  --font-body: 'Inter', -apple-system, sans-serif;
-  --font-display: 'Unbounded', sans-serif;
+  --font:      'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Анимации */
+  --ease:      cubic-bezier(0.4,0,0.2,1);
+  --dur:       0.2s;
+  --dur-slow:  0.35s;
+
+  /* Z-индексы */
+  --z-dropdown: 200;
+  --z-modal:    1000;
+  --z-toast:    2000;
+  --z-overlay:  10000;
 }
 
-/* ── Эффект 1: Glassmorphism ─────────────────────────────────────────── */
-.glass {
-  background: rgba(20, 20, 20, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+/* ── Светлая тема ── */
+:root.light,
+body.light {
+  --bg:        #f2f0eb;
+  --surface:   #ffffff;
+  --surface2:  #f7f6f2;
+  --surface3:  #eeece7;
+  --border:    rgba(0,0,0,0.09);
+  --border2:   rgba(0,0,0,0.15);
+  --shadow:    0 1px 4px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-2:  0 8px 32px rgba(0,0,0,0.12);
+  --text:      #1a1a1a;
+  --text-2:    #4a4a4a;
+  --muted:     #7a7060;
+  --green:     #16a34a;
+  --green-bg:  rgba(22,163,74,0.08);
+  --red:       #dc2626;
+  --red-bg:    rgba(220,38,38,0.08);
+  --yellow:    #b45309;
+  --yellow-bg: rgba(180,83,9,0.08);
+  --blue:      #2563eb;
+  --blue-bg:   rgba(37,99,235,0.08);
 }
 
-/* ── Эффект 2: Hover lift ────────────────────────────────────────────── */
-.lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-2);
+/* ── Синяя тема ── */
+:root.blue,
+body.blue {
+  --bg:        #060d1f;
+  --surface:   #0c1830;
+  --surface2:  #112040;
+  --surface3:  #162850;
+  --border:    rgba(96,165,250,0.13);
+  --border2:   rgba(96,165,250,0.22);
+  --shadow:    0 4px 24px rgba(0,0,0,0.4);
+  --shadow-2:  0 8px 48px rgba(0,0,0,0.6);
+  --text:      #e8f0fe;
+  --text-2:    #93b4d8;
+  --muted:     #4a6fa5;
+  --green:     #34d399;
+  --green-bg:  rgba(52,211,153,0.10);
+  --red:       #f87171;
+  --red-bg:    rgba(248,113,113,0.10);
+  --yellow:    #fbbf24;
+  --yellow-bg: rgba(251,191,36,0.10);
+  --blue:      #93c5fd;
+  --blue-bg:   rgba(147,197,253,0.10);
 }
 
-/* ── Эффект 3: Scroll reveal (класс вешает js/effects.js) ────────────── */
-.reveal {
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-.reveal.revealed {
-  opacity: 1;
-  transform: translateY(0);
+/* ── Базовый сброс ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── Эффект 5: Skeleton loading ──────────────────────────────────────── */
-.skeleton {
-  position: relative;
-  overflow: hidden;
+/* Плавные переходы при смене темы */
+body, body * {
+  transition:
+    background-color var(--dur) var(--ease),
+    border-color     var(--dur) var(--ease),
+    color            var(--dur) var(--ease),
+    box-shadow       var(--dur) var(--ease);
+}
+canvas { transition: none !important; }
+
+/* Скроллбар */
+::-webkit-scrollbar             { width: 6px; height: 6px; }
+::-webkit-scrollbar-track       { background: transparent; }
+::-webkit-scrollbar-thumb       { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Выделение */
+::selection { background: var(--accent-bg); color: var(--accent); }
+
+/* ── Кнопки ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  line-height: 1;
+  transition: opacity var(--dur) var(--ease), transform 80ms var(--ease);
+}
+.btn:active   { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-secondary { background: var(--surface2); color: var(--text); border-color: var(--border); }
+.btn-secondary:hover { background: var(--surface3); }
+.btn-danger    { background: var(--red); color: #fff; }
+.btn-danger:hover { opacity: 0.88; }
+.btn-ghost     { background: transparent; color: var(--text-2); border-color: var(--border); }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+.btn-sm { padding: 6px 12px; font-size: 13px; border-radius: var(--radius-sm); }
+.btn-lg { padding: 14px 24px; font-size: 16px; border-radius: var(--radius-lg); }
+
+/* ── Инпуты ── */
+.input {
+  width: 100%;
+  padding: 10px 14px;
   background: var(--surface2);
-  border-radius: var(--r-sm);
-  min-height: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
-.skeleton::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-  animation: oms-shimmer 1.4s infinite;
-}
-@keyframes oms-shimmer {
-  100% { transform: translateX(100%); }
-}
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.input::placeholder { color: var(--muted); }
 
-/* ── Микровзаимодействия (Фаза 4, база здесь) ────────────────────────── */
-button:active, .btn:active { transform: scale(0.98); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-input:focus, select:focus, textarea:focus { border-color: var(--accent) !important; }
+/* ── Карточки ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  padding: 20px;
+}
+.card-hover:hover { border-color: var(--border2); box-shadow: var(--shadow); }
 
-/* ── Доступность: отключаем всё для prefers-reduced-motion ───────────── */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-  .reveal { opacity: 1; transform: none; }
+/* ── Бейджи ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
 }
+.badge-green  { background: var(--green-bg);  color: var(--green); }
+.badge-red    { background: var(--red-bg);    color: var(--red); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.badge-blue   { background: var(--blue-bg);   color: var(--blue); }
+.badge-accent { background: var(--accent-bg); color: var(--accent); }
+.badge-muted  { background: var(--surface2);  color: var(--muted); }
 
-/* ── Пустые состояния (единый вид на всех страницах) ─────────────────── */
-.empty {
-  text-align: center;
-  color: var(--muted);
-  padding: var(--sp-6) var(--sp-4);
-  font-size: 13px;
-  line-height: 1.6;
+/* ── Скелетон ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
 }
-.empty::before {
-  content: '';
-  display: block;
-  width: 40px;
-  height: 40px;
-  margin: 0 auto var(--sp-3);
-  border-radius: 50%;
-  background: var(--accent-dim);
-  opacity: 0.7;
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
+.skeleton-text  { height: 14px; margin-bottom: 8px; }
+.skeleton-title { height: 20px; width: 60%; margin-bottom: 12px; }
+.skeleton-card  { height: 80px; border-radius: var(--card-radius); }
 
-/* ── Чекбоксы: плавная галочка ────────────────────────────────────────── */
-input[type="checkbox"] {
-  accent-color: var(--accent);
-  transition: transform 0.15s ease;
-}
-input[type="checkbox"]:checked { transform: scale(1.05); }
+/* ── Таблицы — мобильный скролл ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-wrap table { min-width: 520px; }
 
-/* ── Эффект: Spotlight — свет следует за курсором по карточке ─────────── */
-@media (pointer: fine) {
-  .spotlight { position: relative; }
-  .spotlight::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%),
-      rgba(255, 107, 0, 0.10), transparent 60%);
-  }
-  .spotlight:hover::before { opacity: 1; }
-}
+/* ── Разделитель ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
-/* ── Эффект: живой градиент (акцентная карточка) ─────────────────────── */
-.grad-anim {
-  background: linear-gradient(120deg,
-    rgba(255,107,0,0.16), rgba(255,133,52,0.05), rgba(255,107,0,0.12), rgba(255,80,0,0.05));
-  background-size: 300% 300%;
-  animation: oms-grad 9s ease infinite;
-}
-@keyframes oms-grad {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+/* ── Утилиты ── */
+.text-accent  { color: var(--accent); }
+.text-muted   { color: var(--muted); }
+.text-green   { color: var(--green); }
+.text-red     { color: var(--red); }
+.text-yellow  { color: var(--yellow); }
+.text-2       { color: var(--text-2); }
 
-/* ── Эффект: магнитная кнопка (JS в effects.js) ──────────────────────── */
-.magnetic { transition: transform 0.18s cubic-bezier(0.3, 1, 0.4, 1); will-change: transform; }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.fw-700 { font-weight: 700; }
 
-/* ── Тап-цели: на тач-устройствах интерактивные элементы не меньше 44px ── */
-@media (pointer: coarse) {
-  button, .btn, .btn-outline, .tab, .filter-btn, .pill,
-  .settings-nav a, .mp-tab, select, input[type="checkbox"] + * {
-    min-height: 44px;
-  }
-  .tab, .filter-btn, .pill, .settings-nav a, .mp-tab {
-    display: inline-flex;
-    align-items: center;
-  }
-}
+.fs-12 { font-size: 12px; }
+.fs-13 { font-size: 13px; }
+.fs-14 { font-size: 14px; }
+.fs-16 { font-size: 16px; }
+.fs-18 { font-size: 18px; }
+.fs-24 { font-size: 24px; }
+
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mono     { font-family: var(--font-mono); }
+
+.d-flex      { display: flex; }
+.ai-center   { align-items: center; }
+.jc-between  { justify-content: space-between; }
+.gap-4       { gap: 4px; }
+.gap-8       { gap: 8px; }
+.gap-12      { gap: 12px; }
+.gap-16      { gap: 16px; }
+
+.mt-4  { margin-top: 4px; }
+.mt-8  { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-4  { margin-bottom: 4px; }
+.mb-8  { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
