@@ -392,13 +392,14 @@ window.onerror=function(m){if(/Script error|ResizeObserver/.test(m))return false
 window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||String(e.reason);if(/Failed to fetch|NetworkError|AbortError/.test(m))showToast('📡 Нет сети — проверьте соединение');else if(m&&m.length<80)showToast('⚠️ '+m);});
 
 async function loadData() {
+  const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  const authH = { 'Authorization': 'Bearer ' + token };
   document.getElementById('loadingMsg').style.display = 'block';
   document.getElementById('content').style.display = 'none';
   try {
-    // Проверяем company_id: сбрасываем если недействителен
     let companyId = localStorage.getItem('omsfin_company') || '';
     if (companyId) {
-      const cr = await fetch('/api/companies');
+      const cr = await fetch('/api/companies', { headers: authH });
       if (cr.ok) {
         const companies = await cr.json();
         if (Array.isArray(companies) && !companies.find(c => c.id === companyId)) {
@@ -409,18 +410,22 @@ async function loadData() {
       }
     }
     const url = companyId ? `/api/transactions?company_id=${companyId}` : '/api/transactions';
-    const r = await fetch(url);
+    const r = await safeFetch(url, { headers: authH });
     if (!r.ok) { document.getElementById('loadingMsg').textContent = '❌ Ошибка загрузки данных (' + r.status + ')'; return; }
     allTx = await r.json();
     if (!Array.isArray(allTx)) allTx = [];
     filteredTx = allTx;
+    if (!allTx.length) {
+      document.getElementById('loadingMsg').innerHTML = '<div style="text-align:center;padding:48px 20px"><div style="font-size:40px;margin-bottom:12px">📊</div><div style="font-size:16px;font-weight:600;margin-bottom:8px">Нет данных</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px">Загрузите банковскую выписку на главном экране,<br>чтобы увидеть аналитику</div><a href="/" style="display:inline-block;background:var(--accent);color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600">Перейти на главную →</a></div>';
+      return;
+    }
     renderPeriodFilter();
     destroyAllCharts();
     renderAll();
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('content').style.display = 'block';
   } catch(e) {
-    document.getElementById('loadingMsg').textContent = '❌ Ошибка загрузки данных';
+    document.getElementById('loadingMsg').textContent = '❌ Нет соединения — проверьте сеть';
   }
 }
 
@@ -774,7 +779,7 @@ function renderCashflow(txs) {
   if (!section || !alertEl) return;
 
   // Считаем среднемесячный поток за последние 3 месяца
-  const now = new Date();
+  const now = mskNow();
   const cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1).getTime();
   const recent = txs.filter(t => parseDMYts(t.date) >= cutoff);
   if (recent.length < 3) { section.style.display = 'none'; return; }

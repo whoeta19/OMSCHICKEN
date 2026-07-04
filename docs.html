@@ -957,7 +957,7 @@ function getDocInfo() {
     num: document.getElementById('docNum').value || '1',
     date: document.getElementById('docDate').value ? 
       new Date(document.getElementById('docDate').value).toLocaleDateString('ru-RU') : 
-      new Date().toLocaleDateString('ru-RU'),
+      mskNow().toLocaleDateString('ru-RU'),
     advanceNum: hasAdvance ? (document.getElementById('advanceNum')?.value || '') : '',
     advanceDate: hasAdvance && document.getElementById('advanceDate')?.value ?
       new Date(document.getElementById('advanceDate').value).toLocaleDateString('ru-RU') : ''
@@ -1545,7 +1545,7 @@ function genDOG(items, buyer, doc, total) {
     <p style="font-size:10pt;margin-bottom:8px">4.2. За просрочку поставки Поставщик уплачивает штраф 0,05% за каждый день.</p>
     
     <p class="bold" style="margin:8px 0 4px">5. СРОК ДЕЙСТВИЯ И ПРОЧИЕ УСЛОВИЯ</p>
-    <p style="font-size:10pt;margin-bottom:8px">5.1. Договор действует до 31.12.${new Date().getFullYear()} с автоматической пролонгацией. Споры разрешаются в Арбитражном суде ${city !== '_________________' ? `${city}ской области` : 'по месту регистрации Поставщика'}.</p>
+    <p style="font-size:10pt;margin-bottom:8px">5.1. Договор действует до 31.12.${mskNow().getFullYear()} с автоматической пролонгацией. Споры разрешаются в Арбитражном суде ${city !== '_________________' ? `${city}ской области` : 'по месту регистрации Поставщика'}.</p>
     
     <p class="bold" style="margin:8px 0 4px">6. РЕКВИЗИТЫ И ПОДПИСИ СТОРОН</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
@@ -1802,9 +1802,10 @@ function showToast(msg,dur=3000){const t=document.getElementById('toast');t.text
 window.onerror=function(m){if(/Script error|ResizeObserver/.test(m))return false;showToast('⚠️ '+String(m).substring(0,70));return false;};
 window.addEventListener('unhandledrejection',e=>{const m=e.reason?.message||String(e.reason);if(/Failed to fetch|NetworkError|AbortError/.test(m))showToast('📡 Нет сети — проверьте соединение');else if(m&&m.length<80)showToast('⚠️ '+m);});
 
-document.getElementById('docDate').value = new Date().toISOString().split('T')[0];
-document.getElementById('ppDate').value = new Date().toISOString().split('T')[0];
-document.getElementById('ksfDate').value = new Date().toISOString().split('T')[0];
+const _today = mskNow().toISOString().split('T')[0];
+document.getElementById('docDate').value = _today;
+document.getElementById('ppDate').value = _today;
+document.getElementById('ksfDate').value = _today;
 
 // ─── Корректировочный счёт-фактура ────────────────────────────────────────────
 function ksfCalc() {

@@ -676,12 +676,12 @@ async function loadData() {
   const cid = localStorage.getItem('omsfin_company') || '';
   const url = cid ? `/api/transactions?company_id=${encodeURIComponent(cid)}` : '/api/transactions';
   try {
-    const r = await fetch(url, {headers:{'Authorization':'Bearer '+token}});
+    const r = await safeFetch(url, {headers:{'Authorization':'Bearer '+token}});
     if (!r.ok) { showToast("❌ Ошибка загрузки данных"); return; }
     allTx = await r.json();
     if (!Array.isArray(allTx)) allTx = [];
     renderAll();
-  } catch(e) { showToast('❌ Ошибка загрузки данных'); }
+  } catch(e) { showToast('❌ Нет соединения — данные недоступны'); }
 }
 
 function renderAll() {
@@ -1163,11 +1163,7 @@ loadData();
 
 // Прогрессивная шкала НДФЛ 2026 (нарастающим итогом с начала года)
 function calcProgressiveNDFL(income) {
-  if (income <= 2400000)  return Math.round(income * 0.13);
-  if (income <= 5000000)  return 312000 + Math.round((income - 2400000) * 0.15);
-  if (income <= 20000000) return 702000 + Math.round((income - 5000000) * 0.18);
-  if (income <= 50000000) return 3402000 + Math.round((income - 20000000) * 0.20);
-  return 9402000 + Math.round((income - 50000000) * 0.22);
+  return OMSCALC.ndflProgressive(Math.round(income * 100)) / 100;
 }
 
 function fillNdflFromTx() {
@@ -1341,7 +1337,7 @@ let cqSelectedQ = null;
 function openCloseQuarter() {
   // Генерируем кнопки кварталов (4 последних)
   const grid = document.getElementById('cqQuarterGrid');
-  const now = new Date();
+  const now = mskNow();
   const quarters = [];
   for (let i = 0; i < 4; i++) {
     let q = Math.floor(now.getMonth() / 3) - i;

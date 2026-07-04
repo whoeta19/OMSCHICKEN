@@ -449,7 +449,7 @@ function printPayslip(run, empName) {
 
 <div class="sign-row">
   <div>Подпись работодателя: ________________________</div>
-  <div>Дата выдачи: ___.____.${new Date().getFullYear()}</div>
+  <div>Дата выдачи: ___.____.${mskNow().getFullYear()}</div>
 </div>
 <div class="footer">
   НДФЛ рассчитан по прогрессивной шкале 2026 нарастающим итогом с начала года.<br>
@@ -470,7 +470,7 @@ function printPayslip(run, empName) {
 }
 
 // Дефолтный период — текущий месяц
-const now = new Date();
+const now = mskNow();
 document.getElementById('payrollPeriod').value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
 
 loadEmployees();

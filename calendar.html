@@ -431,7 +431,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderNext3();
   // Небольшой скролл к текущему месяцу
   setTimeout(() => {
-    const now = new Date();
+    const now = mskNow();
     const key = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
     const blocks = document.querySelectorAll('.month-block');
     blocks.forEach(b => {

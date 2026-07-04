@@ -217,6 +217,8 @@ async function checkCompany() {
   if (!query) return;
   hideSuggestions();
 
+  const btn = document.querySelector('.search-row .btn');
+  if (btn) btn.disabled = true;
   const result = document.getElementById('searchResult');
   result.innerHTML = `<div class="loading"><div class="spinner"></div><div>Запрашиваем данные ФНС...</div></div>`;
 
@@ -226,14 +228,11 @@ async function checkCompany() {
 
     if (isINN) {
       data = await fetchFromEGRUL(query);
-      // fetchFromEGRUL уже включает dadata fallback через сервер
     } else {
-      // Поиск по названию через Dadata
       const results = await searchByName(query);
       if (results && results.length === 1) {
         data = results[0];
       } else if (results && results.length > 1) {
-        // Показываем список для выбора
         result.innerHTML = renderSuggestionList(results);
         return;
       }
@@ -248,6 +247,8 @@ async function checkCompany() {
     saveHistory(data);
   } catch(e) {
     result.innerHTML = generateManualForm(query);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 

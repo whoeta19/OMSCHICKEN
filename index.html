@@ -1485,7 +1485,7 @@ function renderSuggestions() {
   });
   
   // НДС напоминание
-  const now = new Date();
+  const now = mskNow();
   const quarter = Math.floor(now.getMonth() / 3);
   const quarterEnd = new Date(now.getFullYear(), (quarter+1)*3, 0);
   const daysLeft = Math.ceil((quarterEnd - now) / (1000*60*60*24));
@@ -2751,7 +2751,7 @@ function renderHealthScore() {
   const taxScore = Math.round(taxBurden < 0.05 ? 20 : taxBurden < 0.1 ? 17 : taxBurden < 0.15 ? 13 : taxBurden < 0.2 ? 8 : 3);
 
   // 5. РОСТ (0–15): тренд выручки: текущий месяц vs предыдущий
-  const thisMonth = new Date().getMonth(), thisYear = new Date().getFullYear();
+  const _msk = mskNow(), thisMonth = _msk.getMonth(), thisYear = _msk.getFullYear();
   const incThis = allTx.filter(t=>t.amount>0&&parseDMY(t.date)>=new Date(thisYear,thisMonth,1).getTime()).reduce((s,t)=>s+Number(t.amount),0);
   const incPrev = allTx.filter(t=>t.amount>0&&parseDMY(t.date)>=new Date(thisYear,thisMonth-1,1).getTime()&&parseDMY(t.date)<new Date(thisYear,thisMonth,1).getTime()).reduce((s,t)=>s+Number(t.amount),0);
   const growthRate = incPrev > 0 ? (incThis - incPrev) / incPrev : 0;
@@ -2827,7 +2827,7 @@ function renderMonthCloser() {
   const card = document.getElementById('monthCloserCard');
   if (!card) return;
 
-  const now = new Date();
+  const now = mskNow();
   const monthKey = String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
   const monthNames = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   document.getElementById('closerMonthLabel').textContent = monthNames[now.getMonth()] + ' ' + now.getFullYear();
@@ -3065,7 +3065,7 @@ function guessNextDate(txs) {
   const lastDate = parseDMYtoDate(sorted[0].date);
   if (!lastDate) return null;
   const day = lastDate.getDate();
-  const now = new Date();
+  const now = mskNow();
   let next = new Date(now.getFullYear(), now.getMonth(), day);
   if (next <= now) next = new Date(now.getFullYear(), now.getMonth() + 1, day);
   return next;
@@ -3081,7 +3081,7 @@ function fmtNextDate(d) {
 
 function daysUntil(d) {
   if (!d) return null;
-  return Math.ceil((d - new Date()) / 86400000);
+  return Math.ceil((d - mskNow()) / 86400000);
 }
 
 function renderRecurring() {
@@ -3356,7 +3356,7 @@ document.addEventListener('click', () => closeMoreMenu());
 
 // ─── Приветствие по названию компании ─────────────────────────────────────────
 function initHome() {
-  const now = new Date();
+  const now = mskNow();
   const days = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
   const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const dateEl = document.getElementById('homeDate');
@@ -3391,7 +3391,7 @@ function setUsnRate(r) {
 function renderUSN() {
   const el = document.getElementById('usnResult');
   if (!el) return;
-  const now = new Date();
+  const now = mskNow();
   const year = now.getFullYear();
   const yearTx = allTx.filter(t => { const y = (t.date||'').split('.')[2]; return y == year; });
   if (!yearTx.length) {
@@ -3463,7 +3463,7 @@ function renderForecast() {
     el.innerHTML = '<div style="color:var(--muted);font-size:12px">Загрузи выписку чтобы увидеть прогноз</div>';
     return;
   }
-  const now = new Date();
+  const now = mskNow();
   const avgByMonth = {};
   allTx.forEach(t => {
     const p = t.period || '';
@@ -3564,7 +3564,7 @@ function filterDeadlines(type, btn) {
 function renderTaxCalendar() {
   const el = document.getElementById('taxDeadlinesList');
   if (!el) return;
-  const now = new Date(); now.setHours(0,0,0,0);
+  const now = mskNow(); now.setHours(0,0,0,0);
   const soon = new Date(now); soon.setDate(soon.getDate()+14);
   const typeNames = {usn:'УСН',nds:'НДС',ndfl:'НДФЛ',vznosy:'Взносы',pribyl:'Прибыль'};
   const filtered = TAX_DEADLINES_2026.filter(d => deadlineFilter==='all' || d.type===deadlineFilter);
@@ -3614,7 +3614,7 @@ function clearAIChat() {
 
 function _aiInit() {
   _aiInited = true;
-  const year = new Date().getFullYear();
+  const year = mskNow().getFullYear();
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
@@ -3626,7 +3626,7 @@ function _aiInit() {
     html = `Привет! Я финансовый ассистент OMSFIN.<br><br>Пока данных нет — загрузи банковскую выписку, и я смогу анализировать доходы, расходы, рассчитывать налоги и давать советы.<br><br>Пока что отвечу на любой вопрос по бухгалтерии и налогам 2026 →`;
     chips = ['Как загрузить выписку?', 'Как платить НДС?', 'НДФЛ прогрессивная шкала', 'Страховые взносы 2026', 'Как выплатить дивиденды?'];
   } else {
-    const months = new Date().getMonth() + 1;
+    const months = mskNow().getMonth() + 1;
     const avgMonth = income / months;
     const warn = _aiWeakPoint();
     html = `Привет! Данные за ${year} год:<br>• Доход: <b>${fmt(income)}</b><br>• Расход: <b>${fmt(expense)}</b><br>• Прибыль: <b style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}${fmt(profit)}</b><br>• Средний доход в месяц: <b>${fmt(avgMonth)}</b>${warn ? '<br><br>' + warn : ''}<br><br>Спрашивай по данным или задавай вопросы по налогам →`;
@@ -3714,7 +3714,7 @@ async function aiAsk(q) {
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    const now = new Date();
+    const now = mskNow();
     const year = now.getFullYear();
     const curMonth = String(now.getMonth()+1).padStart(2,'0');
     const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
@@ -3805,7 +3805,7 @@ async function aiAsk(q) {
 
 function aiAnswer(q) {
   const ql = q.toLowerCase();
-  const now = new Date();
+  const now = mskNow();
   const year = now.getFullYear();
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
@@ -4305,7 +4305,7 @@ function detectAnomalies() {
   const block = document.getElementById('anomalyBlock');
   if (!block || allTx.length < 10) { if(block) block.innerHTML=''; return; }
 
-  const now = new Date();
+  const now = mskNow();
   const curMonth = String(now.getMonth()+1).padStart(2,'0')+'.'+now.getFullYear();
   const curTx = allTx.filter(t=>t.period===curMonth&&t.amount<0);
   if (!curTx.length) { block.innerHTML=''; return; }
@@ -4353,7 +4353,7 @@ function renderBreakeven() {
   const pctEl = document.getElementById('breakevenPct');
   if (!card || !allTx.length) return;
 
-  const now = new Date();
+  const now = mskNow();
   const curMonth = String(now.getMonth()+1).padStart(2,'0')+'.'+now.getFullYear();
   const mTx = allTx.filter(t=>t.period===curMonth);
   const income = mTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
@@ -4394,7 +4394,7 @@ function startDeadlineTimer() {
   const timerEl = document.getElementById('deadlineLiveTimer');
   if (!card) return;
 
-  const now = new Date();
+  const now = mskNow();
   const upcoming = NEXT_DEADLINES.map(d=>({...d,dt:new Date(d.date+'T23:59:59')})).filter(d=>d.dt>now);
   if (!upcoming.length) return;
 
@@ -4404,7 +4404,7 @@ function startDeadlineTimer() {
   timerEl.style.display = 'flex';
 
   function tick() {
-    const diff = next.dt - new Date();
+    const diff = next.dt - mskNow();
     if (diff <= 0) { timerEl.innerHTML='<span style="color:var(--red);font-weight:700">Срок истёк!</span>'; return; }
     const d = Math.floor(diff/864e5);
     const h = Math.floor((diff%864e5)/36e5);
@@ -4441,7 +4441,7 @@ function openPL() {
   const period = periods.length ? (periods[0]+(periods.length>1?' — '+periods[periods.length-1]:'')) : 'Все периоды';
 
   content.innerHTML = `
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Период: ${period} · Составлен ${new Date().toLocaleDateString('ru-RU')}</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Период: ${period} · Составлен ${mskNow().toLocaleDateString('ru-RU')}</div>
     <div class="pl-row section"><span>ДОХОДЫ</span></div>
     <div class="pl-row"><span>Выручка от реализации</span><span class="pl-positive">+${fmt(income)}</span></div>
     <div class="pl-row" style="font-weight:600;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;margin-top:4px"><span>Итого доходы</span><span class="pl-positive">+${fmt(income)}</span></div>
@@ -4596,7 +4596,7 @@ function renderInsights() {
   if (!feed || !allTx.length) { if (feed) feed.style.display = 'none'; return; }
 
   const insights = [];
-  const now = new Date();
+  const now = mskNow();
   const curMonth = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
   const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
   const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0') + '.' + prevDate.getFullYear();
@@ -4758,7 +4758,7 @@ function saveBudgets(b) { localStorage.setItem('omsfin_budgets', JSON.stringify(
 function initBudgetPeriodSel() {
   const sel = document.getElementById('budgetPeriodSel');
   if (!sel) return;
-  const now = new Date();
+  const now = mskNow();
   const options = [];
   for (let i = 0; i < 6; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -4873,13 +4873,13 @@ startDeadlineTimer();
 
 // ─── Финансовые цели ──────────────────────────────────────────────
 function getGoals() {
-  const now = new Date();
+  const now = mskNow();
   const period = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
   return JSON.parse(localStorage.getItem('omsfin_goals') || '{}')[period] || {};
 }
 
 function saveGoals() {
-  const now = new Date();
+  const now = mskNow();
   const period = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
   const all = JSON.parse(localStorage.getItem('omsfin_goals') || '{}');
   all[period] = {
@@ -4908,7 +4908,7 @@ function renderGoals() {
   const g = getGoals();
   if (!g.income && !g.expense && !g.profit) { card.style.display = 'none'; return; }
 
-  const now = new Date();
+  const now = mskNow();
   const period = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
   const periodTx = allTx.filter(t => t.period === period || (t.date && t.date.slice(3) === period));
   const income = periodTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
@@ -5128,7 +5128,7 @@ function saveNotifs(n) { localStorage.setItem(NOTIF_KEY, JSON.stringify(n)); }
 function pushNotif(icon, title, body, type, actionUrl) {
   var notifs = getNotifs();
   // Не дублировать одинаковые за сутки
-  var today = new Date().toDateString();
+  var today = mskNow().toDateString();
   if (notifs.some(function(n){ return n.title === title && n.day === today; })) return;
   notifs.unshift({ id: Date.now(), icon: icon, title: title, body: body, type: type || 'info', actionUrl: actionUrl || null, day: today, read: false });
   saveNotifs(notifs.slice(0, 50));
@@ -5193,7 +5193,7 @@ document.addEventListener('click', function(e) {
 
 // ─── Налоговые напоминания ────────────────────────────────────────────────────
 function checkTaxReminders() {
-  var now = new Date();
+  var now = mskNow();
   var day = now.getDate();
   var month = now.getMonth() + 1;
 

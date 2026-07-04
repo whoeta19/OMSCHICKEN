@@ -127,7 +127,7 @@ function fmt(n) { return Math.round(Number(n) || 0).toLocaleString('ru-RU') + ' 
 const ROLE_NAMES = { director: 'Директор', accountant: 'Бухгалтер', employee: 'Сотрудник' };
 
 async function loadOverview() {
-  const now = new Date();
+  const now = mskNow();
   const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   document.getElementById('periodLabel').textContent = `Сводка за ${months[now.getMonth()]} ${now.getFullYear()}`;
 
