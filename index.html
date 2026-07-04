@@ -1948,8 +1948,9 @@ document.getElementById('fileInput').addEventListener('change', async function(e
         text = new TextDecoder('windows-1251').decode(buf);
       }
       const bank = detectBank(text);
-      showAccountModal(text, bank);
-      return; // продолжение в confirmAccountAndUpload после выбора счёта
+      const accountName = extractAccountFromText(text, bank) || 'Основной счёт';
+      saveAccount(accountName);
+      await parseAndProcess(text, accountName);
     } catch(err) {
       showToast('❌ Ошибка файла: ' + file.name.substring(0,20));
     }

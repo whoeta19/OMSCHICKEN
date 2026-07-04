@@ -41,15 +41,23 @@ export default async function handler(req, res) {
   // прежде чем считать пользователя неавторизованным.
   let userId = null, authReason = userToken ? '' : 'нет токена';
   if (userToken) {
-    for (let attempt = 0; attempt < 2 && !userId; attempt++) {
+    for (let attempt = 0; attempt < 3 && !userId; attempt++) {
       try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 4000);
         const ur = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken },
+          signal: ctrl.signal
         });
+        clearTimeout(timer);
         const ud = await ur.json();
         userId = ud.id || null;
         if (!userId) authReason = ud.error_code || ud.msg || ud.error || ('auth ' + ur.status);
-      } catch(e) { console.error(e); authReason = 'auth недоступен'; }
+      } catch(e) {
+        console.error('auth attempt', attempt, e?.message);
+        authReason = 'auth недоступен';
+        if (attempt < 2) await new Promise(r => setTimeout(r, 300 * (attempt + 1)));
+      }
     }
   }
   if (!userId) return res.status(401).json({ error: 'Не авторизован', reason: authReason });
