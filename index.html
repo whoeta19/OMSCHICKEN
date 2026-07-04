@@ -2627,8 +2627,6 @@ function renderCashflowForecast(days) {
   const msDay = 86400000;
   const lookback = 90 * msDay;
 
-  function parseDMY(s) { const [d,m,y] = s.split('.').map(Number); return new Date(y,m-1,d).getTime(); }
-
   // Историческая база за 90 дней
   const histTx = allTx.filter(t => {
     try { const ts = parseDMY(t.date); return ts >= today - lookback && ts <= today; } catch{ return false; }
@@ -2716,8 +2714,6 @@ function renderHealthScore() {
 
   const now = Date.now();
   const msDay = 86400000;
-  function parseDMY(s) { try { const [d,m,y] = s.split('.').map(Number); return new Date(y,m-1,d).getTime(); } catch { return 0; } }
-
   const last90 = allTx.filter(t => parseDMY(t.date) >= now - 90*msDay);
   const last30 = allTx.filter(t => parseDMY(t.date) >= now - 30*msDay);
 
@@ -3727,8 +3723,6 @@ async function aiAsk(q) {
     const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0');
     const prevYear = prevDate.getFullYear();
 
-    function parseDMY(s){try{const[d,m,y]=s.split('.').map(Number);return new Date(y,m-1,d).getTime();}catch{return 0;}}
-
     const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
     const monthTx = yearTx.filter(t => (t.date||'').split('.')[1] == curMonth);
     const prevTx  = allTx.filter(t => (t.date||'').split('.')[1] == prevMonth && (t.date||'').split('.')[2] == prevYear);
@@ -3815,7 +3809,6 @@ function aiAnswer(q) {
   const ql = q.toLowerCase();
   const now = new Date();
   const year = now.getFullYear();
-  function parseDMY(s){try{const[d,m,y]=s.split('.').map(Number);return new Date(y,m-1,d).getTime();}catch{return 0;}}
   const yearTx = allTx.filter(t => (t.date||'').split('.')[2] == year);
   const income = yearTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
   const expense = yearTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
@@ -4608,7 +4601,6 @@ function renderInsights() {
   const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
   const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0') + '.' + prevDate.getFullYear();
 
-  function parseDMY(s) { const [d,m,y]=s.split('.').map(Number); return new Date(y,m-1,d).getTime(); }
   function fmt2(n) { return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(n))+' ₽'; }
 
   const curTx  = allTx.filter(t => t.period === curMonth);

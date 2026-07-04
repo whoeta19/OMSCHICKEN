@@ -1,4 +1,7 @@
 // Общие утилиты OMSFIN — подключать через <script src="/utils.js">
+// Это ЕДИНСТВЕННЫЙ источник истины для: parseDMY, toDMY, parsePeriod,
+// escapeHtml, showToast, fmtMoney, mskNow, safeFetch, showSkeleton, hideSkeleton.
+// Не объявляй эти функции повторно на страницах — используй из этого файла.
 
 // Форматирование суммы в рублях
 function fmt(n) {
@@ -112,4 +115,31 @@ async function safeFetch(url, opts = {}, timeoutMs = 15000) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// ═══ Алиасы для совместимости с заданием ══════════════════════════════
+// toKopeyki / fromKopeyki — обёртки над calc.js (если подключён) или встроенные
+function toKopeyki(rub) {
+  return Math.round(Number(rub) * 100);
+}
+function fromKopeyki(kop) {
+  const rub = (kop || 0) / 100;
+  return new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(rub) + ' ₽';
+}
+// formatMoney — псевдоним fmtMoney для новых страниц
+function formatMoney(rub) { return fmtMoney(rub); }
+
+// ═══ Skeleton-заглушки при загрузке данных ════════════════════════════
+// showSkeleton(el, rows) — заполняет контейнер shimmer-строками
+// hideSkeleton(el) — очищает (вызывается перед вставкой реальных данных)
+function showSkeleton(container, rows) {
+  if (!container) return;
+  rows = rows || 4;
+  container.innerHTML = Array.from({ length: rows }, () =>
+    '<div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:8px"></div>'
+  ).join('');
+}
+function hideSkeleton(container) {
+  if (!container) return;
+  container.innerHTML = '';
 }
