@@ -253,23 +253,23 @@ async function addEmployee() {
   }
 }
 
-async function removeEmployee(id) {
-  if (!confirm('Уволить сотрудника? История его начислений сохранится.')) return;
-  const companyId = getCompanyId();
-
-  try {
-    const r = await fetch('/api/employees?resource=employees', {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ company_id: companyId, id })
-    });
-    const data = await r.json();
-    if (data.error) { showToast('❌ ' + data.error); return; }
-    showToast('✅ Сотрудник удалён из активных');
-    loadEmployees();
-  } catch (e) {
-    showToast('❌ Ошибка удаления');
-  }
+function removeEmployee(id) {
+  showConfirm('Уволить сотрудника? История его начислений сохранится.', async () => {
+    const companyId = getCompanyId();
+    try {
+      const r = await fetch('/api/employees?resource=employees', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_id: companyId, id })
+      });
+      const data = await r.json();
+      if (data.error) { showToast('❌ ' + data.error); return; }
+      showToast('✅ Сотрудник удалён из активных');
+      loadEmployees();
+    } catch (e) {
+      showToast('❌ Ошибка удаления');
+    }
+  }, 'Уволить', true);
 }
 
 let _calcBusy = false;

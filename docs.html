@@ -464,7 +464,7 @@
       <input type="text" id="advanceNum" placeholder="№ авансового счёта-фактуры" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;">
       <input type="date" id="advanceDate" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none;">
     </div>
-    <table class="items-table">
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="items-table" style="min-width:520px">
       <thead>
         <tr>
           <th style="width:35%">Наименование</th>
@@ -489,7 +489,7 @@
           <td><button onclick="removeRow(this)" style="background:none;border:none;color:#ef4444;cursor:pointer">✕</button></td>
         </tr>
       </tbody>
-    </table>
+    </table></div>
     <button class="add-row-btn" onclick="addRow()">+ Добавить строку</button>
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);text-align:right;font-size:13px">
       <div style="color:var(--muted);margin-bottom:4px">Итого без НДС: <span id="sumNoVat">0 ₽</span></div>

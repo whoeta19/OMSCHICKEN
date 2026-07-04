@@ -117,6 +117,29 @@ async function safeFetch(url, opts = {}, timeoutMs = 15000) {
   }
 }
 
+// ═══ Кастомный диалог подтверждения (замена браузерного confirm) ═══════
+// showConfirm(msg, onOk) — показывает модал, при «Да» вызывает onOk()
+if (typeof window !== 'undefined') {
+  window.showConfirm = function(msg, onOk, okLabel, dangerOk) {
+    okLabel = okLabel || 'Да';
+    var overlay = document.createElement('div');
+    overlay.id = '_omsConfirmOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
+    overlay.innerHTML =
+      '<div style="background:var(--surface,#111);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:16px;padding:24px;max-width:380px;width:100%;font-family:Inter,sans-serif">' +
+      '<div style="font-size:14px;line-height:1.6;color:var(--text,#f0f0f0);margin-bottom:20px">' + msg + '</div>' +
+      '<div style="display:flex;gap:10px;justify-content:flex-end">' +
+      '<button id="_omsConfirmNo" style="background:none;border:1px solid var(--border,rgba(255,255,255,0.1));color:var(--text-2,#a3a3a3);border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">Отмена</button>' +
+      '<button id="_omsConfirmYes" style="background:' + (dangerOk ? 'var(--red,#ef4444)' : 'var(--accent,#ff6b00)') + ';border:none;color:#fff;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">' + okLabel + '</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    function close() { overlay.remove(); }
+    overlay.querySelector('#_omsConfirmNo').onclick = close;
+    overlay.querySelector('#_omsConfirmYes').onclick = function() { close(); onOk(); };
+    overlay.onclick = function(e) { if (e.target === overlay) close(); };
+  };
+}
+
 // ═══ Алиасы для совместимости с заданием ══════════════════════════════
 // toKopeyki / fromKopeyki — обёртки над calc.js (если подключён) или встроенные
 function toKopeyki(rub) {

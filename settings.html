@@ -899,24 +899,24 @@ async function changeRole(targetUserId, newRole) {
   }
 }
 
-async function removeMember(targetUserId) {
-  if (!confirm('Убрать этого участника из компании?')) return;
-  const companyId = getCurrentCompanyId();
-  const token = getAuthToken();
-
-  try {
-    const r = await fetch('/api/members', {
-      method: 'DELETE',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ company_id: companyId, target_user_id: targetUserId })
-    });
-    const data = await r.json();
-    if (data.error) { showToast('❌ ' + data.error); return; }
-    showToast('✅ Участник удалён');
-    loadTeam();
-  } catch (e) {
-    showToast('❌ Ошибка удаления');
-  }
+function removeMember(targetUserId) {
+  showConfirm('Убрать этого участника из компании?', async () => {
+    const companyId = getCurrentCompanyId();
+    const token = getAuthToken();
+    try {
+      const r = await fetch('/api/members', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_id: companyId, target_user_id: targetUserId })
+      });
+      const data = await r.json();
+      if (data.error) { showToast('❌ ' + data.error); return; }
+      showToast('✅ Участник удалён');
+      loadTeam();
+    } catch (e) {
+      showToast('❌ Ошибка удаления');
+    }
+  }, 'Убрать', true);
 }
 
 // Уведомления
@@ -952,10 +952,10 @@ function logout() {
   window.location.href = '/login';
 }
 
-async function deleteAccount() {
-  if (!confirm('Удалить аккаунт безвозвратно? Все данные будут удалены. Это действие нельзя отменить.')) return;
-  if (!confirm('Подтверди ещё раз — удалить аккаунт и все данные?')) return;
-  const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+function deleteAccount() {
+  showConfirm('Удалить аккаунт безвозвратно? Все данные будут удалены. Это действие нельзя отменить.', () => {
+    showConfirm('Последнее подтверждение — удалить аккаунт и все данные?', async () => {
+      const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!tok) { showToast('❌ Нет активной сессии'); return; }
   try {
     const r = await fetch('/api/companies?action=delete_account', {
@@ -971,7 +971,9 @@ async function deleteAccount() {
     } else {
       showToast('❌ ' + (d.error || 'Ошибка удаления'));
     }
-  } catch(e) { showToast('❌ Ошибка соединения'); }
+      } catch(e) { showToast('❌ Ошибка соединения'); }
+    }, 'Удалить аккаунт', true);
+  }, 'Да, удалить', true);
 }
 
 function changePassword() {
@@ -1205,7 +1207,7 @@ async function regenerateWebhookSecret() {
   if (!tok) return;
   const statusEl = document.getElementById('webhookStatus');
   const urlEl = document.getElementById('webhookUrl');
-  if (!confirm('Старый URL перестанет работать. Продолжить?')) return;
+  showConfirm('Старый URL перестанет работать. Продолжить?', async () => {
   try {
     const secret = crypto.randomUUID().replace(/-/g, '');
     const r = await fetch('/api/company_settings', {
@@ -1219,6 +1221,7 @@ async function regenerateWebhookSecret() {
   } catch (e) {
     statusEl.textContent = '❌ Ошибка сохранения';
   }
+  }, 'Перегенерировать');
 }
 
 initWebhook();

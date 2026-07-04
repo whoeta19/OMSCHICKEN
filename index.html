@@ -2530,29 +2530,31 @@ async function addManual() {
   }
 }
 
-async function clearAll() {
-  if (!confirm('Удалить ВСЕ данные за все месяцы?')) return;
-  try {
-    await apiDelete(null);
-    allTx = [];
-    lastUploadedPeriod = null;
-    document.getElementById('undoUploadBar').style.display = 'none';
-    renderAll();
-    showToast('Все данные очищены');
-  } catch(e) { showToast('❌ '+e.message); }
+function clearAll() {
+  showConfirm('Удалить ВСЕ данные за все месяцы? Это действие нельзя отменить.', async () => {
+    try {
+      await apiDelete(null);
+      allTx = [];
+      lastUploadedPeriod = null;
+      document.getElementById('undoUploadBar').style.display = 'none';
+      renderAll();
+      showToast('Все данные очищены');
+    } catch(e) { showToast('❌ '+e.message); }
+  }, 'Удалить всё', true);
 }
 
-async function clearLastUpload() {
+function clearLastUpload() {
   if (!lastUploadedPeriod) return;
-  if (!confirm(`Удалить операции за ${lastUploadedPeriod}, загруженные последней выпиской?`)) return;
-  try {
-    await apiDelete(lastUploadedPeriod);
-    allTx = await apiGet();
-    document.getElementById('undoUploadBar').style.display = 'none';
-    lastUploadedPeriod = null;
-    renderAll();
-    showToast('✅ Загрузка отменена');
-  } catch(e) { showToast('❌ '+e.message); }
+  showConfirm(`Удалить операции за ${escapeHtml(lastUploadedPeriod)}, загруженные последней выпиской?`, async () => {
+    try {
+      await apiDelete(lastUploadedPeriod);
+      allTx = await apiGet();
+      document.getElementById('undoUploadBar').style.display = 'none';
+      lastUploadedPeriod = null;
+      renderAll();
+      showToast('✅ Загрузка отменена');
+    } catch(e) { showToast('❌ '+e.message); }
+  }, 'Удалить', true);
 }
 
 
@@ -4387,7 +4389,9 @@ const NEXT_DEADLINES = [
   {date:'2027-01-25',name:'НДС за IV квартал'},
 ];
 
+let _deadlineTimerId = null;
 function startDeadlineTimer() {
+  if (_deadlineTimerId) { clearInterval(_deadlineTimerId); _deadlineTimerId = null; }
   const card = document.getElementById('deadlineLiveCard');
   const nameEl = document.getElementById('deadlineLiveName');
   const titleEl = document.getElementById('deadlineLiveTitle');
@@ -4420,7 +4424,7 @@ function startDeadlineTimer() {
     titleEl.textContent = 'До дедлайна осталось';
   }
   tick();
-  setInterval(tick, 1000);
+  _deadlineTimerId = setInterval(tick, 1000);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4601,7 +4605,7 @@ function renderInsights() {
   const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
   const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0') + '.' + prevDate.getFullYear();
 
-  function fmt2(n) { return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(n))+' ₽'; }
+  const fmt2 = fmtMoney; // алиас глобальной fmtMoney из utils.js
 
   const curTx  = allTx.filter(t => t.period === curMonth);
   const prevTx = allTx.filter(t => t.period === prevMonth);

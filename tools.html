@@ -529,21 +529,7 @@ function calcSalary() {
   // и делим обратно на 12, чтобы показать налог за этот месяц.
   const monthlyBase = Math.max(0, gross - deduct);
   const yearlyBase = monthlyBase * 12;
-  const ndflBrackets = [
-    { upTo: 2400000, rate: 0.13 },
-    { upTo: 5000000, rate: 0.15 },
-    { upTo: 20000000, rate: 0.18 },
-    { upTo: 50000000, rate: 0.20 },
-    { upTo: Infinity, rate: 0.22 },
-  ];
-  let yearlyNdfl = 0, prevEnd = 0;
-  for (const b of ndflBrackets) {
-    const segment = Math.min(b.upTo, yearlyBase) - prevEnd;
-    if (segment > 0) yearlyNdfl += segment * b.rate;
-    prevEnd = b.upTo;
-    if (yearlyBase <= b.upTo) break;
-  }
-  const ndfl = yearlyNdfl / 12;
+  const ndfl = OMSCALC.ndflProgressive(Math.round(yearlyBase * 100)) / 100 / 12;
   const net = gross - ndfl;
 
   // Единый тариф страховых взносов 2026: 30% в пределах базы 2 979 000 ₽/год, 15.1% сверх.
@@ -751,23 +737,8 @@ function updateOrgType() {
   calcTaxSys();
 }
 
-// НДФЛ — прогрессивная шкала зарплаты 2026: 13/15/18/20/22% по годовым порогам
 function progressiveSalaryNdfl(yearlyBase) {
-  const brackets = [
-    { upTo: 2400000, rate: 0.13 },
-    { upTo: 5000000, rate: 0.15 },
-    { upTo: 20000000, rate: 0.18 },
-    { upTo: 50000000, rate: 0.20 },
-    { upTo: Infinity, rate: 0.22 },
-  ];
-  let ndfl = 0, prevEnd = 0;
-  for (const b of brackets) {
-    const seg = Math.min(b.upTo, yearlyBase) - prevEnd;
-    if (seg > 0) ndfl += seg * b.rate;
-    prevEnd = b.upTo;
-    if (yearlyBase <= b.upTo) break;
-  }
-  return ndfl;
+  return OMSCALC.ndflProgressive(Math.round(yearlyBase * 100)) / 100;
 }
 
 // НДФЛ с дивидендов и взносы — единые формулы из /js/calc.js (в копейках, покрыты тестами)

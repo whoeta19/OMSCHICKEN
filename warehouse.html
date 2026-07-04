@@ -378,8 +378,8 @@ function renderItems() {
     const margin = item.salePrice && item.price ? Math.round((item.salePrice - item.price) / item.price * 100) : null;
     return `<div class="${rowClass}">
       <div>
-        <div class="item-name">${item.name}</div>
-        <div class="item-cat">${item.category || ''}${margin !== null ? ` · маржа ${margin}%` : ''}</div>
+        <div class="item-name">${escapeHtml(item.name)}</div>
+        <div class="item-cat">${escapeHtml(item.category || '')}${margin !== null ? ` · маржа ${margin}%` : ''}</div>
       </div>
       <div class="item-qty ${qtyClass}">${fmtQty(qty, '')}</div>
       <div style="font-size:12px;color:var(--muted)">${item.unit || 'шт'}</div>
@@ -484,13 +484,14 @@ function saveItem() {
 function deleteItem() {
   const id = document.getElementById('editItemId').value;
   if (!id) return;
-  if (!confirm('Удалить товар и все его движения?')) return;
-  items = items.filter(i => i.id !== id);
-  movements = movements.filter(m => m.itemId !== id);
-  closeItemModal();
-  saveData();
-  render();
-  showToast('🗑️ Товар удалён');
+  showConfirm('Удалить товар и все его движения?', () => {
+    items = items.filter(i => i.id !== id);
+    movements = movements.filter(m => m.itemId !== id);
+    closeItemModal();
+    saveData();
+    render();
+    showToast('🗑️ Товар удалён');
+  }, 'Удалить', true);
 }
 
 // ─── Модал: движение ─────────────────────────────────────────────
