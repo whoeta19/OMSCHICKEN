@@ -35,6 +35,14 @@ for f in $STAGED; do
     grep -n 'console\.log(' "$f" | head -3
     fail=1
   fi
+
+  # 4) new Date() в налоговых/бизнес контекстах вместо mskNow()
+  # Ищем: const now = new Date() или new Date().getMonth()/getFullYear() — но не в autoTheme и не в export-именах
+  if grep -n 'const now = new Date()\|new Date()\.getMonth\|new Date()\.getFullYear\|new Date()\.getDate' "$f" \
+     | grep -v 'autoTheme\|getHours' >/dev/null 2>&1; then
+    echo "ПРЕДУПРЕЖДЕНИЕ [$f]: new Date() в бизнес-логике — проверьте, нужен ли mskNow() (Железное правило #7)"
+    grep -n 'const now = new Date()\|new Date()\.getMonth\|new Date()\.getFullYear' "$f" | grep -v 'autoTheme\|getHours' | head -3
+  fi
 done
 
 # 4) Лимит Vercel Hobby: максимум 12 serverless-функций в /api

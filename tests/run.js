@@ -66,12 +66,17 @@ console.log('── НДФЛ дивиденды (своя шкала 13/15, НЕ
 eq(calc.ndflDividends(2400000), 312000, 'ровно 2.4 млн -> 13%');
 eq(calc.ndflDividends(3000000), 312000 + 600000 * 0.15, '3 млн: хвост по 15%');
 eq(calc.ndflDividends(1), 0.13, 'один рубль');
+eq(calc.ndflDividends(0), 0, 'ноль дивидендов');
+// Дивиденды и зарплата — разные базы: сумма не должна складываться
+eq(calc.ndflDividends(2400000) + calc.ndflProgressive(2400000), 624000, 'дивиденды + зарплата = раздельные базы');
 
 console.log('── Страховые взносы 2026 (30% до 2 979 000, 15.1% сверх, МСП-льгот нет)');
 eq(calc.insuranceContributions(1000000), 300000, '1 млн -> 30%');
 eq(calc.insuranceContributions(2979000), 893700, 'ровно предельная база');
 eq(calc.insuranceContributions(3979000), 893700 + 1000000 * 0.151, 'миллион сверх базы по 15.1%');
+eq(calc.insuranceContributions(0), 0, 'ноль ФОТ -> 0');
 eq(calc.insuranceContributionsFot(2000000, 2), 600000, 'ФОТ 2 млн на двоих -> 30%');
+eq(calc.insuranceContributionsFot(5958000, 2), 893700 * 2, 'ФОТ ровно 2 × база: без сверхлимитной части');
 
 console.log('── Налог на прибыль 25% (8 фед + 17 рег)');
 eq(calc.profitTax(1000000), 250000, '1 млн прибыли -> 250 000');
@@ -84,6 +89,13 @@ eq(split.total, 250000, 'сумма частей = 25%');
 console.log('── УСН 15% (доходы минус расходы)');
 eq(calc.usnTax(1000000, 400000), 90000, '(1млн - 400к) * 15%');
 eq(calc.usnTax(100, 200), 0, 'расход больше дохода -> 0');
+eq(calc.usnTax(0, 0), 0, 'ноль -> 0');
+eq(calc.usnTax(1000000, 0), 150000, 'нет расходов -> 15% с дохода');
+
+console.log('── НДС встречные проверки (10% и 22%)');
+eq(calc.vatFromGross(110, 10) + (110 - calc.vatFromGross(110, 10)), 110, 'НДС + нетто = брутто');
+eq(calc.vatOnNet(100, 10) + 100, 110, '100 нетто + НДС 10% = 110 брутто');
+eq(Math.abs(calc.vatFromGross(122, 22) - calc.vatOnNet(100, 22)) < 0.01, true, 'vatFromGross и vatOnNet дают одинаковый НДС');
 
 console.log('── Детекторы банковских выписок (реальные образцы строк)');
 const ALFA_SAMPLE = 'statement_unid\tType_close\tDate\tb_date\tm_date\tcreate_date\tName\tInn\tRch\tname_rch\tBik\tKorch\tType\tname_curr\tbal_curr\tbc_rur\tbc_val\tbd_rur\tbd_val\tsc_rur\tSc_val\tSd_rur\tSd_val\tTc_rur\tTc_val\tTd_rur\tTd_val\td_c\toper\tdate_oper\tnumber\to_date\tsum_rur\n' +

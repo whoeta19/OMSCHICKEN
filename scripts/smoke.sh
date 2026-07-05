@@ -44,7 +44,7 @@ check_page "/login"               "loginEmail"         "Вход"
 check_page "/landing"             "hero"               "Лендинг"
 check_page "/utils.js"            "safeFetch"          "utils.js (core)"
 check_page "/js/calc.js"          "ndflProgressive"    "calc.js"
-check_page "/styles/design-system.css" "glass"         "design-system.css"
+check_page "/styles/design-system.css" "skeleton-shimmer" "design-system.css"
 
 echo "── API (валидный JSON, не 5xx)"
 check_api "/api/companies?action=health" "companies health"
