@@ -4829,6 +4829,23 @@ function renderInsights() {
     });
   }
 
+  // 5б. Найденные деньги — вычет НДС теряется на неразмеченных расходах.
+  // «Прочее» не входит ни в один из вычетов раздела НДС (chicken/office/transport) —
+  // если это реальные НДС-облагаемые расходы со счетами-фактурами, вычет просто не считается.
+  const quarterOfMonth = Math.floor(now.getMonth() / 3);
+  const quarterMonths = [quarterOfMonth*3+1, quarterOfMonth*3+2, quarterOfMonth*3+3]
+    .map(mm => String(mm).padStart(2,'0') + '.' + now.getFullYear());
+  const unknownQtrExpense = allTx.filter(t => t.amount < 0 && t.category === 'unknown' && quarterMonths.includes(t.period))
+    .reduce((s,t)=>s+Math.abs(t.amount),0);
+  if (unknownQtrExpense >= 20000) {
+    const missedDeduction = OMSCALC.vatFromGross(unknownQtrExpense, 22);
+    insights.push({
+      type: 'warn', icon: '💸',
+      text: `<b>Найдено ${fmt2(missedDeduction)}</b> потенциального вычета по НДС — ${fmt2(unknownQtrExpense)} расходов за квартал висят в категории «Прочее» и не учитываются в расчёте НДС. Если это операции со счетами-фактурами — разметь их`,
+      action: { label: 'Разметить →', fn: "showPage('reclassify',null)" }
+    });
+  }
+
   // 6. Нет данных за текущий месяц
   if (curTx.length === 0 && allTx.length > 0) {
     insights.push({
