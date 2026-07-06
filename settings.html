@@ -775,7 +775,7 @@ async function loadTeam() {
                 <option value="accountant" ${m.role === 'accountant' ? 'selected' : ''}>Бухгалтер</option>
                 <option value="employee" ${m.role === 'employee' ? 'selected' : ''}>Сотрудник</option>
               </select>
-              <button onclick="removeMember('${m.user_id}')" style="background:none;border:none;color:var(--red);font-size:12px;cursor:pointer">✕</button>
+              <button onclick="removeMember('${m.user_id}')" style="background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;position:relative;width:32px;height:32px;flex-shrink:0"><span style="position:absolute;inset:-6px;display:flex;align-items:center;justify-content:center">✕</span></button>
             ` : ''}
           </div>
         ` : ''}

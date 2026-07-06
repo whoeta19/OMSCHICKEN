@@ -201,7 +201,7 @@ async function loadEmployees() {
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <div class="emp-salary">${fmt(e.salary)}</div>
-          <button onclick="removeEmployee('${e.id}')" style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer">✕</button>
+          <button onclick="removeEmployee('${e.id}')" style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;position:relative;width:32px;height:32px;flex-shrink:0"><span style="position:absolute;inset:-6px;display:flex;align-items:center;justify-content:center">✕</span></button>
         </div>
       </div>
     `).join('');

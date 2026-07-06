@@ -325,7 +325,8 @@
   .rules-list{background:var(--surface2);border-radius:10px;padding:12px;margin-top:8px;font-size:12px;}
   .rule-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
   .rule-item:last-child{border-bottom:none;}
-  .del-rule{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;}
+  .del-rule{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;position:relative;flex-shrink:0;padding:4px;}
+  .del-rule::before{content:'';position:absolute;top:50%;left:50%;width:44px;height:44px;transform:translate(-50%,-50%);}
   
   ::-webkit-scrollbar{width:3px;height:3px;}
   ::-webkit-scrollbar-track{background:transparent;}

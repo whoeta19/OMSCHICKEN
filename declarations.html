@@ -222,13 +222,18 @@
 <div class="page active" id="page-overview">
   <div class="section-title">Декларации и отчётность</div>
 
+  <!-- Скелетон дедлайна — пока не пришли данные -->
+  <div id="deadlineHeroSkeleton" style="margin-bottom:20px">
+    <div class="skeleton" style="height:110px;border-radius:16px"></div>
+  </div>
+
   <!-- Герой: ближайший дедлайн -->
-  <div id="deadlineHero" style="background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02));border:1px solid rgba(255,107,0,0.2);border-radius:16px;padding:22px 24px;margin-bottom:20px">
+  <div id="deadlineHero" style="display:none;background:linear-gradient(135deg,rgba(255,107,0,0.08),rgba(255,107,0,0.02));border:1px solid rgba(255,107,0,0.2);border-radius:16px;padding:22px 24px;margin-bottom:20px">
     <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">НДС — до сдачи</div>
     <div id="deadlineHeroDays" style="font-family:'Unbounded',sans-serif;font-size:38px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1">—</div>
     <div id="deadlineHeroSub" style="font-size:13px;color:var(--text-2,#a3a3a3);margin-top:8px">Считаем сроки…</div>
   </div>
-  
+
   <div class="decl-card" onclick="showPage('nds',document.querySelectorAll('.tab')[2])">
     <div class="decl-icon" style="font-family:Unbounded,sans-serif;font-size:13px;font-weight:900;color:var(--accent)">НДС</div>
     <div class="decl-info">
@@ -386,7 +391,7 @@
       <div class="field-value green" id="ndsDeduct10">—</div>
     </div>
     <div class="field-row">
-      <div class="field-label">Вычет НДС 20% — аренда, транспорт, услуги</div>
+      <div class="field-label">Вычет НДС 22% — аренда, транспорт, услуги</div>
       <div class="field-value green" id="ndsDeduct20">—</div>
     </div>
     <div class="field-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
@@ -677,11 +682,14 @@ async function loadData() {
   const url = cid ? `/api/transactions?company_id=${encodeURIComponent(cid)}` : '/api/transactions';
   try {
     const r = await safeFetch(url, {headers:{'Authorization':'Bearer '+token}});
-    if (!r.ok) { showToast("❌ Ошибка загрузки данных"); return; }
+    if (!r.ok) { showToast("❌ Ошибка загрузки данных"); updateDeadlines(); return; }
     allTx = await r.json();
     if (!Array.isArray(allTx)) allTx = [];
     renderAll();
-  } catch(e) { showToast('❌ Нет соединения — данные недоступны'); }
+  } catch(e) {
+    showToast('❌ Нет соединения — данные недоступны');
+    updateDeadlines();
+  }
 }
 
 function renderAll() {
@@ -772,7 +780,7 @@ function renderNDS() {
   const sales = allTx.filter(t=>t.amount>0&&t.category==='income');
   // Закупки товаров — НДС 10%
   const purchases10 = allTx.filter(t=>t.amount<0&&t.category==='chicken');
-  // Аренда, транспорт, банковские услуги — НДС 20%
+  // Аренда, транспорт, банковские услуги — НДС по базовой ставке 22%
   const purchases20 = allTx.filter(t=>t.amount<0&&['office','transport'].includes(t.category));
 
   const totalSales = sales.reduce((s,t)=>s+Number(t.amount),0);
@@ -781,13 +789,13 @@ function renderNDS() {
 
   // НДС с продаж — 10% автоматически из выписки, 22% вводится вручную
   const sales22Manual = parseFloat(document.getElementById('ndsSales22Manual')?.value) || 0;
-  const vatCharged10 = totalSales * 10/110;
-  const vatCharged22 = sales22Manual * 22/122;
+  const vatCharged10 = OMSCALC.vatFromGross(totalSales, 10);
+  const vatCharged22 = OMSCALC.vatFromGross(sales22Manual, 22);
   const vatCharged = vatCharged10 + vatCharged22;
 
-  // Вычеты по покупкам
-  const vatDeduct10 = totalPurch10 * 10/110;
-  const vatDeduct20 = totalPurch20 * 20/120;
+  // Вычеты по покупкам — аренда/транспорт/услуги облагаются базовой ставкой 22% (была 20%)
+  const vatDeduct10 = OMSCALC.vatFromGross(totalPurch10, 10);
+  const vatDeduct20 = OMSCALC.vatFromGross(totalPurch20, 22);
   const vatDeduct = vatDeduct10 + vatDeduct20;
 
   const vatToPay = Math.max(0, vatCharged - vatDeduct);
@@ -840,6 +848,10 @@ function updateDeadlines() {
     hd.style.color = daysLeft <= 7 ? 'var(--red)' : 'var(--text)';
     if (hs) hs.textContent = 'Декларация по НДС — сдать до 25 ' + getMonthName(quarter*3);
   }
+  const heroSkel = document.getElementById('deadlineHeroSkeleton');
+  const hero = document.getElementById('deadlineHero');
+  if (heroSkel) heroSkel.style.display = 'none';
+  if (hero) hero.style.display = '';
 }
 
 function renderCalendar() {
@@ -929,12 +941,12 @@ function exportNDSExcel() {
   const totalPurch20 = purchases20.reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
 
   const sales22Manual = parseFloat(document.getElementById('ndsSales22Manual')?.value) || 0;
-  const vatCharged10 = Math.round(totalSales * 10/110);
+  const vatCharged10 = Math.round(OMSCALC.vatFromGross(totalSales, 10));
   const salesBase10 = Math.round(totalSales - vatCharged10);
-  const vatCharged22 = Math.round(sales22Manual * 22/122);
+  const vatCharged22 = Math.round(OMSCALC.vatFromGross(sales22Manual, 22));
   const salesBase22 = Math.round(sales22Manual - vatCharged22);
-  const vatDeduct10 = Math.round(totalPurch10 * 10/110);
-  const vatDeduct20 = Math.round(totalPurch20 * 20/120);
+  const vatDeduct10 = Math.round(OMSCALC.vatFromGross(totalPurch10, 10));
+  const vatDeduct20 = Math.round(OMSCALC.vatFromGross(totalPurch20, 22));
   const vatDeduct = vatDeduct10 + vatDeduct20;
   const vatCharged = vatCharged10 + vatCharged22;
   const diff = vatCharged - vatDeduct;
@@ -954,7 +966,7 @@ function exportNDSExcel() {
     ['', '', ''],
     ['', 'КНИГА ПОКУПОК (ВЫЧЕТЫ)', ''],
     ['120', 'Вычет НДС 10% — закупки товаров (стр.120)', vatDeduct10],
-    ['120', 'Вычет НДС 20% — аренда, транспорт, услуги (стр.120)', vatDeduct20],
+    ['120', 'Вычет НДС 22% — аренда, транспорт, услуги (стр.120)', vatDeduct20],
     ['190', 'Общая сумма НДС к вычету (стр.190)', vatDeduct],
     ['', '', ''],
     ['', 'РАЗДЕЛ 1. ИТОГОВАЯ СУММА НАЛОГА', ''],
