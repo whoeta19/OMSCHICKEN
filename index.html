@@ -742,6 +742,14 @@
   </div>
 
 
+  <!-- ─── Кассовый календарь: прогноз баланса на 30 дней вперёд ─── -->
+  <div id="cashCalendarCard" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-family:Unbounded,sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">📅 Кассовый календарь — прогноз на 30 дней</span>
+    </div>
+    <div id="cashCalendarBody"></div>
+  </div>
+
   <!-- ─── Умная лента инсайтов ─── -->
   <div id="insightsFeed" style="display:none;margin-bottom:12px"></div>
 
@@ -3088,6 +3096,127 @@ function daysUntil(d) {
   return Math.ceil((d - mskNow()) / 86400000);
 }
 
+// ─── Кассовый календарь: прогноз баланса на 30 дней вперёд ────────────────────
+// Строится из известных будущих событий: регулярные платежи/поступления
+// (помеченные 🔁 в разделе Операции) + оценка налоговых дедлайнов на основе
+// фактических данных за прошедший период. Это не бухгалтерский расчёт —
+// оценка для планирования, все суммы приблизительные (помечены "оценка").
+function computeCashForecast() {
+  const now = mskNow();
+  const horizonDays = 30;
+  const currentBalance = allTx.reduce((s, t) => s + Number(t.amount), 0);
+  const events = [];
+
+  function collectRecurring(sign) {
+    const txs = allTx.filter(t => t.is_recurring && (sign > 0 ? t.amount > 0 : t.amount < 0));
+    const grouped = {};
+    txs.forEach(t => {
+      const key = t.recurring_label || t.name;
+      (grouped[key] = grouped[key] || []).push(t);
+    });
+    Object.keys(grouped).forEach(key => {
+      const group = grouped[key];
+      const avg = group.reduce((s, t) => s + Math.abs(Number(t.amount)), 0) / group.length;
+      const next = guessNextDate(group);
+      if (!next) return;
+      const days = daysUntil(next);
+      if (days === null || days < 0 || days > horizonDays) return;
+      events.push({ when: next, amount: sign * avg, label: key, type: 'recurring' });
+    });
+  }
+  collectRecurring(-1); // регулярные расходы
+  collectRecurring(1);  // регулярные поступления
+
+  // Страховые взносы — 28 числа, оценка = ФОТ текущего месяца × 30%
+  // (упрощённо: не учитывает превышение предельной базы 2 979 000 ₽/год на человека)
+  const y = now.getFullYear(), m = now.getMonth() + 1;
+  const curPeriod = String(m).padStart(2, '0') + '.' + y;
+  const salaryThisMonth = allTx.filter(t => t.category === 'salary' && t.amount < 0 && t.period === curPeriod)
+    .reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+  if (salaryThisMonth > 0) {
+    const contribDate = new Date(y, m - 1, 28);
+    const days = daysUntil(contribDate);
+    if (days !== null && days >= 0 && days <= horizonDays) {
+      events.push({ when: contribDate, amount: -(salaryThisMonth * 0.30), label: 'Страховые взносы (оценка)', type: 'tax' });
+    }
+  }
+
+  // НДС — 25 числа января/апреля/июля/октября, оценка по прошедшему кварталу
+  if ([1, 4, 7, 10].includes(m)) {
+    const vatDate = new Date(y, m - 1, 25);
+    const days = daysUntil(vatDate);
+    if (days !== null && days >= 0 && days <= horizonDays) {
+      const periods = [1, 2, 3].map(back => {
+        const d = new Date(y, m - 1 - back, 1);
+        return String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+      });
+      const qSales = allTx.filter(t => t.amount > 0 && t.category === 'income' && periods.includes(t.period))
+        .reduce((s, t) => s + Number(t.amount), 0);
+      const qPurch = allTx.filter(t => t.amount < 0 && t.category === 'chicken' && periods.includes(t.period))
+        .reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+      const estVat = Math.max(0, OMSCALC.vatFromGross(qSales, 10) - OMSCALC.vatFromGross(qPurch, 10));
+      if (estVat > 0) {
+        events.push({ when: vatDate, amount: -estVat, label: 'НДС за квартал (оценка)', type: 'tax' });
+      }
+    }
+  }
+
+  events.sort((a, b) => a.when - b.when);
+  let running = currentBalance;
+  const timeline = events.map(e => { running += e.amount; return { ...e, balanceAfter: running }; });
+  const firstNegative = timeline.find(e => e.balanceAfter < 0);
+
+  return { currentBalance, events: timeline, firstNegative };
+}
+
+function renderCashCalendar() {
+  const card = document.getElementById('cashCalendarCard');
+  const body = document.getElementById('cashCalendarBody');
+  if (!card || !body) return;
+  if (!allTx.length) { card.style.display = 'none'; return; }
+
+  const { currentBalance, events, firstNegative } = computeCashForecast();
+  card.style.display = '';
+
+  if (!events.length) {
+    body.innerHTML = `<div style="font-size:12px;color:var(--muted);line-height:1.6">
+      Пока нет известных будущих платежей для прогноза. Отмечай регулярные операции
+      значком 🔁 в разделе «Операции» — тогда здесь появится прогноз баланса на 30 дней вперёд.
+    </div>`;
+    return;
+  }
+
+  const banner = firstNegative
+    ? `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--red)">
+        ⚠️ <b>${fmtNextDate(firstNegative.when)}</b> баланс может уйти в минус (${fmt(firstNegative.balanceAfter)}) —
+        из-за «${escapeHtml(firstNegative.label)}». Стоит сдвинуть платёж или запланировать пополнение заранее.
+      </div>`
+    : `<div style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--green)">
+        ✅ Кассового разрыва в ближайшие 30 дней не ожидается — по известным платежам.
+      </div>`;
+
+  const rows = events.map(e => {
+    const isIncome = e.amount > 0;
+    const negBalance = e.balanceAfter < 0;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:0">
+        <div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(e.label)}</div>
+        <div style="font-size:10px;color:var(--muted)">${fmtNextDate(e.when)} · ${e.type === 'tax' ? 'налоговый дедлайн' : 'регулярный платёж'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;padding-left:10px">
+        <div style="font-size:12px;font-weight:700;color:${isIncome ? 'var(--green)' : 'var(--red)'}">${isIncome ? '+' : ''}${fmt(e.amount)}</div>
+        <div style="font-size:10px;color:${negBalance ? 'var(--red)' : 'var(--muted)'}">баланс: ${fmt(e.balanceAfter)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Текущий баланс: <b style="color:var(--text)">${fmt(currentBalance)}</b></div>
+    ${banner}
+    <div>${rows}</div>
+  `;
+}
+
 function renderRecurring() {
   const list = document.getElementById('recurringList');
   const statsEl = document.getElementById('recurringStats');
@@ -4751,6 +4880,7 @@ function renderAll() {
   try { renderBreakeven(); } catch(e) { console.error(e); }
   try { renderInsights(); } catch(e) { console.error('insights:', e); }
   try { renderAccountsWidget(); } catch(e) { console.error(e); }
+  try { renderCashCalendar(); } catch(e) { console.error('cash calendar:', e); }
 }
 
 // Запуск таймера
