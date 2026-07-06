@@ -709,6 +709,12 @@
     </div>
   </div>
 
+  <!-- ─── Простыми словами: перевод месяца на язык бизнеса, без терминов ─── -->
+  <div id="plainSummaryCard" style="display:none;background:linear-gradient(135deg,rgba(255,107,0,0.06),rgba(255,107,0,0.01));border:1px solid rgba(255,107,0,0.15);border-radius:14px;padding:16px 18px;margin-bottom:14px">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;font-weight:700">💬 Простыми словами</div>
+    <div id="plainSummaryText" style="font-size:14px;line-height:1.6;color:var(--text)"></div>
+  </div>
+
   <!-- ─── Bento: главная метрика + три метрики ─── -->
   <div class="bento-top">
   <div class="hero-stat bento-hero grad-anim spotlight">
@@ -4723,6 +4729,68 @@ function showDuplicatesBanner(inserted, skipped, period) {
   setTimeout(function() { if (el) el.style.display = 'none'; }, 8000);
 }
 
+// ─── Простыми словами: перевод месяца в одну фразу без бухгалтерских терминов ──
+// Идея: собственник бизнеса не обязан понимать «НДС», «маржинальность», «ФОТ» —
+// весь дашборд конкурентов сделан языком бухгалтера. Здесь — язык денег в кармане.
+function renderPlainSummary() {
+  const card = document.getElementById('plainSummaryCard');
+  const textEl = document.getElementById('plainSummaryText');
+  if (!card || !textEl || !allTx.length) { if (card) card.style.display = 'none'; return; }
+
+  const now = mskNow();
+  const curMonth = String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear();
+  const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const prevMonth = String(prevDate.getMonth()+1).padStart(2,'0') + '.' + prevDate.getFullYear();
+
+  const curTx  = allTx.filter(t => t.period === curMonth);
+  const prevTx = allTx.filter(t => t.period === prevMonth);
+  if (!curTx.length) { card.style.display = 'none'; return; }
+
+  const income  = curTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const expense = curTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const profit  = income - expense;
+  const prevIncome  = prevTx.filter(t=>t.amount>0).reduce((s,t)=>s+Number(t.amount),0);
+  const prevExpense = prevTx.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(Number(t.amount)),0);
+  const prevProfit  = prevIncome - prevExpense;
+
+  // Грубая оценка «сколько реально останется» — доход минус расход минус НДС с продаж (10%).
+  // Не учитывает налог на прибыль/УСН и другие платежи — явно оговорено в тексте.
+  const vatEstimate = OMSCALC.vatFromGross(income, 10);
+  const takeHome = profit - vatEstimate;
+
+  const dayOfMonth = now.getDate();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  const isCurrentMonthOngoing = dayOfMonth < daysInMonth;
+
+  let sentence = '';
+  if (income === 0 && expense === 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  const monthWord = isCurrentMonthOngoing ? 'Пока в этом месяце' : 'В этом месяце';
+  sentence += `${monthWord}: пришло <b>${fmt(income)}</b>, ушло <b>${fmt(expense)}</b> — `;
+  sentence += profit >= 0
+    ? `на руках осталось <b style="color:var(--green)">${fmt(profit)}</b>.`
+    : `потратили больше, чем заработали, на <b style="color:var(--red)">${fmt(Math.abs(profit))}</b>.`;
+
+  if (profit > 0 && vatEstimate > 0) {
+    sentence += ` Из них примерно <b>${fmt(vatEstimate)}</b> — это налог с продаж (НДС), его лучше сразу отложить и не тратить. `;
+    sentence += `Реально свободных денег — около <b style="color:${takeHome>=0?'var(--green)':'var(--red)'}">${fmt(takeHome)}</b> `;
+    sentence += `<span style="color:var(--muted);font-size:12px">(без учёта налога на прибыль и других платежей)</span>.`;
+  }
+
+  if (prevIncome > 0 || prevExpense > 0) {
+    const delta = profit - prevProfit;
+    if (Math.abs(delta) > 1000) {
+      sentence += ` По сравнению с прошлым месяцем — ${delta >= 0 ? 'лучше' : 'хуже'} на <b style="color:${delta>=0?'var(--green)':'var(--red)'}">${fmt(Math.abs(delta))}</b>.`;
+    }
+  }
+
+  card.style.display = '';
+  textEl.innerHTML = sentence;
+}
+
 // ─── Умная лента инсайтов ────────────────────────────────────────────────────
 function renderInsights() {
   const feed = document.getElementById('insightsFeed');
@@ -4898,6 +4966,7 @@ function renderAll() {
   try { renderInsights(); } catch(e) { console.error('insights:', e); }
   try { renderAccountsWidget(); } catch(e) { console.error(e); }
   try { renderCashCalendar(); } catch(e) { console.error('cash calendar:', e); }
+  try { renderPlainSummary(); } catch(e) { console.error('plain summary:', e); }
 }
 
 // Запуск таймера
