@@ -518,7 +518,11 @@ export default async function handler(req, res) {
           const chunkSize = 100;
           for (let ci = 0; ci < hashes.length; ci += chunkSize) {
             const chunk = hashes.slice(ci, ci + chunkSize);
-            const hashList = chunk.map(h => `"${h}"`).join(',');
+            // Хэш может прийти из клиентского импорта (1С/Excel), где в него подмешано
+            // сырое название контрагента — кодируем значение (encodeURIComponent экранирует
+            // и кавычки, и &), чтобы спецсимволы не сломали синтаксис PostgREST-фильтра
+            // hash=in.("..","..") и не добавили постороннего параметра в query string.
+            const hashList = chunk.map(h => `"${encodeURIComponent(String(h))}"`).join(',');
             try {
               const checkR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?${scopeFilter}&hash=in.(${hashList})&select=hash`, {
                 headers: { ...adminHeaders, 'Prefer': 'return=representation' }
@@ -538,6 +542,8 @@ export default async function handler(req, res) {
       const skipped = payloadWithUser.length - toInsert.length;
 
       const batchSize = 50;
+      let insertedCount = 0;
+      let batchErrors = 0;
       for (let i = 0; i < toInsert.length; i += batchSize) {
         const batch = toInsert.slice(i, i + batchSize);
         const r = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
@@ -548,6 +554,9 @@ export default async function handler(req, res) {
         if (!r.ok) {
           const err = await r.text();
           console.error('POST error:', err);
+          batchErrors++;
+        } else {
+          insertedCount += batch.length;
         }
       }
       // Уведомления о крупных списаниях — порог берём из заголовка запроса
@@ -559,7 +568,14 @@ export default async function handler(req, res) {
         }
       }
 
-      return res.status(200).json({ ok: true, inserted: toInsert.length, skipped, count: payload.length });
+      if (batchErrors > 0) {
+        return res.status(207).json({
+          ok: false,
+          error: 'Часть операций не удалось сохранить — попробуйте загрузить выписку ещё раз',
+          inserted: insertedCount, skipped, count: payload.length
+        });
+      }
+      return res.status(200).json({ ok: true, inserted: insertedCount, skipped, count: payload.length });
     }
 
     if (req.method === 'PATCH') {

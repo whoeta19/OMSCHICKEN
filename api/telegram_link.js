@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -72,8 +74,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
 
-    // Генерируем код привязки
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Генерируем код привязки — криптостойкий рандом, код открывает доступ к
+    // отправке уведомлений и командам бота от имени пользователя.
+    const code = randomBytes(5).toString('hex').toUpperCase();
     
     // Удаляем старые коды пользователя
     await fetch(`${SUPABASE_URL}/rest/v1/telegram_codes?user_id=eq.${userId}`, {

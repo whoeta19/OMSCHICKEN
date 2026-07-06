@@ -18,6 +18,7 @@ const DADATA_TOKEN_SUGGEST = process.env.DADATA_TOKEN_SUGGEST || process.env.DAD
 async function handleEgrul(req, res) {
   const { inn } = req.query;
   if (!inn) return res.status(400).json({ error: 'Не указан ИНН' });
+  if (!/^\d{10}$|^\d{12}$/.test(inn)) return res.status(400).json({ error: 'ИНН должен состоять из 10 или 12 цифр' });
 
   try {
     // API ФНС ЕГРЮЛ
@@ -59,6 +60,7 @@ async function handleDadata(req, res) {
   if (action === 'findById') {
     if (!DADATA_TOKEN_FINDBYID) return res.status(500).json({ error: 'DADATA_TOKEN_FINDBYID не настроен на сервере' });
     if (!inn) return res.status(400).json({ error: 'inn is required' });
+    if (!/^\d{10}$|^\d{12}$/.test(inn)) return res.status(400).json({ error: 'ИНН должен состоять из 10 или 12 цифр' });
     const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party', {
       method: 'POST',
       headers: {

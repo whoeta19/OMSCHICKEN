@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -23,7 +25,9 @@ const ACTION_LABELS = {
 };
 
 function generateCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  // Криптостойкий рандом — код открывает доступ к финансовым данным компании,
+  // Math.random() предсказуем (не подходит для секретов).
+  return randomBytes(6).toString('hex').toUpperCase();
 }
 
 // Записывает значимое действие в audit_log — не блокирует основной запрос при ошибке
@@ -267,7 +271,7 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
       if (action === 'invites') {
         // Только директор видит активные приглашения
         if (role !== 'director') return res.status(403).json({ error: 'Недостаточно прав' });
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/invite_codes?company_id=eq.${company_id}&used_by=is.null&order=created_at.desc`, {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/invite_codes?company_id=eq.${company_id}&used_by=is.null&order=created_at.desc&limit=100`, {
           headers: { ...adminHeaders, 'Prefer': 'return=representation' }
         });
         const data = await r.json();
@@ -275,7 +279,7 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
       }
 
       // Список участников + их роли (с email через auth admin)
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/company_members?company_id=eq.${company_id}&order=created_at.asc`, {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/company_members?company_id=eq.${company_id}&order=created_at.asc&limit=500`, {
         headers: { ...adminHeaders, 'Prefer': 'return=representation' }
       });
       const members = await r.json();
@@ -321,16 +325,25 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
 
       if (action === 'accept_invite') {
         const { code } = req.body;
-        if (!code) return res.status(400).json({ error: 'code required' });
+        if (!code || typeof code !== 'string') return res.status(400).json({ error: 'code required' });
+        const safeCode = encodeURIComponent(code);
 
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/invite_codes?code=eq.${code}&used_by=is.null&limit=1`, {
-          headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+        // Атомарно: помечаем код использованным ТОЛЬКО если он ещё не использован.
+        // PostgREST вернёт обновлённую строку только если WHERE-условие (used_by=is.null)
+        // совпало на момент апдейта — это исключает гонку двух параллельных запросов
+        // с одним и тем же кодом (ни один SELECT-затем-UPDATE так не защитит).
+        const patchR = await fetch(`${SUPABASE_URL}/rest/v1/invite_codes?code=eq.${safeCode}&used_by=is.null`, {
+          method: 'PATCH',
+          headers: { ...adminHeaders, 'Prefer': 'return=representation' },
+          body: JSON.stringify({ used_by: userId })
         });
-        const invites = await r.json();
-        const invite = invites[0];
+        const patched = await patchR.json();
+        const invite = Array.isArray(patched) ? patched[0] : null;
         if (!invite) return res.status(404).json({ error: 'Код не найден или уже использован' });
 
         if (new Date(invite.expires_at) < new Date()) {
+          // Код истёк — уже отмечен использованным выше, откатывать не нужно:
+          // истёкший код не должен быть переиспользован повторно в любом случае.
           return res.status(400).json({ error: 'Код истёк' });
         }
 
@@ -339,13 +352,6 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
           method: 'POST',
           headers: adminHeaders,
           body: JSON.stringify({ company_id: invite.company_id, user_id: userId, role: invite.role })
-        });
-
-        // Отмечаем код использованным
-        await fetch(`${SUPABASE_URL}/rest/v1/invite_codes?code=eq.${code}`, {
-          method: 'PATCH',
-          headers: adminHeaders,
-          body: JSON.stringify({ used_by: userId })
         });
 
         logAction(invite.company_id, userId, 'member_joined', { role: invite.role });

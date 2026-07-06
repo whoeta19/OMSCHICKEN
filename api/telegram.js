@@ -72,7 +72,13 @@ async function findUserByTelegram(telegramId) {
 }
 
 async function linkUser(telegramId, code) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_codes?code=eq.${code}&limit=1`, {
+  // code приходит из текста команды /start <code> в Telegram — недоверенный пользовательский
+  // ввод. Валидируем формат (ожидаемый код — короткий alphanumeric) до подстановки в фильтр,
+  // чтобы посторонние символы (& " и т.п.) не сломали синтаксис PostgREST-запроса.
+  if (!code || !/^[A-Za-z0-9]{4,16}$/.test(code)) return null;
+  const safeCode = encodeURIComponent(code);
+
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_codes?code=eq.${safeCode}&limit=1`, {
     headers: adminHeaders
   });
   const data = await r.json();
@@ -83,7 +89,7 @@ async function linkUser(telegramId, code) {
     headers: adminHeaders,
     body: JSON.stringify({telegram_id: String(telegramId), user_id: userId})
   });
-  await fetch(`${SUPABASE_URL}/rest/v1/telegram_codes?code=eq.${code}`, {
+  await fetch(`${SUPABASE_URL}/rest/v1/telegram_codes?code=eq.${safeCode}`, {
     method: 'DELETE',
     headers: adminHeaders
   });
@@ -206,7 +212,7 @@ export default async function handler(req, res) {
         const imgBuffer = await imgResp.arrayBuffer();
 
         const form = new FormData();
-        form.append('apikey', 'K83953490988957');
+        form.append('apikey', process.env.OCR_SPACE_API_KEY || 'helloworld');
         form.append('language', 'rus');
         form.append('isOverlayRequired', 'false');
         form.append('file', new Blob([imgBuffer]), 'check.jpg');

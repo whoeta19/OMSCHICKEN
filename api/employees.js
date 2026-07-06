@@ -106,7 +106,7 @@ export default async function handler(req, res) {
       if (!role || !READ_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
 
       if (req.method === 'GET') {
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/employees?company_id=eq.${companyId}&order=created_at.asc`, {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/employees?company_id=eq.${companyId}&order=created_at.asc&limit=1000`, {
           headers: { ...adminHeaders, 'Prefer': 'return=representation' }
         });
         const data = await r.json();
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
         const { id, ...updates } = req.body;
         if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${id}`, {
+        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
           method: 'PATCH',
           headers: adminHeaders,
           body: JSON.stringify(updates)
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
         if (!id) return res.status(400).json({ error: 'Не указан id' });
 
         // Мягкое удаление — переводим в неактивные, история выплат должна остаться
-        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${id}`, {
+        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
           method: 'PATCH',
           headers: adminHeaders,
           body: JSON.stringify({ is_active: false })
@@ -192,7 +192,7 @@ export default async function handler(req, res) {
           const existing = await existingR.json();
           if (existing.length) return res.status(400).json({ error: `Начисление за ${period} уже существует` });
 
-          const empR = await fetch(`${SUPABASE_URL}/rest/v1/employees?company_id=eq.${companyId}&is_active=eq.true`, {
+          const empR = await fetch(`${SUPABASE_URL}/rest/v1/employees?company_id=eq.${companyId}&is_active=eq.true&limit=1000`, {
             headers: { ...adminHeaders, 'Prefer': 'return=representation' }
           });
           const employees = await empR.json();
@@ -204,7 +204,7 @@ export default async function handler(req, res) {
             // Сумма начислений сотруднику с начала года (для расчёта порога взносов).
             // Берём все начисления этого сотрудника и фильтруем по году на стороне JS —
             // надёжнее, чем полагаться на синтаксис like-фильтра PostgREST для строки period.
-            const yearR = await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?employee_id=eq.${emp.id}&select=period,salary_gross`, {
+            const yearR = await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?employee_id=eq.${emp.id}&select=period,salary_gross&limit=500`, {
               headers: { ...adminHeaders, 'Prefer': 'return=representation' }
             });
             const yearRunsRaw = await yearR.json();
@@ -237,7 +237,7 @@ export default async function handler(req, res) {
           const { id } = req.body;
           if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-          await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${id}`, {
+          await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${encodeURIComponent(id)}`, {
             method: 'PATCH',
             headers: adminHeaders,
             body: JSON.stringify({ status: 'paid', paid_at: new Date().toISOString() })
@@ -253,7 +253,7 @@ export default async function handler(req, res) {
         const { id } = req.body;
         if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-        await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${id}`, {
+        await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${encodeURIComponent(id)}`, {
           method: 'DELETE',
           headers: adminHeaders
         });

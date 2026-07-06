@@ -119,7 +119,16 @@ export default async function handler(req, res) {
 
     if (req.method === 'PATCH') {
       const { id, ...updates } = req.body;
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${id}`, {
+      if (!id || typeof id !== 'string') return res.status(400).json({ error: 'Не указана компания' });
+
+      const mR = await fetch(`${SUPABASE_URL}/rest/v1/company_members?company_id=eq.${encodeURIComponent(id)}&user_id=eq.${userId}&limit=1`, {
+        headers: svcHeaders
+      });
+      const mData = await mR.json();
+      const myRole = Array.isArray(mData) ? mData[0]?.role : null;
+      if (myRole !== 'director') return res.status(403).json({ error: 'Только директор может изменять реквизиты компании' });
+
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: svcHeaders,
         body: JSON.stringify(updates)
@@ -141,7 +150,16 @@ export default async function handler(req, res) {
       }
 
       const { id } = req.body;
-      await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${id}`, {
+      if (!id || typeof id !== 'string') return res.status(400).json({ error: 'Не указана компания' });
+
+      const mR = await fetch(`${SUPABASE_URL}/rest/v1/company_members?company_id=eq.${encodeURIComponent(id)}&user_id=eq.${userId}&limit=1`, {
+        headers: svcHeaders
+      });
+      const mData = await mR.json();
+      const myRole = Array.isArray(mData) ? mData[0]?.role : null;
+      if (myRole !== 'director') return res.status(403).json({ error: 'Только директор может удалить компанию' });
+
+      await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: svcHeaders
       });

@@ -2265,6 +2265,9 @@ async function parseAndProcess(text, accountName) {
     const unknownCount = allTx.filter(t=>t.category==='unknown').length;
     const insertedCount = postResult?.inserted ?? txs.length;
     const skippedCount = postResult?.skipped ?? 0;
+    if (postResult?.ok === false) {
+      showToast('⚠️ ' + (postResult.error || 'Часть операций не сохранилась — попробуйте загрузить выписку ещё раз'));
+    }
     ptxt.textContent = `✅ Загружено ${allTx.length} операций всего! Нераспознано: ${unknownCount}`;
     setTimeout(()=>{ wrap.classList.remove('active'); fill.style.width='0%'; }, 2000);
     renderAll();
@@ -4996,7 +4999,11 @@ async function insert1CTxs(parsed) {
   });
   if (!insertResp.ok) { showToast('❌ Ошибка загрузки выписки 1С'); return; }
   const insertData = await insertResp.json();
-  showToast(`✅ 1С: загружено ${insertData.inserted || 0}, пропущено дублей: ${insertData.skipped || 0}`);
+  if (insertData.ok === false) {
+    showToast('⚠️ ' + (insertData.error || 'Часть операций не сохранилась'));
+  } else {
+    showToast(`✅ 1С: загружено ${insertData.inserted || 0}, пропущено дублей: ${insertData.skipped || 0}`);
+  }
   await syncNow();
 }
 
@@ -5111,7 +5118,11 @@ document.getElementById('fileExcelInput').addEventListener('change', async funct
       body: JSON.stringify(payload)
     });
     const insertData = await insertResp.json();
-    showToast(`✅ Excel: загружено ${insertData.inserted || 0}, пропущено дублей: ${insertData.skipped || 0}`);
+    if (insertData.ok === false) {
+      showToast('⚠️ ' + (insertData.error || 'Часть операций не сохранилась'));
+    } else {
+      showToast(`✅ Excel: загружено ${insertData.inserted || 0}, пропущено дублей: ${insertData.skipped || 0}`);
+    }
     await syncNow();
   } catch(err) {
     showToast('❌ Ошибка чтения Excel: ' + err.message);

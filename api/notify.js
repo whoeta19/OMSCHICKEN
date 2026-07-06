@@ -164,7 +164,7 @@ export default async function handler(req, res) {
   const daysToMonthEnd = lastDayOfMonth - day;
 
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?select=telegram_id,user_id`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?select=telegram_id,user_id&limit=5000`, {
       headers: {...adminHeaders, 'Prefer': 'return=representation'}
     });
     const users = await r.json();
