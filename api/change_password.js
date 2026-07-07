@@ -1,4 +1,5 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 export default async function handler(req, res) {
@@ -12,15 +13,19 @@ export default async function handler(req, res) {
   const userToken = authHeader.replace('Bearer ', '').trim();
   if (!userToken) return res.status(401).json({error: 'Не авторизован'});
 
-  // Декодируем JWT без верификации чтобы получить user_id
+  // КРИТИЧНО: userId должен приходить из подписи, проверенной Supabase Auth, а не
+  // из декодированного без проверки JWT payload — раньше здесь брался payload.sub
+  // напрямую, без валидации подписи токена. Это позволяло подделать любой
+  // JSON.stringify->base64 payload с чужим user_id (подпись никто не проверял)
+  // и сменить пароль произвольному пользователю — полный захват аккаунта.
   let userId = null;
   try {
-    const payload = JSON.parse(Buffer.from(userToken.split('.')[1], 'base64').toString());
-    userId = payload.sub;
-    // Проверяем не истёк ли токен
-    if (payload.exp && payload.exp < Math.floor(Date.now()/1000)) {
-      return res.status(401).json({error: 'Сессия истекла, войдите снова'});
-    }
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + userToken }
+    });
+    if (!r.ok) return res.status(401).json({error: 'Сессия истекла, войдите снова'});
+    const d = await r.json();
+    userId = d.id || null;
   } catch(e) {
     return res.status(401).json({error: 'Неверный токен'});
   }
