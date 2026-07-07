@@ -245,29 +245,29 @@
     <div class="card">
       <div class="section-title">Акт сверки взаимных расчётов</div>
       <div class="input-row">
-        <div class="input-group"><label>Номер акта</label><input type="text" id="svNum" placeholder="1"></div>
-        <div class="input-group"><label>Период (от)</label><input type="date" id="svDateFrom"></div>
+        <div class="input-group"><label for="svNum">Номер акта</label><input type="text" id="svNum" placeholder="1"></div>
+        <div class="input-group"><label for="svDateFrom">Период (от)</label><input type="date" id="svDateFrom"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>Период (до)</label><input type="date" id="svDateTo"></div>
-        <div class="input-group"><label>Дата составления</label><input type="date" id="svDate"></div>
+        <div class="input-group"><label for="svDateTo">Период (до)</label><input type="date" id="svDateTo"></div>
+        <div class="input-group"><label for="svDate">Дата составления</label><input type="date" id="svDate"></div>
       </div>
     </div>
     <div class="card">
       <div class="section-title">Наша организация</div>
       <div class="input-row">
-        <div class="input-group"><label>Наименование</label><input type="text" id="svOurName" placeholder="ООО Омсчикен"></div>
-        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="svOurInn" placeholder="5500000001 / 550101001"></div>
+        <div class="input-group"><label for="svOurName">Наименование</label><input type="text" id="svOurName" placeholder="ООО Омсчикен"></div>
+        <div class="input-group"><label for="svOurInn">ИНН / КПП</label><input type="text" id="svOurInn" placeholder="5500000001 / 550101001"></div>
       </div>
-      <div class="input-group"><label>Лицо, подписывающее акт</label><input type="text" id="svOurSigner" placeholder="Директор Иванов И.И."></div>
+      <div class="input-group"><label for="svOurSigner">Лицо, подписывающее акт</label><input type="text" id="svOurSigner" placeholder="Директор Иванов И.И."></div>
     </div>
     <div class="card">
       <div class="section-title">Контрагент</div>
       <div class="input-row">
-        <div class="input-group"><label>Наименование</label><input type="text" id="svCpName" placeholder="ООО Поставщик"></div>
-        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="svCpInn" placeholder="7700000001 / 770101001"></div>
+        <div class="input-group"><label for="svCpName">Наименование</label><input type="text" id="svCpName" placeholder="ООО Поставщик"></div>
+        <div class="input-group"><label for="svCpInn">ИНН / КПП</label><input type="text" id="svCpInn" placeholder="7700000001 / 770101001"></div>
       </div>
-      <div class="input-group"><label>Лицо со стороны контрагента</label><input type="text" id="svCpSigner" placeholder="Директор Петров П.П."></div>
+      <div class="input-group"><label for="svCpSigner">Лицо со стороны контрагента</label><input type="text" id="svCpSigner" placeholder="Директор Петров П.П."></div>
     </div>
     <div class="card">
       <div class="section-title">Операции по нашей стороне</div>
@@ -292,33 +292,33 @@
       <div class="section-title">Корректировочный счёт-фактура</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Оформляется при изменении цены или количества товара после отгрузки, а также при возврате товара покупателем.</div>
       <div class="input-row">
-        <div class="input-group"><label>Номер КСФ</label><input type="text" id="ksfNum" placeholder="1"></div>
-        <div class="input-group"><label>Дата КСФ</label><input type="date" id="ksfDate"></div>
+        <div class="input-group"><label for="ksfNum">Номер КСФ</label><input type="text" id="ksfNum" placeholder="1"></div>
+        <div class="input-group"><label for="ksfDate">Дата КСФ</label><input type="date" id="ksfDate"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>К счёт-фактуре №</label><input type="text" id="ksfOrigNum" placeholder="15"></div>
-        <div class="input-group"><label>Дата исходного СФ</label><input type="date" id="ksfOrigDate"></div>
+        <div class="input-group"><label for="ksfOrigNum">К счёт-фактуре №</label><input type="text" id="ksfOrigNum" placeholder="15"></div>
+        <div class="input-group"><label for="ksfOrigDate">Дата исходного СФ</label><input type="date" id="ksfOrigDate"></div>
       </div>
     </div>
     <div class="card">
       <div class="section-title">Стороны</div>
-      <div class="input-group"><label>Продавец</label><input type="text" id="ksfSeller" placeholder='Название продавца'></div>
+      <div class="input-group"><label for="ksfSeller">Продавец</label><input type="text" id="ksfSeller" placeholder='Название продавца'></div>
       <div class="input-row">
-        <div class="input-group"><label>ИНН продавца</label><input type="text" id="ksfSellerInn" placeholder="ИНН организации"></div>
-        <div class="input-group"><label>КПП продавца</label><input type="text" id="ksfSellerKpp" placeholder="580001001"></div>
+        <div class="input-group"><label for="ksfSellerInn">ИНН продавца</label><input type="text" id="ksfSellerInn" placeholder="ИНН организации"></div>
+        <div class="input-group"><label for="ksfSellerKpp">КПП продавца</label><input type="text" id="ksfSellerKpp" placeholder="580001001"></div>
       </div>
-      <div class="input-group" style="margin-top:10px"><label>Покупатель</label><input type="text" id="ksfBuyer" placeholder='ООО "Покупатель"'></div>
+      <div class="input-group" style="margin-top:10px"><label for="ksfBuyer">Покупатель</label><input type="text" id="ksfBuyer" placeholder='ООО "Покупатель"'></div>
       <div class="input-row">
-        <div class="input-group"><label>ИНН покупателя</label><input type="text" id="ksfBuyerInn" placeholder=""></div>
-        <div class="input-group"><label>КПП покупателя</label><input type="text" id="ksfBuyerKpp" placeholder=""></div>
+        <div class="input-group"><label for="ksfBuyerInn">ИНН покупателя</label><input type="text" id="ksfBuyerInn" placeholder=""></div>
+        <div class="input-group"><label for="ksfBuyerKpp">КПП покупателя</label><input type="text" id="ksfBuyerKpp" placeholder=""></div>
       </div>
     </div>
     <div class="card">
       <div class="section-title">Товар/услуга</div>
-      <div class="input-group"><label>Наименование товара</label><input type="text" id="ksfGoods" placeholder="Тушка ЦБ 1 сорт охл."></div>
+      <div class="input-group"><label for="ksfGoods">Наименование товара</label><input type="text" id="ksfGoods" placeholder="Тушка ЦБ 1 сорт охл."></div>
       <div class="input-row">
-        <div class="input-group"><label>Ед. изм.</label><input type="text" id="ksfUnit" placeholder="кг" style="width:80px"></div>
-        <div class="input-group"><label>Ставка НДС</label>
+        <div class="input-group"><label for="ksfUnit">Ед. изм.</label><input type="text" id="ksfUnit" placeholder="кг" style="width:80px"></div>
+        <div class="input-group"><label for="ksfVatRate">Ставка НДС</label>
           <select id="ksfVatRate" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
             <option value="10">10%</option>
             <option value="20">20%</option>
@@ -328,19 +328,19 @@
       </div>
       <div style="font-size:11px;color:var(--muted);margin:8px 0 6px;text-transform:uppercase;letter-spacing:0.5px">До изменения</div>
       <div class="input-row">
-        <div class="input-group"><label>Кол-во</label><input type="number" id="ksfQtyBefore" placeholder="12000" step="0.001" oninput="ksfCalc()"></div>
-        <div class="input-group"><label>Цена без НДС</label><input type="number" id="ksfPriceBefore" placeholder="183.50" step="0.01" oninput="ksfCalc()"></div>
+        <div class="input-group"><label for="ksfQtyBefore">Кол-во</label><input type="number" id="ksfQtyBefore" placeholder="12000" step="0.001" oninput="ksfCalc()"></div>
+        <div class="input-group"><label for="ksfPriceBefore">Цена без НДС</label><input type="number" id="ksfPriceBefore" placeholder="183.50" step="0.01" oninput="ksfCalc()"></div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin:8px 0 6px;text-transform:uppercase;letter-spacing:0.5px">После изменения</div>
       <div class="input-row">
-        <div class="input-group"><label>Кол-во</label><input type="number" id="ksfQtyAfter" placeholder="10623" step="0.001" oninput="ksfCalc()"></div>
-        <div class="input-group"><label>Цена без НДС</label><input type="number" id="ksfPriceAfter" placeholder="183.50" step="0.01" oninput="ksfCalc()"></div>
+        <div class="input-group"><label for="ksfQtyAfter">Кол-во</label><input type="number" id="ksfQtyAfter" placeholder="10623" step="0.001" oninput="ksfCalc()"></div>
+        <div class="input-group"><label for="ksfPriceAfter">Цена без НДС</label><input type="number" id="ksfPriceAfter" placeholder="183.50" step="0.01" oninput="ksfCalc()"></div>
       </div>
       <div id="ksfCalcResult" style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;font-size:13px;display:none"></div>
     </div>
     <div class="card">
       <div class="section-title">Основание корректировки</div>
-      <div class="input-group"><label>Причина</label>
+      <div class="input-group"><label for="ksfReason">Причина</label>
         <select id="ksfReason" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;width:100%">
           <option value="return">Возврат товара покупателем</option>
           <option value="price">Изменение цены по соглашению сторон</option>
@@ -348,7 +348,7 @@
           <option value="defect">Выявлен брак/недостача</option>
         </select>
       </div>
-      <div class="input-group"><label>Номер соглашения/акта</label><input type="text" id="ksfAgreement" placeholder="Акт возврата №3 от 16.09.2025"></div>
+      <div class="input-group"><label for="ksfAgreement">Номер соглашения/акта</label><input type="text" id="ksfAgreement" placeholder="Акт возврата №3 от 16.09.2025"></div>
     </div>
     <button class="btn" onclick="generateKSF()" style="width:100%;margin-bottom:8px">🖨️ Сформировать КСФ</button>
   </div>
@@ -358,12 +358,12 @@
     <div class="card">
       <div class="section-title">Платёжное поручение — Форма 0401060</div>
       <div class="input-row">
-        <div class="input-group"><label>Номер поручения</label><input type="text" id="ppNum" placeholder="001"></div>
-        <div class="input-group"><label>Дата</label><input type="date" id="ppDate"></div>
+        <div class="input-group"><label for="ppNum">Номер поручения</label><input type="text" id="ppNum" placeholder="001"></div>
+        <div class="input-group"><label for="ppDate">Дата</label><input type="date" id="ppDate"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>Сумма (цифрами)</label><input type="number" id="ppAmount" placeholder="0.00" step="0.01" oninput="ppUpdateAmount()"></div>
-        <div class="input-group"><label>Вид платежа</label>
+        <div class="input-group"><label for="ppAmount">Сумма (цифрами)</label><input type="number" id="ppAmount" placeholder="0.00" step="0.01" oninput="ppUpdateAmount()"></div>
+        <div class="input-group"><label for="ppKind">Вид платежа</label>
           <select id="ppKind"><option value="">Электронно</option><option value="срочно">Срочно</option><option value="почтой">Почтой</option></select>
         </div>
       </div>
@@ -371,50 +371,50 @@
     <div class="card">
       <div class="section-title">Плательщик</div>
       <div class="input-row">
-        <div class="input-group"><label>Наименование</label><input type="text" id="ppPayerName" placeholder="ООО Омсчикен"></div>
-        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="ppPayerInn" placeholder="5500000001 / 550101001"></div>
+        <div class="input-group"><label for="ppPayerName">Наименование</label><input type="text" id="ppPayerName" placeholder="ООО Омсчикен"></div>
+        <div class="input-group"><label for="ppPayerInn">ИНН / КПП</label><input type="text" id="ppPayerInn" placeholder="5500000001 / 550101001"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ppPayerAcc" placeholder="40702810000000000001" maxlength="20"></div>
-        <div class="input-group"><label>Банк плательщика</label><input type="text" id="ppPayerBank" placeholder="АО «Тинькофф Банк»"></div>
+        <div class="input-group"><label for="ppPayerAcc">Расчётный счёт</label><input type="text" id="ppPayerAcc" placeholder="40702810000000000001" maxlength="20"></div>
+        <div class="input-group"><label for="ppPayerBank">Банк плательщика</label><input type="text" id="ppPayerBank" placeholder="АО «Тинькофф Банк»"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>БИК</label><input type="text" id="ppPayerBik" placeholder="044525974" maxlength="9"></div>
-        <div class="input-group"><label>Корр. счёт банка плательщика</label><input type="text" id="ppPayerCorr" placeholder="30101810145250000974" maxlength="20"></div>
+        <div class="input-group"><label for="ppPayerBik">БИК</label><input type="text" id="ppPayerBik" placeholder="044525974" maxlength="9"></div>
+        <div class="input-group"><label for="ppPayerCorr">Корр. счёт банка плательщика</label><input type="text" id="ppPayerCorr" placeholder="30101810145250000974" maxlength="20"></div>
       </div>
     </div>
     <div class="card">
       <div class="section-title">Получатель</div>
       <div class="input-row">
-        <div class="input-group"><label>Наименование</label><input type="text" id="ppPayeeName" placeholder="ООО Поставщик"></div>
-        <div class="input-group"><label>ИНН / КПП</label><input type="text" id="ppPayeeInn" placeholder="7700000001 / 770101001"></div>
+        <div class="input-group"><label for="ppPayeeName">Наименование</label><input type="text" id="ppPayeeName" placeholder="ООО Поставщик"></div>
+        <div class="input-group"><label for="ppPayeeInn">ИНН / КПП</label><input type="text" id="ppPayeeInn" placeholder="7700000001 / 770101001"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ppPayeeAcc" placeholder="40702810000000000002" maxlength="20"></div>
-        <div class="input-group"><label>Банк получателя</label><input type="text" id="ppPayeeBank" placeholder="ВТБ (ПАО)"></div>
+        <div class="input-group"><label for="ppPayeeAcc">Расчётный счёт</label><input type="text" id="ppPayeeAcc" placeholder="40702810000000000002" maxlength="20"></div>
+        <div class="input-group"><label for="ppPayeeBank">Банк получателя</label><input type="text" id="ppPayeeBank" placeholder="ВТБ (ПАО)"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>БИК</label><input type="text" id="ppPayeeBik" placeholder="044525187" maxlength="9"></div>
-        <div class="input-group"><label>Корр. счёт банка получателя</label><input type="text" id="ppPayeeCorr" placeholder="30101810100000000187" maxlength="20"></div>
+        <div class="input-group"><label for="ppPayeeBik">БИК</label><input type="text" id="ppPayeeBik" placeholder="044525187" maxlength="9"></div>
+        <div class="input-group"><label for="ppPayeeCorr">Корр. счёт банка получателя</label><input type="text" id="ppPayeeCorr" placeholder="30101810100000000187" maxlength="20"></div>
       </div>
     </div>
     <div class="card">
       <div class="section-title">Детали платежа</div>
       <div class="input-row">
-        <div class="input-group"><label>Вид оп.</label><input type="text" id="ppOp" value="01" style="max-width:60px"></div>
-        <div class="input-group"><label>Очерёдность платежа</label>
+        <div class="input-group"><label for="ppOp">Вид оп.</label><input type="text" id="ppOp" value="01" style="max-width:60px"></div>
+        <div class="input-group"><label for="ppQueue">Очерёдность платежа</label>
           <select id="ppQueue"><option value="3">3 — налоги, сборы</option><option value="4" selected>4 — по исполнит. листу</option><option value="5">5 — прочие</option></select>
         </div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>КБК (для налогов)</label><input type="text" id="ppKbk" placeholder="18201061201010000510 (ЕНС)" maxlength="20"></div>
-        <div class="input-group"><label>ОКТМО</label><input type="text" id="ppOktmo" placeholder="52701000" maxlength="11"></div>
+        <div class="input-group"><label for="ppKbk">КБК (для налогов)</label><input type="text" id="ppKbk" placeholder="18201061201010000510 (ЕНС)" maxlength="20"></div>
+        <div class="input-group"><label for="ppOktmo">ОКТМО</label><input type="text" id="ppOktmo" placeholder="52701000" maxlength="11"></div>
       </div>
       <div class="input-row">
-        <div class="input-group"><label>Основание (НП/ТП/ЗД)</label><input type="text" id="ppBase" placeholder="ТП — текущий период"></div>
-        <div class="input-group"><label>Налоговый период</label><input type="text" id="ppPeriod" placeholder="КВ.02.2026"></div>
+        <div class="input-group"><label for="ppBase">Основание (НП/ТП/ЗД)</label><input type="text" id="ppBase" placeholder="ТП — текущий период"></div>
+        <div class="input-group"><label for="ppPeriod">Налоговый период</label><input type="text" id="ppPeriod" placeholder="КВ.02.2026"></div>
       </div>
-      <div class="input-group"><label>Назначение платежа</label><input type="text" id="ppPurpose" placeholder="Оплата по договору № 1 от 01.01.2026. Без НДС."></div>
+      <div class="input-group"><label for="ppPurpose">Назначение платежа</label><input type="text" id="ppPurpose" placeholder="Оплата по договору № 1 от 01.01.2026. Без НДС."></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:20px">
       <button class="btn" onclick="generatePP()">📋 Сформировать</button>
@@ -427,16 +427,16 @@
   <div class="card">
     <div class="section-title">Реквизиты контрагента</div>
     <div class="input-row">
-      <div class="input-group"><label>Наименование</label><input type="text" id="buyerName" placeholder="ООО Покупатель"></div>
-      <div class="input-group"><label>ИНН / КПП</label><input type="text" id="buyerInn" placeholder="1234567890 / 123456789"></div>
+      <div class="input-group"><label for="buyerName">Наименование</label><input type="text" id="buyerName" placeholder="ООО Покупатель"></div>
+      <div class="input-group"><label for="buyerInn">ИНН / КПП</label><input type="text" id="buyerInn" placeholder="1234567890 / 123456789"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>Адрес</label><input type="text" id="buyerAddr" placeholder="г. Москва, ул. Пушкина, 1"></div>
-      <div class="input-group"><label>Р/С и Банк</label><input type="text" id="buyerBank" placeholder="40702810... АО Сбербанк"></div>
+      <div class="input-group"><label for="buyerAddr">Адрес</label><input type="text" id="buyerAddr" placeholder="г. Москва, ул. Пушкина, 1"></div>
+      <div class="input-group"><label for="buyerBank">Р/С и Банк</label><input type="text" id="buyerBank" placeholder="40702810... АО Сбербанк"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>Руководитель</label><input type="text" id="buyerDirector" placeholder="Иванов И.И."></div>
-      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="buyerBuh" placeholder="Петрова П.П."></div>
+      <div class="input-group"><label for="buyerDirector">Руководитель</label><input type="text" id="buyerDirector" placeholder="Иванов И.И."></div>
+      <div class="input-group"><label for="buyerBuh">Гл. бухгалтер</label><input type="text" id="buyerBuh" placeholder="Петрова П.П."></div>
     </div>
   </div>
 
@@ -570,25 +570,25 @@
   <div class="section-title" style="margin-top:16px">Реквизиты по умолчанию</div>
   <div class="card">
     <div class="input-row">
-      <div class="input-group"><label>Организация</label><input type="text" id="sName"></div>
-      <div class="input-group"><label>ИНН</label><input type="text" id="sInn"></div>
+      <div class="input-group"><label for="sName">Организация</label><input type="text" id="sName"></div>
+      <div class="input-group"><label for="sInn">ИНН</label><input type="text" id="sInn"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>КПП</label><input type="text" id="sKpp"></div>
-      <div class="input-group"><label>ОГРН</label><input type="text" id="sOgrn"></div>
+      <div class="input-group"><label for="sKpp">КПП</label><input type="text" id="sKpp"></div>
+      <div class="input-group"><label for="sOgrn">ОГРН</label><input type="text" id="sOgrn"></div>
     </div>
-    <div class="input-group"><label>Адрес</label><input type="text" id="sAddr"></div>
+    <div class="input-group"><label for="sAddr">Адрес</label><input type="text" id="sAddr"></div>
     <div class="input-row">
-      <div class="input-group"><label>Банк</label><input type="text" id="sBank"></div>
-      <div class="input-group"><label>Р/С</label><input type="text" id="sRs"></div>
-    </div>
-    <div class="input-row">
-      <div class="input-group"><label>БИК</label><input type="text" id="sBik"></div>
-      <div class="input-group"><label>К/С</label><input type="text" id="sKs"></div>
+      <div class="input-group"><label for="sBank">Банк</label><input type="text" id="sBank"></div>
+      <div class="input-group"><label for="sRs">Р/С</label><input type="text" id="sRs"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>Директор</label><input type="text" id="sDirector"></div>
-      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="sBuh"></div>
+      <div class="input-group"><label for="sBik">БИК</label><input type="text" id="sBik"></div>
+      <div class="input-group"><label for="sKs">К/С</label><input type="text" id="sKs"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label for="sDirector">Директор</label><input type="text" id="sDirector"></div>
+      <div class="input-group"><label for="sBuh">Гл. бухгалтер</label><input type="text" id="sBuh"></div>
     </div>
     <button class="btn" onclick="saveSettings()" style="margin-top:8px">💾 Сохранить</button>
   </div>
@@ -632,8 +632,8 @@ function initSettings() {
     const el = document.getElementById('s'+k);
     if (el) el.value = rawS[k.toLowerCase()] || '';
   });
-  if (stampImg) document.getElementById('stampPreview').innerHTML = `<img src="${stampImg}" style="max-height:80px;max-width:120px">`;
-  if (signImg) document.getElementById('signPreview').innerHTML = `<img src="${signImg}" style="max-height:50px;max-width:150px">`;
+  if (stampImg) document.getElementById('stampPreview').innerHTML = `<img src="${stampImg}" alt="Штамп" style="max-height:80px;max-width:120px">`;
+  if (signImg) document.getElementById('signPreview').innerHTML = `<img src="${signImg}" alt="Подпись" style="max-height:50px;max-width:150px">`;
 }
 
 function saveSettings() {
@@ -664,7 +664,7 @@ function loadImg(input, key, previewId) {
     localStorage.setItem('omsfin_' + key, data);
     if (key === 'stamp') stampImg = data;
     if (key === 'sign') signImg = data;
-    document.getElementById(previewId).innerHTML = `<img src="${data}" style="max-height:${key==='stamp'?'80':'50'}px;max-width:${key==='stamp'?'120':'150'}px">`;
+    document.getElementById(previewId).innerHTML = `<img src="${data}" alt="${key==='stamp'?'Штамп':'Подпись'}" style="max-height:${key==='stamp'?'80':'50'}px;max-width:${key==='stamp'?'120':'150'}px">`;
     showToast('✅ Загружено');
   };
   reader.readAsDataURL(file);
@@ -984,7 +984,7 @@ function getDocInfo() {
 }
 
 function stampHTML() {
-  if (stampImg) return `<img src="${stampImg}" style="width:80px;height:80px;opacity:0.85;transform:rotate(-12deg)">`;
+  if (stampImg) return `<img src="${stampImg}" alt="Штамп" style="width:80px;height:80px;opacity:0.85;transform:rotate(-12deg)">`;
   return `<div style="width:80px;height:80px;border:2px solid #00008B;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#00008B;text-align:center;transform:rotate(-15deg);padding:6px"><div style="border:1px solid #00008B;border-radius:50%;width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-weight:bold">М.П.</div></div>`;
 }
 
@@ -1043,7 +1043,7 @@ function rubles(amount) {
 }
 
 function signHTML(label) {
-  const sig = signImg ? `<img src="${signImg}" style="height:30px;max-width:100px;opacity:0.85;display:block;margin-bottom:2px">` : '_________________';
+  const sig = signImg ? `<img src="${signImg}" alt="Подпись" style="height:30px;max-width:100px;opacity:0.85;display:block;margin-bottom:2px">` : '_________________';
   return `${label} ${sig}`;
 }
 

@@ -209,29 +209,29 @@
   <div class="card" id="sec-company">
     <div class="section-title">Реквизиты компании</div>
     <div class="input-row">
-      <div class="input-group"><label>Название</label><input type="text" id="sName" placeholder='ООО "Моя компания"'></div>
-      <div class="input-group"><label>ИНН</label><input type="text" id="sInn" placeholder="ИНН организации"></div>
+      <div class="input-group"><label for="sName">Название</label><input type="text" id="sName" placeholder='ООО "Моя компания"'></div>
+      <div class="input-group"><label for="sInn">ИНН</label><input type="text" id="sInn" placeholder="ИНН организации"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>КПП</label><input type="text" id="sKpp" placeholder="580001001"></div>
-      <div class="input-group"><label>ОГРН</label><input type="text" id="sOgrn" placeholder="1255800003447"></div>
+      <div class="input-group"><label for="sKpp">КПП</label><input type="text" id="sKpp" placeholder="580001001"></div>
+      <div class="input-group"><label for="sOgrn">ОГРН</label><input type="text" id="sOgrn" placeholder="1255800003447"></div>
     </div>
-    <div class="input-group"><label>Юридический адрес</label><input type="text" id="sAddr" placeholder="Юридический адрес"></div>
+    <div class="input-group"><label for="sAddr">Юридический адрес</label><input type="text" id="sAddr" placeholder="Юридический адрес"></div>
     <div class="input-row">
-      <div class="input-group"><label>Телефон</label><input type="text" id="sPhone" placeholder="8(9869)47-66-97"></div>
-      <div class="input-group"><label>Email</label><input type="text" id="sEmail" placeholder="mo@omchicken.ru"></div>
-    </div>
-    <div class="input-row">
-      <div class="input-group"><label>Генеральный директор</label><input type="text" id="sDirector" placeholder="ФИО"></div>
-      <div class="input-group"><label>Гл. бухгалтер</label><input type="text" id="sBuh" placeholder="ФИО"></div>
+      <div class="input-group"><label for="sPhone">Телефон</label><input type="text" id="sPhone" placeholder="8(9869)47-66-97"></div>
+      <div class="input-group"><label for="sEmail">Email</label><input type="text" id="sEmail" placeholder="mo@omchicken.ru"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>Банк</label><input type="text" id="sBank" placeholder="АО «ТБанк»"></div>
-      <div class="input-group"><label>Расчётный счёт</label><input type="text" id="sRs" placeholder="40702810210001915113"></div>
+      <div class="input-group"><label for="sDirector">Генеральный директор</label><input type="text" id="sDirector" placeholder="ФИО"></div>
+      <div class="input-group"><label for="sBuh">Гл. бухгалтер</label><input type="text" id="sBuh" placeholder="ФИО"></div>
     </div>
     <div class="input-row">
-      <div class="input-group"><label>БИК</label><input type="text" id="sBik" placeholder="044525411"></div>
-      <div class="input-group"><label>Корр. счёт</label><input type="text" id="sKs" placeholder="30101810145250000974"></div>
+      <div class="input-group"><label for="sBank">Банк</label><input type="text" id="sBank" placeholder="АО «ТБанк»"></div>
+      <div class="input-group"><label for="sRs">Расчётный счёт</label><input type="text" id="sRs" placeholder="40702810210001915113"></div>
+    </div>
+    <div class="input-row">
+      <div class="input-group"><label for="sBik">БИК</label><input type="text" id="sBik" placeholder="044525411"></div>
+      <div class="input-group"><label for="sKs">Корр. счёт</label><input type="text" id="sKs" placeholder="30101810145250000974"></div>
     </div>
     <button class="btn" onclick="saveRequisites()">Сохранить реквизиты</button>
   </div>
@@ -426,7 +426,7 @@
     <div class="section-title">МойСклад</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Импортируй платежи напрямую из МойСклад без выписки банка.</p>
     <div class="input-group">
-      <label>API токен МойСклад</label>
+      <label for="msToken">API токен МойСклад</label>
       <input type="password" id="msToken" placeholder="Токен из МойСклад → Настройки → Доступ к API"
         style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;font-family:monospace">
     </div>
@@ -642,10 +642,11 @@ function loadImage(input, key, previewId) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
+  const altMap = {stamp:'Штамп', sign:'Подпись', logo:'Логотип'};
   reader.onload = e => {
     const data = e.target.result;
     localStorage.setItem('omsfin_' + key, data);
-    document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
+    document.getElementById(previewId).innerHTML = `<img src="${data}" alt="${altMap[key] || 'Изображение'}" class="preview-img">`;
     saveToCloud(key, data);
     showToast('✅ Изображение загружено и синхронизировано');
   };
@@ -674,17 +675,17 @@ async function loadCloudSettings() {
     if (data && data.stamp) {
       localStorage.setItem('omsfin_stamp', data.stamp);
       const el = document.getElementById('stampPreview');
-      if (el) el.innerHTML = '<img src="' + data.stamp + '" style="max-width:120px;max-height:120px;border-radius:8px">';
+      if (el) el.innerHTML = '<img src="' + data.stamp + '" alt="Штамп" style="max-width:120px;max-height:120px;border-radius:8px">';
     }
     if (data && data.sign) {
       localStorage.setItem('omsfin_sign', data.sign);
       const el = document.getElementById('signPreview');
-      if (el) el.innerHTML = '<img src="' + data.sign + '" style="max-height:60px;max-width:180px">';
+      if (el) el.innerHTML = '<img src="' + data.sign + '" alt="Подпись" style="max-height:60px;max-width:180px">';
     }
     if (data && data.logo) {
       localStorage.setItem('omsfin_logo', data.logo);
       const el = document.getElementById('logoPreview');
-      if (el) el.innerHTML = '<img src="' + data.logo + '" style="max-width:120px;max-height:120px;border-radius:8px">';
+      if (el) el.innerHTML = '<img src="' + data.logo + '" alt="Логотип" style="max-width:120px;max-height:120px;border-radius:8px">';
     }
     if (data && data.seller) {
       localStorage.setItem('omsfin_seller', JSON.stringify(data.seller));
@@ -720,11 +721,12 @@ async function saveToCloud(key, value) {
 }
 
 function initImagePreviews() {
+  const altMap = {stamp:'Штамп', sign:'Подпись', logo:'Логотип'};
   ['logo','stamp','sign'].forEach(key => {
     const data = localStorage.getItem('omsfin_' + key);
     const previewId = key + 'Preview';
     if (data && document.getElementById(previewId)) {
-      document.getElementById(previewId).innerHTML = `<img src="${data}" class="preview-img">`;
+      document.getElementById(previewId).innerHTML = `<img src="${data}" alt="${altMap[key]}" class="preview-img">`;
     }
   });
 }

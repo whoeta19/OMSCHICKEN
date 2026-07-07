@@ -464,8 +464,8 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div class="input-group"><label>КБК</label><input type="text" value="182 1 01 02010 01 1000 110" placeholder="КБК"></div>
       <div class="input-group"><label>ОКТМО</label><input type="text" placeholder="ОКТМО"></div>
-      <div class="input-group"><label>Сумма НДФЛ удержанная (руб.)</label><input type="number" id="ndfl_sum" placeholder="0"></div>
-      <div class="input-group"><label>Дата удержания налога</label><input type="date" id="ndfl_date"></div>
+      <div class="input-group"><label for="ndfl_sum">Сумма НДФЛ удержанная (руб.)</label><input type="number" id="ndfl_sum" placeholder="0"></div>
+      <div class="input-group"><label for="ndfl_date">Дата удержания налога</label><input type="date" id="ndfl_date"></div>
     </div>
   </div>
 
@@ -473,10 +473,10 @@
     <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:14px">Раздел 2. Сводные данные</div>
     <div id="ndfl_from_tx_banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;font-size:12px;color:#22c55e"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="input-group"><label>Ставка налога (%)</label><input type="number" value="13" id="ndfl_rate"></div>
-      <div class="input-group"><label>Кол-во физлиц получивших доход</label><input type="number" id="ndfl_persons" placeholder="0"></div>
-      <div class="input-group"><label>Сумма начисленного дохода</label><input type="number" id="ndfl_income" placeholder="0"></div>
-      <div class="input-group"><label>Сумма вычетов</label><input type="number" id="ndfl_deduct" placeholder="0" value="0"></div>
+      <div class="input-group"><label for="ndfl_rate">Ставка налога (%)</label><input type="number" value="13" id="ndfl_rate"></div>
+      <div class="input-group"><label for="ndfl_persons">Кол-во физлиц получивших доход</label><input type="number" id="ndfl_persons" placeholder="0"></div>
+      <div class="input-group"><label for="ndfl_income">Сумма начисленного дохода</label><input type="number" id="ndfl_income" placeholder="0"></div>
+      <div class="input-group"><label for="ndfl_deduct">Сумма вычетов</label><input type="number" id="ndfl_deduct" placeholder="0" value="0"></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
       <button class="btn" onclick="calcNdfl()">Рассчитать</button>
@@ -514,12 +514,12 @@
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px">
     <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:14px">Расчёт налога на прибыль</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="input-group"><label>Доходы от реализации (руб.)</label><input type="number" id="profit_income" oninput="calcProfit()" placeholder="0"></div>
-      <div class="input-group"><label>Расходы (руб.)</label><input type="number" id="profit_expense" oninput="calcProfit()" placeholder="0"></div>
-      <div class="input-group"><label>Внереализационные доходы</label><input type="number" id="profit_other_in" oninput="calcProfit()" placeholder="0" value="0"></div>
-      <div class="input-group"><label>Внереализационные расходы</label><input type="number" id="profit_other_ex" oninput="calcProfit()" placeholder="0" value="0"></div>
-      <div class="input-group"><label>Авансы уплаченные (руб.)</label><input type="number" id="profit_paid" oninput="calcProfit()" placeholder="0" value="0"></div>
-      <div class="input-group"><label>Ставка (%)</label><input type="number" id="profit_rate" oninput="calcProfit()" value="25"></div>
+      <div class="input-group"><label for="profit_income">Доходы от реализации (руб.)</label><input type="number" id="profit_income" oninput="calcProfit()" placeholder="0"></div>
+      <div class="input-group"><label for="profit_expense">Расходы (руб.)</label><input type="number" id="profit_expense" oninput="calcProfit()" placeholder="0"></div>
+      <div class="input-group"><label for="profit_other_in">Внереализационные доходы</label><input type="number" id="profit_other_in" oninput="calcProfit()" placeholder="0" value="0"></div>
+      <div class="input-group"><label for="profit_other_ex">Внереализационные расходы</label><input type="number" id="profit_other_ex" oninput="calcProfit()" placeholder="0" value="0"></div>
+      <div class="input-group"><label for="profit_paid">Авансы уплаченные (руб.)</label><input type="number" id="profit_paid" oninput="calcProfit()" placeholder="0" value="0"></div>
+      <div class="input-group"><label for="profit_rate">Ставка (%)</label><input type="number" id="profit_rate" oninput="calcProfit()" value="25"></div>
     </div>
     <div id="profit_result" style="margin-top:14px;padding:14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">Налоговая база (прибыль)</span><span id="profit_base" style="font-weight:600">0 ₽</span></div>
@@ -559,8 +559,8 @@
     <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:14px">Данные для расчёта</div>
     <div id="rsv_from_tx_banner" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;font-size:12px"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="input-group"><label>Кол-во застрахованных лиц</label><input type="number" id="rsv_persons" oninput="calcRsv()" placeholder="0"></div>
-      <div class="input-group"><label>Фонд оплаты труда (руб.)</label><input type="number" id="rsv_fot" oninput="calcRsv()" placeholder="0"></div>
+      <div class="input-group"><label for="rsv_persons">Кол-во застрахованных лиц</label><input type="number" id="rsv_persons" oninput="calcRsv()" placeholder="0"></div>
+      <div class="input-group"><label for="rsv_fot">Фонд оплаты труда (руб.)</label><input type="number" id="rsv_fot" oninput="calcRsv()" placeholder="0"></div>
     </div>
     <button class="btn-outline" onclick="fillRsvFromTx()" style="margin-top:10px">📥 Заполнить ФОТ из выписки</button>
     <div style="margin-top:8px;font-size:11px;color:var(--muted)">Единый тариф 2026: 30% в пределах базы 2 979 000 ₽ на сотрудника в год, 15,1% — сверх базы (льготы для МСП отменены с 2026 года)</div>
@@ -639,9 +639,9 @@
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px">
     <div style="font-size:12px;font-weight:600;margin-bottom:14px">Расчёт взносов на НС и ПЗ (травматизм)</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-      <div class="input-group"><label>ФОТ за квартал (руб.)</label><input type="number" id="efs_fot" oninput="calcEfs()" placeholder="0"></div>
-      <div class="input-group"><label>Тариф НС и ПЗ (%)</label><input type="number" id="efs_rate" oninput="calcEfs()" value="0.2" step="0.1"></div>
-      <div class="input-group"><label>Скидка/надбавка (%)</label><input type="number" id="efs_discount" oninput="calcEfs()" value="0" step="0.1"></div>
+      <div class="input-group"><label for="efs_fot">ФОТ за квартал (руб.)</label><input type="number" id="efs_fot" oninput="calcEfs()" placeholder="0"></div>
+      <div class="input-group"><label for="efs_rate">Тариф НС и ПЗ (%)</label><input type="number" id="efs_rate" oninput="calcEfs()" value="0.2" step="0.1"></div>
+      <div class="input-group"><label for="efs_discount">Скидка/надбавка (%)</label><input type="number" id="efs_discount" oninput="calcEfs()" value="0" step="0.1"></div>
     </div>
     <div id="efs_result" style="margin-top:12px;padding:14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.15);border-radius:10px">
       <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--muted)">Взносы по базовому тарифу</span><span id="efs_base_amt" style="font-weight:600">0 ₽</span></div>

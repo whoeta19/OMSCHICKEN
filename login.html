@@ -82,11 +82,11 @@
   <!-- Вход -->
   <div id="tab-login">
     <div class="input-group">
-      <label>Email</label>
+      <label for="loginEmail">Email</label>
       <input type="email" id="loginEmail" placeholder="ivan@company.ru" autocomplete="email">
     </div>
     <div class="input-group">
-      <label>Пароль</label>
+      <label for="loginPassword">Пароль</label>
       <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn" id="loginBtn" onclick="login()">Войти</button>
@@ -101,19 +101,19 @@
   <!-- Регистрация -->
   <div id="tab-register" style="display:none">
     <div class="input-group">
-      <label>Название компании</label>
+      <label for="regCompany">Название компании</label>
       <input type="text" id="regCompany" placeholder="ООО Ромашка">
     </div>
     <div class="input-group">
-      <label>Email</label>
+      <label for="regEmail">Email</label>
       <input type="email" id="regEmail" placeholder="director@company.ru" autocomplete="email">
     </div>
     <div class="input-group">
-      <label>Пароль</label>
+      <label for="regPassword">Пароль</label>
       <input type="password" id="regPassword" placeholder="Минимум 6 символов" autocomplete="new-password">
     </div>
     <div class="input-group">
-      <label>Повтори пароль</label>
+      <label for="regPassword2">Повтори пароль</label>
       <input type="password" id="regPassword2" placeholder="••••••••" autocomplete="new-password">
     </div>
     <button class="btn" id="regBtn" onclick="register()">Создать аккаунт</button>

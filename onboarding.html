@@ -120,16 +120,16 @@
         </div>
         <div id="ob-inn-status" style="font-size:11px;color:#666;margin-top:4px"></div>
       </div>
-      <div class="input-group"><label>Название компании</label><input type="text" id="ob-name" placeholder='ООО "Ромашка" или ИП Иванов И.И.'></div>
+      <div class="input-group"><label for="ob-name">Название компании</label><input type="text" id="ob-name" placeholder='ООО "Ромашка" или ИП Иванов И.И.'></div>
       <div class="input-row">
-        <div class="input-group"><label>КПП</label><input type="text" id="ob-kpp" placeholder="123456789" maxlength="9"></div>
+        <div class="input-group"><label for="ob-kpp">КПП</label><input type="text" id="ob-kpp" placeholder="123456789" maxlength="9"></div>
         <div class="input-group" style="visibility:hidden"><label>—</label><input type="text" disabled></div>
       </div>
-      <div class="input-group"><label>Юридический адрес</label><input type="text" id="ob-addr" placeholder="г. Москва, ул. Пушкина, 1"></div>
-      <div class="input-group"><label>Руководитель</label><input type="text" id="ob-director" placeholder="Иванов Иван Иванович"></div>
+      <div class="input-group"><label for="ob-addr">Юридический адрес</label><input type="text" id="ob-addr" placeholder="г. Москва, ул. Пушкина, 1"></div>
+      <div class="input-group"><label for="ob-director">Руководитель</label><input type="text" id="ob-director" placeholder="Иванов Иван Иванович"></div>
       <div class="input-row">
-        <div class="input-group"><label>Банк</label><input type="text" id="ob-bank" placeholder="АО «Т-Банк»"></div>
-        <div class="input-group"><label>Расчётный счёт</label><input type="text" id="ob-rs" placeholder="40702810..."></div>
+        <div class="input-group"><label for="ob-bank">Банк</label><input type="text" id="ob-bank" placeholder="АО «Т-Банк»"></div>
+        <div class="input-group"><label for="ob-rs">Расчётный счёт</label><input type="text" id="ob-rs" placeholder="40702810..."></div>
       </div>
       <button class="btn" onclick="saveRequisites()">Сохранить и продолжить →</button>
       <button class="btn-skip" onclick="nextStep()">Пропустить, настрою позже</button>
@@ -159,7 +159,7 @@
         </div>
       </div>
       <div class="input-group">
-        <label>Ставка НДС (если на ОСНО)</label>
+        <label for="ob-vat-rate">Ставка НДС (если на ОСНО)</label>
         <select id="ob-vat-rate" style="width:100%;background:#161616;border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:11px 14px;color:#f5f5f5;font-size:13px;outline:none">
           <option value="10">10% (продукты питания, базовые товары)</option>
           <option value="22">22% (основная ставка)</option>

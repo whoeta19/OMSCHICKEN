@@ -1002,10 +1002,10 @@
     <button id="addTypeExpense" onclick="setAddType('expense')" style="background:rgba(239,68,68,0.1);border:2px solid #ef4444;border-radius:10px;padding:12px;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer">📤 Расход</button>
     <button id="addTypeIncome" onclick="setAddType('income')" style="background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer">📥 Доход</button>
   </div>
-  <div class="input-group"><label>Сумма</label><input type="number" id="addAmount" placeholder="50 000" inputmode="decimal" style="font-size:20px!important;font-weight:700;padding:12px 14px;"></div>
+  <div class="input-group"><label for="addAmount">Сумма</label><input type="number" id="addAmount" placeholder="50 000" inputmode="decimal" style="font-size:20px!important;font-weight:700;padding:12px 14px;"></div>
   <div class="input-row">
-    <div class="input-group"><label>Дата</label><input type="date" id="addDate"></div>
-    <div class="input-group"><label>Категория</label>
+    <div class="input-group"><label for="addDate">Дата</label><input type="date" id="addDate"></div>
+    <div class="input-group"><label for="addCat">Категория</label>
       <select id="addCat">
         <option value="">Автоматически</option>
         <option value="income">Доход от продаж</option>
@@ -1027,8 +1027,8 @@
       </select>
     </div>
   </div>
-  <div class="input-group"><label>Контрагент</label><input type="text" id="addName" placeholder="ООО Агросфера" autocomplete="organization"></div>
-  <div class="input-group"><label>Назначение</label><input type="text" id="addDesc" placeholder="Оплата по счёту №..."></div>
+  <div class="input-group"><label for="addName">Контрагент</label><input type="text" id="addName" placeholder="ООО Агросфера" autocomplete="organization"></div>
+  <div class="input-group"><label for="addDesc">Назначение</label><input type="text" id="addDesc" placeholder="Оплата по счёту №..."></div>
   <button class="btn" onclick="addManual()" style="width:100%;margin-bottom:12px;font-size:14px;padding:14px">Сохранить</button>
   <div id="addResult"></div>
   <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
