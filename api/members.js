@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const adminHeaders = {
   'apikey': SERVICE_KEY,
@@ -24,6 +25,8 @@ const ACTION_LABELS = {
   member_removed: 'Участник удалён из компании'
 };
 
+const ROLE_LABELS = { director: 'Директор', accountant: 'Бухгалтер', employee: 'Сотрудник' };
+
 function generateCode() {
   // Криптостойкий рандом — код открывает доступ к финансовым данным компании,
   // Math.random() предсказуем (не подходит для секретов).
@@ -41,6 +44,45 @@ async function logAction(companyId, userId, action, details) {
     });
   } catch (e) {
     // Журналирование не должно ломать основной запрос — молча игнорируем
+  }
+}
+
+// Доверие/прозрачность: изменения состава команды (кто-то присоединился, кому-то
+// сменили роль, кого-то удалили) уходят ВСЕМ директорам компании в Telegram —
+// это ровно те события, которые директор хочет узнать немедленно, а не только
+// при заходе в журнал действий.
+async function getEmail(uid) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${uid}`, { headers: adminHeaders });
+    const d = await r.json();
+    return d.email || uid;
+  } catch (e) {
+    return uid;
+  }
+}
+
+async function notifyDirectors(companyId, text) {
+  if (!BOT_TOKEN || !companyId) return;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/company_members?company_id=eq.${companyId}&role=eq.director&select=user_id`, {
+      headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+    });
+    const directors = await r.json();
+    if (!Array.isArray(directors) || !directors.length) return;
+    for (const d of directors) {
+      const tgR = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${d.user_id}&limit=1`, {
+        headers: { ...adminHeaders, 'Prefer': 'return=representation' }
+      });
+      const rows = await tgR.json();
+      if (!Array.isArray(rows) || !rows.length) continue;
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: rows[0].telegram_id, text, parse_mode: 'HTML' })
+      });
+    }
+  } catch (e) {
+    // Уведомление не должно ломать основной запрос
   }
 }
 
@@ -355,6 +397,8 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
         });
 
         logAction(invite.company_id, userId, 'member_joined', { role: invite.role });
+        getEmail(userId).then(email => notifyDirectors(invite.company_id,
+          `👋 <b>Новый участник в команде</b>\n\n${email} присоединился по инвайту с ролью «${ROLE_LABELS[invite.role] || invite.role}»`));
         return res.status(200).json({ ok: true, company_id: invite.company_id, role: invite.role });
       }
 
@@ -373,6 +417,8 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
         });
 
         logAction(company_id, userId, 'member_role_changed', { target_user_id, new_role });
+        Promise.all([getEmail(userId), getEmail(target_user_id)]).then(([actorEmail, targetEmail]) =>
+          notifyDirectors(company_id, `🔑 <b>Изменена роль участника</b>\n\n${actorEmail} изменил роль ${targetEmail} на «${ROLE_LABELS[new_role] || new_role}»`));
         return res.status(200).json({ ok: true });
       }
 
@@ -394,6 +440,8 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
       });
 
       logAction(company_id, userId, 'member_removed', { target_user_id });
+      Promise.all([getEmail(userId), getEmail(target_user_id)]).then(([actorEmail, targetEmail]) =>
+        notifyDirectors(company_id, `🚪 <b>Участник удалён из компании</b>\n\n${actorEmail} удалил ${targetEmail} из команды`));
       return res.status(200).json({ ok: true });
     }
   } catch (e) {

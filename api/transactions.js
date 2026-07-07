@@ -27,26 +27,53 @@ function fmtAmt(n) {
   return Math.abs(n).toLocaleString('ru-RU', {maximumFractionDigits: 0}) + ' ₽';
 }
 
-async function notifyBigTx(userId, tx) {
+async function sendTelegram(chatId, text) {
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${userId}&limit=1`, {
-      headers: {...adminHeaders, 'Prefer': 'return=representation'}
-    });
-    const rows = await r.json();
-    if (!Array.isArray(rows) || !rows.length) return;
-    const chatId = rows[0].telegram_id;
-    const text = `⚠️ <b>Крупное списание</b>\n\n` +
-      `Контрагент: <b>${tx.name || '—'}</b>\n` +
-      `Сумма: <b>${fmtAmt(tx.amount)}</b>\n` +
-      `Дата: <b>${tx.date || '—'}</b>\n` +
-      (tx.description ? `Назначение: ${tx.description}\n` : '') +
-      `\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`;
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chat_id: chatId, text, parse_mode: 'HTML'})
     });
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error('sendTelegram:', e); }
+}
+
+// Доверие/прозрачность: если в компании есть директор(ы), крупные и разрушительные
+// операции уходят ИМ в Telegram — даже если действие выполнил бухгалтер/сотрудник,
+// а не сам директор. Без company_id (личный аккаунт без команды) — уведомляем
+// только самого пользователя, других получателей просто не существует.
+async function notifyCompanyOwners(companyId, actorUserId, text) {
+  try {
+    let recipientIds;
+    if (companyId) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/company_members?company_id=eq.${companyId}&role=eq.director&select=user_id`, {
+        headers: {...adminHeaders, 'Prefer': 'return=representation'}
+      });
+      const directors = await r.json();
+      recipientIds = Array.isArray(directors) ? directors.map(d => d.user_id) : [];
+    } else {
+      recipientIds = actorUserId ? [actorUserId] : [];
+    }
+    if (!recipientIds.length) return;
+
+    for (const uid of recipientIds) {
+      const tgR = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${uid}&limit=1`, {
+        headers: {...adminHeaders, 'Prefer': 'return=representation'}
+      });
+      const rows = await tgR.json();
+      if (!Array.isArray(rows) || !rows.length) continue;
+      await sendTelegram(rows[0].telegram_id, text);
+    }
+  } catch(e) { console.error('notifyCompanyOwners:', e); }
+}
+
+async function notifyBigTx(companyId, userId, tx) {
+  const text = `⚠️ <b>Крупное списание</b>\n\n` +
+    `Контрагент: <b>${tx.name || '—'}</b>\n` +
+    `Сумма: <b>${fmtAmt(tx.amount)}</b>\n` +
+    `Дата: <b>${tx.date || '—'}</b>\n` +
+    (tx.description ? `Назначение: ${tx.description}\n` : '') +
+    `\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`;
+  await notifyCompanyOwners(companyId, userId, text);
 }
 
 // Записывает значимое действие в audit_log — не блокирует основной запрос при ошибке
@@ -564,7 +591,7 @@ export default async function handler(req, res) {
       if (threshold > 0 && userId) {
         const bigTxs = toInsert.filter(t => t.amount < 0 && Math.abs(t.amount) >= threshold);
         for (const tx of bigTxs) {
-          notifyBigTx(userId, tx);
+          notifyBigTx(companyId, userId, tx);
         }
       }
 
@@ -612,6 +639,8 @@ export default async function handler(req, res) {
           headers: adminHeaders
         });
         logAction(companyId, userId, 'transactions_deleted', { period });
+        // Разрушительное действие — директор(ы) узнают немедленно, даже если удалил бухгалтер
+        notifyCompanyOwners(companyId, userId, `🗑️ <b>Удалена выписка за период</b>\n\nПериод: <b>${period}</b>\nВсе операции за этот период удалены из системы.\n\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`);
       } else if (period && userId) {
         await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}&user_id=eq.${userId}`, {
           method: 'DELETE',
