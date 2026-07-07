@@ -628,7 +628,13 @@ export default async function handler(req, res) {
       if (is_recurring !== undefined) patch.is_recurring = is_recurring;
       if (recurring_label !== undefined) patch.recurring_label = recurring_label;
       if (status !== undefined) patch.status = status;
-      await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${encodeURIComponent(id)}`, {
+      // IDOR-фикс: id операции обязательно вместе с company_id/user_id проверенной
+      // роли — иначе участник компании A мог бы отредактировать операцию компании B,
+      // просто подобрав id (роль проверялась только для companyId запроса, id самой
+      // операции с ним никак не сверялся). id транзакций — последовательные, подбор
+      // тривиален.
+      const patchScopeFilter = companyId ? `&company_id=eq.${encodeURIComponent(companyId)}` : (userId ? `&user_id=eq.${encodeURIComponent(userId)}` : '');
+      await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${encodeURIComponent(id)}${patchScopeFilter}`, {
         method: 'PATCH',
         headers: adminHeaders,
         body: JSON.stringify(patch)

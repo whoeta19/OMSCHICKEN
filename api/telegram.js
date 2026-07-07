@@ -4,6 +4,7 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const APP_URL = 'https://omschicken-u5dn.vercel.app';
+const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
 // Vercel исполняет serverless-функции в UTC, а не в московском времени — new Date()
 // на границе суток/месяца/квартала (21:00-00:00 UTC = 00:00-03:00 МСК) даёт неверный
@@ -211,6 +212,21 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(200).json({ok: true});
 
+  // КРИТИЧНО: без этой проверки любой, кто знает URL вебхука (публичный —
+  // это открытый репозиторий), мог отправить сюда произвольный поддельный
+  // Update-объект напрямую, минуя Telegram — с любым chat_id/telegram_id,
+  // выдавая себя за любого привязанного пользователя (читать его финансовые
+  // данные, создавать поддельные операции от его имени, удалять чужие
+  // операции через ocr_undo без проверки владения). Telegram подписывает
+  // каждый настоящий webhook-запрос заголовком X-Telegram-Bot-Api-Secret-Token,
+  // если он задан при регистрации через setWebhook — сверяем его.
+  if (WEBHOOK_SECRET) {
+    const incomingSecret = req.headers['x-telegram-bot-api-secret-token'];
+    if (incomingSecret !== WEBHOOK_SECRET) {
+      return res.status(401).json({ error: 'invalid_secret_token' });
+    }
+  }
+
   const update = req.body;
   const message = update.message || update.callback_query?.message;
   if (!message) return res.status(200).json({ok: true});
@@ -306,7 +322,11 @@ export default async function handler(req, res) {
     if (callbackData) {
       if (callbackData.startsWith('ocr_undo:')) {
         const txId = callbackData.slice('ocr_undo:'.length);
-        await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${txId}`, {
+        // IDOR-фикс: удаляем только если операция принадлежит привязанному
+        // пользователю этого чата — без этого любой мог бы удалить чужую
+        // операцию по id (id последовательные, подобрать легко).
+        if (!linkedUserEarly) return res.status(200).json({ok: true});
+        await fetch(`${SUPABASE_URL}/rest/v1/transactions?id=eq.${encodeURIComponent(txId)}&user_id=eq.${linkedUserEarly.user_id}`, {
           method: 'DELETE', headers: adminHeaders
         });
         await answerCallback(update.callback_query.id, '↩️ Операция удалена');

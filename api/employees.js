@@ -129,10 +129,14 @@ export default async function handler(req, res) {
 
       if (req.method === 'PATCH') {
         if (!WRITE_ROLES.includes(role)) return res.status(403).json({ error: 'Недостаточно прав' });
-        const { id, ...updates } = req.body;
+        const { id, company_id, ...updates } = req.body;
         if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
+        // IDOR-фикс: id сотрудника обязательно фильтруется вместе с company_id
+        // из проверенной роли — иначе директор компании A мог бы отредактировать
+        // сотрудника компании B, зная/подобрав его id (role проверялась только
+        // для companyId запроса, а не для реальной принадлежности id).
+        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${encodeURIComponent(id)}&company_id=eq.${encodeURIComponent(companyId)}`, {
           method: 'PATCH',
           headers: adminHeaders,
           body: JSON.stringify(updates)
@@ -145,8 +149,9 @@ export default async function handler(req, res) {
         const { id } = req.body;
         if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-        // Мягкое удаление — переводим в неактивные, история выплат должна остаться
-        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${encodeURIComponent(id)}`, {
+        // Мягкое удаление — переводим в неактивные, история выплат должна остаться.
+        // company_id в фильтре — тот же IDOR-фикс, что и в PATCH выше.
+        await fetch(`${SUPABASE_URL}/rest/v1/employees?id=eq.${encodeURIComponent(id)}&company_id=eq.${encodeURIComponent(companyId)}`, {
           method: 'PATCH',
           headers: adminHeaders,
           body: JSON.stringify({ is_active: false })
@@ -237,7 +242,8 @@ export default async function handler(req, res) {
           const { id } = req.body;
           if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-          await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${encodeURIComponent(id)}`, {
+          // IDOR-фикс: id обязательно вместе с company_id проверенной роли.
+          await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${encodeURIComponent(id)}&company_id=eq.${encodeURIComponent(companyId)}`, {
             method: 'PATCH',
             headers: adminHeaders,
             body: JSON.stringify({ status: 'paid', paid_at: new Date().toISOString() })
@@ -253,7 +259,8 @@ export default async function handler(req, res) {
         const { id } = req.body;
         if (!id) return res.status(400).json({ error: 'Не указан id' });
 
-        await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${encodeURIComponent(id)}`, {
+        // IDOR-фикс: id обязательно вместе с company_id проверенной роли.
+        await fetch(`${SUPABASE_URL}/rest/v1/payroll_runs?id=eq.${encodeURIComponent(id)}&company_id=eq.${encodeURIComponent(companyId)}`, {
           method: 'DELETE',
           headers: adminHeaders
         });
