@@ -459,11 +459,11 @@
         <input type="number" id="beVar" placeholder="150" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
       </div>
       <div>
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Цена продажи 1 ед., ₽</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="bePrice">Цена продажи 1 ед., ₽</label>
         <input type="number" id="bePrice" placeholder="400" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
       </div>
       <div>
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Текущий объём продаж/мес, ед.</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="beVolume">Текущий объём продаж/мес, ед.</label>
         <input type="number" id="beVolume" placeholder="2000" oninput="calcBreakeven()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--text);font-size:13px;outline:none">
       </div>
     </div>
@@ -476,11 +476,11 @@
     <div id="currencyDate" style="font-size:11px;color:var(--muted);margin-bottom:12px"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div>
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="currAmt">Сумма</label>
         <input type="number" id="currAmt" value="1000" min="0" oninput="convertCurrency()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:14px;outline:none">
       </div>
       <div>
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Валюта</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="currCode">Валюта</label>
         <select id="currCode" onchange="convertCurrency()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;outline:none">
           <option value="USD">🇺🇸 USD — Доллар США</option>
           <option value="EUR">🇪🇺 EUR — Евро</option>

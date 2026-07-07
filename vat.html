@@ -207,11 +207,11 @@
     <div class="stat-card" style="padding:20px">
       <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:14px">Выделить НДС из суммы</div>
       <div style="margin-bottom:10px">
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма с НДС</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="calcIn">Сумма с НДС</label>
         <input type="number" id="calcIn" oninput="calcVatFrom()" placeholder="100 000" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;outline:none">
       </div>
       <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Ставка НДС</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="calcRate">Ставка НДС</label>
         <select id="calcRate" onchange="calcVatFrom()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none">
           <option value="10">10%</option>
           <option value="20">20%</option>
@@ -237,11 +237,11 @@
     <div class="stat-card" style="padding:20px">
       <div style="font-family:Unbounded,sans-serif;font-size:12px;font-weight:700;margin-bottom:14px">Начислить НДС на сумму</div>
       <div style="margin-bottom:10px">
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма без НДС</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="calcIn2">Сумма без НДС</label>
         <input type="number" id="calcIn2" oninput="calcVatTo()" placeholder="90 909" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;outline:none">
       </div>
       <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Ставка НДС</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="calcRate2">Ставка НДС</label>
         <select id="calcRate2" onchange="calcVatTo()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none">
           <option value="10">10%</option>
           <option value="20">20%</option>
@@ -288,11 +288,11 @@
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
       <div>
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Сумма закупки (с НДС)</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="shiftAmount">Сумма закупки (с НДС)</label>
         <input type="number" id="shiftAmount" oninput="calcTaxShift()" placeholder="500 000" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;outline:none">
       </div>
       <div>
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Планируемая дата оплаты</label>
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="shiftDate">Планируемая дата оплаты</label>
         <input type="date" id="shiftDate" oninput="calcTaxShift()" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;outline:none">
       </div>
     </div>

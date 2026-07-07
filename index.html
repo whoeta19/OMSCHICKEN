@@ -810,11 +810,11 @@
   <div id="goalsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center">
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;width:90%;max-width:380px">
       <div style="font-size:14px;font-weight:700;margin-bottom:16px">🎯 Финансовые цели на месяц</div>
-      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">План выручки, ₽</label>
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="goalIncome">План выручки, ₽</label>
       <input id="goalIncome" type="number" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px">
-      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Лимит расходов, ₽</label>
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="goalExpense">Лимит расходов, ₽</label>
       <input id="goalExpense" type="number" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px">
-      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Минимальная прибыль, ₽</label>
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px" for="goalProfit">Минимальная прибыль, ₽</label>
       <input id="goalProfit" type="number" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px">
       <div style="display:flex;gap:8px">
         <button onclick="saveGoals()" style="flex:1;background:var(--accent);border:none;border-radius:8px;padding:10px;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Сохранить</button>

@@ -184,16 +184,16 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
     <h2 id="itemModalTitle">Новый товар</h2>
     <input type="hidden" id="editItemId">
     <div class="form-group">
-      <label class="form-label">Наименование</label>
+      <label class="form-label" for="itemName">Наименование</label>
       <input class="form-inp" id="itemName" placeholder="Куриное бедро охл.">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Категория</label>
+        <label class="form-label" for="itemCategory">Категория</label>
         <input class="form-inp" id="itemCategory" placeholder="Категория товара">
       </div>
       <div class="form-group">
-        <label class="form-label">Единица</label>
+        <label class="form-label" for="itemUnit">Единица</label>
         <select class="form-inp" id="itemUnit">
           <option>кг</option><option>шт</option><option>л</option><option>м</option><option>уп</option><option>коробка</option>
         </select>
@@ -201,21 +201,21 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Начальный остаток</label>
+        <label class="form-label" for="itemQty">Начальный остаток</label>
         <input class="form-inp" id="itemQty" type="number" placeholder="0" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Мин. остаток (предупр.)</label>
+        <label class="form-label" for="itemMinQty">Мин. остаток (предупр.)</label>
         <input class="form-inp" id="itemMinQty" type="number" placeholder="10" min="0">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Закупочная цена</label>
+        <label class="form-label" for="itemPrice">Закупочная цена</label>
         <input class="form-inp" id="itemPrice" type="number" placeholder="0" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Продажная цена</label>
+        <label class="form-label" for="itemSalePrice">Продажная цена</label>
         <input class="form-inp" id="itemSalePrice" type="number" placeholder="0" min="0">
       </div>
     </div>
@@ -233,25 +233,25 @@ h1{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:900;margin-bott
     <h2 id="moveModalTitle">Приход товара</h2>
     <input type="hidden" id="moveType">
     <div class="form-group">
-      <label class="form-label">Товар</label>
+      <label class="form-label" for="moveItem">Товар</label>
       <select class="form-inp" id="moveItem"></select>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Количество</label>
+        <label class="form-label" for="moveQty">Количество</label>
         <input class="form-inp" id="moveQty" type="number" placeholder="0" min="0.001" step="0.001">
       </div>
       <div class="form-group">
-        <label class="form-label">Цена (необяз.)</label>
+        <label class="form-label" for="movePrice">Цена (необяз.)</label>
         <input class="form-inp" id="movePrice" type="number" placeholder="авто" min="0">
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Дата</label>
+      <label class="form-label" for="moveDate">Дата</label>
       <input class="form-inp" id="moveDate" type="date">
     </div>
     <div class="form-group">
-      <label class="form-label">Комментарий</label>
+      <label class="form-label" for="moveNote">Комментарий</label>
       <input class="form-inp" id="moveNote" placeholder="Поставщик, документ...">
     </div>
     <div class="modal-actions">
