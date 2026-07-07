@@ -11,6 +11,13 @@ const adminHeaders = {
 const BASE_URL = 'https://omschicken-u5dn.vercel.app';
 const REMIND_DAYS = [30, 14, 7, 3, 1];
 
+// Vercel исполняет cron в UTC — new Date() на границе суток по Москве (21:00-00:00 UTC)
+// даёт неверный день, из-за чего REMIND_DAYS мог сработать не в тот день или пропустить
+// напоминание о налоговом дедлайне. Тот же mskNow(), что в utils.js/telegram.js.
+function mskNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+}
+
 async function sendTelegram(chatId, text) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: 'POST',
@@ -117,7 +124,7 @@ export default async function handler(req, res) {
     return res.status(401).json({error: 'Не авторизован'});
   }
 
-  const now = new Date();
+  const now = mskNow();
   const day = now.getDate();
   const month = now.getMonth();
   const year = now.getFullYear();

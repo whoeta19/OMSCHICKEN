@@ -5,6 +5,14 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const APP_URL = 'https://omschicken-u5dn.vercel.app';
 
+// Vercel исполняет serverless-функции в UTC, а не в московском времени — new Date()
+// на границе суток/месяца/квартала (21:00-00:00 UTC = 00:00-03:00 МСК) даёт неверный
+// день/месяц: например /stats в 00:30 по Москве 1-го числа увидел бы ещё прошлый
+// месяц, т.к. в UTC это ещё 21:30 предыдущих суток. Тот же mskNow(), что в utils.js.
+function mskNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+}
+
 // Верификация подписи Telegram WebApp initData (HMAC-SHA256)
 function verifyTgInitData(initData) {
   try {
@@ -122,14 +130,14 @@ function fmt(n) {
 
 // Текущий период MM.YYYY
 function currentPeriod() {
-  const now = new Date();
+  const now = mskNow();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   return `${mm}.${now.getFullYear()}`;
 }
 
 // Текущий квартал: массив периодов MM.YYYY
 function currentQuarterPeriods() {
-  const now = new Date();
+  const now = mskNow();
   const q = Math.floor(now.getMonth() / 3);
   const year = now.getFullYear();
   return [q*3+1, q*3+2, q*3+3].map(m => `${String(m).padStart(2,'0')}.${year}`);
@@ -247,7 +255,7 @@ export default async function handler(req, res) {
           : null;
 
         const dateMatch = ocrText.match(/(\d{2})[.\/\-](\d{2})[.\/\-](\d{2,4})/);
-        let txDate = new Date().toLocaleDateString('ru-RU').replace(/\//g, '.');
+        let txDate = mskNow().toLocaleDateString('ru-RU').replace(/\//g, '.');
         if (dateMatch) {
           const y = dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3];
           txDate = `${dateMatch[1]}.${dateMatch[2]}.${y}`;
@@ -401,7 +409,7 @@ export default async function handler(req, res) {
 
     // Кнопки выбора периода для /stats
     const prevMonth = (() => {
-      const d = new Date(); d.setMonth(d.getMonth() - 1);
+      const d = mskNow(); d.setMonth(d.getMonth() - 1);
       return `${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
     })();
     const periodButtons = (cmd) => ({inline_keyboard: [
@@ -453,7 +461,7 @@ export default async function handler(req, res) {
       const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p, companyId)))).flat();
       const { vatOut: qVatOut, vatIn: qVatIn, vatToPay: qVatToPay } = calcVat(allQTxs);
 
-      const now = new Date();
+      const now = mskNow();
       const quarter = Math.floor(now.getMonth() / 3) + 1;
       const quarterEndMonth = quarter * 3;
       const quarterEnd = new Date(now.getFullYear(), quarterEndMonth, 25);
@@ -477,7 +485,7 @@ export default async function handler(req, res) {
       const qPeriods = currentQuarterPeriods();
       const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p, companyId)))).flat();
       const { income: qIn, expense: qEx, profit: qPr, vatToPay: qVat } = calcVat(allQTxs);
-      const now = new Date();
+      const now = mskNow();
       const quarter = Math.floor(now.getMonth() / 3) + 1;
       const profitEmoji = qPr >= 0 ? '✅' : '❌';
       await sendMessage(chatId,
@@ -494,7 +502,7 @@ export default async function handler(req, res) {
 
     // /deadline — налоговый календарь
     if (text === '/deadline' || text.includes('дедлайн') || text.includes('срок') || text.includes('календар')) {
-      const now = new Date();
+      const now = mskNow();
       const q = Math.floor(now.getMonth() / 3) + 1;
       const year = now.getFullYear();
 
@@ -653,7 +661,7 @@ export default async function handler(req, res) {
         const nameMatch = text.match(/(?:на|от|у|в)\s+([а-яёА-ЯЁa-zA-Z][^,.\n]{2,30})/i);
         const name = nameMatch ? nameMatch[1].trim() : (nlIsExpense ? 'Расход' : 'Доход');
 
-        const today = new Date().toLocaleDateString('ru-RU').replace(/\//g, '.');
+        const today = mskNow().toLocaleDateString('ru-RU').replace(/\//g, '.');
         const [, mm, yyyy] = today.split('.');
         const txPeriod = `${mm}.${yyyy}`;
 
