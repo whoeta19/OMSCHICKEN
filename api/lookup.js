@@ -14,6 +14,27 @@
 
 const DADATA_TOKEN_FINDBYID = process.env.DADATA_TOKEN_FINDBYID || process.env.DADATA_TOKEN;
 const DADATA_TOKEN_SUGGEST = process.env.DADATA_TOKEN_SUGGEST || process.env.DADATA_TOKEN;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+
+// egrul/dadata дёргают платные внешние API (у Dadata — квота по счётчику запросов).
+// Эндпоинт был полностью анонимным — кто угодно в интернете мог его спамить и
+// сжечь квоту компании. Требуем валидный токен OMSFIN (без role-check — читать
+// открытые данные ЕГРЮЛ может любой авторизованный участник компании).
+async function requireAuth(req) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace('Bearer ', '').trim();
+  if (!token) return false;
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    const d = await r.json();
+    return !!d.id;
+  } catch (e) {
+    return false;
+  }
+}
 
 async function handleEgrul(req, res) {
   const { inn } = req.query;
@@ -100,9 +121,15 @@ export default async function handler(req, res) {
   const { provider } = req.query;
 
   try {
-    if (provider === 'egrul') return await handleEgrul(req, res);
-    if (provider === 'dadata') return await handleDadata(req, res);
+    // Курс валют — открытые данные ЦБ, без квоты, авторизация не нужна.
     if (provider === 'currency') return await handleCurrency(req, res);
+
+    if (provider === 'egrul' || provider === 'dadata') {
+      if (!(await requireAuth(req))) return res.status(401).json({ error: 'Не авторизован' });
+      if (provider === 'egrul') return await handleEgrul(req, res);
+      return await handleDadata(req, res);
+    }
+
     return res.status(400).json({ error: 'Unknown provider. Use provider=egrul|dadata|currency' });
   } catch (e) {
     return res.status(500).json({ error: e.message });

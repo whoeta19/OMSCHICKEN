@@ -1659,9 +1659,10 @@ async function scanCounterpartyRadar() {
   if (!toCheck.length) return;
 
   // Проверяем по очереди с небольшой задержкой, чтобы не упереться в рейт-лимит ЕГРЮЛ
+  const _radarToken = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || '';
   for (const inn of toCheck) {
     try {
-      const r = await fetch(`/api/lookup?provider=egrul&inn=${inn}`);
+      const r = await fetch(`/api/lookup?provider=egrul&inn=${inn}`, { headers: { 'Authorization': 'Bearer ' + _radarToken } });
       if (r.ok) {
         const d = await r.json();
         if (d.data) {

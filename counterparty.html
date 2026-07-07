@@ -283,9 +283,12 @@ async function fetchFromEGRUL(inn) {
 
   let result = null;
 
+  const _lookupToken = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  const _lookupAuthH = { 'Authorization': 'Bearer ' + _lookupToken };
+
   // Сначала пробуем ЕГРЮЛ
   try {
-    const r = await fetch(`/api/lookup?provider=egrul&inn=${encodeURIComponent(inn)}`);
+    const r = await fetch(`/api/lookup?provider=egrul&inn=${encodeURIComponent(inn)}`, { headers: _lookupAuthH });
     if (r.ok) {
       const d = await r.json();
       if (d.data) result = parseEGRUL(d.data, inn);
@@ -295,7 +298,7 @@ async function fetchFromEGRUL(inn) {
   // Fallback — Dadata через серверный прокси (избегаем CORS и проблем с токеном)
   if (!result) {
     try {
-      const r = await fetch(`/api/lookup?provider=dadata&action=findById&inn=${encodeURIComponent(inn)}`);
+      const r = await fetch(`/api/lookup?provider=dadata&action=findById&inn=${encodeURIComponent(inn)}`, { headers: _lookupAuthH });
       if (r.ok) {
         const d = await r.json();
         if (d.suggestions?.length) result = parseDadata(d.suggestions[0]);
@@ -395,7 +398,8 @@ function parseEGRUL(raw, inn) {
 
 async function searchByName(name) {
   try {
-    const r = await fetch(`/api/lookup?provider=dadata&action=suggest&query=${encodeURIComponent(name)}`);
+    const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+    const r = await fetch(`/api/lookup?provider=dadata&action=suggest&query=${encodeURIComponent(name)}`, { headers: { 'Authorization': 'Bearer ' + token } });
     if (r.ok) {
       const d = await r.json();
       if (d.suggestions?.length) {
@@ -793,7 +797,8 @@ document.getElementById('searchInput').addEventListener('input', async function(
   clearTimeout(_acTimer);
   _acTimer = setTimeout(async () => {
     try {
-      const r = await fetch(`/api/lookup?provider=dadata&action=suggest&query=${encodeURIComponent(q)}`);
+      const token = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+      const r = await fetch(`/api/lookup?provider=dadata&action=suggest&query=${encodeURIComponent(q)}`, { headers: { 'Authorization': 'Bearer ' + token } });
       if (!r.ok) { hideSuggestions(); return; }
       const dd = await r.json();
       if (!dd.suggestions?.length) { hideSuggestions(); return; }
