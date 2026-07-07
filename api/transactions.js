@@ -66,12 +66,21 @@ async function notifyCompanyOwners(companyId, actorUserId, text) {
   } catch(e) { console.error('notifyCompanyOwners:', e); }
 }
 
+// tx.name/tx.description приходят из банковской выписки — название контрагента
+// теоретически управляется отправителем платежа. Telegram-сообщение отправляется
+// с parse_mode:'HTML', поэтому < > & в этих полях экранируем — иначе сообщение
+// может не отправиться (Telegram отклоняет невалидную разметку) или, в узком
+// случае, встроить постороннюю кликабельную ссылку в уведомление от OMSFIN.
+function escTg(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 async function notifyBigTx(companyId, userId, tx) {
   const text = `⚠️ <b>Крупное списание</b>\n\n` +
-    `Контрагент: <b>${tx.name || '—'}</b>\n` +
+    `Контрагент: <b>${escTg(tx.name) || '—'}</b>\n` +
     `Сумма: <b>${fmtAmt(tx.amount)}</b>\n` +
     `Дата: <b>${tx.date || '—'}</b>\n` +
-    (tx.description ? `Назначение: ${tx.description}\n` : '') +
+    (tx.description ? `Назначение: ${escTg(tx.description)}\n` : '') +
     `\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`;
   await notifyCompanyOwners(companyId, userId, text);
 }
@@ -382,7 +391,7 @@ async function handleBankWebhook(req, res) {
   try {
     const sign = tx.amount > 0 ? '💰 Поступление' : '📤 Списание';
     const fmtA = n => Math.abs(n).toLocaleString('ru-RU', {maximumFractionDigits:0}) + ' ₽';
-    const msg = `${sign}\n\n<b>${tx.name}</b>\n<b>${tx.amount > 0 ? '+' : '−'}${fmtA(tx.amount)}</b>\n${tx.date}${tx.description ? '\n' + tx.description.substring(0,80) : ''}\n\n<i>Автоимпорт · ${accountName}</i>`;
+    const msg = `${sign}\n\n<b>${escTg(tx.name)}</b>\n<b>${tx.amount > 0 ? '+' : '−'}${fmtA(tx.amount)}</b>\n${tx.date}${tx.description ? '\n' + escTg(tx.description.substring(0,80)) : ''}\n\n<i>Автоимпорт · ${escTg(accountName)}</i>`;
     const tgR = await fetch(`${SUPABASE_URL}/rest/v1/telegram_users?user_id=eq.${userId}&limit=1`, { headers: adminHeaders });
     const tgRows = await tgR.json();
     if (Array.isArray(tgRows) && tgRows[0]) {

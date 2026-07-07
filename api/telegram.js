@@ -37,6 +37,14 @@ const adminHeaders = {
   'Content-Type': 'application/json'
 };
 
+// Экранирование для вставки внешних данных (OCR-текст чека, название контрагента
+// из выписки) в HTML-сообщения Telegram (parse_mode:'HTML') — без этого < > &
+// в тексте ломают разметку сообщения или, в узком случае, встраивают постороннюю
+// кликабельную ссылку в уведомление от бота.
+function escTg(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 async function sendMessage(chatId, text, keyboard = null) {
   const body = { chat_id: chatId, text, parse_mode: 'HTML' };
   if (keyboard) body.reply_markup = keyboard;
@@ -266,7 +274,7 @@ export default async function handler(req, res) {
 
         if (!amount || isNaN(amount) || amount <= 0) {
           await sendMessage(chatId,
-            `❓ Не удалось распознать сумму на чеке.\n\nРаспознанный текст:\n<code>${ocrText.substring(0, 300)}</code>\n\nДобавь операцию вручную.`,
+            `❓ Не удалось распознать сумму на чеке.\n\nРаспознанный текст:\n<code>${escTg(ocrText.substring(0, 300))}</code>\n\nДобавь операцию вручную.`,
             appKeyboard([[{text: '➕ Добавить вручную', url: APP_URL}]])
           );
         } else {
@@ -283,7 +291,7 @@ export default async function handler(req, res) {
           const txData = await txResp.json();
           const txId = txData[0]?.id;
           await sendMessage(chatId,
-            `🧾 <b>Чек добавлен!</b>\n\n📅 Дата: ${txDate}\n🏪 Продавец: ${merchant}\n💳 Сумма: <b>-${fmt(amount)}</b>`,
+            `🧾 <b>Чек добавлен!</b>\n\n📅 Дата: ${txDate}\n🏪 Продавец: ${escTg(merchant)}\n💳 Сумма: <b>-${fmt(amount)}</b>`,
             txId ? {inline_keyboard: [[{text: '↩️ Отменить', callback_data: `ocr_undo:${txId}`}]]} : null
           );
         }
@@ -333,7 +341,7 @@ export default async function handler(req, res) {
           const top = Object.entries(byName).sort(([,a],[,b])=>b-a).slice(0,7);
           await sendMessage(chatId,
             `📤 <b>Топ расходов ${label}:</b>\n\n` +
-            (top.length ? top.map(([name,val],i)=>`${i+1}. ${name.substring(0,28)}\n    ${fmt(val)}`).join('\n\n') : 'Расходов нет'),
+            (top.length ? top.map(([name,val],i)=>`${i+1}. ${escTg(name).substring(0,28)}\n    ${fmt(val)}`).join('\n\n') : 'Расходов нет'),
             appKeyboard()
           );
         }
@@ -568,7 +576,7 @@ export default async function handler(req, res) {
       const top = Object.entries(byName).sort(([,a],[,b])=>b-a).slice(0,7);
       await sendMessage(chatId,
         `💰 <b>Топ покупателей за всё время:</b>\n\n` +
-        (top.length ? top.map(([name,val],i)=>`${i+1}. ${name.substring(0,28)}\n    ${fmt(val)}`).join('\n\n') : 'Покупателей нет'),
+        (top.length ? top.map(([name,val],i)=>`${i+1}. ${escTg(name).substring(0,28)}\n    ${fmt(val)}`).join('\n\n') : 'Покупателей нет'),
         appKeyboard()
       );
       return res.status(200).json({ok: true});
@@ -589,7 +597,7 @@ export default async function handler(req, res) {
       await sendMessage(chatId,
         `📋 <b>Последние операции (${period}):</b>\n\n` +
         (last.length
-          ? last.map(t=>`${t.date||'—'} · ${(t.name||'').substring(0,22)}\n${t.amount>0?'➕':'➖'} <b>${fmt(t.amount)}</b>`).join('\n\n')
+          ? last.map(t=>`${t.date||'—'} · ${escTg(t.name||'').substring(0,22)}\n${t.amount>0?'➕':'➖'} <b>${fmt(t.amount)}</b>`).join('\n\n')
           : 'Операций нет'),
         appKeyboard()
       );
