@@ -29,6 +29,20 @@ function declDays(n) {
   return 'дней';
 }
 
+// Компания пользователя через company_members (не companies.user_id — тот
+// принадлежит только создателю компании, не всем её участникам).
+async function getUserCompanyId(userId) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}&limit=1&select=company_id`, {
+      headers: adminHeaders
+    });
+    const d = await r.json();
+    return d[0]?.company_id || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function daysUntil(date, now) {
   return Math.ceil((date - now) / (1000 * 60 * 60 * 24));
 }
@@ -178,11 +192,17 @@ export default async function handler(req, res) {
     for (const user of users) {
       const {telegram_id, user_id} = user;
 
+      // company_id в приоритете — иначе для бухгалтера/сотрудника, привязавшего
+      // свой Telegram, напоминание считалось бы по их личным транзакциям
+      // (обычно пусто), а не по реальным данным компании.
+      const companyId = await getUserCompanyId(user_id);
+      const scopeFilter = companyId ? `company_id=eq.${companyId}` : `user_id=eq.${user_id}`;
+
       // Загружаем транзакции только за текущий квартал для НДС
       const qStart = month - (month % 3); // первый месяц квартала (0-indexed)
       const qPeriods = [qStart, qStart+1, qStart+2].map(m => `${String(m+1).padStart(2,'0')}.${year}`);
       const qFilter = `period=in.(${qPeriods.join(',')})`;
-      const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${user_id}&${qFilter}&limit=5000`, {
+      const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?${scopeFilter}&${qFilter}&limit=5000`, {
         headers: adminHeaders
       });
       const txs = await txR.json();
@@ -193,8 +213,11 @@ export default async function handler(req, res) {
       if (vat.days !== null && REMIND_DAYS.includes(vat.days)) {
         let vatToPay = 0;
         if (Array.isArray(txs) && txs.length) {
-          const income    = txs.filter(t => t.amount > 0).reduce((s, t) => s + Number(t.amount), 0);
-          const purchases = txs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+          // Только продажи (category='income') и профильные закупки (category='chicken') —
+          // так же, как в vat.html/declarations.html. Займы, транзит, зарплата и т.п.
+          // НДС не облагаются и не должны попадать ни в начисление, ни в вычет.
+          const income    = txs.filter(t => t.amount > 0 && t.category === 'income').reduce((s, t) => s + Number(t.amount), 0);
+          const purchases = txs.filter(t => t.amount < 0 && t.category === 'chicken').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
           vatToPay = Math.max(0, Math.round((income * 10 / 110) - (purchases * 10 / 110)));
         }
         if (vatToPay > 0) {
