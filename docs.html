@@ -603,26 +603,41 @@ let history = JSON.parse(localStorage.getItem('omsfin_docs') || '[]');
 let stampImg = localStorage.getItem('omsfin_stamp') || localStorage.getItem('omschicken_stamp') || '';
 let signImg = localStorage.getItem('omsfin_sign') || localStorage.getItem('omschicken_sign') || '';
 
-// Реквизиты
-let S = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {
+// Экранирование строковых полей объекта — используется, чтобы данные
+// продавца/покупателя не выполнялись как HTML при вставке в innerHTML
+// генераторов документов (см. ниже, объявление S).
+function escSeller(obj) {
+  const out = {};
+  for (const k in obj) out[k] = typeof obj[k] === 'string' ? escapeHtml(obj[k]) : obj[k];
+  return out;
+}
+
+// Реквизиты. rawS — сырые данные (для заполнения полей формы: input.value не
+// интерпретирует HTML-сущности, поэтому туда нужен исходный текст без escape).
+// S — экранированная копия; именно её используют все 9 генераторов документов
+// (genSchet/genUPD/genTORG12/...) при вставке в innerHTML предпросмотра —
+// без этого XSS через название/адрес компании (в т.ч. автозаполненные по ИНН
+// из ЕГРЮЛ/Dadata — публичный реестр вне нашего контроля) мог выполниться.
+let rawS = JSON.parse(localStorage.getItem('omsfin_seller') || localStorage.getItem('omschicken_seller') || 'null') || {
   name:'', inn:'', kpp:'', ogrn:'',
   addr:'', phone:'',
   bank:'', rs:'', ks:'', bik:'',
   director:'', buh:''
 };
+let S = escSeller(rawS);
 
 // Инициализация настроек
 function initSettings() {
   ['Name','Inn','Kpp','Ogrn','Addr','Bank','Rs','Bik','Ks','Director','Buh'].forEach(k=>{
     const el = document.getElementById('s'+k);
-    if (el) el.value = S[k.toLowerCase()] || '';
+    if (el) el.value = rawS[k.toLowerCase()] || '';
   });
   if (stampImg) document.getElementById('stampPreview').innerHTML = `<img src="${stampImg}" style="max-height:80px;max-width:120px">`;
   if (signImg) document.getElementById('signPreview').innerHTML = `<img src="${signImg}" style="max-height:50px;max-width:150px">`;
 }
 
 function saveSettings() {
-  S = {
+  rawS = {
     name: document.getElementById('sName').value,
     inn: document.getElementById('sInn').value,
     kpp: document.getElementById('sKpp').value,
@@ -635,7 +650,8 @@ function saveSettings() {
     director: document.getElementById('sDirector').value,
     buh: document.getElementById('sBuh').value,
   };
-  localStorage.setItem('omsfin_seller', JSON.stringify(S));
+  S = escSeller(rawS);
+  localStorage.setItem('omsfin_seller', JSON.stringify(rawS));
   showToast('✅ Сохранено');
 }
 
@@ -928,9 +944,10 @@ function getItems() {
   const items = [];
   document.querySelectorAll('#itemsBody tr').forEach((tr, i) => {
     const inputs = tr.querySelectorAll('input');
-    const name = inputs[0]?.value || '';
+    // Экранируем name — попадает в innerHTML таблицы документа при генерации превью
+    const name = escapeHtml(inputs[0]?.value || '');
+    const unit = escapeHtml(inputs[2]?.value || 'кг');
     const qty = parseFloat(inputs[1]?.value) || 0;
-    const unit = inputs[2]?.value || 'кг';
     const price = parseFloat(inputs[3]?.value) || 0;
     const vatPct = parseFloat(tr.querySelector('select')?.value) || 0;
     const sum = qty * price;
@@ -941,14 +958,16 @@ function getItems() {
 }
 
 function getBuyer() {
-  return {
+  // Используется только для генерации превью документа (innerHTML) — экранируем
+  // здесь же, единственное место вызова, риск обратной порчи формы отсутствует.
+  return escSeller({
     name: document.getElementById('buyerName').value || '—',
     inn: document.getElementById('buyerInn').value || '—',
     addr: document.getElementById('buyerAddr').value || '—',
     bank: document.getElementById('buyerBank').value || '—',
     director: document.getElementById('buyerDirector').value || '—',
     buh: document.getElementById('buyerBuh').value || '—',
-  };
+  });
 }
 
 function getDocInfo() {
