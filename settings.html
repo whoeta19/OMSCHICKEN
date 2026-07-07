@@ -665,7 +665,8 @@ async function loadCloudSettings() {
   const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!tok) { initImagePreviews(); return; }
   try {
-    const r = await fetch('/api/company_settings?nc=' + Date.now(), {
+    const cid = localStorage.getItem('omsfin_company') || '';
+    const r = await fetch('/api/company_settings?nc=' + Date.now() + (cid ? '&company_id=' + cid : ''), {
       headers: {'Authorization': 'Bearer ' + tok},
       cache: 'no-store'
     });
@@ -708,11 +709,12 @@ async function loadCloudSettings() {
 
 async function saveToCloud(key, value) {
   const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
+  const cid = localStorage.getItem('omsfin_company') || '';
   try {
     await fetch('/api/company_settings', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+tok},
-      body: JSON.stringify({[key]: value})
+      body: JSON.stringify({[key]: value, ...(cid ? {company_id: cid} : {})})
     });
   } catch(e) { console.error(e); }
 }
@@ -1163,11 +1165,12 @@ function selectBank(bank) {
 async function initWebhook() {
   const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!tok) return;
+  const cid = localStorage.getItem('omsfin_company') || '';
   const statusEl = document.getElementById('webhookStatus');
   const urlEl = document.getElementById('webhookUrl');
   selectBank('tbank');
   try {
-    const r = await fetch('/api/company_settings', { headers: { Authorization: 'Bearer ' + tok } });
+    const r = await fetch('/api/company_settings' + (cid ? '?company_id=' + cid : ''), { headers: { Authorization: 'Bearer ' + tok } });
     if (!r.ok) return;
     const data = await r.json();
     let secret = data.webhook_secret;
@@ -1176,7 +1179,7 @@ async function initWebhook() {
       await fetch('/api/company_settings', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ webhook_secret: secret })
+        body: JSON.stringify({ webhook_secret: secret, ...(cid ? {company_id: cid} : {}) })
       });
     }
     _webhookSecret = secret;
@@ -1200,6 +1203,7 @@ function copyWebhookUrl() {
 async function regenerateWebhookSecret() {
   const tok = localStorage.getItem('omsfin_token') || localStorage.getItem('omschicken_token') || '';
   if (!tok) return;
+  const cid = localStorage.getItem('omsfin_company') || '';
   const statusEl = document.getElementById('webhookStatus');
   const urlEl = document.getElementById('webhookUrl');
   showConfirm('Старый URL перестанет работать. Продолжить?', async () => {
@@ -1208,7 +1212,7 @@ async function regenerateWebhookSecret() {
     const r = await fetch('/api/company_settings', {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ webhook_secret: secret })
+      body: JSON.stringify({ webhook_secret: secret, ...(cid ? {company_id: cid} : {}) })
     });
     if (!r.ok) throw new Error('save failed');
     urlEl.textContent = buildWebhookUrl(secret);

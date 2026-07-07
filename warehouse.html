@@ -274,7 +274,8 @@ async function loadData() {
   try {
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || '';
     if (!token) { loadLocal(); return; }
-    const r = await fetch('/api/company_settings', {
+    const cid = localStorage.getItem('omsfin_company') || '';
+    const r = await fetch('/api/company_settings' + (cid ? '?company_id=' + cid : ''), {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!r.ok) { loadLocal(); return; }
@@ -299,10 +300,11 @@ async function saveData() {
   try {
     const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('omschicken_token') || '';
     if (!token) return;
+    const cid = localStorage.getItem('omsfin_company') || '';
     await fetch('/api/company_settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ warehouse_items: items, warehouse_movements: movements })
+      body: JSON.stringify({ warehouse_items: items, warehouse_movements: movements, ...(cid ? {company_id: cid} : {}) })
     });
   } catch(e) { console.error(e); } finally { _saving = false; }
 }

@@ -1095,7 +1095,8 @@ async function syncUserSettings() {
   try {
     const token = localStorage.getItem(TOKEN_KEY) || '';
     if (!token) return;
-    const r = await fetch('/api/company_settings', {
+    const cid = localStorage.getItem('omsfin_company') || '';
+    const r = await fetch('/api/company_settings' + (cid ? '?company_id=' + cid : ''), {
       headers: { 'Authorization': 'Bearer ' + token }
     });
     if (!r.ok) return;
@@ -1118,11 +1119,12 @@ async function saveUserSettings() {
   try {
     const token = localStorage.getItem(TOKEN_KEY) || '';
     if (!token) return;
+    const cid = localStorage.getItem('omsfin_company') || '';
     const goals = JSON.parse(localStorage.getItem('omsfin_goals') || '{}');
     await fetch('/api/company_settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ rules: userRules, goals })
+      body: JSON.stringify({ rules: userRules, goals, ...(cid ? {company_id: cid} : {}) })
     });
   } catch(e) { console.error(e); }
 }
@@ -1421,6 +1423,26 @@ async function createDefaultCompany() {
   if (company && company[0]) {
     currentCompanyId = company[0].id;
     localStorage.setItem('omsfin_company', currentCompanyId);
+    // Реквизиты/штамп/подпись, введённые на онбординге, были сохранены в облако
+    // без company_id (компании ещё не существовало) — переносим их в новую
+    // компанию, иначе они останутся «висеть» в старой персональной записи.
+    try {
+      const carryOver = {};
+      if (seller && Object.keys(seller).length) carryOver.seller = seller;
+      const stamp = localStorage.getItem('omsfin_stamp');
+      const sign = localStorage.getItem('omsfin_sign');
+      const logo = localStorage.getItem('omsfin_logo');
+      if (stamp) carryOver.stamp = stamp;
+      if (sign) carryOver.sign = sign;
+      if (logo) carryOver.logo = logo;
+      if (Object.keys(carryOver).length) {
+        await fetch('/api/company_settings', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body: JSON.stringify({ ...carryOver, company_id: currentCompanyId })
+        });
+      }
+    } catch(e) { console.error('carry over seller data:', e); }
     await loadCompanies();
   }
 }
