@@ -305,10 +305,10 @@ async function remindTg(event, e) {
   const dateStr = d.toLocaleDateString('ru-RU', {day:'numeric',month:'long'});
   const text = `📅 Напоминание\n${dateStr}: ${event.title}`;
   try {
-    const r = await fetch('/api/notify', {
+    const r = await fetch('/api/telegram_link', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body: JSON.stringify({message: text})
+      body: JSON.stringify({action: 'send', text})
     });
     if (r.ok) showToast('📱 Напоминание отправлено в Telegram');
     else showToast('⚠️ Telegram не подключён — настрой в параметрах');
