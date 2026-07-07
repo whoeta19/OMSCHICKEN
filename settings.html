@@ -814,13 +814,13 @@ async function loadAuditLog(myRole) {
     content.innerHTML = logs.map(l => {
       const date = new Date(l.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       let extra = '';
-      if (l.action === 'transaction_category_changed') extra = `→ ${l.details?.new_category || ''}`;
-      if (l.action === 'transactions_deleted') extra = `за ${l.details?.period || ''}`;
-      if (l.action === 'member_role_changed') extra = `→ ${l.details?.new_role || ''}`;
+      if (l.action === 'transaction_category_changed') extra = `→ ${escapeHtml(l.details?.new_category || '')}`;
+      if (l.action === 'transactions_deleted') extra = `за ${escapeHtml(l.details?.period || '')}`;
+      if (l.action === 'member_role_changed') extra = `→ ${escapeHtml(l.details?.new_role || '')}`;
       return `
         <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px">
           <div>
-            <div style="color:var(--text)">${l.action_label} ${extra}</div>
+            <div style="color:var(--text)">${escapeHtml(l.action_label)} ${extra}</div>
             <div style="color:var(--muted);font-size:11px;margin-top:2px">${escapeHtml(l.user_email || 'неизвестно')}</div>
           </div>
           <div style="color:var(--muted);font-size:11px;white-space:nowrap;margin-left:12px">${date}</div>

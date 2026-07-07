@@ -643,6 +643,14 @@ export default async function handler(req, res) {
       }
 
       const { period } = req.body || {};
+      // period попадает в audit_log.details и рендерится в журнале действий
+      // директора (settings.html) — валидируем формат MM.YYYY на входе, а не
+      // полагаемся только на экранирование при отображении (defense in depth).
+      // Falsy period (null/undefined/'') — легитимный случай «удалить все
+      // операции», обрабатывается веткой ниже без фильтра по периоду.
+      if (period && !/^\d{2}\.\d{4}$/.test(period)) {
+        return res.status(400).json({ error: 'Некорректный формат периода' });
+      }
       if (period && companyId) {
         await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}&company_id=eq.${companyId}`, {
           method: 'DELETE',
