@@ -586,13 +586,14 @@ export default async function handler(req, res) {
           insertedCount += batch.length;
         }
       }
-      // Уведомления о крупных списаниях — порог берём из заголовка запроса
+      // Уведомления о крупных списаниях — порог берём из заголовка запроса.
+      // await Promise.all (не await в цикле) — параллельно, чтобы загрузка выписки
+      // с несколькими крупными операциями не ждала их по одной; но всё равно await,
+      // а не fire-and-forget — иначе Vercel может завершить контейнер до отправки.
       const threshold = parseInt(req.headers['x-big-tx-threshold'] || '0');
       if (threshold > 0 && userId) {
         const bigTxs = toInsert.filter(t => t.amount < 0 && Math.abs(t.amount) >= threshold);
-        for (const tx of bigTxs) {
-          notifyBigTx(companyId, userId, tx);
-        }
+        await Promise.all(bigTxs.map(tx => notifyBigTx(companyId, userId, tx)));
       }
 
       if (batchErrors > 0) {
@@ -639,8 +640,9 @@ export default async function handler(req, res) {
           headers: adminHeaders
         });
         logAction(companyId, userId, 'transactions_deleted', { period });
-        // Разрушительное действие — директор(ы) узнают немедленно, даже если удалил бухгалтер
-        notifyCompanyOwners(companyId, userId, `🗑️ <b>Удалена выписка за период</b>\n\nПериод: <b>${period}</b>\nВсе операции за этот период удалены из системы.\n\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`);
+        // Разрушительное действие — директор(ы) узнают немедленно, даже если удалил бухгалтер.
+        // await — иначе Vercel может завершить контейнер до отправки уведомления.
+        await notifyCompanyOwners(companyId, userId, `🗑️ <b>Удалена выписка за период</b>\n\nПериод: <b>${period}</b>\nВсе операции за этот период удалены из системы.\n\n<a href="https://omschicken-u5dn.vercel.app/">Открыть OMSFIN →</a>`);
       } else if (period && userId) {
         await fetch(`${SUPABASE_URL}/rest/v1/transactions?period=eq.${encodeURIComponent(period)}&user_id=eq.${userId}`, {
           method: 'DELETE',

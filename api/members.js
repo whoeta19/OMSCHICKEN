@@ -397,8 +397,12 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
         });
 
         logAction(invite.company_id, userId, 'member_joined', { role: invite.role });
-        getEmail(userId).then(email => notifyDirectors(invite.company_id,
-          `👋 <b>Новый участник в команде</b>\n\n${email} присоединился по инвайту с ролью «${ROLE_LABELS[invite.role] || invite.role}»`));
+        // await — иначе Vercel может завершить контейнер сразу после ответа,
+        // не дав фоновому уведомлению уйти (в отличие от logAction, здесь это
+        // основная ценность фичи, а не необязательный журнал)
+        const joinedEmail = await getEmail(userId);
+        await notifyDirectors(invite.company_id,
+          `👋 <b>Новый участник в команде</b>\n\n${joinedEmail} присоединился по инвайту с ролью «${ROLE_LABELS[invite.role] || invite.role}»`);
         return res.status(200).json({ ok: true, company_id: invite.company_id, role: invite.role });
       }
 
@@ -417,8 +421,8 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
         });
 
         logAction(company_id, userId, 'member_role_changed', { target_user_id, new_role });
-        Promise.all([getEmail(userId), getEmail(target_user_id)]).then(([actorEmail, targetEmail]) =>
-          notifyDirectors(company_id, `🔑 <b>Изменена роль участника</b>\n\n${actorEmail} изменил роль ${targetEmail} на «${ROLE_LABELS[new_role] || new_role}»`));
+        const [roleActorEmail, roleTargetEmail] = await Promise.all([getEmail(userId), getEmail(target_user_id)]);
+        await notifyDirectors(company_id, `🔑 <b>Изменена роль участника</b>\n\n${roleActorEmail} изменил роль ${roleTargetEmail} на «${ROLE_LABELS[new_role] || new_role}»`);
         return res.status(200).json({ ok: true });
       }
 
@@ -440,8 +444,8 @@ ${ctx.cashflowWarning ? `\n🔴 КАССОВЫЙ РАЗРЫВ: ${ctx.cashflowWar
       });
 
       logAction(company_id, userId, 'member_removed', { target_user_id });
-      Promise.all([getEmail(userId), getEmail(target_user_id)]).then(([actorEmail, targetEmail]) =>
-        notifyDirectors(company_id, `🚪 <b>Участник удалён из компании</b>\n\n${actorEmail} удалил ${targetEmail} из команды`));
+      const [removedActorEmail, removedTargetEmail] = await Promise.all([getEmail(userId), getEmail(target_user_id)]);
+      await notifyDirectors(company_id, `🚪 <b>Участник удалён из компании</b>\n\n${removedActorEmail} удалил ${removedTargetEmail} из команды`);
       return res.status(200).json({ ok: true });
     }
   } catch (e) {
