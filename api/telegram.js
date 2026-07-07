@@ -54,13 +54,33 @@ function parseDMY(str) {
   return new Date(yyyy, mm - 1, dd).getTime();
 }
 
-// Загрузка транзакций за период (MM.YYYY) или всех, сортировка в JS (date — строка DD.MM.YYYY)
-async function getTxs(userId, period = null) {
-  let url = `${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}&limit=2000`;
+// Загрузка транзакций за период (MM.YYYY) или всех, сортировка в JS (date — строка DD.MM.YYYY).
+// companyId в приоритете — иначе бухгалтер/сотрудник, привязавший СВОЙ телеграм,
+// видел бы только операции, загруженные под его собственным user_id (пусто/чужое),
+// а не общие данные компании. Без companyId (личный аккаунт без команды) — по user_id.
+async function getTxs(userId, period = null, companyId = null) {
+  let url = companyId
+    ? `${SUPABASE_URL}/rest/v1/transactions?company_id=eq.${companyId}&limit=2000`
+    : `${SUPABASE_URL}/rest/v1/transactions?user_id=eq.${userId}&limit=2000`;
   if (period) url += `&period=eq.${period}`;
   const r = await fetch(url, { headers: adminHeaders });
   const data = await r.json();
   return Array.isArray(data) ? data.sort((a, b) => parseDMY(b.date) - parseDMY(a.date)) : [];
+}
+
+// Компания пользователя через company_members (не companies.user_id — тот принадлежит
+// только создателю). Если пользователь состоит в нескольких компаниях, берём первую —
+// у бота нет команды переключения компании, это осознанное упрощение.
+async function getUserCompanyId(userId) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}&limit=1&select=company_id`, {
+      headers: adminHeaders
+    });
+    const d = await r.json();
+    return d[0]?.company_id || null;
+  } catch (e) {
+    return null;
+  }
 }
 
 async function findUserByTelegram(telegramId) {
@@ -244,10 +264,7 @@ export default async function handler(req, res) {
         } else {
           const [, mm, yyyy] = txDate.split('.');
           const period = `${mm}.${yyyy}`;
-          // Берём первую компанию пользователя для company_id
-          const compResp = await fetch(`${SUPABASE_URL}/rest/v1/companies?user_id=eq.${linkedUserEarly.user_id}&limit=1`, { headers: adminHeaders });
-          const compData = await compResp.json();
-          const companyId = compData[0]?.id || null;
+          const companyId = await getUserCompanyId(linkedUserEarly.user_id);
           const txBody = { user_id: linkedUserEarly.user_id, date: txDate, amount: -amount, name: merchant, category: 'unknown', period };
           if (companyId) txBody.company_id = companyId;
           const txResp = await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
@@ -286,7 +303,8 @@ export default async function handler(req, res) {
         const [cmd, period] = callbackData.split(':');
         const userId = linkedUserEarly?.user_id;
         if (!userId) return res.status(200).json({ok: true});
-        const txs = await getTxs(userId, period === 'all' ? null : period);
+        const companyId = await getUserCompanyId(userId);
+        const txs = await getTxs(userId, period === 'all' ? null : period, companyId);
         const { income, expense, profit } = calcVat(txs);
         const label = period === 'all' ? 'за всё время' : `за ${period}`;
         if (cmd === 'stats') {
@@ -376,8 +394,9 @@ export default async function handler(req, res) {
     }
 
     const userId = linkedUser.user_id;
+    const companyId = await getUserCompanyId(userId);
     const period = currentPeriod();
-    const txs = await getTxs(userId, period);
+    const txs = await getTxs(userId, period, companyId);
     const { income, expense, profit, vatOut, vatIn, vatToPay } = calcVat(txs);
 
     // Кнопки выбора периода для /stats
@@ -431,7 +450,7 @@ export default async function handler(req, res) {
     // /nds
     if (text === '/nds' || text.includes('ндс') || text.includes('налог')) {
       const qPeriods = currentQuarterPeriods();
-      const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p)))).flat();
+      const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p, companyId)))).flat();
       const { vatOut: qVatOut, vatIn: qVatIn, vatToPay: qVatToPay } = calcVat(allQTxs);
 
       const now = new Date();
@@ -456,7 +475,7 @@ export default async function handler(req, res) {
     // /quarter — сводка за квартал
     if (text === '/quarter' || text.includes('кварт')) {
       const qPeriods = currentQuarterPeriods();
-      const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p)))).flat();
+      const allQTxs = (await Promise.all(qPeriods.map(p => getTxs(userId, p, companyId)))).flat();
       const { income: qIn, expense: qEx, profit: qPr, vatToPay: qVat } = calcVat(allQTxs);
       const now = new Date();
       const quarter = Math.floor(now.getMonth() / 3) + 1;
@@ -533,7 +552,7 @@ export default async function handler(req, res) {
 
     // /top — топ покупателей
     if (text === '/top' || text.includes('топ') || text.includes('покупател')) {
-      const allTxs = await getTxs(userId);
+      const allTxs = await getTxs(userId, null, companyId);
       const byName = {};
       allTxs.filter(t=>t.amount>0).forEach(t=>{
         byName[t.name] = (byName[t.name]||0) + Number(t.amount);
@@ -637,10 +656,6 @@ export default async function handler(req, res) {
         const today = new Date().toLocaleDateString('ru-RU').replace(/\//g, '.');
         const [, mm, yyyy] = today.split('.');
         const txPeriod = `${mm}.${yyyy}`;
-
-        const compResp = await fetch(`${SUPABASE_URL}/rest/v1/companies?user_id=eq.${userId}&limit=1`, { headers: adminHeaders });
-        const compData = await compResp.json();
-        const companyId = compData[0]?.id || null;
 
         const txBody = {
           user_id: userId,
