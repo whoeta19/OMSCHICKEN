@@ -228,6 +228,8 @@ export default async function handler(req, res) {
   }
 
   const update = req.body;
+  // ВРЕМЕННО: диагностика — почему message оказывается пустым для реальных апдейтов
+  console.error('DEBUG update:', typeof update, JSON.stringify(update)?.slice(0, 500));
   const message = update.message || update.callback_query?.message;
   if (!message) return res.status(200).json({ok: true});
 
