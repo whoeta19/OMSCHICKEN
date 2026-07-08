@@ -117,6 +117,44 @@ eq(calc.isBankSber(KREDIT_DEBET_SAMPLE), false, 'Кредит/Дебет НЕ п
 eq(calc.isBankVTB(KREDIT_DEBET_SAMPLE), false, 'Кредит/Дебет НЕ путается с ВТБ');
 eq(calc.isBankAlfa(VTB_SAMPLE), false, 'ВТБ НЕ путается с Альфой');
 
+console.log('── Парсер кассовых чеков (Слой 1: касса → операции)');
+// Эвотор — деньги в копейках, data.positions
+const EVOTOR = {
+  type: 'receipt.sell',
+  data: {
+    id: 'ev-rcpt-777', dateTime: '2026-06-01T10:30:00', type: 'SELL',
+    positions: [
+      { name: 'Окорочка куриные', price: 18350, quantity: 2, result: 36700, tax: { type: 'VAT_10' } },
+      { name: 'Пакет-майка', price: 500, quantity: 1, result: 500, tax: { type: 'VAT_20' } },
+    ],
+  },
+};
+const evR = calc.parsePosReceipt(EVOTOR);
+eq(evR.format, 'evotor', 'Эвотор распознан по data.positions');
+eq(evR.sourceId, 'ev-rcpt-777', 'Эвотор: sourceId из data.id (для дедупа)');
+eq(evR.positions.length, 2, 'Эвотор: две позиции = две будущие операции');
+eq(evR.positions[0].amountKop, 36700, 'Эвотор: сумма в копейках как есть (result)');
+eq(evR.positions[0].vatRate, 10, 'Эвотор: VAT_10 → 10');
+eq(evR.positions[1].vatRate, 22, 'Эвотор: VAT_20 → базовая 22 (2026)');
+eq(evR.isReturn, false, 'Эвотор SELL — не возврат');
+
+// АТОЛ / МТС — деньги в рублях, receipt.items
+const ATOL = {
+  external_id: 'atol-42', timestamp: '01.06.2026 10:30:00',
+  receipt: { items: [ { name: 'Грудка', price: 250.50, quantity: 3, sum: 751.50, vat: { type: 'vat10' } } ] },
+};
+const atR = calc.parsePosReceipt(ATOL);
+eq(atR.format, 'atol', 'АТОЛ распознан по receipt.items');
+eq(atR.positions[0].amountKop, 75150, 'АТОЛ: 751.50₽ → 75150 копеек (без float-потерь)');
+eq(atR.positions[0].vatRate, 10, 'АТОЛ: vat10 → 10');
+eq(atR.sourceId, 'atol-42', 'АТОЛ: sourceId из external_id');
+
+// Дедупликация: один и тот же чек, разобранный дважды → идентичный sourceId
+// (реальная защита от задвоения — уникальный индекс БД company_id+source+source_id)
+eq(calc.parsePosReceipt(EVOTOR).sourceId === calc.parsePosReceipt(EVOTOR).sourceId, true,
+   'Дедуп: повторный разбор того же чека даёт тот же sourceId');
+eq(calc.parsePosReceipt({ foo: 'bar' }), null, 'Мусор без позиций → null (не создаём операций)');
+
 // ═══ Итог ═══
 console.log('');
 if (failed) {

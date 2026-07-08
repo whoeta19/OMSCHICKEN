@@ -1,4 +1,7 @@
 {
+  "crons": [
+    { "path": "/api/ingest?action=process-queue", "schedule": "0 3 * * *" }
+  ],
   "rewrites": [
     {
       "source": "/negotiation",

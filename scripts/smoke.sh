@@ -50,6 +50,8 @@ echo "── API (валидный JSON, не 5xx)"
 check_api "/api/companies?action=health" "companies health"
 check_api "/api/companies"               "companies (401 без токена — ок)"
 check_api "/api/transactions"            "transactions (401 без токена — ок)"
+check_api "/api/ingest?action=process-queue" "ingest queue (401 без секрета — ок)"
+check_api "/api/ingest"                  "ingest (400 без параметров — ок)"
 
 echo ""
 if [ "$fail" -ne 0 ]; then echo "SMOKE: ПРОВАЛ"; exit 1; else echo "SMOKE: всё живое"; fi

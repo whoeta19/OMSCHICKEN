@@ -142,6 +142,72 @@
       (head.includes('плательщик') && head.includes('получатель') && head.includes('назначение платежа'));
   }
 
+  // ═══ ПАРСЕР КАССОВЫХ ЧЕКОВ (Слой 1: касса → операции сами) ═══════════
+  // Нормализует вебхук ККТ в единый вид. Всегда отдаёт суммы в КОПЕЙКАХ.
+  // Форматы: Эвотор (деньги в копейках), АТОЛ/МТС/Эйвери/generic (в рублях,
+  // массив items). Сырой payload всегда сохраняется в raw_data вызывающим —
+  // форматы ККТ в реальности плавают, парсер покрывает документированные формы.
+
+  function _vatFromTag(tag) {
+    if (tag == null) return null;
+    const s = String(tag).toLowerCase().replace(/[^0-9a-zа-я]/g, '');
+    if (s.indexOf('22') >= 0 || s.indexOf('20') >= 0) return 22;
+    if (s.indexOf('10') >= 0) return 10;
+    if (s.indexOf('0') >= 0 || s.indexOf('none') >= 0 || s.indexOf('no') >= 0 || s.indexOf('без') >= 0) return 0;
+    return null;
+  }
+
+  function parsePosReceipt(payload) {
+    if (!payload || typeof payload !== 'object') return null;
+
+    // ── Эвотор: data.positions, деньги в КОПЕЙКАХ ──
+    const evData = payload.data && Array.isArray(payload.data.positions) ? payload.data : null;
+    if (evData) {
+      const positions = evData.positions.map(function (p) {
+        const kop = p.result != null ? p.result
+          : (p.sum != null ? p.sum : (Number(p.price || 0) * Number(p.quantity || 1)));
+        return {
+          name: String(p.name || p.productName || 'Товар').slice(0, 200),
+          amountKop: Math.round(Number(kop)),
+          qty: Number(p.quantity || p.qty || 1),
+          vatRate: _vatFromTag(p.tax && (p.tax.type || p.tax)),
+        };
+      }).filter(function (x) { return x.amountKop; });
+      if (positions.length) return {
+        format: 'evotor',
+        sourceId: String(evData.id || payload.id || ''),
+        occurredAt: evData.dateTime || evData.date || null,
+        isReturn: /back|return|payback|возврат/i.test(String(evData.type || payload.type || '')),
+        positions: positions,
+      };
+    }
+
+    // ── АТОЛ / МТС Касса / Эйвери / generic: items[], деньги в РУБЛЯХ ──
+    const rc = payload.receipt || payload;
+    const items = Array.isArray(rc.items) ? rc.items
+      : (Array.isArray(payload.items) ? payload.items : null);
+    if (items && items.length) {
+      const positions = items.map(function (p) {
+        const rub = p.sum != null ? Number(p.sum) : (Number(p.price || 0) * Number(p.quantity || 1));
+        return {
+          name: String(p.name || 'Товар').slice(0, 200),
+          amountKop: Math.round(rub * 100),
+          qty: Number(p.quantity || 1),
+          vatRate: _vatFromTag(p.vat && (p.vat.type || p.vat)),
+        };
+      }).filter(function (x) { return x.amountKop; });
+      if (positions.length) return {
+        format: payload.receipt ? 'atol' : 'generic',
+        sourceId: String(payload.external_id || rc.external_id || rc.id || payload.id || ''),
+        occurredAt: payload.timestamp || rc.timestamp || rc.date || null,
+        isReturn: /back|return|возврат/i.test(String(rc.operation || rc.type || payload.type || '')),
+        positions: positions,
+      };
+    }
+
+    return null;
+  }
+
   return {
     toKop, toRub, roundMoney, roundRub,
     vatFromGross, vatOnNet,
@@ -149,5 +215,6 @@
     insuranceContributions, insuranceContributionsFot, CONTRIB_LIMIT,
     profitTax, profitTaxSplit, usnTax,
     isBankTBank, isBankAlfa, isBankVTB, isBankKreditDebet, isBankSber,
+    parsePosReceipt,
   };
 });
