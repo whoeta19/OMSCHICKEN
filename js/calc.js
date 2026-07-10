@@ -208,6 +208,42 @@
     return null;
   }
 
+  // ═══ ИИ-СЛОЙ: дешёвая эвристика до вызова Claude (Слой 2) ═══════════════
+  // Классификация операции по ключевым словам. Возвращает category + type +
+  // confidence 0..1. Если confidence >= 0.75 — ИИ не вызывается (экономия
+  // токенов). Ниже — ai.js уточняет через Claude. Категории совпадают с теми,
+  // что уже использует дашборд (income/chicken/salary/tax/office/…).
+  const _CAT_RULES = [
+    { re: /выручк|оплата от|поступлени|реализац|продаж|за товар|за услуг/i, type: 'income',   cat: 'income',    conf: 0.80 },
+    { re: /зарплат|аванс.*работ|выплата зп|фот\b|з\/п/i,                     type: 'salary',   cat: 'salary',    conf: 0.85 },
+    { re: /налог|ндс|ндфл|фнс|ифнс|взнос|усн|патент/i,                        type: 'tax',      cat: 'tax',       conf: 0.90 },
+    { re: /закуп|поставщик|сырь|мясо|птиц|окороч|груд|товар для перепрод/i,   type: 'expense',  cat: 'chicken',   conf: 0.72 },
+    { re: /аренд|коммунал|офис|связ|интернет|мтс|билайн|мегафон/i,            type: 'expense',  cat: 'office',    conf: 0.75 },
+    { re: /транспорт|логистик|доставк|гсм|бензин|топлив|перевозк/i,           type: 'expense',  cat: 'transport', conf: 0.75 },
+    { re: /комисси|эквайринг|обслуж.*счет|банковск|процент по кредит/i,       type: 'expense',  cat: 'bank',      conf: 0.70 },
+    { re: /перевод между|на свой счет|пополнение счета|собственн.*средств/i,  type: 'transfer', cat: 'transit',   conf: 0.70 },
+  ];
+  function keywordCategory(text) {
+    const s = String(text || '');
+    for (const r of _CAT_RULES) if (r.re.test(s)) return { type: r.type, category: r.cat, confidence: r.conf };
+    return { type: 'unknown', category: 'unknown', confidence: 0.30 };
+  }
+
+  // Прогноз баланса по известным будущим событиям (Слой 2: forecast).
+  // events: [{dayOffset, amountKop(+приход/-расход)}]. Всё в копейках.
+  function projectBalance(currentKop, events) {
+    const sorted = (events || []).slice().sort(function (a, b) { return a.dayOffset - b.dayOffset; });
+    let running = Math.round(currentKop);
+    const timeline = [];
+    let firstNeg = null;
+    for (const e of sorted) {
+      running += Math.round(e.amountKop);
+      timeline.push({ dayOffset: e.dayOffset, balanceKop: running });
+      if (running < 0 && firstNeg === null) firstNeg = e.dayOffset;
+    }
+    return { timeline: timeline, firstNegativeDayOffset: firstNeg, endBalanceKop: running };
+  }
+
   return {
     toKop, toRub, roundMoney, roundRub,
     vatFromGross, vatOnNet,
@@ -215,6 +251,6 @@
     insuranceContributions, insuranceContributionsFot, CONTRIB_LIMIT,
     profitTax, profitTaxSplit, usnTax,
     isBankTBank, isBankAlfa, isBankVTB, isBankKreditDebet, isBankSber,
-    parsePosReceipt,
+    parsePosReceipt, keywordCategory, projectBalance,
   };
 });

@@ -132,7 +132,7 @@ async function loadOverview() {
   document.getElementById('periodLabel').textContent = `Сводка за ${months[now.getMonth()]} ${now.getFullYear()}`;
 
   try {
-    const r = await fetch('/api/companies-overview', {
+    const r = await fetch('/api/companies?resource=overview', {
       headers: { 'Authorization': 'Bearer ' + getToken() }
     });
     const data = await r.json();

@@ -155,6 +155,27 @@ eq(calc.parsePosReceipt(EVOTOR).sourceId === calc.parsePosReceipt(EVOTOR).source
    'Дедуп: повторный разбор того же чека даёт тот же sourceId');
 eq(calc.parsePosReceipt({ foo: 'bar' }), null, 'Мусор без позиций → null (не создаём операций)');
 
+console.log('── ИИ-эвристика: keywordCategory (до вызова Claude)');
+eq(calc.keywordCategory('Оплата от ООО Ромашка за товар').category, 'income', 'выручка → income');
+eq(calc.keywordCategory('Оплата от ООО Ромашка').confidence >= 0.75, true, 'выручка: высокая уверенность → ИИ не нужен');
+eq(calc.keywordCategory('Зарплата за июнь').category, 'salary', 'зарплата → salary');
+eq(calc.keywordCategory('Уплата НДС за 2 квартал').category, 'tax', 'НДС → tax');
+eq(calc.keywordCategory('Закупка сырья мясо птицы').category, 'chicken', 'закупка → chicken');
+eq(calc.keywordCategory('Аренда офиса').category, 'office', 'аренда → office');
+eq(calc.keywordCategory('Транспортные услуги логистика').category, 'transport', 'логистика → transport');
+eq(calc.keywordCategory('Перевод между своими счетами').type, 'transfer', 'перевод → transfer');
+eq(calc.keywordCategory('абырвалг').confidence < 0.75, true, 'непонятное → низкая уверенность → нужен ИИ');
+
+console.log('── Прогноз баланса projectBalance (Слой 2: forecast)');
+const _fc = calc.projectBalance(10000000, [ // 100 000 ₽ старт (в копейках)
+  { dayOffset: 5,  amountKop: -3000000 },   // -30 000
+  { dayOffset: 10, amountKop: -9000000 },   // -90 000 → уходит в минус
+  { dayOffset: 15, amountKop: 5000000 },    // +50 000
+]);
+eq(_fc.firstNegativeDayOffset, 10, 'кассовый разрыв обнаружен на 10-й день');
+eq(_fc.endBalanceKop, 3000000, 'итоговый баланс = 30 000 ₽ (в копейках)');
+eq(calc.projectBalance(10000000, []).firstNegativeDayOffset, null, 'нет событий → нет разрыва');
+
 // ═══ Итог ═══
 console.log('');
 if (failed) {

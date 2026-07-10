@@ -70,6 +70,35 @@ export default async function handler(req, res) {
   };
 
   try {
+    // ── Сводный дашборд по всем компаниям (слито из companies-overview.js
+    //    ради лимита Vercel Hobby 12 функций) ──
+    if (req.method === 'GET' && req.query.resource === 'overview') {
+      const memberR = await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}&select=company_id,role`, { headers: svcHeaders });
+      const memberships = await memberR.json();
+      if (!Array.isArray(memberships) || !memberships.length) return res.status(200).json({ companies: [] });
+
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+      const currentPeriod = String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
+
+      const companies = await Promise.all(memberships.map(async (m) => {
+        const compR = await fetch(`${SUPABASE_URL}/rest/v1/companies?id=eq.${m.company_id}&select=id,name,inn`, { headers: svcHeaders });
+        const compData = await compR.json();
+        const company = Array.isArray(compData) ? compData[0] : null;
+        if (!company) return null;
+        const txR = await fetch(`${SUPABASE_URL}/rest/v1/transactions?company_id=eq.${m.company_id}&period=eq.${encodeURIComponent(currentPeriod)}&select=amount,category`, { headers: svcHeaders });
+        const txList = await txR.json();
+        const list = Array.isArray(txList) ? txList : [];
+        const income = list.filter(t => Number(t.amount) > 0).reduce((s, t) => s + Number(t.amount), 0);
+        const expense = list.filter(t => Number(t.amount) < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+        const salesIncome = list.filter(t => Number(t.amount) > 0 && t.category === 'income').reduce((s, t) => s + Number(t.amount), 0);
+        const purchaseExpense = list.filter(t => Number(t.amount) < 0 && t.category === 'chicken').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+        const vatToPay = Math.max(0, Math.round((salesIncome * 10 / 110) - (purchaseExpense * 10 / 110)));
+        return { id: company.id, name: company.name, inn: company.inn, role: m.role, period: currentPeriod,
+          income: Math.round(income), expense: Math.round(expense), profit: Math.round(income - expense), vatToPay, txCount: list.length };
+      }));
+      return res.status(200).json({ companies: companies.filter(Boolean) });
+    }
+
     if (req.method === 'GET') {
       // Получаем все company_id где пользователь является участником
       const mR = await fetch(`${SUPABASE_URL}/rest/v1/company_members?user_id=eq.${userId}&select=company_id,role`, {
